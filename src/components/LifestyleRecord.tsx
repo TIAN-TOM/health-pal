@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ArrowLeft, Check, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,7 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
 
   const dietOptions = [
     { value: 'high_salt', label: '吃得比较咸', emoji: '🧂' },
-    { value: 'very_salty', label: '吃得很咸', emoji: '🧂🧂' },
+    { value: 'very_salty', label: '吃得很咸', emoji: '🧂' },
     { value: 'coffee', label: '喝了咖啡', emoji: '☕' },
     { value: 'tea', label: '喝了浓茶', emoji: '🍵' },
     { value: 'alcohol', label: '喝了酒', emoji: '🍷' },
@@ -151,23 +152,23 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
               <h3 className="text-lg font-medium mb-4 text-gray-700">
                 今天吃了什么？ (可多选)
               </h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 {dietOptions.map(option => (
                   <Button
                     key={option.value}
                     onClick={() => toggleDiet(option.value)}
                     variant={diet.includes(option.value) ? "default" : "outline"}
-                    className={`p-4 h-auto ${
+                    className={`p-3 h-auto min-h-[60px] ${
                       diet.includes(option.value) 
                         ? 'bg-orange-500 hover:bg-orange-600 text-white' 
                         : 'border-2 hover:border-orange-300'
                     }`}
                   >
-                    <div className="flex flex-col items-center">
-                      <span className="text-xl mb-1">{option.emoji}</span>
-                      <span className="text-sm text-center">{option.label}</span>
+                    <div className="flex flex-col items-center justify-center w-full">
+                      <span className="text-base mb-1">{option.emoji}</span>
+                      <span className="text-xs text-center leading-tight break-words">{option.label}</span>
                       {diet.includes(option.value) && (
-                        <Check className="mt-1 h-4 w-4" />
+                        <Check className="mt-1 h-3 w-3" />
                       )}
                     </div>
                   </Button>
@@ -180,27 +181,29 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
               <h3 className="text-lg font-medium mb-4 text-gray-700">
                 昨晚睡得怎么样？ <span className="text-red-500">*</span>
               </h3>
-              <div className="grid gap-3">
+              <div className="grid gap-2">
                 {sleepOptions.map(option => (
                   <Button
                     key={option.value}
                     onClick={() => setSleep(option.value)}
                     variant={sleep === option.value ? "default" : "outline"}
-                    className={`w-full py-4 text-lg ${
+                    className={`w-full py-3 ${
                       sleep === option.value 
                         ? 'bg-blue-500 hover:bg-blue-600 text-white' 
                         : 'border-2 hover:border-blue-300'
                     }`}
                   >
-                    <div className="flex flex-col items-center">
-                      <div className="flex items-center mb-1">
-                        <span className="text-2xl mr-2">{option.emoji}</span>
-                        <span className="font-medium">{option.label}</span>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center">
+                        <span className="text-lg mr-2">{option.emoji}</span>
+                        <span className="font-medium text-sm">{option.label}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-xs opacity-75 mr-2">{option.desc}</span>
                         {sleep === option.value && (
-                          <Check className="ml-2 h-5 w-5" />
+                          <Check className="h-4 w-4" />
                         )}
                       </div>
-                      <span className="text-sm opacity-75">{option.desc}</span>
                     </div>
                   </Button>
                 ))}
@@ -212,27 +215,29 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
               <h3 className="text-lg font-medium mb-4 text-gray-700">
                 今天压力大吗？ <span className="text-red-500">*</span>
               </h3>
-              <div className="grid gap-3">
+              <div className="grid gap-2">
                 {stressOptions.map(option => (
                   <Button
                     key={option.value}
                     onClick={() => setStress(option.value)}
                     variant={stress === option.value ? "default" : "outline"}
-                    className={`w-full py-4 text-lg ${
+                    className={`w-full py-3 ${
                       stress === option.value 
                         ? 'bg-purple-500 hover:bg-purple-600 text-white' 
                         : 'border-2 hover:border-purple-300'
                     }`}
                   >
-                    <div className="flex flex-col items-center">
-                      <div className="flex items-center mb-1">
-                        <span className="text-2xl mr-2">{option.emoji}</span>
-                        <span className="font-medium">{option.label}</span>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center">
+                        <span className="text-lg mr-2">{option.emoji}</span>
+                        <span className="font-medium text-sm">{option.label}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-xs opacity-75 mr-2">{option.desc}</span>
                         {stress === option.value && (
-                          <Check className="ml-2 h-5 w-5" />
+                          <Check className="h-4 w-4" />
                         )}
                       </div>
-                      <span className="text-sm opacity-75">{option.desc}</span>
                     </div>
                   </Button>
                 ))}
