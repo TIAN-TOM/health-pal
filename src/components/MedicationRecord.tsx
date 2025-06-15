@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Check, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,7 @@ interface MedicationRecordProps {
 const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
   const [medications, setMedications] = useState<string[]>([]);
   const [dosage, setDosage] = useState<string>('');
-  const [manualInput, setManualInput] = useState('');
+  const [note, setNote] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [userMedications, setUserMedications] = useState<Medication[]>([]);
   const [loadingMeds, setLoadingMeds] = useState(true);
@@ -91,7 +90,7 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
     const medications_text = medications.join('、');
     const dosage_text = dosage === 'normal' ? '正常剂量' : dosage === 'half' ? '减半剂量' : dosage === 'extra' ? '加强剂量' : '';
     
-    const record_text = `我有梅尼埃症，今天服用的药物：${medications_text}，用药剂量：${dosage_text}。${manualInput ? `补充信息：${manualInput}` : ''}请给我一些用药建议和指导。`;
+    const record_text = `我有梅尼埃症，今天服用的药物：${medications_text}，用药剂量：${dosage_text}。${note ? `详细说明：${note}` : ''}请给我一些用药建议和指导。`;
     
     if (aiType === 'doubao') {
       window.open('doubao://chat?text=' + encodeURIComponent(record_text), '_blank');
@@ -127,7 +126,7 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
       await saveMedicationRecord({
         medications,
         dosage,
-        manualInput: manualInput.trim() || undefined
+        manualInput: note.trim() || undefined
       });
 
       toast({
@@ -268,15 +267,15 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
                   </div>
                 </div>
 
-                {/* 手动输入框 */}
+                {/* 详细说明 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    补充信息（可选）
+                    详细说明（可选）
                   </label>
                   <Textarea
-                    value={manualInput}
-                    onChange={(e) => setManualInput(e.target.value)}
-                    placeholder="可以手动输入其他用药相关信息..."
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="可以记录用药时间、服药后感受、副作用等相关信息..."
                     className="w-full"
                     rows={3}
                   />

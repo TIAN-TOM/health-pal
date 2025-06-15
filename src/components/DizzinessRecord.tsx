@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,6 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
   const [duration, setDuration] = useState('');
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [note, setNote] = useState('');
-  const [manualInput, setManualInput] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -56,10 +54,9 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
 
   const handleAIAssistant = (aiType: 'doubao' | 'deepseek') => {
     const symptoms_text = symptoms.join('、');
-    const record_text = `我有梅尼埃症，刚才出现了${severity}眩晕症状，持续${duration}，伴随症状包括：${symptoms_text}。${note ? `其他说明：${note}` : ''}${manualInput ? `补充信息：${manualInput}` : ''}请给我一些建议和指导。`;
+    const record_text = `我有梅尼埃症，刚才出现了${severity}眩晕症状，持续${duration}，伴随症状包括：${symptoms_text}。${note ? `详细说明：${note}` : ''}请给我一些建议和指导。`;
     
     if (aiType === 'doubao') {
-      // 尝试打开豆包APP，如果没有安装则提示用户
       window.open('doubao://chat?text=' + encodeURIComponent(record_text), '_blank');
       setTimeout(() => {
         toast({
@@ -68,7 +65,6 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
         });
       }, 1000);
     } else if (aiType === 'deepseek') {
-      // 尝试打开DeepSeek APP
       window.open('deepseek://chat?text=' + encodeURIComponent(record_text), '_blank');
       setTimeout(() => {
         toast({
@@ -95,8 +91,7 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
           severity,
           duration,
           symptoms,
-          note: note.trim() || undefined,
-          manualInput: manualInput.trim() || undefined
+          note: note.trim() || undefined
         }
       };
 
@@ -112,7 +107,6 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
       setDuration('');
       setSymptoms([]);
       setNote('');
-      setManualInput('');
       
       onBack();
     } catch (error: any) {
@@ -228,31 +222,17 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
                 </div>
               </div>
 
-              {/* 备注 */}
+              {/* 详细说明 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  备注说明（可选）
+                  详细说明（可选）
                 </label>
                 <Textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="记录症状细节、诱发因素等..."
+                  placeholder="记录症状细节、诱发因素、相关情况等..."
                   className="w-full"
                   rows={3}
-                />
-              </div>
-
-              {/* 手动输入框 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  补充信息（可选）
-                </label>
-                <Textarea
-                  value={manualInput}
-                  onChange={(e) => setManualInput(e.target.value)}
-                  placeholder="可以手动输入其他相关信息..."
-                  className="w-full"
-                  rows={2}
                 />
               </div>
 

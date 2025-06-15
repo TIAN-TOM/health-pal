@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft, Check, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,7 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
   const [diet, setDiet] = useState<string[]>([]);
   const [sleep, setSleep] = useState<string>('');
   const [stress, setStress] = useState<string>('');
-  const [manualInput, setManualInput] = useState('');
+  const [note, setNote] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -65,7 +64,7 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
     const sleep_text = sleepOptions.find(opt => opt.value === sleep)?.label || '';
     const stress_text = stressOptions.find(opt => opt.value === stress)?.label || '';
     
-    const record_text = `我有梅尼埃症，今天的生活状况：饮食方面${diet_text || '正常'}，睡眠状况${sleep_text}，压力水平${stress_text}。${manualInput ? `补充信息：${manualInput}` : ''}请给我一些生活方式的建议和指导。`;
+    const record_text = `我有梅尼埃症，今天的生活状况：饮食方面${diet_text || '正常'}，睡眠状况${sleep_text}，压力水平${stress_text}。${note ? `详细说明：${note}` : ''}请给我一些生活方式的建议和指导。`;
     
     if (aiType === 'doubao') {
       window.open('doubao://chat?text=' + encodeURIComponent(record_text), '_blank');
@@ -102,7 +101,7 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
         diet,
         sleep,
         stress,
-        manualInput: manualInput.trim() || undefined
+        manualInput: note.trim() || undefined
       });
 
       toast({
@@ -240,15 +239,15 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
               </div>
             </div>
 
-            {/* 手动输入框 */}
+            {/* 详细说明 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                补充信息（可选）
+                详细说明（可选）
               </label>
               <Textarea
-                value={manualInput}
-                onChange={(e) => setManualInput(e.target.value)}
-                placeholder="可以手动输入其他生活相关信息..."
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="可以记录其他相关信息，如具体的饮食内容、睡眠时间、压力来源等..."
                 className="w-full"
                 rows={3}
               />

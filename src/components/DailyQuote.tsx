@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Quote } from 'lucide-react';
+import { Quote, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface QuoteData {
   text: string;
@@ -10,7 +11,7 @@ interface QuoteData {
 }
 
 const DailyQuote = () => {
-  const [quote, setQuote] = useState<QuoteData | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const quotes: QuoteData[] = [
     {
@@ -115,31 +116,24 @@ const DailyQuote = () => {
     }
   ];
 
+  // 20秒自动切换
   useEffect(() => {
-    // 根据当天日期选择名言，确保每天都是同一条
-    const today = new Date().toDateString();
-    const stored = localStorage.getItem('dailyQuote');
-    const storedData = stored ? JSON.parse(stored) : null;
+    const interval = setInterval(() => {
+      setCurrentIndex(prev => (prev + 1) % quotes.length);
+    }, 20000);
 
-    if (storedData && storedData.date === today) {
-      setQuote(storedData.quote);
-    } else {
-      // 使用日期作为种子生成伪随机数，确保每天显示固定的名言
-      const dateSum = today.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-      const randomIndex = dateSum % quotes.length;
-      const selectedQuote = quotes[randomIndex];
-      
-      setQuote(selectedQuote);
-      localStorage.setItem('dailyQuote', JSON.stringify({
-        date: today,
-        quote: selectedQuote
-      }));
-    }
-  }, []);
+    return () => clearInterval(interval);
+  }, [quotes.length]);
 
-  if (!quote) {
-    return null;
-  }
+  const goToPrevious = () => {
+    setCurrentIndex(prev => prev === 0 ? quotes.length - 1 : prev - 1);
+  };
+
+  const goToNext = () => {
+    setCurrentIndex(prev => (prev + 1) % quotes.length);
+  };
+
+  const currentQuote = quotes[currentIndex];
 
   return (
     <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
@@ -148,13 +142,36 @@ const DailyQuote = () => {
           <Quote className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
           <div className="flex-1">
             <div className="text-gray-800 text-lg leading-relaxed mb-2 font-medium">
-              {quote.text}
+              {currentQuote.text}
             </div>
             <div className="text-gray-600 text-base leading-relaxed mb-3 italic">
-              {quote.english}
+              {currentQuote.english}
             </div>
-            <div className="text-sm text-blue-600 font-medium">
-              — {quote.author}
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-blue-600 font-medium">
+                — {currentQuote.author}
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={goToPrevious}
+                  className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-100"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs text-gray-500">
+                  {currentIndex + 1}/{quotes.length}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={goToNext}
+                  className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-100"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
