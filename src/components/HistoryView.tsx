@@ -2,11 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Thermometer, Droplets, Pill, RefreshCw } from 'lucide-react';
+import { Calendar, Thermometer, Droplets, Pill, RefreshCw } from 'lucide-react';
 import { getRecentRecords } from '@/services/meniereRecordService';
 import type { Tables } from '@/integrations/supabase/types';
 import RecordDelete from '@/components/RecordDelete';
-import { formatBeijingTime } from '@/utils/beijingTime';
 
 type MeniereRecord = Tables<'meniere_records'>;
 
@@ -92,10 +91,6 @@ const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
               {getRecordIcon(record.type)}
               <div>
                 <div className="font-medium">{getRecordTitle(record)}</div>
-                <div className="text-sm text-gray-500 flex items-center">
-                  <Clock className="h-3 w-3 mr-1" />
-                  {record.timestamp ? formatBeijingTime(record.timestamp) : '时间未知'}
-                </div>
               </div>
             </div>
             <RecordDelete
