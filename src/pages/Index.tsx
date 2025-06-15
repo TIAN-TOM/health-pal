@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Phone, Menu, Download, Mic, AlertCircle, Home, LogOut, Shield } from 'lucide-react';
+import { Heart, Phone, Menu, Download, AlertCircle, Home, LogOut, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,7 +9,6 @@ import EmergencyMode from '@/components/EmergencyMode';
 import DizzinessRecord from '@/components/DizzinessRecord';
 import LifestyleRecord from '@/components/LifestyleRecord';
 import MedicationRecord from '@/components/MedicationRecord';
-import VoiceRecord from '@/components/VoiceRecord';
 import DataExport from '@/components/DataExport';
 import Settings from '@/components/Settings';
 import HistoryView from '@/components/HistoryView';
@@ -94,10 +93,6 @@ const Index = () => {
 
   if (currentView === 'medication-record') {
     return <MedicationRecord onBack={navigateHome} />;
-  }
-
-  if (currentView === 'voice-record') {
-    return <VoiceRecord onBack={navigateHome} />;
   }
 
   if (currentView === 'data-export') {
@@ -214,22 +209,6 @@ const Index = () => {
                     <div className="w-6 h-6 bg-purple-500 rounded-full"></div>
                   </div>
                   <span className="leading-relaxed">记录用药情况</span>
-                </div>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow duration-200">
-            <CardContent className="p-6">
-              <Button
-                onClick={() => navigateTo('voice-record')}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
-              >
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-3">
-                    <Mic className="h-6 w-6 text-orange-600" />
-                  </div>
-                  <span className="leading-relaxed">语音记事</span>
                 </div>
               </Button>
             </CardContent>

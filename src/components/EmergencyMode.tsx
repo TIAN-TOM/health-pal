@@ -4,6 +4,7 @@ import { ArrowLeft, Phone, Volume2, VolumeX, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { Contact, getContacts } from '@/services/contactsService';
 
 interface EmergencyModeProps {
   onBack: () => void;
@@ -13,16 +14,13 @@ const EmergencyMode = ({ onBack }: EmergencyModeProps) => {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [audioType, setAudioType] = useState<'white-noise' | 'nature' | 'breathing'>('white-noise');
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // 紧急联系人示例数据
-  const emergencyContacts = [
-    { name: '老伴', phone: '138****8888', avatar: '👵' },
-    { name: '儿子', phone: '139****9999', avatar: '👨' },
-    { name: '女儿', phone: '136****6666', avatar: '👩' }
-  ];
-
   useEffect(() => {
+    loadContacts();
+    
     // 创建音频元素
     const audio = new Audio();
     audio.loop = true;
@@ -36,6 +34,23 @@ const EmergencyMode = ({ onBack }: EmergencyModeProps) => {
       }
     };
   }, []);
+
+  const loadContacts = async () => {
+    try {
+      const contactsData = await getContacts();
+      setContacts(contactsData);
+    } catch (error) {
+      console.error('加载联系人失败:', error);
+      // 如果加载失败，使用默认联系人
+      setContacts([
+        { name: '老伴', phone: '138****8888', avatar: '👵' },
+        { name: '儿子', phone: '139****9999', avatar: '👨' },
+        { name: '女儿', phone: '136****6666', avatar: '👩' }
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (audioElement) {
@@ -207,24 +222,40 @@ const EmergencyMode = ({ onBack }: EmergencyModeProps) => {
           <h3 className="text-xl font-bold text-center mb-6 text-gray-800">
             呼叫家人
           </h3>
-          <div className="space-y-4">
-            {emergencyContacts.map((contact, index) => (
-              <Button
-                key={index}
-                onClick={() => handleCall(contact.phone, contact.name)}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg font-medium py-6 rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg"
-              >
-                <div className="flex items-center justify-center">
-                  <span className="text-2xl mr-3">{contact.avatar}</span>
-                  <Phone className="mr-3 h-5 w-5" />
-                  <div className="text-center">
-                    <div>呼叫{contact.name}</div>
-                    <div className="text-sm opacity-90">{contact.phone}</div>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="text-lg text-gray-600">加载联系人中...</div>
+            </div>
+          ) : contacts.length > 0 ? (
+            <div className="space-y-4">
+              {contacts.map((contact, index) => (
+                <Button
+                  key={contact.id || index}
+                  onClick={() => handleCall(contact.phone, contact.name)}
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg font-medium py-6 rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg"
+                >
+                  <div className="flex items-center justify-center">
+                    <span className="text-2xl mr-3">{contact.avatar}</span>
+                    <Phone className="mr-3 h-5 w-5" />
+                    <div className="text-center">
+                      <div>呼叫{contact.name}</div>
+                      <div className="text-sm opacity-90">{contact.phone}</div>
+                    </div>
                   </div>
-                </div>
+                </Button>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-lg text-gray-600 mb-4">还没有设置紧急联系人</div>
+              <Button
+                onClick={onBack}
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                去设置联系人
               </Button>
-            ))}
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
