@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Phone, Menu, Download, AlertCircle, Home, LogOut, Shield } from 'lucide-react';
+import { Heart, Phone, Menu, Download, AlertCircle, Home, LogOut, Shield, FileText, BookOpen, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,6 +12,8 @@ import MedicationRecord from '@/components/MedicationRecord';
 import DataExport from '@/components/DataExport';
 import Settings from '@/components/Settings';
 import HistoryView from '@/components/HistoryView';
+import MedicalRecords from '@/components/MedicalRecords';
+import EducationCenter from '@/components/EducationCenter';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<string>('home');
@@ -103,6 +105,14 @@ const Index = () => {
     return <Settings onBack={navigateHome} />;
   }
 
+  if (currentView === 'medical-records') {
+    return <MedicalRecords onBack={navigateHome} />;
+  }
+
+  if (currentView === 'education') {
+    return <EducationCenter onBack={navigateHome} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       {/* 紧急求助横幅 */}
@@ -145,18 +155,6 @@ const Index = () => {
           
           <div className="text-sm text-gray-600 mb-2 leading-relaxed">
             欢迎回来，{getUserDisplayName()}
-          </div>
-          
-          <div className="flex justify-center mb-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              className="text-gray-500 hover:text-gray-700 text-sm"
-            >
-              <LogOut className="h-4 w-4 mr-1" />
-              退出登录
-            </Button>
           </div>
           
           <p className="text-gray-600 text-lg leading-relaxed">
@@ -213,6 +211,38 @@ const Index = () => {
               </Button>
             </CardContent>
           </Card>
+
+          <Card className="hover:shadow-lg transition-shadow duration-200">
+            <CardContent className="p-6">
+              <Button
+                onClick={() => navigateTo('medical-records')}
+                className="w-full bg-indigo-500 hover:bg-indigo-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
+              >
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-3">
+                    <Stethoscope className="h-6 w-6 text-indigo-600" />
+                  </div>
+                  <span className="leading-relaxed">医疗记录管理</span>
+                </div>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow duration-200">
+            <CardContent className="p-6">
+              <Button
+                onClick={() => navigateTo('education')}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
+              >
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
+                    <BookOpen className="h-6 w-6 text-emerald-600" />
+                  </div>
+                  <span className="leading-relaxed">疾病科普与心理支持</span>
+                </div>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         {/* 历史记录 */}
@@ -227,6 +257,21 @@ const Index = () => {
             <Download className="mr-3 h-5 w-5" />
             <span className="leading-relaxed">整理记录给医生/AI</span>
           </Button>
+        </div>
+
+        {/* 退出登录 - 移到底部不显眼位置 */}
+        <div className="mt-8 pt-4 border-t border-gray-200">
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSignOut}
+              className="text-gray-400 hover:text-gray-600 text-sm"
+            >
+              <LogOut className="h-4 w-4 mr-1" />
+              退出登录
+            </Button>
+          </div>
         </div>
       </div>
     </div>

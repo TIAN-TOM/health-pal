@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      education_articles: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          reading_time: number | null
+          summary: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          id?: string
+          reading_time?: number | null
+          summary?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          reading_time?: number | null
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       emergency_contacts: {
         Row: {
           avatar: string | null
@@ -34,6 +67,57 @@ export type Database = {
           id?: string
           name?: string
           phone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      medical_records: {
+        Row: {
+          created_at: string
+          date: string
+          department: string | null
+          diagnosis: string | null
+          doctor: string | null
+          hospital: string | null
+          id: string
+          next_appointment: string | null
+          notes: string | null
+          prescribed_medications: string[] | null
+          record_type: string
+          symptoms: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          department?: string | null
+          diagnosis?: string | null
+          doctor?: string | null
+          hospital?: string | null
+          id?: string
+          next_appointment?: string | null
+          notes?: string | null
+          prescribed_medications?: string[] | null
+          record_type: string
+          symptoms?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          department?: string | null
+          diagnosis?: string | null
+          doctor?: string | null
+          hospital?: string | null
+          id?: string
+          next_appointment?: string | null
+          notes?: string | null
+          prescribed_medications?: string[] | null
+          record_type?: string
+          symptoms?: string | null
           updated_at?: string
           user_id?: string
         }

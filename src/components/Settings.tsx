@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Phone, Plus, Trash2, Pill, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,6 @@ const Settings = ({ onBack }: SettingsProps) => {
   const [newContactName, setNewContactName] = useState('');
   const [newContactPhone, setNewContactPhone] = useState('');
   const [newContactAvatar, setNewContactAvatar] = useState('👤');
-  const [newMedication, setNewMedication] = useState('');
   const [newMedicationFrequency, setNewMedicationFrequency] = useState('daily');
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +31,20 @@ const Settings = ({ onBack }: SettingsProps) => {
     { value: 'twice_daily', label: '每天两次' },
     { value: 'three_times_daily', label: '每天三次' },
     { value: 'as_needed', label: '按需服用' }
+  ];
+
+  // 常用梅尼埃药物选项
+  const commonMedications = [
+    { name: '倍他司汀', frequency: 'three_times_daily' },
+    { name: '甲磺酸倍他司汀', frequency: 'twice_daily' },
+    { name: '地西泮', frequency: 'as_needed' },
+    { name: '异丙嗪', frequency: 'as_needed' },
+    { name: '氢氯噻嗪', frequency: 'daily' },
+    { name: '维生素B6', frequency: 'daily' },
+    { name: '盐酸氟桂利嗪', frequency: 'daily' },
+    { name: '茶苯海明', frequency: 'as_needed' },
+    { name: '尼莫地平', frequency: 'three_times_daily' },
+    { name: '银杏叶提取物', frequency: 'twice_daily' }
   ];
 
   useEffect(() => {
@@ -141,6 +153,37 @@ const Settings = ({ onBack }: SettingsProps) => {
       console.error('更新头像失败:', error);
       toast({
         title: "更新失败",
+        description: "请检查网络连接后重试",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const addCommonMedication = async (medication: { name: string; frequency: string }) => {
+    if (medications.some(m => m.name === medication.name)) {
+      toast({
+        title: "药物已存在",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const newMed = await saveMedication({
+        name: medication.name,
+        frequency: medication.frequency
+      });
+
+      setMedications([...medications, newMed]);
+      
+      toast({
+        title: "添加成功",
+        description: `${medication.name} 已添加到常用药物`,
+      });
+    } catch (error) {
+      console.error('添加药物失败:', error);
+      toast({
+        title: "添加失败",
         description: "请检查网络连接后重试",
         variant: "destructive"
       });
@@ -391,9 +434,34 @@ const Settings = ({ onBack }: SettingsProps) => {
               ))}
             </div>
 
-            {/* 添加新药物 */}
+            {/* 常用药物快速添加 */}
             <div className="space-y-3 border-t pt-4">
-              <h4 className="font-medium text-gray-700">添加新药物</h4>
+              <h4 className="font-medium text-gray-700">常用梅尼埃药物（一键添加）</h4>
+              
+              <div className="grid gap-2 max-h-60 overflow-y-auto">
+                {commonMedications.map((medication, index) => (
+                  <Button
+                    key={index}
+                    onClick={() => addCommonMedication(medication)}
+                    variant="outline"
+                    className="justify-between text-left h-auto p-3"
+                    disabled={medications.some(m => m.name === medication.name)}
+                  >
+                    <div>
+                      <div className="font-medium">{medication.name}</div>
+                      <div className="text-xs text-gray-500">
+                        {getFrequencyLabel(medication.frequency)}
+                      </div>
+                    </div>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* 自定义添加药物 */}
+            <div className="space-y-3 border-t pt-4">
+              <h4 className="font-medium text-gray-700">添加其他药物</h4>
               
               <Input
                 placeholder="药物名称"
