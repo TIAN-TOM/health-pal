@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Calendar, Heart, MessageCircle, Check, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import type { Tables } from '@/integrations/supabase/types';
-import { getBeijingTime, formatBeijingTime } from '@/utils/beijingTime';
+import { getBeijingTime, formatBeijingTime, formatBeijingDateTime } from '@/utils/beijingTime';
 import CalendarView from './CalendarView';
 import HistoryView from './HistoryView';
 
@@ -260,7 +259,7 @@ const DailyDataHub = ({ onBack }: DailyDataHubProps) => {
                     </div>
                   </div>
                   <p className="text-xs text-gray-500 mt-2">
-                    当前时间: {format(getBeijingTime(), 'yyyy年MM月dd日 HH:mm', { locale: zhCN })} (北京时间)
+                    当前时间: {formatBeijingDateTime(getBeijingTime())} (北京时间)
                   </p>
                 </div>
               </CardContent>

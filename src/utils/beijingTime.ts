@@ -1,64 +1,38 @@
 
 // 北京时间工具函数 - 统一时间处理
 export const getBeijingTime = () => {
-  // 获取当前时间
   const now = new Date();
-  console.log('原始UTC时间:', now.toISOString());
-  
-  // 使用Intl.DateTimeFormat获取北京时间
-  const beijingDate = new Intl.DateTimeFormat('sv-SE', {
-    timeZone: 'Asia/Shanghai',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  }).format(now);
-  
-  const beijingTime = new Date(beijingDate);
-  console.log('转换后北京时间:', beijingTime.toISOString());
+  // 获取北京时间（UTC+8）
+  const beijingTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+  console.log('当前北京时间:', beijingTime.toISOString());
   return beijingTime;
 };
 
 // 获取北京时间的日期字符串 (YYYY-MM-DD)
 export const getBeijingDateString = (date?: Date) => {
-  const targetDate = date || new Date();
+  const targetDate = date || getBeijingTime();
   
-  // 使用Intl.DateTimeFormat获取北京时区的日期
-  const beijingDateStr = new Intl.DateTimeFormat('sv-SE', {
-    timeZone: 'Asia/Shanghai',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).format(targetDate);
+  // 确保使用北京时间
+  const beijingDate = new Date(targetDate.getTime() + (8 * 60 * 60 * 1000));
+  const year = beijingDate.getUTCFullYear();
+  const month = String(beijingDate.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(beijingDate.getUTCDate()).padStart(2, '0');
   
-  console.log('生成的北京日期字符串:', beijingDateStr);
-  return beijingDateStr;
+  const dateString = `${year}-${month}-${day}`;
+  console.log('生成的北京日期字符串:', dateString);
+  return dateString;
 };
 
 // 获取北京时间的ISO字符串
 export const getBeijingTimeISO = (date?: Date) => {
-  const targetDate = date || new Date();
-  
-  // 使用Intl.DateTimeFormat获取北京时间的完整格式
-  const beijingDateTimeStr = new Intl.DateTimeFormat('sv-SE', {
-    timeZone: 'Asia/Shanghai',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  }).format(targetDate);
-  
-  // 转换为ISO格式
-  const isoString = beijingDateTimeStr.replace(' ', 'T') + '.000Z';
+  const targetDate = date || getBeijingTime();
+  const beijingTime = new Date(targetDate.getTime() + (8 * 60 * 60 * 1000));
+  const isoString = beijingTime.toISOString();
   console.log('北京时间ISO字符串:', isoString);
   return isoString;
 };
 
-// 格式化北京时间显示
+// 格式化北京时间显示 - 统一格式
 export const formatBeijingTime = (dateString: string) => {
   try {
     if (!dateString) {
@@ -71,11 +45,12 @@ export const formatBeijingTime = (dateString: string) => {
       return '时间格式错误';
     }
     
-    // 转换为北京时间显示
+    // 转换为北京时间显示 - 使用统一格式
     return date.toLocaleString('zh-CN', {
       timeZone: 'Asia/Shanghai',
-      month: 'short',
-      day: 'numeric',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
@@ -108,18 +83,12 @@ export const getCurrentBeijingTime = () => {
 
 // 获取月份的第一天和最后一天（北京时间）
 export const getMonthRange = (date: Date) => {
-  // 先转换为北京时区的日期
-  const beijingDateStr = new Intl.DateTimeFormat('sv-SE', {
-    timeZone: 'Asia/Shanghai',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).format(date);
+  const beijingTime = new Date(date.getTime() + (8 * 60 * 60 * 1000));
+  const year = beijingTime.getUTCFullYear();
+  const month = beijingTime.getUTCMonth();
   
-  const [year, month] = beijingDateStr.split('-').map(Number);
-  
-  const firstDay = new Date(year, month - 1, 1);
-  const lastDay = new Date(year, month, 0);
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
   
   return {
     start: getBeijingDateString(firstDay),
@@ -146,4 +115,18 @@ export const deleteAllCheckins = async () => {
   }
 
   console.log('所有打卡记录已删除');
+};
+
+// 统一的北京时间显示格式
+export const formatBeijingDateTime = (date: Date = getBeijingTime()) => {
+  return date.toLocaleString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
 };

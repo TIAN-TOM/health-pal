@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, Calendar, Smile, Frown, Meh, RefreshCw } fro
 import { getDailyCheckins } from '@/services/dailyCheckinService';
 import { getMeniereRecords } from '@/services/meniereRecordService';
 import { useToast } from '@/hooks/use-toast';
-import { getBeijingTime, getBeijingDateString, getMonthRange, getTodayBeijingDate, deleteAllCheckins } from '@/utils/beijingTime';
+import { getBeijingTime, getBeijingDateString, getMonthRange, getTodayBeijingDate, deleteAllCheckins, formatBeijingDateTime } from '@/utils/beijingTime';
 
 interface DayData {
   date: string;
@@ -291,9 +291,9 @@ const CalendarView = () => {
               </div>
             </div>
             
-            {/* 当前时间显示 */}
+            {/* 当前时间显示 - 使用统一格式 */}
             <div className="pt-2 border-t text-xs text-gray-500 text-center">
-              当前北京时间: {beijingCurrentDate.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
+              当前北京时间: {formatBeijingDateTime(beijingCurrentDate)}
             </div>
           </div>
         )}
