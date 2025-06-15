@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
@@ -25,6 +24,7 @@ import CheckinStatus from '@/components/CheckinStatus';
 import DailyData from '@/components/DailyData';
 import RecordDetail from '@/components/RecordDetail';
 import MedicationManagement from '@/components/MedicationManagement';
+import CheckinCalendar from '@/components/CheckinCalendar';
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
@@ -162,6 +162,10 @@ const Index = () => {
 
   if (currentView === 'record-detail' && selectedRecord) {
     return <RecordDetail record={selectedRecord} onBack={navigateHome} />;
+  }
+
+  if (currentView === 'checkin-calendar') {
+    return <CheckinCalendar onBack={navigateHome} />;
   }
 
   return (
