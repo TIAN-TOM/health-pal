@@ -1,11 +1,38 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, Activity, Home, Pill, Mic } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
+interface MeniereRecord {
+  id: string;
+  type: 'dizziness' | 'lifestyle' | 'medication' | 'voice';
+  timestamp: string;
+  data: any;
+  note?: string;
+  severity?: string;
+  sleep?: string;
+  medications?: string[];
+}
+
 const HistoryView = () => {
-  const records = JSON.parse(localStorage.getItem('meniereRecords') || '[]');
-  const recentRecords = records.slice(-5).reverse(); // 显示最近5条记录
+  const [records, setRecords] = useState<MeniereRecord[]>([]);
+
+  useEffect(() => {
+    loadRecords();
+  }, []);
+
+  const loadRecords = () => {
+    try {
+      const storedRecords = localStorage.getItem('meniereRecords');
+      if (storedRecords) {
+        const parsedRecords = JSON.parse(storedRecords);
+        setRecords(parsedRecords.slice(-5).reverse()); // 显示最近5条记录
+      }
+    } catch (error) {
+      console.error('加载记录失败:', error);
+      setRecords([]);
+    }
+  };
 
   const getRecordIcon = (type: string) => {
     switch (type) {
@@ -17,7 +44,7 @@ const HistoryView = () => {
     }
   };
 
-  const getRecordTitle = (record: any) => {
+  const getRecordTitle = (record: MeniereRecord) => {
     switch (record.type) {
       case 'dizziness': 
         return `眩晕发作 - ${record.severity === 'mild' ? '轻微' : record.severity === 'moderate' ? '中等' : '严重'}`;
@@ -43,13 +70,13 @@ const HistoryView = () => {
     return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
   };
 
-  if (recentRecords.length === 0) {
+  if (records.length === 0) {
     return (
       <Card className="mb-6">
         <CardContent className="p-6 text-center">
           <Clock className="h-8 w-8 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-500">还没有记录</p>
-          <p className="text-sm text-gray-400">开始记录您的症状和生活状况吧</p>
+          <p className="text-gray-500 leading-relaxed">还没有记录</p>
+          <p className="text-sm text-gray-400 leading-relaxed mt-2">开始记录您的症状和生活状况吧</p>
         </CardContent>
       </Card>
     );
@@ -57,24 +84,26 @@ const HistoryView = () => {
 
   return (
     <div className="mb-6">
-      <h3 className="text-lg font-medium text-gray-800 mb-4">最近记录</h3>
+      <h3 className="text-lg font-medium text-gray-800 mb-4 leading-relaxed">最近记录</h3>
       <div className="space-y-3">
-        {recentRecords.map((record: any, index: number) => (
-          <Card key={index} className="hover:shadow-md transition-shadow duration-200">
+        {records.map((record: MeniereRecord, index: number) => (
+          <Card key={record.id || index} className="hover:shadow-md transition-shadow duration-200">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between min-h-[48px]">
                 <div className="flex items-center space-x-3">
-                  {getRecordIcon(record.type)}
-                  <div>
-                    <div className="font-medium text-gray-800">
+                  <div className="flex-shrink-0">
+                    {getRecordIcon(record.type)}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-800 leading-relaxed">
                       {getRecordTitle(record)}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 leading-relaxed">
                       {formatTime(record.timestamp)}
                     </div>
                   </div>
                 </div>
-                <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                <div className="w-3 h-3 rounded-full bg-green-400 flex-shrink-0"></div>
               </div>
             </CardContent>
           </Card>
