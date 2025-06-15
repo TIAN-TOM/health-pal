@@ -71,6 +71,7 @@ export const saveLifestyleRecord = async (record: {
   diet: string[];
   sleep: string;
   stress: string;
+  manualInput?: string;
 }) => {
   const { data, error } = await supabase
     .from('meniere_records')
@@ -79,6 +80,7 @@ export const saveLifestyleRecord = async (record: {
       diet: record.diet,
       sleep: record.sleep,
       stress: record.stress,
+      note: record.manualInput,
       data: record,
       user_id: (await supabase.auth.getUser()).data.user?.id!
     });
@@ -90,6 +92,7 @@ export const saveLifestyleRecord = async (record: {
 export const saveMedicationRecord = async (record: {
   medications: string[];
   dosage: string;
+  manualInput?: string;
 }) => {
   const { data, error } = await supabase
     .from('meniere_records')
@@ -97,6 +100,7 @@ export const saveMedicationRecord = async (record: {
       type: 'medication',
       medications: record.medications,
       dosage: record.dosage,
+      note: record.manualInput,
       data: record,
       user_id: (await supabase.auth.getUser()).data.user?.id!
     });
