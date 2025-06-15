@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { ArrowLeft, Download, Calendar, FileText, Database, ExternalLink, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -255,11 +256,15 @@ const DataExport = ({ onBack }: DataExportProps) => {
       return null;
     }).flat().filter(Boolean);
 
+    // 使用北京时间格式化导出日期范围
+    const beijingStartDate = new Date(startDate + 'T00:00:00');
+    const beijingEndDate = new Date(endDate + 'T23:59:59');
+    
     return {
       patientId: "MeniereUser01",
       exportDateRange: {
-        start: new Date(startDate).toISOString(),
-        end: new Date(endDate).toISOString()
+        start: new Date(beijingStartDate.toLocaleString("en-US", {timeZone: "Asia/Shanghai"})).toISOString(),
+        end: new Date(beijingEndDate.toLocaleString("en-US", {timeZone: "Asia/Shanghai"})).toISOString()
       },
       events
     };
@@ -406,6 +411,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
         startDateStr = customStartDate;
         endDateStr = customEndDate;
       } else {
+        // 动态计算时间范围 - 使用北京时间
         const now = getBeijingTime();
         const timeLimit = new Date(now);
         
@@ -669,3 +675,4 @@ const DataExport = ({ onBack }: DataExportProps) => {
 };
 
 export default DataExport;
+
