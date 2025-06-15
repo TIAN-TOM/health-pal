@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Calendar, Heart, MessageCircle, Check, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import type { Tables } from '@/integrations/supabase/types';
-import { getBeijingTime, formatBeijingTime, formatBeijingDateTime } from '@/utils/beijingTime';
+import { getBeijingTime } from '@/utils/beijingTime';
 import CalendarView from './CalendarView';
 import HistoryView from './HistoryView';
 
@@ -94,12 +95,6 @@ const DailyDataHub = ({ onBack }: DailyDataHubProps) => {
     setSelectedDate(date);
   };
 
-  const isCheckinDate = (date: Date) => {
-    return checkinDates.some(checkinDate => 
-      format(checkinDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
-    );
-  };
-
   const handleRecordClick = (record: any) => {
     console.log('记录被点击:', record);
   };
@@ -149,9 +144,6 @@ const DailyDataHub = ({ onBack }: DailyDataHubProps) => {
                       {todayCheckin.note && (
                         <p className="mt-2 text-sm">备注: {todayCheckin.note}</p>
                       )}
-                      <p className="text-xs text-green-600 mt-2">
-                        打卡时间: {formatBeijingTime(todayCheckin.created_at)} (北京时间)
-                      </p>
                     </div>
                   </div>
                 ) : (
@@ -258,9 +250,6 @@ const DailyDataHub = ({ onBack }: DailyDataHubProps) => {
                       <span>未打卡</span>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    当前时间: {formatBeijingDateTime(getBeijingTime())} (北京时间)
-                  </p>
                 </div>
               </CardContent>
             </Card>
