@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ArrowLeft, Download, Calendar, FileText, Database } from 'lucide-react';
+import { ArrowLeft, Download, Calendar, FileText, Database, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +17,28 @@ const DataExport = ({ onBack }: DataExportProps) => {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const { toast } = useToast();
+
+  const handleAIAssistant = (aiType: 'doubao' | 'deepseek') => {
+    const message = `我是梅尼埃症患者，想要分析我的症状记录。请帮我分析症状规律、诱发因素和治疗建议。我已经导出了记录文件，请告诉我如何更好地管理我的病情。`;
+    
+    if (aiType === 'doubao') {
+      window.open('doubao://chat?text=' + encodeURIComponent(message), '_blank');
+      setTimeout(() => {
+        toast({
+          title: "如果没有自动打开豆包APP",
+          description: "请手动复制记录文件到豆包中分析",
+        });
+      }, 1000);
+    } else if (aiType === 'deepseek') {
+      window.open('deepseek://chat?text=' + encodeURIComponent(message), '_blank');
+      setTimeout(() => {
+        toast({
+          title: "如果没有自动打开DeepSeek APP",
+          description: "请手动复制记录文件到DeepSeek中分析",
+        });
+      }, 1000);
+    }
+  };
 
   const handleExport = async (timeRange: 'week' | 'month' | 'custom') => {
     if (timeRange === 'custom') {
@@ -192,6 +213,39 @@ const DataExport = ({ onBack }: DataExportProps) => {
           </Button>
           <h1 className="text-xl font-bold">整理记录给医生/AI</h1>
         </div>
+
+        {/* AI助手快速咨询 */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center text-lg">
+              <ExternalLink className="h-5 w-5 mr-2" />
+              AI健康助手咨询
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <Button
+                onClick={() => handleAIAssistant('doubao')}
+                variant="outline"
+                className="flex items-center justify-center border-orange-300 text-orange-600 hover:border-orange-400 py-4"
+              >
+                <ExternalLink className="h-4 w-4 mr-1" />
+                豆包AI
+              </Button>
+              <Button
+                onClick={() => handleAIAssistant('deepseek')}
+                variant="outline"
+                className="flex items-center justify-center border-purple-300 text-purple-600 hover:border-purple-400 py-4"
+              >
+                <ExternalLink className="h-4 w-4 mr-1" />
+                DeepSeek
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500">
+              点击按钮跳转到AI应用进行健康咨询，可上传导出的记录文件进行分析
+            </p>
+          </CardContent>
+        </Card>
 
         <Tabs defaultValue="quick" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">

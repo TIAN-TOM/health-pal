@@ -129,10 +129,10 @@ const EducationCenter = ({ onBack }: EducationCenterProps) => {
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl text-center text-gray-800">
-              梅尼埃病科普中心
+              科普与心理支持中心
             </CardTitle>
             <p className="text-center text-gray-600">
-              了解疾病，科学应对，关爱自己
+              科学了解，积极应对，关爱自己
             </p>
           </CardHeader>
           <CardContent>

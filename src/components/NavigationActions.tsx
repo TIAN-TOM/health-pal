@@ -45,7 +45,7 @@ const NavigationActions = ({ onDataExport, onDailyData }: NavigationActionsProps
           <span className="mt-2 block">
             开发者：
             <a 
-              href="https://www.linkedin.com/in/yushun-tian-317580257/" 
+              href="https://www.linkedin.com/in/tom-tian-317580257/" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-800 underline ml-1"
