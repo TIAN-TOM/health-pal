@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -30,13 +29,49 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
     } catch (error) {
       console.error('加载药物失败:', error);
       // 如果加载失败，使用默认药物
-      setUserMedications([
-        { name: '倍他司汀', frequency: 'daily' },
-        { name: '地西泮', frequency: 'as_needed' },
-        { name: '异丙嗪', frequency: 'as_needed' },
-        { name: '利尿剂', frequency: 'daily' },
-        { name: '维生素B', frequency: 'daily' }
-      ]);
+      const fallbackMedications: Medication[] = [
+        {
+          id: 'fallback-1',
+          name: '倍他司汀',
+          frequency: 'daily',
+          user_id: 'fallback-user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 'fallback-2',
+          name: '地西泮',
+          frequency: 'as_needed',
+          user_id: 'fallback-user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 'fallback-3',
+          name: '异丙嗪',
+          frequency: 'as_needed',
+          user_id: 'fallback-user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 'fallback-4',
+          name: '利尿剂',
+          frequency: 'daily',
+          user_id: 'fallback-user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 'fallback-5',
+          name: '维生素B',
+          frequency: 'daily',
+          user_id: 'fallback-user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ];
+      setUserMedications(fallbackMedications);
     } finally {
       setLoadingMeds(false);
     }
@@ -151,7 +186,7 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
                         )}
                         <span>吃了"{medication.name}"</span>
                         <span className="text-sm opacity-75">
-                          {getFrequencyLabel(medication.frequency)}
+                          {getFrequencyLabel(medication.frequency || 'daily')}
                         </span>
                       </div>
                     </Button>

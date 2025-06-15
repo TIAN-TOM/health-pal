@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Phone, Volume2, VolumeX, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,11 +41,36 @@ const EmergencyMode = ({ onBack }: EmergencyModeProps) => {
     } catch (error) {
       console.error('加载联系人失败:', error);
       // 如果加载失败，使用默认联系人
-      setContacts([
-        { name: '老伴', phone: '138****8888', avatar: '👵' },
-        { name: '儿子', phone: '139****9999', avatar: '👨' },
-        { name: '女儿', phone: '136****6666', avatar: '👩' }
-      ]);
+      const fallbackContacts: Contact[] = [
+        {
+          id: 'fallback-1',
+          name: '老伴',
+          phone: '138****8888',
+          avatar: '👵',
+          user_id: 'fallback-user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 'fallback-2',
+          name: '儿子',
+          phone: '139****9999',
+          avatar: '👨',
+          user_id: 'fallback-user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 'fallback-3',
+          name: '女儿',
+          phone: '136****6666',
+          avatar: '👩',
+          user_id: 'fallback-user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ];
+      setContacts(fallbackContacts);
     } finally {
       setIsLoading(false);
     }
