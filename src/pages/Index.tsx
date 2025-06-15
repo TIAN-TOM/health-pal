@@ -116,7 +116,12 @@ const Index = () => {
   }
 
   if (currentView === 'medication-record') {
-    return <MedicationRecord onBack={navigateHome} />;
+    return (
+      <MedicationRecord 
+        onBack={navigateHome} 
+        onNavigateToMedicationManagement={() => navigateTo('medication-management')}
+      />
+    );
   }
 
   if (currentView === 'data-export') {

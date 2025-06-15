@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Check, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,9 +10,10 @@ import { Medication, getMedications } from '@/services/medicationsService';
 
 interface MedicationRecordProps {
   onBack: () => void;
+  onNavigateToMedicationManagement?: () => void;
 }
 
-const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
+const MedicationRecord = ({ onBack, onNavigateToMedicationManagement }: MedicationRecordProps) => {
   const [medications, setMedications] = useState<string[]>([]);
   const [dosage, setDosage] = useState<string>('');
   const [note, setNote] = useState('');
@@ -86,31 +88,6 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
     );
   };
 
-  const handleAIAssistant = (aiType: 'doubao' | 'deepseek') => {
-    const medications_text = medications.join('、');
-    const dosage_text = dosage === 'normal' ? '正常剂量' : dosage === 'half' ? '减半剂量' : dosage === 'extra' ? '加强剂量' : '';
-    
-    const record_text = `我有梅尼埃症，今天服用的药物：${medications_text}，用药剂量：${dosage_text}。${note ? `详细说明：${note}` : ''}请给我一些用药建议和指导。`;
-    
-    if (aiType === 'doubao') {
-      window.open('doubao://chat?text=' + encodeURIComponent(record_text), '_blank');
-      setTimeout(() => {
-        toast({
-          title: "如果没有自动打开豆包APP",
-          description: "请手动复制用药记录到豆包中咨询",
-        });
-      }, 1000);
-    } else if (aiType === 'deepseek') {
-      window.open('deepseek://chat?text=' + encodeURIComponent(record_text), '_blank');
-      setTimeout(() => {
-        toast({
-          title: "如果没有自动打开DeepSeek APP",
-          description: "请手动复制用药记录到DeepSeek中咨询",
-        });
-      }, 1000);
-    }
-  };
-
   const handleSave = async () => {
     if (medications.length === 0) {
       toast({
@@ -157,6 +134,12 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
     }
   };
 
+  const handleGoToMedicationManagement = () => {
+    if (onNavigateToMedicationManagement) {
+      onNavigateToMedicationManagement();
+    }
+  };
+
   if (loadingMeds) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4 flex items-center justify-center">
@@ -191,52 +174,71 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* 药物选择 */}
-            <div>
-              <h3 className="text-lg font-medium mb-4 text-gray-700">
-                选择药物 (可多选)
-              </h3>
-              {userMedications.length > 0 ? (
-                <div className="grid gap-3">
-                  {userMedications.map((medication, index) => (
-                    <Button
-                      key={medication.id || index}
-                      onClick={() => toggleMedication(medication.name)}
-                      variant={medications.includes(medication.name) ? "default" : "outline"}
-                      className={`w-full py-4 text-lg ${
-                        medications.includes(medication.name)
-                          ? 'bg-purple-500 hover:bg-purple-600 text-white' 
-                          : 'border-2 hover:border-purple-300'
-                      }`}
-                    >
-                      <div className="flex flex-col items-center">
-                        {medications.includes(medication.name) && (
-                          <Check className="mr-2 h-5 w-5" />
-                        )}
-                        <span>吃了"{medication.name}"</span>
-                        <span className="text-sm opacity-75">
-                          {getFrequencyLabel(medication.frequency || 'daily')}
-                        </span>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="text-gray-600 mb-4">还没有设置常用药物</div>
-                  <Button
-                    onClick={onBack}
-                    variant="outline"
-                    className="border-purple-300 text-purple-600 hover:border-purple-400"
-                  >
-                    去设置常用药物
-                  </Button>
-                </div>
-              )}
-            </div>
+            {/* 提示信息 */}
+            {userMedications.length === 0 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm text-yellow-800 mb-3">
+                  💡 请先添加常用药物才能进行用药记录
+                </p>
+                <Button
+                  onClick={handleGoToMedicationManagement}
+                  variant="outline"
+                  className="w-full border-purple-300 text-purple-600 hover:border-purple-400"
+                >
+                  去设置常用药物
+                </Button>
+              </div>
+            )}
 
             {userMedications.length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800 mb-3">
+                  💡 如需添加更多药物，请先到常用药物管理中设置
+                </p>
+                <Button
+                  onClick={handleGoToMedicationManagement}
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-300 text-blue-600 hover:border-blue-400"
+                >
+                  管理常用药物
+                </Button>
+              </div>
+            )}
+
+            {/* 药物选择 */}
+            {userMedications.length > 0 && (
               <>
+                <div>
+                  <h3 className="text-lg font-medium mb-4 text-gray-700">
+                    选择药物 (可多选)
+                  </h3>
+                  <div className="grid gap-3">
+                    {userMedications.map((medication, index) => (
+                      <Button
+                        key={medication.id || index}
+                        onClick={() => toggleMedication(medication.name)}
+                        variant={medications.includes(medication.name) ? "default" : "outline"}
+                        className={`w-full py-4 text-lg ${
+                          medications.includes(medication.name)
+                            ? 'bg-purple-500 hover:bg-purple-600 text-white' 
+                            : 'border-2 hover:border-purple-300'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center">
+                          {medications.includes(medication.name) && (
+                            <Check className="mr-2 h-5 w-5" />
+                          )}
+                          <span>吃了"{medication.name}"</span>
+                          <span className="text-sm opacity-75">
+                            {getFrequencyLabel(medication.frequency || 'daily')}
+                          </span>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* 用药剂量 */}
                 <div>
                   <h3 className="text-lg font-medium mb-4 text-gray-700">
@@ -279,36 +281,6 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
                     className="w-full"
                     rows={3}
                   />
-                </div>
-
-                {/* AI助手按钮 */}
-                <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700">
-                    AI健康助手咨询
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleAIAssistant('doubao')}
-                      className="flex items-center justify-center border-orange-300 text-orange-600 hover:border-orange-400"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      豆包AI
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleAIAssistant('deepseek')}
-                      className="flex items-center justify-center border-purple-300 text-purple-600 hover:border-purple-400"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      DeepSeek
-                    </Button>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    点击按钮跳转到对应AI应用进行健康咨询
-                  </p>
                 </div>
 
                 {/* 温馨提示 */}
