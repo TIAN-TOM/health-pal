@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,7 +47,7 @@ const AdminUserManagement = () => {
 
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, full_name, avatar_url')
+        .select('id, full_name')
         .in('id', userIDs);
 
       if (profilesError) throw profilesError;
@@ -62,7 +63,6 @@ const AdminUserManagement = () => {
           id: user.id,
           email: user.email || 'N/A',
           full_name: profile.full_name || '未设置',
-          avatar_url: profile.avatar_url || '',
           role: user.app_metadata?.role || 'user',
           created_at: user.created_at,
           updated_at: user.updated_at,
@@ -185,72 +185,6 @@ const AdminUserManagement = () => {
     }
   };
 
-  const handleBanUser = async (user: UserWithProfile) => {
-    if (!confirm(`确定要禁用用户 ${user.email} 吗？`)) return;
-
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.admin.updateUserById(user.id, {
-        banned_until: new Date().toISOString(),
-      });
-
-      if (error) throw error;
-
-      // Optimistically update the user list
-      setUsers(prevUsers =>
-        prevUsers.map(u =>
-          u.id === user.id ? { ...u, banned_until: new Date().toISOString() } : u
-        )
-      );
-
-      toast({
-        title: "禁用用户成功",
-        description: `用户 ${user.email} 已被禁用`
-      });
-    } catch (error: any) {
-      toast({
-        title: "禁用用户失败",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUnbanUser = async (user: UserWithProfile) => {
-    if (!confirm(`确定要解禁用户 ${user.email} 吗？`)) return;
-
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.admin.updateUserById(user.id, {
-        banned_until: null,
-      });
-
-      if (error) throw error;
-
-      // Optimistically update the user list
-      setUsers(prevUsers =>
-        prevUsers.map(u =>
-          u.id === user.id ? { ...u, banned_until: null } : u
-        )
-      );
-
-      toast({
-        title: "解禁用户成功",
-        description: `用户 ${user.email} 已被解禁`
-      });
-    } catch (error: any) {
-      toast({
-        title: "解禁用户失败",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleViewUser = async (user: UserWithProfile) => {
     setSelectedUser(user);
     setCurrentView('detail');
@@ -340,25 +274,6 @@ const AdminUserManagement = () => {
                       <Trash2 className="h-4 w-4 mr-2" />
                       删除
                     </Button>
-                    {user.banned_until ? (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleUnbanUser(user)}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-                        解禁
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleBanUser(user)}
-                      >
-                        <XCircle className="h-4 w-4 mr-2 text-red-500" />
-                        禁用
-                      </Button>
-                    )}
                   </div>
                 </div>
               </CardContent>
