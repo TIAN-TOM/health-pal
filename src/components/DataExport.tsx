@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { getBeijingTime, getBeijingDateString } from '@/utils/beijingTime';
+import { getBeijingTime, getBeijingDateString, getCurrentBeijingTime } from '@/utils/beijingTime';
 import { getRecordsByDateRange, generateJSONFormat, generateTextFormat } from '@/services/dataExportService';
 import QuickExportSection from './export/QuickExportSection';
 import CustomExportSection from './export/CustomExportSection';
@@ -27,8 +27,16 @@ const DataExport = ({ onBack }: DataExportProps) => {
     const oneMonthAgo = new Date(today);
     oneMonthAgo.setMonth(today.getMonth() - 1);
     
-    setCustomEndDate(getBeijingDateString(today));
-    setCustomStartDate(getBeijingDateString(oneMonthAgo));
+    const todayStr = getBeijingDateString(today);
+    const oneMonthAgoStr = getBeijingDateString(oneMonthAgo);
+    
+    console.log('设置默认日期范围:', oneMonthAgoStr, '-', todayStr);
+    
+    setCustomEndDate(todayStr);
+    setCustomStartDate(oneMonthAgoStr);
+    
+    // 打印当前北京时间
+    getCurrentBeijingTime();
   }, []);
 
   const copyToClipboard = async (text: string, format: 'json' | 'text') => {
@@ -52,7 +60,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
   const handleQuickExport = async (timeRange: 'week' | 'month', format: 'json' | 'text') => {
     setLoading(true);
     try {
-      // 动态计算时间范围 - 使用北京时间
+      // 动态计算时间范围 - 使用最新的北京时间
       const now = getBeijingTime();
       const timeLimit = new Date(now);
       
@@ -62,9 +70,13 @@ const DataExport = ({ onBack }: DataExportProps) => {
         timeLimit.setMonth(now.getMonth() - 1);
       }
       
-      const records = await getRecordsByDateRange(timeLimit, now);
       const startDateStr = getBeijingDateString(timeLimit);
       const endDateStr = getBeijingDateString(now);
+      
+      console.log('快速导出时间范围:', startDateStr, '-', endDateStr);
+      console.log('使用的北京时间:', now.toISOString());
+      
+      const records = await getRecordsByDateRange(timeLimit, now);
 
       console.log('导出的记录数量:', records?.length || 0);
 
@@ -120,6 +132,8 @@ const DataExport = ({ onBack }: DataExportProps) => {
 
     setLoading(true);
     try {
+      console.log('自定义导出时间范围:', customStartDate, '-', customEndDate);
+      
       const records = await getRecordsByDateRange(startDate, endDate);
 
       console.log('导出的记录数量:', records?.length || 0);

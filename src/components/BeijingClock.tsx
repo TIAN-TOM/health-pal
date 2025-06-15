@@ -1,14 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
-import { getBeijingTime } from '@/utils/beijingTime';
+import { getBeijingTime, getCurrentBeijingTime } from '@/utils/beijingTime';
 
 const BeijingClock = () => {
   const [currentTime, setCurrentTime] = useState(getBeijingTime());
 
   useEffect(() => {
+    // 初始化时打印当前北京时间
+    getCurrentBeijingTime();
+    
     const timer = setInterval(() => {
-      setCurrentTime(getBeijingTime());
+      const newTime = getBeijingTime();
+      setCurrentTime(newTime);
+      
+      // 每分钟打印一次北京时间用于调试
+      if (newTime.getSeconds() === 0) {
+        console.log('北京时间更新:', newTime.toISOString());
+      }
     }, 1000);
 
     return () => clearInterval(timer);

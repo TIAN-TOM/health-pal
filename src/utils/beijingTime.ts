@@ -1,18 +1,26 @@
 
 // 北京时间工具函数 - 统一时间处理
 export const getBeijingTime = () => {
-  return new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+  // 获取当前UTC时间，然后转换为北京时间
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const beijingTime = new Date(utc + (8 * 3600000)); // 北京时间 UTC+8
+  return beijingTime;
 };
 
 // 获取北京时间的日期字符串 (YYYY-MM-DD)
 export const getBeijingDateString = (date?: Date) => {
-  const beijingTime = date ? new Date(date.toLocaleString("en-US", {timeZone: "Asia/Shanghai"})) : getBeijingTime();
+  const beijingTime = date ? 
+    new Date(date.getTime() + (8 * 3600000) - (date.getTimezoneOffset() * 60000)) : 
+    getBeijingTime();
   return beijingTime.toISOString().split('T')[0];
 };
 
 // 获取北京时间的ISO字符串
 export const getBeijingTimeISO = (date?: Date) => {
-  const beijingTime = date ? new Date(date.toLocaleString("en-US", {timeZone: "Asia/Shanghai"})) : getBeijingTime();
+  const beijingTime = date ? 
+    new Date(date.getTime() + (8 * 3600000) - (date.getTimezoneOffset() * 60000)) : 
+    getBeijingTime();
   return beijingTime.toISOString();
 };
 
@@ -30,7 +38,7 @@ export const formatBeijingTime = (dateString: string) => {
     }
     
     // 转换为北京时间
-    const beijingTime = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+    const beijingTime = new Date(date.getTime() + (8 * 3600000) - (date.getTimezoneOffset() * 60000));
     
     return beijingTime.toLocaleString('zh-CN', {
       month: 'short',
@@ -59,12 +67,13 @@ export const isToday = (dateString: string) => {
 export const getCurrentBeijingTime = () => {
   const beijingTime = getBeijingTime();
   console.log('当前北京时间:', beijingTime.toISOString());
+  console.log('北京时间日期字符串:', getBeijingDateString());
   return beijingTime;
 };
 
 // 获取月份的第一天和最后一天（北京时间）
 export const getMonthRange = (date: Date) => {
-  const beijingTime = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+  const beijingTime = new Date(date.getTime() + (8 * 3600000) - (date.getTimezoneOffset() * 60000));
   const year = beijingTime.getFullYear();
   const month = beijingTime.getMonth();
   

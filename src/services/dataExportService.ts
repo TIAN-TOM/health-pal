@@ -1,6 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { getBeijingTime, getBeijingDateString } from '@/utils/beijingTime';
+import { getBeijingTime, getBeijingDateString, getCurrentBeijingTime } from '@/utils/beijingTime';
 
 export const getRecordsByDateRange = async (startDate: Date, endDate: Date) => {
   try {
@@ -9,8 +8,9 @@ export const getRecordsByDateRange = async (startDate: Date, endDate: Date) => {
       throw new Error('用户未登录');
     }
 
-    console.log('获取用户记录，用户ID:', user.id);
-    console.log('日期范围:', startDate.toISOString(), '-', endDate.toISOString());
+    // 打印当前北京时间用于调试
+    getCurrentBeijingTime();
+    console.log('查询日期范围:', startDate.toISOString(), '-', endDate.toISOString());
 
     // 获取所有用户记录
     const { data: records, error: recordsError } = await supabase
@@ -101,9 +101,9 @@ const convertSeverityToNumber = (severity: string): number => {
 
 export const generateJSONFormat = (records: any[], startDate: string, endDate: string) => {
   const events = records.map(record => {
-    // 将时间戳转换为北京时间
+    // 确保使用正确的北京时间
     const originalTime = new Date(record.timestamp || record.created_at);
-    const beijingTime = new Date(originalTime.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+    const beijingTime = new Date(originalTime.getTime() + (8 * 3600000) - (originalTime.getTimezoneOffset() * 60000));
     const timestamp = beijingTime.toISOString();
     
     if (record.type === 'dizziness') {
@@ -188,8 +188,9 @@ export const generateJSONFormat = (records: any[], startDate: string, endDate: s
     return null;
   }).flat().filter(Boolean);
 
-  // 获取当前北京时间并动态计算日期范围
-  const now = getBeijingTime();
+  // 使用动态计算的北京时间日期范围
+  const currentBeijingTime = getBeijingTime();
+  console.log('导出数据时的北京时间:', currentBeijingTime.toISOString());
   
   return {
     patientId: "MeniereUser01",
@@ -197,17 +198,20 @@ export const generateJSONFormat = (records: any[], startDate: string, endDate: s
       start: new Date(startDate + 'T00:00:00').toISOString(),
       end: new Date(endDate + 'T23:59:59').toISOString()
     },
+    exportedAt: currentBeijingTime.toISOString(),
     events
   };
 };
 
 export const generateTextFormat = (records: any[], startDate: string, endDate: string) => {
-  let text = `梅尼埃症数据记录 (${startDate} - ${endDate})\n\n`;
+  const currentBeijingTime = getBeijingTime();
+  let text = `梅尼埃症数据记录 (${startDate} - ${endDate})\n`;
+  text += `导出时间: ${currentBeijingTime.toLocaleString('zh-CN')} (北京时间)\n\n`;
   
   // 按日期分组 - 使用北京时间
   const recordsByDate = records.reduce((acc, record) => {
     const originalTime = new Date(record.timestamp || record.created_at);
-    const beijingTime = new Date(originalTime.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+    const beijingTime = new Date(originalTime.getTime() + (8 * 3600000) - (originalTime.getTimezoneOffset() * 60000));
     const date = beijingTime.toLocaleDateString('zh-CN');
     if (!acc[date]) acc[date] = [];
     acc[date].push(record);
@@ -219,7 +223,7 @@ export const generateTextFormat = (records: any[], startDate: string, endDate: s
     
     dayRecords.forEach(record => {
       const originalTime = new Date(record.timestamp || record.created_at);
-      const beijingTime = new Date(originalTime.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+      const beijingTime = new Date(originalTime.getTime() + (8 * 3600000) - (originalTime.getTimezoneOffset() * 60000));
       const time = beijingTime.toLocaleTimeString('zh-CN', { 
         hour: '2-digit', 
         minute: '2-digit' 
