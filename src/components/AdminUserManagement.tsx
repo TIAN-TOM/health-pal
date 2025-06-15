@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,11 +11,12 @@ import { zhCN } from 'date-fns/locale';
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserProfile = Tables<'profiles'>;
+type UserRole = 'admin' | 'user';
 
 interface UserWithProfile extends UserProfile {
   email: string;
   auth_id: string;
-  role: string;
+  role: UserRole;
   created_at: string;
   updated_at: string;
 }
@@ -29,7 +29,7 @@ const AdminUserManagement = () => {
   const [currentView, setCurrentView] = useState<'list' | 'detail'>('list');
   const [selectedUser, setSelectedUser] = useState<UserWithProfile | null>(null);
   const [isEditingRole, setIsEditingRole] = useState(false);
-  const [newRole, setNewRole] = useState('');
+  const [newRole, setNewRole] = useState<UserRole>('user');
   const { toast } = useToast();
   const [userCheckins, setUserCheckins] = useState<{ [userId: string]: any[] }>({});
 
@@ -86,7 +86,7 @@ const AdminUserManagement = () => {
         auth_id: profile.id,
         email: profile.email || 'N/A',
         full_name: profile.full_name || '未设置',
-        role: rolesMap.get(profile.id) || 'user',
+        role: (rolesMap.get(profile.id) || 'user') as UserRole,
         created_at: profile.created_at,
         updated_at: profile.updated_at
       }));
@@ -163,7 +163,7 @@ const AdminUserManagement = () => {
         .from('user_roles')
         .upsert({
           user_id: selectedUser.id,
-          role: newRole
+          role: newRole as UserRole
         }, {
           onConflict: 'user_id'
         });
@@ -368,7 +368,7 @@ const AdminUserManagement = () => {
                 <CardContent className="p-6 space-y-6">
                   <div>
                     <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-400">选择角色</label>
-                    <Select value={newRole} onValueChange={(value) => setNewRole(value)}>
+                    <Select value={newRole} onValueChange={(value) => setNewRole(value as UserRole)}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="选择角色" />
                       </SelectTrigger>
