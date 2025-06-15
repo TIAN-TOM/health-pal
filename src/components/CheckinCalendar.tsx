@@ -7,9 +7,10 @@ import { format } from 'date-fns';
 
 interface CheckinCalendarProps {
   onDateSelect?: (date: Date) => void;
+  onBack?: () => void;
 }
 
-const CheckinCalendar = ({ onDateSelect }: CheckinCalendarProps) => {
+const CheckinCalendar = ({ onDateSelect, onBack }: CheckinCalendarProps) => {
   const [checkinDates, setCheckinDates] = useState<Date[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 

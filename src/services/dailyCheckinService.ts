@@ -143,7 +143,7 @@ export const getCheckinsByDateRange = async (
   return data || [];
 };
 
-// Add the missing getCheckinHistory function
-export const getCheckinHistory = async (): Promise<DailyCheckin[]> => {
-  return getRecentCheckins(30); // Get last 30 check-ins for history
+// Updated function to accept limit parameter
+export const getCheckinHistory = async (limit: number = 30): Promise<DailyCheckin[]> => {
+  return getRecentCheckins(limit);
 };
