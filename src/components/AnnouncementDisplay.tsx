@@ -46,10 +46,29 @@ const AnnouncementDisplay = () => {
     localStorage.setItem('dismissedAnnouncements', JSON.stringify(newDismissedIds));
   };
 
-  // 获取北京时间格式化
+  // 获取北京时间格式化 - 修复日期处理
   const formatBeijingTime = (dateString: string) => {
-    const date = new Date(dateString + '+08:00');
-    return format(date, 'MM月dd日 HH:mm', { locale: zhCN });
+    try {
+      if (!dateString) {
+        return '未知时间';
+      }
+      
+      // 直接使用 date-fns 解析日期，不手动添加时区
+      const date = new Date(dateString);
+      
+      // 检查日期是否有效
+      if (isNaN(date.getTime())) {
+        return '时间格式错误';
+      }
+      
+      // 转换为北京时间 (UTC+8)
+      const beijingTime = new Date(date.getTime() + (8 * 60 * 60 * 1000));
+      
+      return format(beijingTime, 'MM月dd日 HH:mm', { locale: zhCN });
+    } catch (error) {
+      console.error('日期格式化失败:', error, '原始日期:', dateString);
+      return '时间格式错误';
+    }
   };
 
   const visibleAnnouncements = announcements.filter(
