@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BadgeInfo, Edit, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
 
 type UserRole = 'admin' | 'user';
 
@@ -50,15 +48,25 @@ const UserListView = ({
         return '未知时间';
       }
       
+      // 直接创建Date对象，然后转换为北京时间显示
       const date = new Date(dateString);
       
       if (isNaN(date.getTime())) {
         return '时间格式错误';
       }
       
-      const beijingTime = new Date(date.getTime() + (8 * 60 * 60 * 1000));
+      // 使用toLocaleString直接获取北京时间
+      const beijingTimeString = date.toLocaleString('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
       
-      return format(beijingTime, 'yyyy年MM月dd日 HH:mm', { locale: zhCN });
+      return beijingTimeString.replace(/\//g, '年').replace(/,/, '日 ') + '分';
     } catch (error) {
       console.error('日期格式化失败:', error, '原始日期:', dateString);
       return '时间格式错误';

@@ -16,10 +16,19 @@ interface DailyDataProps {
 const DailyData = ({ onBack }: DailyDataProps) => {
   const [records, setRecords] = useState<MeniereRecord[]>([]);
   const [checkins, setCheckins] = useState<any[]>([]);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
+  // 获取北京时间的今日日期
+  const getBeijingDateString = () => {
+    const now = new Date();
+    const beijingTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+    return beijingTime.toISOString().split('T')[0];
+  };
+
   useEffect(() => {
+    // 设置默认选中今天的日期
+    setSelectedDate(getBeijingDateString());
     loadData();
   }, []);
 
@@ -30,6 +39,8 @@ const DailyData = ({ onBack }: DailyDataProps) => {
         getRecordsForPeriod(30),
         getCheckinHistory(30)
       ]);
+      console.log('加载的记录数据:', recordsData);
+      console.log('加载的打卡数据:', checkinsData);
       setRecords(recordsData || []);
       setCheckins(checkinsData || []);
     } catch (error) {
@@ -53,9 +64,10 @@ const DailyData = ({ onBack }: DailyDataProps) => {
   const getLast7Days = () => {
     const days = [];
     for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      days.push(date.toISOString().split('T')[0]);
+      const now = new Date();
+      const beijingTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+      beijingTime.setDate(beijingTime.getDate() - i);
+      days.push(beijingTime.toISOString().split('T')[0]);
     }
     return days;
   };
@@ -76,7 +88,7 @@ const DailyData = ({ onBack }: DailyDataProps) => {
   };
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    const date = new Date(dateStr + 'T00:00:00');
     return date.toLocaleDateString('zh-CN', { 
       month: 'short', 
       day: 'numeric',
@@ -264,24 +276,32 @@ const DailyData = ({ onBack }: DailyDataProps) => {
                     <div>
                       <h4 className="font-medium mb-2">详细记录</h4>
                       <div className="space-y-2">
-                        {dayRecords.map(record => (
-                          <div key={record.id} className="p-2 bg-gray-50 rounded text-sm">
-                            <div className="flex justify-between items-center">
-                              <div className="font-medium">
-                                {record.type === 'dizziness' && '眩晕记录'}
-                                {record.type === 'lifestyle' && '生活记录'}
-                                {record.type === 'medication' && '用药记录'}
-                              </div>
-                              <div className="text-gray-600 flex items-center">
-                                <Clock className="h-3 w-3 mr-1" />
-                                {new Date(record.timestamp).toLocaleTimeString('zh-CN', {
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
+                        {dayRecords.map(record => {
+                          // 格式化记录时间为北京时间
+                          const recordTime = new Date(record.timestamp).toLocaleString('zh-CN', {
+                            timeZone: 'Asia/Shanghai',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
+                          });
+                          
+                          return (
+                            <div key={record.id} className="p-2 bg-gray-50 rounded text-sm">
+                              <div className="flex justify-between items-center">
+                                <div className="font-medium">
+                                  {record.type === 'dizziness' && '眩晕记录'}
+                                  {record.type === 'lifestyle' && '生活记录'}
+                                  {record.type === 'medication' && '用药记录'}
+                                  {record.type === 'voice' && '语音记录'}
+                                </div>
+                                <div className="text-gray-600 flex items-center">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  {recordTime}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}
