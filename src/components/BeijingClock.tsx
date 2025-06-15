@@ -13,10 +13,12 @@ const BeijingClock = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // 获取正确的北京时间 (Asia/Shanghai)
+  // 获取正确的北京时间 (UTC+8)
   const getBeijingTime = () => {
     const now = new Date();
-    return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+    // 创建一个新的Date对象，直接设置为北京时间
+    const beijingTime = new Date(now.getTime() + (8 * 60 * 60 * 1000) - (now.getTimezoneOffset() * 60 * 1000));
+    return beijingTime;
   };
 
   const beijingTime = getBeijingTime();
@@ -40,6 +42,8 @@ const BeijingClock = () => {
       day: 'numeric'
     }) + ' ' + weekday;
   };
+
+  console.log('北京时钟显示时间:', beijingTime.toISOString(), '本地时间:', new Date().toISOString());
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-sm border">

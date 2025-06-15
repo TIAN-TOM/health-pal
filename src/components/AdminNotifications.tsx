@@ -104,6 +104,35 @@ const AdminNotifications = () => {
     }
   };
 
+  // 格式化为北京时间
+  const formatBeijingTime = (dateString: string) => {
+    try {
+      if (!dateString) {
+        return '未知时间';
+      }
+      
+      const date = new Date(dateString);
+      
+      if (isNaN(date.getTime())) {
+        return '时间格式错误';
+      }
+      
+      return date.toLocaleString('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+    } catch (error) {
+      console.error('日期格式化失败:', error, '原始日期:', dateString);
+      return '时间格式错误';
+    }
+  };
+
   const unreadCount = notifications.filter(notif => !notif.is_read).length;
 
   return (
@@ -153,7 +182,7 @@ const AdminNotifications = () => {
                       {notification.message}
                     </p>
                     <p className="text-xs text-gray-400 mt-2">
-                      {new Date(notification.created_at).toLocaleString()}
+                      {formatBeijingTime(notification.created_at)} (北京时间)
                     </p>
                   </div>
                   {!notification.is_read && (

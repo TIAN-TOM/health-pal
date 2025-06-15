@@ -7,8 +7,9 @@ type DailyCheckin = Tables<'daily_checkins'>;
 // 获取正确的北京时间
 const getBeijingTime = () => {
   const now = new Date();
-  // 使用正确的时区转换方法
-  return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+  // 创建一个新的Date对象，直接设置为北京时间
+  const beijingTime = new Date(now.getTime() + (8 * 60 * 60 * 1000) - (now.getTimezoneOffset() * 60 * 1000));
+  return beijingTime;
 };
 
 // 获取北京时间的日期字符串 (YYYY-MM-DD)
@@ -35,6 +36,7 @@ export const createCheckin = async (
   }
 
   const checkinDate = getBeijingDateString();
+  console.log('打卡使用的北京时间日期:', checkinDate);
 
   // 检查今日是否已打卡
   const { data: existingCheckin } = await supabase
@@ -76,6 +78,7 @@ export const createCheckin = async (
 
   // 异步调用通知管理员的Edge Function
   try {
+    console.log('发送通知，使用日期:', checkinDate);
     await supabase.functions.invoke('notify-admin-checkin', {
       body: {
         user_id: user.id,

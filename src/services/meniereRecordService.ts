@@ -21,8 +21,9 @@ export interface MeniereRecord {
 // 获取正确的北京时间
 const getBeijingTime = () => {
   const now = new Date();
-  // 使用正确的时区转换方法
-  return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+  // 创建一个新的Date对象，直接设置为北京时间
+  const beijingTime = new Date(now.getTime() + (8 * 60 * 60 * 1000) - (now.getTimezoneOffset() * 60 * 1000));
+  return beijingTime;
 };
 
 // 获取正确的北京时间ISO字符串
@@ -40,6 +41,7 @@ export const saveMeniereRecord = async (record: MeniereRecord) => {
   }
 
   const beijingTime = getBeijingTimeISO();
+  console.log('保存梅尼埃记录，使用北京时间:', beijingTime);
 
   const { data, error } = await supabase
     .from('meniere_records')
