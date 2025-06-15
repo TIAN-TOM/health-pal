@@ -7,7 +7,12 @@ interface MeniereRecord {
   note?: string;
   severity?: string;
   sleep?: string;
+  stress?: string;
+  diet?: string[];
   medications?: string[];
+  dosage?: string;
+  duration?: string;
+  symptoms?: string[];
 }
 
 class SupabaseService {
@@ -107,26 +112,64 @@ class SupabaseService {
     );
 
     const jsonData = JSON.stringify(filteredRecords, null, 2);
-    const textData = this.formatRecordsAsText(filteredRecords);
+    const textData = this.formatRecordsAsText(filteredRecords, timeRange);
 
     return { json: jsonData, text: textData };
   }
 
-  private formatRecordsAsText(records: MeniereRecord[]): string {
-    let text = `梅尼埃症记录报告\n生成时间: ${new Date().toLocaleString('zh-CN')}\n\n`;
+  private formatRecordsAsText(records: MeniereRecord[], timeRange: string): string {
+    let text = `梅尼埃症记录报告\n`;
+    text += `生成时间: ${new Date().toLocaleString('zh-CN')}\n`;
+    text += `时间范围: ${timeRange === 'week' ? '最近一周' : '最近一个月'}\n`;
+    text += `记录总数: ${records.length} 条\n\n`;
+    
+    // 按类型统计
+    const typeStats = records.reduce((acc, record) => {
+      acc[record.type] = (acc[record.type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    text += `记录类型统计:\n`;
+    Object.entries(typeStats).forEach(([type, count]) => {
+      text += `- ${this.getRecordTypeText(type)}: ${count} 条\n`;
+    });
+    text += '\n';
+    
+    text += '详细记录:\n';
+    text += '=' .repeat(50) + '\n\n';
     
     records.forEach((record, index) => {
-      text += `${index + 1}. ${new Date(record.timestamp).toLocaleString('zh-CN')}\n`;
-      text += `类型: ${this.getRecordTypeText(record.type)}\n`;
+      text += `${index + 1}. 【${this.getRecordTypeText(record.type)}】\n`;
+      text += `时间: ${new Date(record.timestamp).toLocaleString('zh-CN')}\n`;
       
       if (record.type === 'dizziness') {
-        text += `严重程度: ${record.severity}\n`;
+        text += `严重程度: ${record.severity || record.data?.severity || '未记录'}\n`;
+        text += `持续时间: ${record.duration || record.data?.duration || '未记录'}\n`;
+        const symptoms = record.symptoms || record.data?.symptoms || [];
+        if (symptoms.length > 0) {
+          text += `伴随症状: ${symptoms.join('、')}\n`;
+        }
       } else if (record.type === 'lifestyle') {
-        text += `睡眠状况: ${record.sleep}\n`;
+        text += `睡眠质量: ${record.sleep || record.data?.sleep || '未记录'}\n`;
+        text += `压力水平: ${record.stress || record.data?.stress || '未记录'}\n`;
+        const diet = record.diet || record.data?.diet || [];
+        if (diet.length > 0) {
+          text += `饮食情况: ${diet.join('、')}\n`;
+        }
       } else if (record.type === 'medication') {
-        text += `用药: ${record.medications?.join(', ') || '未记录'}\n`;
-      } else if (record.type === 'voice' && record.note) {
-        text += `备注: ${record.note}\n`;
+        const medications = record.medications || record.data?.medications || [];
+        if (medications.length > 0) {
+          text += `用药情况: ${medications.join('、')}\n`;
+        }
+        if (record.dosage || record.data?.dosage) {
+          text += `用药剂量: ${record.dosage || record.data?.dosage}\n`;
+        }
+      }
+      
+      // 添加备注信息
+      const note = record.note || record.data?.note || record.data?.manualInput;
+      if (note) {
+        text += `详细说明: ${note}\n`;
       }
       
       text += '\n';

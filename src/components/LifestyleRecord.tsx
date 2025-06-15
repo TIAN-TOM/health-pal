@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { ArrowLeft, Check, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,36 +20,36 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
   const { toast } = useToast();
 
   const dietOptions = [
-    { value: 'high_salt', label: '吃得比较咸', emoji: '🧂' },
-    { value: 'very_salty', label: '吃得很咸', emoji: '🧂' },
-    { value: 'coffee', label: '喝了咖啡', emoji: '☕' },
-    { value: 'tea', label: '喝了浓茶', emoji: '🍵' },
-    { value: 'alcohol', label: '喝了酒', emoji: '🍷' },
-    { value: 'chocolate', label: '吃了巧克力', emoji: '🍫' },
-    { value: 'cheese', label: '吃了奶酪', emoji: '🧀' },
-    { value: 'processed_food', label: '吃了腌制品', emoji: '🥓' },
-    { value: 'spicy', label: '吃了辛辣食物', emoji: '🌶️' },
-    { value: 'sweet', label: '吃了很多甜食', emoji: '🍰' },
-    { value: 'msg', label: '外食（可能含味精）', emoji: '🍜' },
-    { value: 'low_salt', label: '饮食清淡', emoji: '🥗' }
+    { value: 'high_salt', label: '比较咸', emoji: '🧂' },
+    { value: 'very_salty', label: '很咸', emoji: '🧂' },
+    { value: 'coffee', label: '咖啡', emoji: '☕' },
+    { value: 'tea', label: '浓茶', emoji: '🍵' },
+    { value: 'alcohol', label: '酒类', emoji: '🍷' },
+    { value: 'chocolate', label: '巧克力', emoji: '🍫' },
+    { value: 'cheese', label: '奶酪', emoji: '🧀' },
+    { value: 'processed_food', label: '腌制品', emoji: '🥓' },
+    { value: 'spicy', label: '辛辣食物', emoji: '🌶️' },
+    { value: 'sweet', label: '甜食', emoji: '🍰' },
+    { value: 'msg', label: '外食', emoji: '🍜' },
+    { value: 'low_salt', label: '清淡', emoji: '🥗' }
   ];
 
   const sleepOptions = [
-    { value: 'excellent', label: '睡得很好', emoji: '😴', desc: '一觉到天亮，精神饱满' },
-    { value: 'good', label: '睡得不错', emoji: '😊', desc: '基本睡够了，感觉还行' },
-    { value: 'fair', label: '一般般', emoji: '😐', desc: '睡眠质量一般，有点累' },
-    { value: 'poor', label: '没睡好', emoji: '😴', desc: '睡眠不足或质量差' },
-    { value: 'very_poor', label: '睡得很差', emoji: '😫', desc: '失眠或多梦，很疲劳' },
-    { value: 'insomnia', label: '基本没睡', emoji: '😵', desc: '整夜失眠，非常疲惫' }
+    { value: 'excellent', label: '很好', emoji: '😴', desc: '一觉到天亮' },
+    { value: 'good', label: '不错', emoji: '😊', desc: '基本睡够' },
+    { value: 'fair', label: '一般', emoji: '😐', desc: '有点累' },
+    { value: 'poor', label: '没睡好', emoji: '😴', desc: '睡眠不足' },
+    { value: 'very_poor', label: '很差', emoji: '😫', desc: '失眠多梦' },
+    { value: 'insomnia', label: '基本没睡', emoji: '😵', desc: '整夜失眠' }
   ];
 
   const stressOptions = [
-    { value: 'very_low', label: '很放松', emoji: '😌', desc: '心情愉快，没有压力' },
-    { value: 'low', label: '比较轻松', emoji: '🙂', desc: '心情不错，压力不大' },
-    { value: 'moderate', label: '有点压力', emoji: '😐', desc: '有些担心的事情' },
-    { value: 'high', label: '压力较大', emoji: '😟', desc: '比较焦虑，心情不好' },
-    { value: 'very_high', label: '压力很大', emoji: '😰', desc: '非常焦虑，情绪紧张' },
-    { value: 'overwhelming', label: '压力巨大', emoji: '😫', desc: '感到崩溃，无法承受' }
+    { value: 'very_low', label: '很放松', emoji: '😌', desc: '心情愉快' },
+    { value: 'low', label: '轻松', emoji: '🙂', desc: '压力不大' },
+    { value: 'moderate', label: '有点压力', emoji: '😐', desc: '有些担心' },
+    { value: 'high', label: '压力较大', emoji: '😟', desc: '比较焦虑' },
+    { value: 'very_high', label: '压力很大', emoji: '😰', desc: '非常焦虑' },
+    { value: 'overwhelming', label: '压力巨大', emoji: '😫', desc: '感到崩溃' }
   ];
 
   const toggleDiet = (dietItem: string) => {
@@ -57,32 +58,6 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
         ? prev.filter(d => d !== dietItem)
         : [...prev, dietItem]
     );
-  };
-
-  const handleAIAssistant = (aiType: 'doubao' | 'deepseek') => {
-    const diet_text = diet.map(d => dietOptions.find(opt => opt.value === d)?.label).join('、');
-    const sleep_text = sleepOptions.find(opt => opt.value === sleep)?.label || '';
-    const stress_text = stressOptions.find(opt => opt.value === stress)?.label || '';
-    
-    const record_text = `我有梅尼埃症，今天的生活状况：饮食方面${diet_text || '正常'}，睡眠状况${sleep_text}，压力水平${stress_text}。${note ? `详细说明：${note}` : ''}请给我一些生活方式的建议和指导。`;
-    
-    if (aiType === 'doubao') {
-      window.open('doubao://chat?text=' + encodeURIComponent(record_text), '_blank');
-      setTimeout(() => {
-        toast({
-          title: "如果没有自动打开豆包APP",
-          description: "请手动复制生活记录到豆包中咨询",
-        });
-      }, 1000);
-    } else if (aiType === 'deepseek') {
-      window.open('deepseek://chat?text=' + encodeURIComponent(record_text), '_blank');
-      setTimeout(() => {
-        toast({
-          title: "如果没有自动打开DeepSeek APP",
-          description: "请手动复制生活记录到DeepSeek中咨询",
-        });
-      }, 1000);
-    }
   };
 
   const handleSave = async () => {
@@ -152,21 +127,21 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
               <h3 className="text-lg font-medium mb-4 text-gray-700">
                 今天吃了什么？ (可多选)
               </h3>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {dietOptions.map(option => (
                   <Button
                     key={option.value}
                     onClick={() => toggleDiet(option.value)}
                     variant={diet.includes(option.value) ? "default" : "outline"}
-                    className={`p-2 h-auto min-h-[50px] text-xs ${
+                    className={`p-2 h-16 text-xs ${
                       diet.includes(option.value) 
                         ? 'bg-orange-500 hover:bg-orange-600 text-white' 
                         : 'border-2 hover:border-orange-300'
                     }`}
                   >
                     <div className="flex flex-col items-center justify-center w-full">
-                      <span className="text-sm mb-1">{option.emoji}</span>
-                      <span className="text-xs text-center leading-tight break-words">{option.label}</span>
+                      <span className="text-lg mb-1">{option.emoji}</span>
+                      <span className="text-xs text-center leading-tight">{option.label}</span>
                       {diet.includes(option.value) && (
                         <Check className="mt-1 h-3 w-3" />
                       )}
@@ -256,36 +231,6 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
                 className="w-full"
                 rows={3}
               />
-            </div>
-
-            {/* AI助手按钮 */}
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-700">
-                AI健康助手咨询
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleAIAssistant('doubao')}
-                  className="flex items-center justify-center border-orange-300 text-orange-600 hover:border-orange-400"
-                >
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  豆包AI
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleAIAssistant('deepseek')}
-                  className="flex items-center justify-center border-purple-300 text-purple-600 hover:border-purple-400"
-                >
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  DeepSeek
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500">
-                点击按钮跳转到对应AI应用进行健康咨询
-              </p>
             </div>
 
             {/* 温馨提示 */}

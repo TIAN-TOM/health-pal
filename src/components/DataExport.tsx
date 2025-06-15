@@ -19,26 +19,14 @@ const DataExport = ({ onBack }: DataExportProps) => {
   const [customEndDate, setCustomEndDate] = useState('');
   const { toast } = useToast();
 
-  const handleAIAssistant = (aiType: 'doubao' | 'deepseek') => {
+  const handleAIAssistant = () => {
     const message = `我是梅尼埃症患者，想要分析我的症状记录。请帮我分析症状规律、诱发因素和治疗建议。我已经导出了记录文件，请告诉我如何更好地管理我的病情。`;
     
-    if (aiType === 'doubao') {
-      window.open('doubao://chat?text=' + encodeURIComponent(message), '_blank');
-      setTimeout(() => {
-        toast({
-          title: "如果没有自动打开豆包APP",
-          description: "请手动复制记录文件到豆包中分析",
-        });
-      }, 1000);
-    } else if (aiType === 'deepseek') {
-      window.open('deepseek://chat?text=' + encodeURIComponent(message), '_blank');
-      setTimeout(() => {
-        toast({
-          title: "如果没有自动打开DeepSeek APP",
-          description: "请手动复制记录文件到DeepSeek中分析",
-        });
-      }, 1000);
-    }
+    window.open('https://www.doubao.com/chat/?text=' + encodeURIComponent(message), '_blank');
+    toast({
+      title: "已跳转到豆包AI",
+      description: "请将导出的记录文件上传给AI进行分析",
+    });
   };
 
   const handleExport = async (timeRange: 'week' | 'month' | 'custom') => {
@@ -154,29 +142,60 @@ const DataExport = ({ onBack }: DataExportProps) => {
 
   const formatRecordsAsText = (records: any[]) => {
     let text = `梅尼埃症记录报告\n生成时间: ${new Date().toLocaleString('zh-CN')}\n`;
-    text += `时间范围: ${customStartDate} 到 ${customEndDate}\n\n`;
+    text += `时间范围: ${customStartDate} 到 ${customEndDate}\n`;
+    text += `记录总数: ${records.length} 条\n\n`;
+    
+    // 按类型统计
+    const typeStats = records.reduce((acc, record) => {
+      acc[record.type] = (acc[record.type] || 0) + 1;
+      return acc;
+    }, {});
+    
+    text += `记录类型统计:\n`;
+    Object.entries(typeStats).forEach(([type, count]) => {
+      text += `- ${getRecordTypeText(type)}: ${count} 条\n`;
+    });
+    text += '\n';
+    
+    text += '详细记录:\n';
+    text += '=' .repeat(50) + '\n\n';
     
     records.forEach((record, index) => {
-      text += `${index + 1}. ${new Date(record.timestamp).toLocaleString('zh-CN')}\n`;
-      text += `类型: ${getRecordTypeText(record.type)}\n`;
+      text += `${index + 1}. 【${getRecordTypeText(record.type)}】\n`;
+      text += `时间: ${new Date(record.timestamp).toLocaleString('zh-CN')}\n`;
       
       if (record.type === 'dizziness') {
-        text += `严重程度: ${record.severity}\n`;
-        if (record.duration) text += `持续时间: ${record.duration}\n`;
-        if (record.symptoms?.length) text += `症状: ${record.symptoms.join(', ')}\n`;
+        text += `严重程度: ${record.severity || record.data?.severity || '未记录'}\n`;
+        text += `持续时间: ${record.duration || record.data?.duration || '未记录'}\n`;
+        const symptoms = record.symptoms || record.data?.symptoms || [];
+        if (symptoms.length > 0) {
+          text += `伴随症状: ${symptoms.join('、')}\n`;
+        }
       } else if (record.type === 'lifestyle') {
-        text += `睡眠状况: ${record.sleep}\n`;
-        if (record.stress) text += `压力水平: ${record.stress}\n`;
-        if (record.diet?.length) text += `饮食: ${record.diet.join(', ')}\n`;
+        text += `睡眠质量: ${record.sleep || record.data?.sleep || '未记录'}\n`;
+        text += `压力水平: ${record.stress || record.data?.stress || '未记录'}\n`;
+        const diet = record.diet || record.data?.diet || [];
+        if (diet.length > 0) {
+          text += `饮食情况: ${diet.join('、')}\n`;
+        }
       } else if (record.type === 'medication') {
-        text += `用药: ${record.medications?.join(', ') || '未记录'}\n`;
-        if (record.dosage) text += `剂量: ${record.dosage}\n`;
-      } else if (record.type === 'voice' && record.note) {
-        text += `备注: ${record.note}\n`;
+        const medications = record.medications || record.data?.medications || [];
+        if (medications.length > 0) {
+          text += `用药情况: ${medications.join('、')}\n`;
+        }
+        if (record.dosage || record.data?.dosage) {
+          text += `用药剂量: ${record.dosage || record.data?.dosage}\n`;
+        }
+      } else if (record.type === 'daily_checkin') {
+        if (record.mood_score || record.data?.mood_score) {
+          text += `心情评分: ${record.mood_score || record.data?.mood_score}/5\n`;
+        }
       }
       
-      if (record.note && record.type !== 'voice') {
-        text += `备注: ${record.note}\n`;
+      // 添加备注信息
+      const note = record.note || record.data?.note || record.data?.manualInput;
+      if (note) {
+        text += `详细说明: ${note}\n`;
       }
       
       text += '\n';
@@ -191,6 +210,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
       case 'lifestyle': return '生活记录';
       case 'medication': return '用药记录';
       case 'voice': return '语音记事';
+      case 'daily_checkin': return '每日打卡';
       default: return '未知类型';
     }
   };
@@ -206,13 +226,20 @@ const DataExport = ({ onBack }: DataExportProps) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
-      <div className="container mx-auto max-w-md">
-        <div className="flex items-center mb-6">
-          <Button variant="ghost" onClick={onBack} className="mr-2">
-            <ArrowLeft className="h-4 w-4" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <div className="container mx-auto px-4 py-6 max-w-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="flex items-center"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            返回
           </Button>
-          <h1 className="text-xl font-bold">整理记录给医生/AI</h1>
+          <h1 className="text-xl font-bold text-gray-800">整理记录给医生/AI</h1>
+          <div className="w-16"></div>
         </div>
 
         <Tabs defaultValue="quick" className="space-y-6">
@@ -261,14 +288,15 @@ const DataExport = ({ onBack }: DataExportProps) => {
                 <CardContent>
                   <div className="text-sm text-gray-600 space-y-2">
                     <p>• 导出包含JSON和文本两种格式</p>
-                    <p>• JSON格式便于数据分析</p>
-                    <p>• 文本格式便于医生查看</p>
+                    <p>• JSON格式便于数据分析和AI处理</p>
+                    <p>• 文本格式便于医生查看和阅读</p>
+                    <p>• 包含完整的症状、用药、生活记录信息</p>
                     <p>• 文件将自动下载到您的设备</p>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* AI助手快速咨询 */}
+              {/* AI助手咨询 */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center text-lg">
@@ -277,26 +305,15 @@ const DataExport = ({ onBack }: DataExportProps) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <Button
-                      onClick={() => handleAIAssistant('doubao')}
-                      variant="outline"
-                      className="flex items-center justify-center border-orange-300 text-orange-600 hover:border-orange-400 py-4"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      豆包AI
-                    </Button>
-                    <Button
-                      onClick={() => handleAIAssistant('deepseek')}
-                      variant="outline"
-                      className="flex items-center justify-center border-purple-300 text-purple-600 hover:border-purple-400 py-4"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      DeepSeek
-                    </Button>
-                  </div>
+                  <Button
+                    onClick={handleAIAssistant}
+                    className="w-full bg-orange-600 hover:bg-orange-700 text-white py-6 text-lg mb-4"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    豆包AI 健康分析
+                  </Button>
                   <p className="text-xs text-gray-500">
-                    点击按钮跳转到AI应用进行健康咨询，可上传导出的记录文件进行分析
+                    点击按钮跳转到豆包AI进行健康咨询，可上传导出的记录文件进行专业分析
                   </p>
                 </CardContent>
               </Card>
@@ -365,7 +382,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
             <div className="text-sm text-gray-600 space-y-2">
               <p><strong>就医前：</strong>导出最近症状记录，便于医生了解病情发展</p>
               <p><strong>复诊时：</strong>导出用药期间的记录，评估治疗效果</p>
-              <p><strong>AI分析：</strong>导出JSON格式数据，便于AI工具分析症状规律</p>
+              <p><strong>AI分析：</strong>导出完整数据，便于AI工具分析症状规律和诱发因素</p>
             </div>
           </CardContent>
         </Card>
