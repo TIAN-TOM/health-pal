@@ -4,8 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, Thermometer, Droplets, Pill, RefreshCw } from 'lucide-react';
 import { getRecentRecords } from '@/services/meniereRecordService';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
 import type { Tables } from '@/integrations/supabase/types';
 import RecordDelete from '@/components/RecordDelete';
 import { formatBeijingTime } from '@/utils/beijingTime';
@@ -85,7 +83,6 @@ const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* 症状记录 */}
         {records.map((record) => (
           <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
             <div 
@@ -97,7 +94,7 @@ const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
                 <div className="font-medium">{getRecordTitle(record)}</div>
                 <div className="text-sm text-gray-500 flex items-center">
                   <Clock className="h-3 w-3 mr-1" />
-                  {formatBeijingTime(record.timestamp)}
+                  {record.timestamp ? formatBeijingTime(record.timestamp) : '时间未知'}
                 </div>
               </div>
             </div>
