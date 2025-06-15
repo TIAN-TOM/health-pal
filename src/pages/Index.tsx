@@ -10,6 +10,7 @@ import LifestyleRecord from '@/components/LifestyleRecord';
 import MedicationRecord from '@/components/MedicationRecord';
 import DataExport from '@/components/DataExport';
 import Settings from '@/components/Settings';
+import AdminPanel from '@/components/AdminPanel';
 import MedicalRecords from '@/components/MedicalRecords';
 import EducationCenter from '@/components/EducationCenter';
 import DailyQuote from '@/components/DailyQuote';

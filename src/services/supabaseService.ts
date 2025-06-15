@@ -57,6 +57,19 @@ class SupabaseService {
     }
   }
 
+  async getRecordsByDateRange(startDate: Date, endDate: Date): Promise<MeniereRecord[]> {
+    try {
+      const allRecords = await this.getRecords();
+      return allRecords.filter(record => {
+        const recordDate = new Date(record.timestamp);
+        return recordDate >= startDate && recordDate <= endDate;
+      });
+    } catch (error) {
+      console.error('获取时间范围记录失败:', error);
+      return [];
+    }
+  }
+
   private saveToLocalStorage(record: MeniereRecord): void {
     try {
       const existingRecords = this.getFromLocalStorage();

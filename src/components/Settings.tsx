@@ -1,15 +1,16 @@
 
 import React from 'react';
-import { ArrowLeft, User, Bell, Shield, Database, LogOut } from 'lucide-react';
+import { ArrowLeft, User, Bell, Shield, Database, LogOut, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 
 interface SettingsProps {
   onBack: () => void;
+  onAdminPanel?: () => void;
 }
 
-const Settings = ({ onBack }: SettingsProps) => {
+const Settings = ({ onBack, onAdminPanel }: SettingsProps) => {
   const { userProfile, userRole, signOut } = useAuth();
 
   const handleSignOut = async () => {
@@ -27,6 +28,27 @@ const Settings = ({ onBack }: SettingsProps) => {
           </Button>
           <h1 className="text-xl font-bold">设置</h1>
         </div>
+
+        {/* 管理员面板 */}
+        {userRole === 'admin' && onAdminPanel && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Settings2 className="h-5 w-5 mr-2" />
+                管理员功能
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={onAdminPanel}
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                进入管理员面板
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* 用户信息 */}
         <Card className="mb-6">
@@ -112,6 +134,16 @@ const Settings = ({ onBack }: SettingsProps) => {
             梅尼埃症生活伴侣 v1.0.0
             <br />
             © 2024 专注于梅尼埃症患者的健康管理
+            <br />
+            开发者：
+            <a 
+              href="https://www.linkedin.com/in/tom-tian-317580257/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 underline ml-1"
+            >
+              Tom Tian
+            </a>
           </p>
         </div>
       </div>

@@ -41,6 +41,18 @@ const NavigationActions = ({ onDataExport, onDailyData }: NavigationActionsProps
           本应用仅供参考，不能替代专业医疗建议
           <br />
           如有严重症状请及时就医
+          <br />
+          <span className="mt-2 block">
+            开发者：
+            <a 
+              href="https://www.linkedin.com/in/tom-tian-317580257/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 underline ml-1"
+            >
+              Tom Tian
+            </a>
+          </span>
         </p>
       </div>
     </div>
