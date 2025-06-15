@@ -1,7 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
-import { getBeijingDateString, getBeijingTimeISO } from '@/utils/beijingTime';
+import { getBeijingDateString } from '@/utils/beijingTime';
 
 type DailyCheckin = Tables<'daily_checkins'>;
 
@@ -31,7 +30,7 @@ export const createCheckin = async (
     throw new Error('今日已完成打卡');
   }
 
-  // 创建新的打卡记录，使用北京时间
+  // 创建新的打卡记录，使用数据库默认时间
   const { data, error } = await supabase
     .from('daily_checkins')
     .insert({
@@ -39,9 +38,8 @@ export const createCheckin = async (
       checkin_date: checkinDate,
       mood_score: moodScore,
       note,
-      photo_url: photoUrl,
-      created_at: getBeijingTimeISO(),
-      updated_at: getBeijingTimeISO()
+      photo_url: photoUrl
+      // 不手动设置 created_at 和 updated_at，让数据库使用默认值
     })
     .select()
     .single();
