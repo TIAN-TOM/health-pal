@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { ChevronLeft, ChevronRight, Calendar, Smile, Frown, Meh, RefreshCw } fro
 import { getDailyCheckins } from '@/services/dailyCheckinService';
 import { getMeniereRecords } from '@/services/meniereRecordService';
 import { useToast } from '@/hooks/use-toast';
-import { getBeijingTime, getBeijingDateString, getMonthRange, getTodayBeijingDate, deleteAllCheckins, formatBeijingDateTime } from '@/utils/beijingTime';
+import { getBeijingTime, getBeijingDateString, getMonthRange, getTodayBeijingDate, deleteAllCheckins } from '@/utils/beijingTime';
 
 interface DayData {
   date: string;
@@ -153,6 +152,22 @@ const CalendarView = () => {
   console.log('今天的北京时间日期:', today);
   console.log('当前北京时间完整:', beijingCurrentDate.toISOString());
 
+  // 正确计算北京时间显示
+  const formatBeijingTimeDisplay = () => {
+    const now = new Date();
+    // 直接使用本地时间转换为中国时区显示
+    return now.toLocaleString('zh-CN', {
+      timeZone: 'Asia/Shanghai',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -291,9 +306,9 @@ const CalendarView = () => {
               </div>
             </div>
             
-            {/* 当前时间显示 - 使用统一格式 */}
+            {/* 当前时间显示 - 修复北京时间显示 */}
             <div className="pt-2 border-t text-xs text-gray-500 text-center">
-              当前北京时间: {formatBeijingDateTime(beijingCurrentDate)}
+              当前北京时间: {formatBeijingTimeDisplay()}
             </div>
           </div>
         )}
