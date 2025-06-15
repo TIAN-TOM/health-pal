@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,8 @@ const DataExport = ({ onBack }: DataExportProps) => {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [copiedFormat, setCopiedFormat] = useState<'json' | 'text' | null>(null);
+  const [exportedData, setExportedData] = useState<string>('');
+  const [showDataModal, setShowDataModal] = useState(false);
   const { toast } = useToast();
 
   // 设置默认日期（最近一个月）- 使用北京时间
@@ -39,20 +40,53 @@ const DataExport = ({ onBack }: DataExportProps) => {
     getCurrentBeijingTime();
   }, []);
 
+  // 移动端友好的复制功能
   const copyToClipboard = async (text: string, format: 'json' | 'text') => {
     try {
-      await navigator.clipboard.writeText(text);
-      setCopiedFormat(format);
-      setTimeout(() => setCopiedFormat(null), 2000);
-      toast({
-        title: "复制成功",
-        description: `${format === 'json' ? 'JSON格式' : '纯文本格式'}数据已复制到剪贴板`,
-      });
+      // 首先尝试现代剪贴板API
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        setCopiedFormat(format);
+        setTimeout(() => setCopiedFormat(null), 2000);
+        toast({
+          title: "复制成功",
+          description: `${format === 'json' ? 'JSON格式' : '纯文本格式'}数据已复制到剪贴板`,
+        });
+        return;
+      }
+      
+      // 备用方案：使用传统的选择和复制方法
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      if (successful) {
+        setCopiedFormat(format);
+        setTimeout(() => setCopiedFormat(null), 2000);
+        toast({
+          title: "复制成功",
+          description: `${format === 'json' ? 'JSON格式' : '纯文本格式'}数据已复制到剪贴板`,
+        });
+      } else {
+        throw new Error('复制命令执行失败');
+      }
     } catch (error) {
+      console.error('复制失败:', error);
+      // 如果复制失败，显示数据供用户手动复制
+      setExportedData(text);
+      setShowDataModal(true);
       toast({
-        title: "复制失败",
-        description: "请手动复制数据",
-        variant: 'destructive'
+        title: "自动复制失败",
+        description: "请手动选择并复制下方显示的数据",
+        variant: 'default'
       });
     }
   };
@@ -212,6 +246,58 @@ const DataExport = ({ onBack }: DataExportProps) => {
             />
           </TabsContent>
         </Tabs>
+
+        {/* 手动复制数据模态框 */}
+        {showDataModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-96 overflow-hidden">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">请手动复制数据</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowDataModal(false)}
+                >
+                  ✕
+                </Button>
+              </div>
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  自动复制失败，请选择下方文本并手动复制：
+                </p>
+                <textarea
+                  value={exportedData}
+                  readOnly
+                  className="w-full h-64 p-3 border rounded-md font-mono text-xs resize-none"
+                  onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+                />
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={() => {
+                    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+                    textarea.select();
+                    document.execCommand('copy');
+                    toast({
+                      title: "已选择文本",
+                      description: "请使用系统复制功能(Ctrl+C 或长按选择复制)",
+                    });
+                  }}
+                  className="flex-1"
+                >
+                  选择全部文本
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDataModal(false)}
+                  className="flex-1"
+                >
+                  关闭
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
