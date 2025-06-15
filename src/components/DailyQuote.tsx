@@ -13,8 +13,9 @@ interface QuoteData {
 const DailyQuote = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [shuffledQuotes, setShuffledQuotes] = useState<QuoteData[]>([]);
 
-  const quotes: QuoteData[] = [
+  const originalQuotes: QuoteData[] = [
     {
       text: "健康不是一切，但没有健康就没有一切。",
       english: "Health is not everything, but without health, everything is nothing.",
@@ -92,34 +93,65 @@ const DailyQuote = () => {
     }
   ];
 
+  // 洗牌算法 - Fisher-Yates shuffle
+  const shuffleArray = (array: QuoteData[]) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  // 初始化时随机打乱名言顺序
+  useEffect(() => {
+    const shuffled = shuffleArray(originalQuotes);
+    setShuffledQuotes(shuffled);
+  }, []);
+
   // 20秒自动切换
   useEffect(() => {
+    if (shuffledQuotes.length === 0) return;
+    
     const interval = setInterval(() => {
       handleNext();
     }, 20000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [shuffledQuotes]);
 
   const handleNext = () => {
-    if (isAnimating) return;
+    if (isAnimating || shuffledQuotes.length === 0) return;
     setIsAnimating(true);
     setTimeout(() => {
-      setCurrentIndex(prev => (prev + 1) % quotes.length);
+      setCurrentIndex(prev => (prev + 1) % shuffledQuotes.length);
       setIsAnimating(false);
     }, 200);
   };
 
   const handlePrevious = () => {
-    if (isAnimating) return;
+    if (isAnimating || shuffledQuotes.length === 0) return;
     setIsAnimating(true);
     setTimeout(() => {
-      setCurrentIndex(prev => prev === 0 ? quotes.length - 1 : prev - 1);
+      setCurrentIndex(prev => prev === 0 ? shuffledQuotes.length - 1 : prev - 1);
       setIsAnimating(false);
     }, 200);
   };
 
-  const currentQuote = quotes[currentIndex];
+  // 如果还没有洗牌完成，显示加载状态
+  if (shuffledQuotes.length === 0) {
+    return (
+      <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center">
+            <Quote className="h-6 w-6 text-blue-600 animate-pulse" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const currentQuote = shuffledQuotes[currentIndex];
 
   return (
     <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
@@ -149,7 +181,7 @@ const DailyQuote = () => {
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <span className="text-xs text-gray-500">
-                    {currentIndex + 1}/{quotes.length}
+                    {currentIndex + 1}/{shuffledQuotes.length}
                   </span>
                   <Button
                     variant="ghost"
