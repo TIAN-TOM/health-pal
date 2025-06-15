@@ -26,6 +26,7 @@ import RecordDetail from '@/components/RecordDetail';
 import MedicationManagement from '@/components/MedicationManagement';
 import CheckinCalendar from '@/components/CheckinCalendar';
 import type { Tables } from '@/integrations/supabase/types';
+import AnnouncementDisplay from '@/components/AnnouncementDisplay';
 
 type MeniereRecord = Tables<'meniere_records'>;
 
@@ -177,6 +178,9 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       {/* 紧急求助横幅 */}
       <EmergencyBanner onEmergencyClick={() => navigateTo('emergency')} />
+
+      {/* 公告显示 */}
+      <AnnouncementDisplay />
 
       {/* 统一首页页面宽度 */}
       <div className="container mx-auto px-4 py-6 max-w-2xl">

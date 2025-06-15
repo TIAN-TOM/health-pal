@@ -2,10 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Heart, Camera, MessageCircle, Check, ArrowLeft } from 'lucide-react';
-import { getTodayCheckin, createCheckin } from '@/services/dailyCheckinService';
+import { Calendar, Heart, MessageCircle, Check, ArrowLeft } from 'lucide-react';
+import { getTodayCheckin, createCheckin, getCheckinHistory } from '@/services/dailyCheckinService';
 import { useToast } from '@/hooks/use-toast';
-import CheckinCalendar from './CheckinCalendar';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import type { Tables } from '@/integrations/supabase/types';
 
 type DailyCheckin = Tables<'daily_checkins'>;
@@ -19,11 +21,13 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
   const [moodScore, setMoodScore] = useState(3);
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [checkinDates, setCheckinDates] = useState<Date[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
 
   useEffect(() => {
     loadTodayCheckin();
+    loadCheckinHistory();
   }, []);
 
   const loadTodayCheckin = async () => {
@@ -35,12 +39,23 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
     }
   };
 
+  const loadCheckinHistory = async () => {
+    try {
+      const records = await getCheckinHistory(90);
+      const dates = records.map(record => new Date(record.checkin_date + 'T00:00:00+08:00')); // 使用北京时间
+      setCheckinDates(dates);
+    } catch (error) {
+      console.error('加载打卡历史失败:', error);
+    }
+  };
+
   const handleCheckin = async () => {
     try {
       setLoading(true);
       const newCheckin = await createCheckin(moodScore, note || undefined);
       setTodayCheckin(newCheckin);
       setNote('');
+      loadCheckinHistory(); // 重新加载历史记录以更新日历
       toast({
         title: "打卡成功！",
         description: "今日打卡已完成，继续保持好习惯！",
@@ -72,9 +87,23 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
     return '很糟糕';
   };
 
-  if (showCalendar) {
-    return <CheckinCalendar onBack={() => setShowCalendar(false)} />;
-  }
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+  };
+
+  const isCheckinDate = (date: Date) => {
+    return checkinDates.some(checkinDate => 
+      format(checkinDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+    );
+  };
+
+  // 获取北京时间
+  const getBeijingTime = () => {
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const beijingTime = new Date(utc + (8 * 3600000));
+    return beijingTime;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -93,7 +122,8 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
           <h1 className="text-xl font-bold text-gray-800">每日打卡</h1>
         </div>
 
-        <Card>
+        {/* 打卡状态卡片 */}
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center">
               <Calendar className="h-5 w-5 mr-2 text-blue-600" />
@@ -112,6 +142,9 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
                   {todayCheckin.note && (
                     <p className="mt-2 text-sm">备注: {todayCheckin.note}</p>
                   )}
+                  <p className="text-xs text-green-600 mt-2">
+                    打卡时间: {format(new Date(todayCheckin.created_at + '+08:00'), 'HH:mm', { locale: zhCN })} (北京时间)
+                  </p>
                 </div>
               </div>
             ) : (
@@ -160,16 +193,48 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
                 </Button>
               </div>
             )}
+          </CardContent>
+        </Card>
 
-            <div className="pt-4 border-t">
-              <Button
-                onClick={() => setShowCalendar(true)}
-                variant="outline"
-                className="w-full"
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                查看打卡日历
-              </Button>
+        {/* 打卡日历 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">打卡日历</CardTitle>
+            <p className="text-sm text-gray-600">绿色日期表示已打卡的日子</p>
+          </CardHeader>
+          <CardContent>
+            <CalendarComponent
+              mode="single"
+              selected={selectedDate}
+              onSelect={handleDateSelect}
+              className="rounded-md border w-full"
+              modifiers={{
+                checkin: checkinDates,
+              }}
+              modifiersStyles={{
+                checkin: {
+                  backgroundColor: '#22c55e',
+                  color: 'white',
+                  fontWeight: 'bold',
+                },
+              }}
+              disabled={(date) => date > getBeijingTime()}
+              locale={zhCN}
+            />
+            <div className="mt-4 text-sm text-gray-600">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-green-500 rounded mr-2"></div>
+                  <span>已打卡</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-gray-200 rounded mr-2"></div>
+                  <span>未打卡</span>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                当前时间: {format(getBeijingTime(), 'yyyy年MM月dd日 HH:mm', { locale: zhCN })} (北京时间)
+              </p>
             </div>
           </CardContent>
         </Card>

@@ -4,6 +4,14 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type DailyCheckin = Tables<'daily_checkins'>;
 
+// 获取北京时间的日期字符串 (YYYY-MM-DD)
+const getBeijingDateString = () => {
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const beijingTime = new Date(utc + (8 * 3600000));
+  return beijingTime.toISOString().split('T')[0];
+};
+
 export const createCheckin = async (
   moodScore: number,
   note?: string,
@@ -15,7 +23,7 @@ export const createCheckin = async (
     throw new Error('用户未登录');
   }
 
-  const checkinDate = new Date().toISOString().split('T')[0];
+  const checkinDate = getBeijingDateString();
 
   // 检查今日是否已打卡
   const { data: existingCheckin } = await supabase
@@ -78,7 +86,7 @@ export const getTodayCheckin = async (): Promise<DailyCheckin | null> => {
     return null;
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getBeijingDateString();
 
   const { data, error } = await supabase
     .from('daily_checkins')
@@ -143,7 +151,6 @@ export const getCheckinsByDateRange = async (
   return data || [];
 };
 
-// Updated function to accept limit parameter
 export const getCheckinHistory = async (limit: number = 30): Promise<DailyCheckin[]> => {
   return getRecentCheckins(limit);
 };
