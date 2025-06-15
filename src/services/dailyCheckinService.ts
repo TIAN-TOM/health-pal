@@ -30,26 +30,13 @@ export const createCheckin = async (photoFile: File, moodScore: number, note?: s
   if (!user.data.user) throw new Error('用户未登录');
 
   const today = new Date().toISOString().split('T')[0];
-  const fileName = `${user.data.user.id}/${today}-${Date.now()}.jpg`;
 
-  // 上传照片
-  const { data: uploadData, error: uploadError } = await supabase.storage
-    .from('checkin-photos')
-    .upload(fileName, photoFile);
-
-  if (uploadError) throw uploadError;
-
-  const { data: urlData } = supabase.storage
-    .from('checkin-photos')
-    .getPublicUrl(fileName);
-
-  // 创建打卡记录
+  // 创建打卡记录，不再需要照片
   const { data, error } = await supabase
     .from('daily_checkins')
     .insert({
       user_id: user.data.user.id,
       checkin_date: today,
-      photo_url: urlData.publicUrl,
       mood_score: moodScore,
       note: note
     })

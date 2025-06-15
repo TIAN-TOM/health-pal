@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowLeft, User, Bell, Shield, Database, LogOut, Settings2 } from 'lucide-react';
+import { ArrowLeft, User, Shield, LogOut, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
@@ -81,36 +81,6 @@ const Settings = ({ onBack, onAdminPanel }: SettingsProps) => {
                 )}
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* 通知设置 */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Bell className="h-5 w-5 mr-2" />
-              通知设置
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 text-sm">
-              通知功能正在开发中...
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* 数据管理 */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Database className="h-5 w-5 mr-2" />
-              数据管理
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 text-sm">
-              数据备份和恢复功能正在开发中...
-            </p>
           </CardContent>
         </Card>
 

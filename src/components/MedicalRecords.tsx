@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { MedicalRecord, getMedicalRecords, saveMedicalRecord, deleteMedicalRecord } from '@/services/medicalRecordsService';
+import { MedicalRecord, getMedicalRecords, saveMedicalRecord, deleteMedicalRecord, updateMedicalRecord } from '@/services/medicalRecordsService';
 
 interface MedicalRecordsProps {
   onBack: () => void;
@@ -15,6 +15,7 @@ interface MedicalRecordsProps {
 const MedicalRecords = ({ onBack }: MedicalRecordsProps) => {
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<MedicalRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState<Partial<MedicalRecord>>({
     record_type: 'visit',
@@ -52,17 +53,26 @@ const MedicalRecords = ({ onBack }: MedicalRecordsProps) => {
     }
 
     try {
-      await saveMedicalRecord(formData as Omit<MedicalRecord, 'id'>);
+      if (editingRecord) {
+        await updateMedicalRecord(editingRecord.id!, formData);
+        toast({
+          title: "更新成功",
+          description: "医疗记录已更新",
+        });
+      } else {
+        await saveMedicalRecord(formData as Omit<MedicalRecord, 'id'>);
+        toast({
+          title: "保存成功",
+          description: "医疗记录已保存",
+        });
+      }
+      
       await loadRecords();
       setShowAddForm(false);
+      setEditingRecord(null);
       setFormData({
         record_type: 'visit',
         date: new Date().toISOString().split('T')[0]
-      });
-      
-      toast({
-        title: "保存成功",
-        description: "医疗记录已保存",
       });
     } catch (error) {
       console.error('保存失败:', error);
@@ -74,7 +84,26 @@ const MedicalRecords = ({ onBack }: MedicalRecordsProps) => {
     }
   };
 
+  const handleEdit = (record: MedicalRecord) => {
+    setEditingRecord(record);
+    setFormData({ ...record });
+    setShowAddForm(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingRecord(null);
+    setShowAddForm(false);
+    setFormData({
+      record_type: 'visit',
+      date: new Date().toISOString().split('T')[0]
+    });
+  };
+
   const handleDelete = async (id: string) => {
+    if (!window.confirm('确定要删除这条医疗记录吗？')) {
+      return;
+    }
+
     try {
       await deleteMedicalRecord(id);
       await loadRecords();
@@ -137,12 +166,23 @@ const MedicalRecords = ({ onBack }: MedicalRecordsProps) => {
               className="w-full bg-blue-600 hover:bg-blue-700 text-white mb-6"
             >
               <Plus className="mr-2 h-5 w-5" />
-              添加医疗记录
+              {editingRecord ? '取消编辑' : '添加医疗记录'}
             </Button>
 
             {showAddForm && (
               <Card className="mb-6">
                 <CardContent className="p-6 space-y-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium">
+                      {editingRecord ? '编辑医疗记录' : '添加医疗记录'}
+                    </h3>
+                    {editingRecord && (
+                      <Button variant="ghost" onClick={handleCancelEdit}>
+                        取消编辑
+                      </Button>
+                    )}
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">记录类型</label>
                     <div className="grid grid-cols-3 gap-2">
@@ -264,10 +304,10 @@ const MedicalRecords = ({ onBack }: MedicalRecordsProps) => {
                       onClick={handleSave}
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                     >
-                      保存记录
+                      {editingRecord ? '更新记录' : '保存记录'}
                     </Button>
                     <Button
-                      onClick={() => setShowAddForm(false)}
+                      onClick={editingRecord ? handleCancelEdit : () => setShowAddForm(false)}
                       variant="outline"
                       className="flex-1"
                     >
@@ -295,14 +335,24 @@ const MedicalRecords = ({ onBack }: MedicalRecordsProps) => {
                           </span>
                           <div className="text-lg font-medium mt-1">{record.date}</div>
                         </div>
-                        <Button
-                          onClick={() => handleDelete(record.id!)}
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex space-x-2">
+                          <Button
+                            onClick={() => handleEdit(record)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => handleDelete(record.id!)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                       
                       {record.hospital && (

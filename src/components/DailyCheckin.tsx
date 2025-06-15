@@ -1,8 +1,9 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Smile, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Smile, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { getTodayCheckin, createCheckin } from '@/services/dailyCheckinService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -12,12 +13,9 @@ interface DailyCheckinProps {
 
 const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
-  const [isCapturing, setIsCapturing] = useState(false);
   const [moodScore, setMoodScore] = useState(3);
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -33,71 +31,29 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
     }
   };
 
-  const startCamera = async () => {
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
     try {
-      setIsCapturing(true);
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user' } 
+      // 创建一个空的图片文件作为占位符
+      const emptyBlob = new Blob([''], { type: 'image/jpeg' });
+      const emptyFile = new File([emptyBlob], 'placeholder.jpg', { type: 'image/jpeg' });
+      
+      await createCheckin(emptyFile, moodScore, note);
+      
+      toast({
+        title: "打卡成功！",
+        description: "今天的心情已记录 😊"
       });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
+      
+      setHasCheckedIn(true);
     } catch (error) {
       toast({
-        title: "无法启动相机",
-        description: "请确保已授权相机权限",
+        title: "打卡失败",
+        description: "请稍后重试",
         variant: "destructive"
       });
-      setIsCapturing(false);
-    }
-  };
-
-  const stopCamera = () => {
-    if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-    }
-    setIsCapturing(false);
-  };
-
-  const capturePhoto = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    const context = canvas.getContext('2d');
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    if (context) {
-      context.drawImage(video, 0, 0);
-      
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-        
-        try {
-          setIsSubmitting(true);
-          const file = new File([blob], 'checkin.jpg', { type: 'image/jpeg' });
-          await createCheckin(file, moodScore, note);
-          
-          toast({
-            title: "打卡成功！",
-            description: "今天的微笑已记录 😊"
-          });
-          
-          setHasCheckedIn(true);
-          stopCamera();
-        } catch (error) {
-          toast({
-            title: "打卡失败",
-            description: "请稍后重试",
-            variant: "destructive"
-          });
-        } finally {
-          setIsSubmitting(false);
-        }
-      }, 'image/jpeg', 0.8);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -137,78 +93,66 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-center text-lg">
-              今天你微笑了吗？ 😊
+              今天你的心情如何？ 😊
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-center text-gray-600 mb-4">
-              拍一张自拍，记录你今天的精神面貌
+          <CardContent className="space-y-6">
+            <p className="text-center text-gray-600">
+              记录你今天的精神状态和心情感受
             </p>
 
-            {!isCapturing ? (
-              <Button onClick={startCamera} className="w-full mb-4">
-                <Camera className="h-4 w-4 mr-2" />
-                开始拍照
-              </Button>
-            ) : (
-              <div className="space-y-4">
-                <div className="relative">
-                  <video 
-                    ref={videoRef} 
-                    autoPlay 
-                    playsInline 
-                    className="w-full rounded-lg"
-                  />
-                  <canvas ref={canvasRef} className="hidden" />
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">心情评分 (1-5):</label>
-                    <div className="flex space-x-2">
-                      {[1, 2, 3, 4, 5].map((score) => (
-                        <Button
-                          key={score}
-                          variant={moodScore === score ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setMoodScore(score)}
-                        >
-                          {score}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">今日感想 (可选):</label>
-                    <textarea 
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      placeholder="记录今天的感受..."
-                      className="w-full p-2 border rounded-md"
-                      rows={2}
-                    />
-                  </div>
-
-                  <div className="flex space-x-2">
-                    <Button 
-                      onClick={capturePhoto} 
-                      disabled={isSubmitting}
-                      className="flex-1"
-                    >
-                      {isSubmitting ? '提交中...' : '拍照打卡'}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={stopCamera}
-                      className="flex-1"
-                    >
-                      取消
-                    </Button>
-                  </div>
-                </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">心情评分 (1-5):</label>
+              <div className="flex space-x-2 justify-center">
+                {[1, 2, 3, 4, 5].map((score) => (
+                  <Button
+                    key={score}
+                    variant={moodScore === score ? "default" : "outline"}
+                    size="lg"
+                    onClick={() => setMoodScore(score)}
+                    className="w-12 h-12 rounded-full"
+                  >
+                    {score}
+                  </Button>
+                ))}
               </div>
-            )}
+              <div className="text-center text-sm text-gray-500 mt-2">
+                {moodScore === 1 && "很糟糕"}
+                {moodScore === 2 && "不太好"}
+                {moodScore === 3 && "一般"}
+                {moodScore === 4 && "不错"}
+                {moodScore === 5 && "很棒"}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">今日感想 (可选):</label>
+              <Textarea 
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="记录今天的感受、想法或特别的事情..."
+                className="w-full"
+                rows={4}
+              />
+            </div>
+
+            <Button 
+              onClick={handleSubmit} 
+              disabled={isSubmitting}
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-6 text-lg rounded-lg"
+            >
+              {isSubmitting ? '提交中...' : '完成打卡'}
+            </Button>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-800 mb-2">💡 打卡说明</h4>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• 每日打卡帮助你跟踪心情变化</li>
+                <li>• 心情评分可以反映症状对生活的影响</li>
+                <li>• 定期记录有助于发现规律和趋势</li>
+                <li>• 这些数据可以在就医时提供给医生参考</li>
+              </ul>
+            </div>
           </CardContent>
         </Card>
       </div>

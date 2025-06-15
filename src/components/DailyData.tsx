@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Calendar, TrendingUp, Smile, Activity } from 'lucide-react';
+import { ArrowLeft, Calendar, TrendingUp, Smile, Activity, Clock, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getRecordsForPeriod } from '@/services/meniereRecordService';
@@ -64,6 +64,17 @@ const DailyData = ({ onBack }: DailyDataProps) => {
     return getDateRecords(date).filter(record => record.type === type).length;
   };
 
+  const getAverageMoodScore = () => {
+    const validCheckins = checkins.filter(c => c.mood_score);
+    if (validCheckins.length === 0) return 0;
+    const sum = validCheckins.reduce((acc, c) => acc + c.mood_score, 0);
+    return (sum / validCheckins.length).toFixed(1);
+  };
+
+  const getTotalRecordsCount = () => {
+    return records.length;
+  };
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('zh-CN', { 
@@ -103,6 +114,38 @@ const DailyData = ({ onBack }: DailyDataProps) => {
           </Button>
           <h1 className="text-xl font-bold">每日数据</h1>
         </div>
+
+        {/* 总体统计卡片 */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <BarChart3 className="h-5 w-5 mr-2" />
+              30天统计概览
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">
+                  {getTotalRecordsCount()}
+                </div>
+                <div className="text-xs text-gray-600">总记录数</div>
+              </div>
+              <div className="p-3 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">
+                  {getAverageMoodScore()}
+                </div>
+                <div className="text-xs text-gray-600">平均心情</div>
+              </div>
+              <div className="p-3 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">
+                  {checkins.length}
+                </div>
+                <div className="text-xs text-gray-600">打卡天数</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="mb-6">
           <CardHeader>
@@ -211,9 +254,9 @@ const DailyData = ({ onBack }: DailyDataProps) => {
                     </div>
                     <div className="text-center p-3 bg-orange-50 rounded-lg">
                       <div className="text-2xl font-bold text-orange-600">
-                        {getRecordTypeCount(selectedDate, 'voice')}
+                        {dayRecords.length}
                       </div>
-                      <div className="text-sm text-gray-600">语音记录</div>
+                      <div className="text-sm text-gray-600">总记录数</div>
                     </div>
                   </div>
 
@@ -223,17 +266,19 @@ const DailyData = ({ onBack }: DailyDataProps) => {
                       <div className="space-y-2">
                         {dayRecords.map(record => (
                           <div key={record.id} className="p-2 bg-gray-50 rounded text-sm">
-                            <div className="font-medium">
-                              {record.type === 'dizziness' && '眩晕记录'}
-                              {record.type === 'lifestyle' && '生活记录'}
-                              {record.type === 'medication' && '用药记录'}
-                              {record.type === 'voice' && '语音记录'}
-                            </div>
-                            <div className="text-gray-600">
-                              {new Date(record.timestamp).toLocaleTimeString('zh-CN', {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
+                            <div className="flex justify-between items-center">
+                              <div className="font-medium">
+                                {record.type === 'dizziness' && '眩晕记录'}
+                                {record.type === 'lifestyle' && '生活记录'}
+                                {record.type === 'medication' && '用药记录'}
+                              </div>
+                              <div className="text-gray-600 flex items-center">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {new Date(record.timestamp).toLocaleTimeString('zh-CN', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </div>
                             </div>
                           </div>
                         ))}
