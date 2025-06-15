@@ -178,8 +178,8 @@ const Index = () => {
       {/* 紧急求助横幅 */}
       <EmergencyBanner onEmergencyClick={() => navigateTo('emergency')} />
 
-      {/* 主页面内容 */}
-      <div className="container mx-auto px-4 py-6 max-w-md">
+      {/* 统一首页页面宽度 */}
+      <div className="container mx-auto px-4 py-6 max-w-2xl">
         {/* 标题区域和用户信息 */}
         <UserWelcome 
           userDisplayName={getUserDisplayName()}

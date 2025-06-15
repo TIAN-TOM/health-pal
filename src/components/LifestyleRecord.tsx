@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft, Check, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -125,19 +124,20 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <div className="container mx-auto px-4 py-6 max-w-md">
-        {/* 返回按钮 */}
-        <div className="flex items-center mb-6">
+      <div className="container mx-auto px-4 py-6 max-w-2xl">
+        {/* 统一返回按钮位置 */}
+        <div className="flex items-center justify-between mb-6">
           <Button
             variant="ghost"
             size="sm"
             onClick={onBack}
-            className="mr-2"
+            className="flex items-center"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             返回
           </Button>
           <h1 className="text-xl font-bold text-gray-800">记录饮食与作息</h1>
+          <div className="w-16"></div> {/* 占位符保持居中 */}
         </div>
 
         <Card>
@@ -158,14 +158,14 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
                     key={option.value}
                     onClick={() => toggleDiet(option.value)}
                     variant={diet.includes(option.value) ? "default" : "outline"}
-                    className={`p-3 h-auto min-h-[60px] ${
+                    className={`p-2 h-auto min-h-[50px] text-xs ${
                       diet.includes(option.value) 
                         ? 'bg-orange-500 hover:bg-orange-600 text-white' 
                         : 'border-2 hover:border-orange-300'
                     }`}
                   >
                     <div className="flex flex-col items-center justify-center w-full">
-                      <span className="text-base mb-1">{option.emoji}</span>
+                      <span className="text-sm mb-1">{option.emoji}</span>
                       <span className="text-xs text-center leading-tight break-words">{option.label}</span>
                       {diet.includes(option.value) && (
                         <Check className="mt-1 h-3 w-3" />

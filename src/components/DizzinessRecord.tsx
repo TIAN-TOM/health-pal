@@ -122,24 +122,25 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <div className="container mx-auto px-4 py-6 max-w-md">
-        {/* 返回按钮 */}
-        <div className="flex items-center mb-6">
+      <div className="container mx-auto px-4 py-6 max-w-2xl">
+        {/* 统一返回按钮位置 */}
+        <div className="flex items-center justify-between mb-6">
           <Button
             variant="ghost"
             size="sm"
             onClick={onBack}
-            className="mr-2"
+            className="flex items-center"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             返回
           </Button>
           <h1 className="text-xl font-bold text-gray-800">记录眩晕症状</h1>
+          <div className="w-16"></div> {/* 占位符保持居中 */}
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
+            <CardTitle className="flex items-center justify-center">
               <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
               记录眩晕症状
             </CardTitle>

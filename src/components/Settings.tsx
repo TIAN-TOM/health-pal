@@ -24,13 +24,21 @@ const Settings = ({ onBack, onAdminPanel, onEmergencyContacts, onMedicalRecords,
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
-      <div className="container mx-auto max-w-md">
-        <div className="flex items-center mb-6">
-          <Button variant="ghost" onClick={onBack} className="mr-2">
-            <ArrowLeft className="h-4 w-4" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <div className="container mx-auto px-4 py-6 max-w-2xl">
+        {/* 统一返回按钮位置 */}
+        <div className="flex items-center justify-between mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="flex items-center"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            返回
           </Button>
           <h1 className="text-xl font-bold">设置</h1>
+          <div className="w-16"></div> {/* 占位符保持居中 */}
         </div>
 
         {/* 管理员面板 */}
@@ -88,7 +96,6 @@ const Settings = ({ onBack, onAdminPanel, onEmergencyContacts, onMedicalRecords,
           </CardContent>
         </Card>
 
-        {/* 功能设置 */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>功能管理</CardTitle>
@@ -140,7 +147,6 @@ const Settings = ({ onBack, onAdminPanel, onEmergencyContacts, onMedicalRecords,
           </CardContent>
         </Card>
 
-        {/* 退出登录 */}
         <Card>
           <CardContent className="p-6">
             <Button
@@ -154,7 +160,6 @@ const Settings = ({ onBack, onAdminPanel, onEmergencyContacts, onMedicalRecords,
           </CardContent>
         </Card>
 
-        {/* 应用信息 */}
         <div className="mt-8 pt-6 border-t border-gray-200 text-center">
           <p className="text-xs text-gray-500 leading-relaxed">
             梅尼埃症生活伴侣 v1.0.0
@@ -166,7 +171,8 @@ const Settings = ({ onBack, onAdminPanel, onEmergencyContacts, onMedicalRecords,
               href="https://www.linkedin.com/in/yushun-tian-317580257/" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 underline ml-1"
+              className="text-blue-600 hover:text-blue-800 ml-1"
+              style={{ textDecoration: 'none' }}
             >
               Yushun Tian
             </a>
