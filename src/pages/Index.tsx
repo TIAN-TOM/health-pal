@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
-import { Heart, Phone, Menu, Download, Mic, AlertCircle, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Heart, Phone, Menu, Download, Mic, AlertCircle, Home, LogOut, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useAuth } from '@/hooks/useAuth';
 import EmergencyMode from '@/components/EmergencyMode';
 import DizzinessRecord from '@/components/DizzinessRecord';
 import LifestyleRecord from '@/components/LifestyleRecord';
@@ -14,6 +16,43 @@ import HistoryView from '@/components/HistoryView';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<string>('home');
+  const { user, userRole, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  // 如果正在加载，显示加载状态
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <Heart className="h-8 w-8 text-blue-600 animate-pulse mx-auto mb-4" />
+          <p className="text-gray-600">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果未登录，显示登录提示
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <Heart className="h-16 w-16 text-blue-600 mx-auto mb-6" />
+          <h1 className="text-3xl font-bold text-gray-800 mb-4 leading-normal">
+            梅尼埃症生活伴侣
+          </h1>
+          <p className="text-gray-600 mb-8 text-lg leading-relaxed">
+            记录症状，守护健康
+          </p>
+          <Button
+            onClick={() => navigate('/auth')}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-lg min-h-[56px]"
+          >
+            登录 / 注册
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const navigateTo = (view: string) => {
     setCurrentView(view);
@@ -21,6 +60,11 @@ const Index = () => {
 
   const navigateHome = () => {
     setCurrentView('home');
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
   };
 
   if (currentView === 'emergency') {
@@ -53,7 +97,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      {/* 紧急求助横幅 - 改为温暖的橙色调 */}
+      {/* 紧急求助横幅 */}
       <div className="bg-orange-500 text-white p-4 shadow-lg">
         <Button
           onClick={() => navigateTo('emergency')}
@@ -66,22 +110,47 @@ const Index = () => {
 
       {/* 主页面内容 */}
       <div className="container mx-auto px-4 py-6 max-w-md">
-        {/* 标题区域 - 修复字体显示问题 */}
+        {/* 标题区域和用户信息 */}
         <div className="text-center mb-8">
           <div className="flex justify-between items-center mb-4 min-h-[48px]">
             <h1 className="text-2xl font-bold text-gray-800 flex items-center leading-tight">
               <Heart className="mr-2 h-6 w-6 text-blue-600 flex-shrink-0" />
               <span className="leading-normal">梅尼埃症生活伴侣</span>
             </h1>
+            <div className="flex items-center space-x-2">
+              {userRole === 'admin' && (
+                <div className="flex items-center text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">
+                  <Shield className="h-3 w-3 mr-1" />
+                  管理员
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigateTo('settings')}
+                className="text-gray-500 hover:text-gray-700 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+          
+          <div className="text-sm text-gray-600 mb-2 leading-relaxed">
+            欢迎回来，{user.email}
+          </div>
+          
+          <div className="flex justify-center mb-4">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigateTo('settings')}
-              className="text-gray-500 hover:text-gray-700 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              onClick={handleSignOut}
+              className="text-gray-500 hover:text-gray-700 text-sm"
             >
-              <Menu className="h-5 w-5" />
+              <LogOut className="h-4 w-4 mr-1" />
+              退出登录
             </Button>
           </div>
+          
           <p className="text-gray-600 text-lg leading-relaxed">
             记录症状，守护健康
           </p>
