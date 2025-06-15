@@ -11,6 +11,7 @@ import MedicationRecord from '@/components/MedicationRecord';
 import DataExport from '@/components/DataExport';
 import Settings from '@/components/Settings';
 import AdminPanel from '@/components/AdminPanel';
+import EmergencyContacts from '@/components/EmergencyContacts';
 import MedicalRecords from '@/components/MedicalRecords';
 import EducationCenter from '@/components/EducationCenter';
 import DailyQuote from '@/components/DailyQuote';
@@ -126,7 +127,23 @@ const Index = () => {
   }
 
   if (currentView === 'settings') {
-    return <Settings onBack={navigateHome} />;
+    return (
+      <Settings 
+        onBack={navigateHome} 
+        onAdminPanel={userRole === 'admin' ? () => navigateTo('admin-panel') : undefined}
+        onEmergencyContacts={() => navigateTo('emergency-contacts')}
+        onMedicalRecords={() => navigateTo('medical-records')}
+        onEducation={() => navigateTo('education')}
+      />
+    );
+  }
+
+  if (currentView === 'admin-panel') {
+    return <AdminPanel onBack={() => navigateTo('settings')} />;
+  }
+
+  if (currentView === 'emergency-contacts') {
+    return <EmergencyContacts onBack={() => navigateTo('settings')} />;
   }
 
   if (currentView === 'medical-records') {

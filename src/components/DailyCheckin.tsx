@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { getTodayCheckin, createCheckin } from '@/services/dailyCheckinService';
 import { useToast } from '@/hooks/use-toast';
+import CheckinCalendar from './CheckinCalendar';
 
 interface DailyCheckinProps {
   onBack: () => void;
@@ -68,13 +69,16 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
             <h1 className="text-xl font-bold">每日打卡</h1>
           </div>
 
-          <Card>
+          <Card className="mb-6">
             <CardContent className="p-6 text-center">
               <Smile className="h-16 w-16 text-green-500 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-green-600 mb-2">今日已打卡！</h2>
               <p className="text-gray-600">感谢你记录今天的美好时光</p>
             </CardContent>
           </Card>
+
+          {/* 显示打卡日历 */}
+          <CheckinCalendar />
         </div>
       </div>
     );
@@ -89,6 +93,9 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
           </Button>
           <h1 className="text-xl font-bold">每日打卡</h1>
         </div>
+
+        {/* 显示打卡日历 */}
+        <CheckinCalendar />
 
         <Card className="mb-6">
           <CardHeader>

@@ -36,7 +36,7 @@ const NavigationActions = ({ onDataExport, onDailyData }: NavigationActionsProps
       {/* 作者声明 */}
       <div className="mt-8 pt-6 border-t border-gray-200 text-center">
         <p className="text-xs text-gray-500 leading-relaxed">
-          © 2024 梅尼埃症生活伴侣 - 专注于梅尼埃症患者的健康管理
+          © 2025 梅尼埃症生活伴侣 - 专注于梅尼埃症患者的健康管理
           <br />
           本应用仅供参考，不能替代专业医疗建议
           <br />

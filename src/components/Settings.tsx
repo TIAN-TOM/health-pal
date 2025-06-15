@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowLeft, User, Shield, LogOut, Settings2 } from 'lucide-react';
+import { ArrowLeft, User, Shield, LogOut, Settings2, Phone, FileText, Pill } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,9 +8,12 @@ import { useAuth } from '@/hooks/useAuth';
 interface SettingsProps {
   onBack: () => void;
   onAdminPanel?: () => void;
+  onEmergencyContacts?: () => void;
+  onMedicalRecords?: () => void;
+  onEducation?: () => void;
 }
 
-const Settings = ({ onBack, onAdminPanel }: SettingsProps) => {
+const Settings = ({ onBack, onAdminPanel, onEmergencyContacts, onMedicalRecords, onEducation }: SettingsProps) => {
   const { userProfile, userRole, signOut } = useAuth();
 
   const handleSignOut = async () => {
@@ -84,6 +87,47 @@ const Settings = ({ onBack, onAdminPanel }: SettingsProps) => {
           </CardContent>
         </Card>
 
+        {/* 功能设置 */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>功能管理</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {onEmergencyContacts && (
+              <Button
+                onClick={onEmergencyContacts}
+                variant="outline"
+                className="w-full justify-start"
+              >
+                <Phone className="h-4 w-4 mr-2" />
+                管理紧急联系人
+              </Button>
+            )}
+            
+            {onMedicalRecords && (
+              <Button
+                onClick={onMedicalRecords}
+                variant="outline"
+                className="w-full justify-start"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                医疗记录管理
+              </Button>
+            )}
+
+            {onEducation && (
+              <Button
+                onClick={onEducation}
+                variant="outline"
+                className="w-full justify-start"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                健康科普
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+
         {/* 退出登录 */}
         <Card>
           <CardContent className="p-6">
@@ -103,7 +147,7 @@ const Settings = ({ onBack, onAdminPanel }: SettingsProps) => {
           <p className="text-xs text-gray-500 leading-relaxed">
             梅尼埃症生活伴侣 v1.0.0
             <br />
-            © 2024 专注于梅尼埃症患者的健康管理
+            © 2025 专注于梅尼埃症患者的健康管理
             <br />
             开发者：
             <a 
