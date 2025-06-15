@@ -43,7 +43,22 @@ export const getRecordsByDateRange = async (startDate: Date, endDate: Date) => {
 
     console.log('获取到的打卡记录数量:', checkins?.length || 0);
 
-    // 合并记录，将打卡记录转换为统一格式
+    // 获取医疗记录
+    const { data: medicalRecords, error: medicalError } = await supabase
+      .from('medical_records')
+      .select('*')
+      .eq('user_id', user.id)
+      .gte('date', getBeijingDateString(startDate))
+      .lte('date', getBeijingDateString(endDate))
+      .order('date', { ascending: false });
+
+    if (medicalError) {
+      console.error('获取医疗记录失败:', medicalError);
+    }
+
+    console.log('获取到的医疗记录数量:', medicalRecords?.length || 0);
+
+    // 合并记录，将打卡记录和医疗记录转换为统一格式
     const allRecords = [...(records || [])];
     
     if (checkins && checkins.length > 0) {
@@ -59,7 +74,43 @@ export const getRecordsByDateRange = async (startDate: Date, endDate: Date) => {
           data: {
             mood_score: checkin.mood_score,
             checkin_date: checkin.checkin_date,
-            note: checkin.note
+            note: checkin.note,
+            photo_url: checkin.photo_url
+          },
+          severity: null,
+          duration: null,
+          symptoms: null,
+          diet: null,
+          sleep: null,
+          stress: null,
+          medications: null,
+          dosage: null
+        } as any);
+      });
+    }
+
+    // 添加医疗记录
+    if (medicalRecords && medicalRecords.length > 0) {
+      medicalRecords.forEach(medRecord => {
+        allRecords.push({
+          id: `medical-${medRecord.id}`,
+          type: 'medical',
+          timestamp: medRecord.created_at,
+          created_at: medRecord.created_at,
+          updated_at: medRecord.updated_at,
+          user_id: medRecord.user_id,
+          note: medRecord.notes,
+          data: {
+            record_type: medRecord.record_type,
+            date: medRecord.date,
+            hospital: medRecord.hospital,
+            doctor: medRecord.doctor,
+            department: medRecord.department,
+            diagnosis: medRecord.diagnosis,
+            symptoms: medRecord.symptoms,
+            prescribed_medications: medRecord.prescribed_medications,
+            notes: medRecord.notes,
+            next_appointment: medRecord.next_appointment
           },
           severity: null,
           duration: null,
@@ -114,7 +165,8 @@ export const generateJSONFormat = (records: any[], startDate: string, endDate: s
           type: "Vertigo",
           durationMinutes: convertDurationToMinutes(record.duration),
           intensity: convertSeverityToNumber(record.severity),
-          associatedSymptoms: record.symptoms || []
+          associatedSymptoms: record.symptoms || [],
+          note: record.note || undefined
         }
       };
     } else if (record.type === 'lifestyle') {
@@ -127,7 +179,8 @@ export const generateJSONFormat = (records: any[], startDate: string, endDate: s
           eventType: "LifestyleLog",
           details: {
             type: "Diet",
-            tags: record.diet
+            tags: record.diet,
+            note: record.note || undefined
           }
         });
       }
@@ -139,7 +192,8 @@ export const generateJSONFormat = (records: any[], startDate: string, endDate: s
           eventType: "LifestyleLog",
           details: {
             type: "Sleep",
-            quality: record.sleep
+            quality: record.sleep,
+            note: record.note || undefined
           }
         });
       }
@@ -151,7 +205,8 @@ export const generateJSONFormat = (records: any[], startDate: string, endDate: s
           eventType: "LifestyleLog",
           details: {
             type: "Stress",
-            level: record.stress
+            level: record.stress,
+            note: record.note || undefined
           }
         });
       }
@@ -163,7 +218,8 @@ export const generateJSONFormat = (records: any[], startDate: string, endDate: s
         eventType: "MedicationLog",
         details: {
           medications: record.medications || [],
-          dosage: record.dosage
+          dosage: record.dosage,
+          note: record.note || undefined
         }
       };
     } else if (record.type === 'voice') {
@@ -180,7 +236,24 @@ export const generateJSONFormat = (records: any[], startDate: string, endDate: s
         eventType: "DailyCheckin",
         details: {
           mood_score: record.data?.mood_score,
-          note: record.data?.note
+          note: record.data?.note,
+          photo_url: record.data?.photo_url
+        }
+      };
+    } else if (record.type === 'medical') {
+      return {
+        timestamp,
+        eventType: "MedicalRecord",
+        details: {
+          record_type: record.data?.record_type,
+          hospital: record.data?.hospital,
+          doctor: record.data?.doctor,
+          department: record.data?.department,
+          diagnosis: record.data?.diagnosis,
+          symptoms: record.data?.symptoms,
+          prescribed_medications: record.data?.prescribed_medications,
+          notes: record.data?.notes,
+          next_appointment: record.data?.next_appointment
         }
       };
     }
@@ -236,6 +309,9 @@ export const generateTextFormat = (records: any[], startDate: string, endDate: s
         if (record.symptoms?.length > 0) {
           text += `  伴随症状: ${record.symptoms.join(', ')}\n`;
         }
+        if (record.note) {
+          text += `  备注: ${record.note}\n`;
+        }
       } else if (record.type === 'lifestyle') {
         if (record.diet?.length > 0) {
           text += `- [${time}] 饮食记录: ${record.diet.join(', ')}\n`;
@@ -246,6 +322,9 @@ export const generateTextFormat = (records: any[], startDate: string, endDate: s
         if (record.stress) {
           text += `- [${time}] 压力水平: ${record.stress}\n`;
         }
+        if (record.note) {
+          text += `  备注: ${record.note}\n`;
+        }
       } else if (record.type === 'medication') {
         text += `- [${time}] 用药记录\n`;
         if (record.medications?.length > 0) {
@@ -253,6 +332,9 @@ export const generateTextFormat = (records: any[], startDate: string, endDate: s
         }
         if (record.dosage) {
           text += `  剂量: ${record.dosage}\n`;
+        }
+        if (record.note) {
+          text += `  备注: ${record.note}\n`;
         }
       } else if (record.type === 'voice') {
         text += `- [${time}] 语音记事\n`;
@@ -265,10 +347,35 @@ export const generateTextFormat = (records: any[], startDate: string, endDate: s
         if (record.data?.note) {
           text += `  备注: ${record.data.note}\n`;
         }
-      }
-      
-      if (record.note && record.type !== 'voice' && record.type !== 'checkin') {
-        text += `  备注: ${record.note}\n`;
+        if (record.data?.photo_url) {
+          text += `  照片: ${record.data.photo_url}\n`;
+        }
+      } else if (record.type === 'medical') {
+        text += `- [${time}] 医疗记录 (${record.data?.record_type || '未知类型'})\n`;
+        if (record.data?.hospital) {
+          text += `  医院: ${record.data.hospital}\n`;
+        }
+        if (record.data?.doctor) {
+          text += `  医生: ${record.data.doctor}\n`;
+        }
+        if (record.data?.department) {
+          text += `  科室: ${record.data.department}\n`;
+        }
+        if (record.data?.diagnosis) {
+          text += `  诊断: ${record.data.diagnosis}\n`;
+        }
+        if (record.data?.symptoms) {
+          text += `  症状: ${record.data.symptoms}\n`;
+        }
+        if (record.data?.prescribed_medications?.length > 0) {
+          text += `  处方药物: ${record.data.prescribed_medications.join(', ')}\n`;
+        }
+        if (record.data?.notes) {
+          text += `  备注: ${record.data.notes}\n`;
+        }
+        if (record.data?.next_appointment) {
+          text += `  下次预约: ${record.data.next_appointment}\n`;
+        }
       }
       
       text += '\n';

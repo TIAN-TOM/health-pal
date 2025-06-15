@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,17 +55,36 @@ const CalendarView = () => {
         const date = getBeijingDateString(dayDate);
         
         const checkin = checkins.find(c => c.checkin_date === date);
-        const dayRecords = records.filter(r => r.timestamp && r.timestamp.startsWith(date));
+        
+        // 修复症状记录统计逻辑
+        const dayRecords = records.filter(r => {
+          if (!r.timestamp) return false;
+          const recordDate = new Date(r.timestamp);
+          const recordDateString = getBeijingDateString(recordDate);
+          return recordDateString === date;
+        });
+        
+        // 统计所有类型的记录，不仅仅是眩晕记录
+        const totalRecordsCount = dayRecords.length;
+        const hasAnySymptoms = dayRecords.some(r => {
+          // 检查是否有症状记录
+          if (r.type === 'dizziness' && r.symptoms && r.symptoms.length > 0) return true;
+          if (r.type === 'lifestyle' && (r.diet?.length > 0 || r.sleep || r.stress)) return true;
+          if (r.type === 'medication' && r.medications?.length > 0) return true;
+          if (r.type === 'voice' && r.note) return true;
+          return false;
+        });
         
         monthDays.push({
           date,
           hasCheckin: !!checkin,
           moodScore: checkin?.mood_score || undefined,
-          hasSymptoms: dayRecords.some(r => r.type === 'dizziness' && r.symptoms && r.symptoms.length > 0),
-          symptomCount: dayRecords.filter(r => r.type === 'dizziness').length
+          hasSymptoms: hasAnySymptoms,
+          symptomCount: totalRecordsCount
         });
       }
 
+      console.log('处理后的月度数据:', monthDays.filter(d => d.symptomCount > 0));
       setMonthData(monthDays);
     } catch (error) {
       console.error('加载月度数据失败:', error);
@@ -287,7 +307,7 @@ const CalendarView = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span>症状记录数</span>
+                  <span>记录数量</span>
                 </div>
               </div>
               <div className="space-y-2">

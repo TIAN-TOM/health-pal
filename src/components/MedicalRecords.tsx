@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Calendar, Hospital, User, FileText, Trash2, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { MedicalRecord, getMedicalRecords, saveMedicalRecord, deleteMedicalRecord, updateMedicalRecord } from '@/services/medicalRecordsService';
+import { getBeijingDateString } from '@/utils/beijingTime';
 
 interface MedicalRecordsProps {
   onBack: () => void;
@@ -17,15 +17,29 @@ const MedicalRecords = ({ onBack }: MedicalRecordsProps) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState<MedicalRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // 使用北京时间作为默认日期
+  const getTodayDateString = () => getBeijingDateString();
+  
   const [formData, setFormData] = useState<Partial<MedicalRecord>>({
     record_type: 'visit',
-    date: new Date().toISOString().split('T')[0]
+    date: getTodayDateString()
   });
   const { toast } = useToast();
 
   useEffect(() => {
     loadRecords();
   }, []);
+
+  // 每次打开添加表单时，重新设置当天日期
+  useEffect(() => {
+    if (showAddForm && !editingRecord) {
+      setFormData(prev => ({
+        ...prev,
+        date: getTodayDateString()
+      }));
+    }
+  }, [showAddForm, editingRecord]);
 
   const loadRecords = async () => {
     try {
@@ -72,7 +86,7 @@ const MedicalRecords = ({ onBack }: MedicalRecordsProps) => {
       setEditingRecord(null);
       setFormData({
         record_type: 'visit',
-        date: new Date().toISOString().split('T')[0]
+        date: getTodayDateString()
       });
     } catch (error) {
       console.error('保存失败:', error);
@@ -95,7 +109,7 @@ const MedicalRecords = ({ onBack }: MedicalRecordsProps) => {
     setShowAddForm(false);
     setFormData({
       record_type: 'visit',
-      date: new Date().toISOString().split('T')[0]
+      date: getTodayDateString()
     });
   };
 
