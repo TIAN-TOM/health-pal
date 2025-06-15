@@ -3,15 +3,15 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertTriangle, Clock, Save, Zap } from 'lucide-react';
+import { AlertTriangle, Clock, Save, Zap, ArrowLeft } from 'lucide-react';
 import { saveMeniereRecord } from '@/services/meniereRecordService';
 import { useToast } from '@/hooks/use-toast';
 
 interface DizzinessRecordProps {
-  onSave: () => void;
+  onBack: () => void;
 }
 
-const DizzinessRecord = ({ onSave }: DizzinessRecordProps) => {
+const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
   const [severity, setSeverity] = useState('轻度');
   const [duration, setDuration] = useState('');
   const [symptoms, setSymptoms] = useState<string[]>([]);
@@ -20,9 +20,9 @@ const DizzinessRecord = ({ onSave }: DizzinessRecordProps) => {
   const { toast } = useToast();
 
   const severityOptions = [
-    { value: '轻度', label: '轻度', emoji: '😌', color: 'bg-green-100 text-green-800' },
-    { value: '中度', label: '中度', emoji: '😐', color: 'bg-yellow-100 text-yellow-800' },
-    { value: '重度', label: '重度', emoji: '😵', color: 'bg-red-100 text-red-800' }
+    { value: '轻度', label: '轻度', color: 'bg-green-100 text-green-800' },
+    { value: '中度', label: '中度', color: 'bg-yellow-100 text-yellow-800' },
+    { value: '重度', label: '重度', color: 'bg-red-100 text-red-800' }
   ];
 
   const durationOptions = [
@@ -35,14 +35,14 @@ const DizzinessRecord = ({ onSave }: DizzinessRecordProps) => {
   ];
 
   const symptomOptions = [
-    { value: '旋转性眩晕', emoji: '🌪️' },
-    { value: '头晕', emoji: '😵‍💫' },
-    { value: '恶心', emoji: '🤢' },
-    { value: '呕吐', emoji: '🤮' },
-    { value: '耳鸣', emoji: '👂' },
-    { value: '听力下降', emoji: '🔇' },
-    { value: '耳胀感', emoji: '💨' },
-    { value: '平衡失调', emoji: '⚖️' }
+    '旋转性眩晕',
+    '头晕',
+    '恶心',
+    '呕吐',
+    '耳鸣',
+    '听力下降',
+    '耳胀感',
+    '平衡失调'
   ];
 
   const handleSymptomToggle = (symptom: string) => {
@@ -76,7 +76,7 @@ const DizzinessRecord = ({ onSave }: DizzinessRecordProps) => {
       await saveMeniereRecord(recordData);
       
       toast({
-        title: "✅ 记录保存成功",
+        title: "记录保存成功 ✅",
         description: "眩晕症状记录已保存，继续关注您的健康",
       });
 
@@ -86,10 +86,10 @@ const DizzinessRecord = ({ onSave }: DizzinessRecordProps) => {
       setSymptoms([]);
       setNote('');
       
-      onSave();
+      onBack();
     } catch (error: any) {
       toast({
-        title: "❌ 保存失败",
+        title: "保存失败 ❌",
         description: error.message,
         variant: "destructive",
       });
@@ -101,6 +101,13 @@ const DizzinessRecord = ({ onSave }: DizzinessRecordProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
       <div className="container mx-auto max-w-md">
+        <div className="flex items-center mb-6">
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            返回
+          </Button>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -130,12 +137,9 @@ const DizzinessRecord = ({ onSave }: DizzinessRecordProps) => {
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{option.label}</span>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-lg">{option.emoji}</span>
-                          <span className={`text-xs px-2 py-1 rounded ${option.color}`}>
-                            {option.label}
-                          </span>
-                        </div>
+                        <span className={`text-xs px-2 py-1 rounded ${option.color}`}>
+                          {option.label}
+                        </span>
                       </div>
                     </button>
                   ))}
@@ -169,24 +173,21 @@ const DizzinessRecord = ({ onSave }: DizzinessRecordProps) => {
               {/* 伴随症状 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  💫 伴随症状（可多选）
+                  伴随症状（可多选）
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {symptomOptions.map((symptom) => (
                     <button
-                      key={symptom.value}
+                      key={symptom}
                       type="button"
-                      onClick={() => handleSymptomToggle(symptom.value)}
+                      onClick={() => handleSymptomToggle(symptom)}
                       className={`p-2 text-sm rounded-lg border transition-all ${
-                        symptoms.includes(symptom.value)
+                        symptoms.includes(symptom)
                           ? 'border-blue-500 bg-blue-50 text-blue-700'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <div className="flex items-center space-x-1">
-                        <span>{symptom.emoji}</span>
-                        <span>{symptom.value}</span>
-                      </div>
+                      {symptom}
                     </button>
                   ))}
                 </div>
@@ -195,7 +196,7 @@ const DizzinessRecord = ({ onSave }: DizzinessRecordProps) => {
               {/* 备注 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  📝 备注说明（可选）
+                  备注说明（可选）
                 </label>
                 <Textarea
                   value={note}

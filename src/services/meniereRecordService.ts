@@ -18,6 +18,35 @@ export interface MeniereRecord {
   dosage?: string;
 }
 
+// Generic function to save any type of Meniere record
+export const saveMeniereRecord = async (record: MeniereRecord) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('用户未登录');
+  }
+
+  const { data, error } = await supabase
+    .from('meniere_records')
+    .insert({
+      type: record.type,
+      duration: record.duration,
+      severity: record.severity,
+      symptoms: record.symptoms,
+      diet: record.diet,
+      sleep: record.sleep,
+      stress: record.stress,
+      medications: record.medications,
+      dosage: record.dosage,
+      note: record.note,
+      data: record.data,
+      user_id: user.id
+    });
+
+  if (error) throw error;
+  return data;
+};
+
 export const saveDizzinessRecord = async (record: {
   duration: string;
   severity: string;
