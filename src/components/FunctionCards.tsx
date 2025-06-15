@@ -1,0 +1,97 @@
+
+import React from 'react';
+import { Home, BookOpen, Stethoscope } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+
+interface FunctionCardsProps {
+  onNavigate: (view: string) => void;
+}
+
+const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
+  return (
+    <div className="grid gap-4 mb-8">
+      <Card className="hover:shadow-lg transition-shadow duration-200">
+        <CardContent className="p-6">
+          <Button
+            onClick={() => onNavigate('dizziness-record')}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                <div className="w-6 h-6 bg-blue-500 rounded-full animate-pulse"></div>
+              </div>
+              <span className="leading-relaxed">记录眩晕症状</span>
+            </div>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="hover:shadow-lg transition-shadow duration-200">
+        <CardContent className="p-6">
+          <Button
+            onClick={() => onNavigate('lifestyle-record')}
+            className="w-full bg-green-500 hover:bg-green-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
+                <Home className="h-6 w-6 text-green-600" />
+              </div>
+              <span className="leading-relaxed">记录饮食与作息</span>
+            </div>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="hover:shadow-lg transition-shadow duration-200">
+        <CardContent className="p-6">
+          <Button
+            onClick={() => onNavigate('medication-record')}
+            className="w-full bg-purple-500 hover:bg-purple-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+                <div className="w-6 h-6 bg-purple-500 rounded-full"></div>
+              </div>
+              <span className="leading-relaxed">记录用药情况</span>
+            </div>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="hover:shadow-lg transition-shadow duration-200">
+        <CardContent className="p-6">
+          <Button
+            onClick={() => onNavigate('medical-records')}
+            className="w-full bg-indigo-500 hover:bg-indigo-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-3">
+                <Stethoscope className="h-6 w-6 text-indigo-600" />
+              </div>
+              <span className="leading-relaxed">医疗记录管理</span>
+            </div>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="hover:shadow-lg transition-shadow duration-200">
+        <CardContent className="p-6">
+          <Button
+            onClick={() => onNavigate('education')}
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
+                <BookOpen className="h-6 w-6 text-emerald-600" />
+              </div>
+              <span className="leading-relaxed">疾病科普与心理支持</span>
+            </div>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default FunctionCards;
