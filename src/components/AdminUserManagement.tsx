@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,7 +24,7 @@ const AdminUserManagement = () => {
   const [users, setUsers] = useState<UserWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRole, setSelectedRole] = useState('');
+  const [selectedRole, setSelectedRole] = useState('all');
   const [currentView, setCurrentView] = useState<'list' | 'detail'>('list');
   const [selectedUser, setSelectedUser] = useState<UserWithProfile | null>(null);
   const [isEditingRole, setIsEditingRole] = useState(false);
@@ -114,7 +113,7 @@ const AdminUserManagement = () => {
   const filteredUsers = users.filter(user => {
     const searchMatch = user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
-    const roleMatch = selectedRole ? user.role === selectedRole : true;
+    const roleMatch = selectedRole === 'all' ? true : user.role === selectedRole;
     return searchMatch && roleMatch;
   });
 
@@ -199,8 +198,27 @@ const AdminUserManagement = () => {
   };
 
   const formatBeijingTime = (dateString: string) => {
-    const date = new Date(dateString + '+08:00');
-    return format(date, 'yyyy年MM月dd日 HH:mm', { locale: zhCN });
+    try {
+      if (!dateString) {
+        return '未知时间';
+      }
+      
+      // 直接使用 date-fns 解析日期，不手动添加时区
+      const date = new Date(dateString);
+      
+      // 检查日期是否有效
+      if (isNaN(date.getTime())) {
+        return '时间格式错误';
+      }
+      
+      // 转换为北京时间 (UTC+8)
+      const beijingTime = new Date(date.getTime() + (8 * 60 * 60 * 1000));
+      
+      return format(beijingTime, 'yyyy年MM月dd日 HH:mm', { locale: zhCN });
+    } catch (error) {
+      console.error('日期格式化失败:', error, '原始日期:', dateString);
+      return '时间格式错误';
+    }
   };
 
   if (loading) {
@@ -230,7 +248,7 @@ const AdminUserManagement = () => {
               <SelectValue placeholder="所有角色" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">所有角色</SelectItem>
+              <SelectItem value="all">所有角色</SelectItem>
               <SelectItem value="user">普通用户</SelectItem>
               <SelectItem value="admin">管理员</SelectItem>
             </SelectContent>
