@@ -98,36 +98,6 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
     );
   };
 
-  // 获取正确的北京时间
-  const getBeijingTime = () => {
-    const now = new Date();
-    // 获取UTC时间戳，然后加上8小时（北京时间是UTC+8）
-    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
-    const beijingTime = new Date(utcTime + (8 * 60 * 60 * 1000));
-    return beijingTime;
-  };
-
-  // 修复的北京时间格式化函数
-  const formatBeijingTime = (dateString: string) => {
-    try {
-      if (!dateString) {
-        return '未知时间';
-      }
-      
-      const date = new Date(dateString);
-      
-      if (isNaN(date.getTime())) {
-        return '时间格式错误';
-      }
-      
-      // 直接使用传入的时间（已经是北京时间）
-      return format(date, 'HH:mm', { locale: zhCN });
-    } catch (error) {
-      console.error('日期格式化失败:', error, '原始日期:', dateString);
-      return '时间格式错误';
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <div className="container mx-auto px-4 py-6 max-w-md">
