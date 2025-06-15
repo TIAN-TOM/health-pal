@@ -11,14 +11,14 @@ interface NavigationActionsProps {
 const NavigationActions = ({ onDataExport, onDailyData }: NavigationActionsProps) => {
   return (
     <div className="space-y-4">
-      {/* 每日数据查看 */}
+      {/* 每日数据中心 */}
       <div>
         <Button
           onClick={onDailyData}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-medium py-6 rounded-lg min-h-[64px]"
         >
-          <TrendingUp className="mr-3 h-5 w-5" />
-          <span className="leading-relaxed">查看每日数据</span>
+          <Calendar className="mr-3 h-5 w-5" />
+          <span className="leading-relaxed">每日数据中心</span>
         </Button>
       </div>
 

@@ -21,7 +21,7 @@ import NavigationActions from '@/components/NavigationActions';
 import HistoryView from '@/components/HistoryView';
 import DailyCheckin from '@/components/DailyCheckin';
 import CheckinStatus from '@/components/CheckinStatus';
-import DailyData from '@/components/DailyData';
+import DailyDataHub from '@/components/DailyDataHub';
 import RecordDetail from '@/components/RecordDetail';
 import MedicationManagement from '@/components/MedicationManagement';
 import CheckinCalendar from '@/components/CheckinCalendar';
@@ -110,8 +110,9 @@ const Index = () => {
     );
   }
 
-  if (currentView === 'daily-checkin') {
-    return <DailyCheckin onBack={navigateHome} />;
+  // 合并每日打卡和每日数据查看
+  if (currentView === 'daily-checkin' || currentView === 'daily-data') {
+    return <DailyDataHub onBack={navigateHome} />;
   }
 
   if (currentView === 'dizziness-record') {
@@ -133,10 +134,6 @@ const Index = () => {
 
   if (currentView === 'data-export') {
     return <DataExport onBack={navigateHome} />;
-  }
-
-  if (currentView === 'daily-data') {
-    return <DailyData onBack={navigateHome} />;
   }
 
   if (currentView === 'settings') {

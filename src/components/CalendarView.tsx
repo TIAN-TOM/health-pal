@@ -80,8 +80,9 @@ const CalendarView = () => {
 
   const getMoodIcon = (moodScore?: number) => {
     if (moodScore === undefined) return null;
-    if (moodScore >= 7) return <Smile className="h-4 w-4 text-green-500" />;
-    if (moodScore >= 4) return <Meh className="h-4 w-4 text-yellow-500" />;
+    // 修正心情评分范围为1-5
+    if (moodScore >= 4) return <Smile className="h-4 w-4 text-green-500" />;
+    if (moodScore >= 3) return <Meh className="h-4 w-4 text-yellow-500" />;
     return <Frown className="h-4 w-4 text-red-500" />;
   };
 
@@ -231,7 +232,7 @@ const CalendarView = () => {
               })}
             </div>
             
-            {/* 图例 */}
+            {/* 修正的图例 */}
             <div className="grid grid-cols-2 gap-4 pt-4 border-t text-sm">
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
@@ -246,15 +247,15 @@ const CalendarView = () => {
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Smile className="h-4 w-4 text-green-500" />
-                  <span>心情好 (7-10)</span>
+                  <span>心情好 (4-5分)</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Meh className="h-4 w-4 text-yellow-500" />
-                  <span>心情一般 (4-6)</span>
+                  <span>心情一般 (3分)</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Frown className="h-4 w-4 text-red-500" />
-                  <span>心情不好 (1-3)</span>
+                  <span>心情不好 (1-2分)</span>
                 </div>
               </div>
             </div>
