@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { ArrowLeft, Download, Calendar, FileText, Database, ExternalLink, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -386,16 +384,6 @@ const DataExport = ({ onBack }: DataExportProps) => {
         });
         return;
       }
-
-      const today = getBeijingTime();
-      if (endDate > today) {
-        toast({
-          title: '错误',
-          description: '结束日期不能是未来时间',
-          variant: 'destructive'
-        });
-        return;
-      }
     }
 
     setLoading(true);
@@ -607,7 +595,6 @@ const DataExport = ({ onBack }: DataExportProps) => {
                     type="date"
                     value={customStartDate}
                     onChange={(e) => setCustomStartDate(e.target.value)}
-                    max={new Date().toISOString().split('T')[0]}
                   />
                 </div>
 
@@ -618,7 +605,6 @@ const DataExport = ({ onBack }: DataExportProps) => {
                     type="date"
                     value={customEndDate}
                     onChange={(e) => setCustomEndDate(e.target.value)}
-                    max={new Date().toISOString().split('T')[0]}
                     min={customStartDate}
                   />
                 </div>
@@ -648,8 +634,8 @@ const DataExport = ({ onBack }: DataExportProps) => {
                   <p className="font-medium mb-1">提示：</p>
                   <p>• 选择您需要的具体时间段</p>
                   <p>• 开始日期不能晚于结束日期</p>
-                  <p>• 结束日期不能是未来时间</p>
-                  <p>• 建议选择有记录的时间段</p>
+                  <p>• 可以选择任何日期范围进行数据导出</p>
+                  <p>• 建议选择有记录的时间段以获得有效数据</p>
                 </div>
               </CardContent>
             </Card>
@@ -675,4 +661,3 @@ const DataExport = ({ onBack }: DataExportProps) => {
 };
 
 export default DataExport;
-
