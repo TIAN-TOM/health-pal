@@ -3,7 +3,7 @@
 export const getBeijingTime = () => {
   const now = new Date();
   // 获取北京时间（UTC+8）
-  const beijingTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+  const beijingTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (8 * 60 * 60 * 1000));
   console.log('当前北京时间:', beijingTime.toISOString());
   return beijingTime;
 };
@@ -12,11 +12,9 @@ export const getBeijingTime = () => {
 export const getBeijingDateString = (date?: Date) => {
   const targetDate = date || getBeijingTime();
   
-  // 确保使用北京时间
-  const beijingDate = new Date(targetDate.getTime() + (8 * 60 * 60 * 1000));
-  const year = beijingDate.getUTCFullYear();
-  const month = String(beijingDate.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(beijingDate.getUTCDate()).padStart(2, '0');
+  const year = targetDate.getFullYear();
+  const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+  const day = String(targetDate.getDate()).padStart(2, '0');
   
   const dateString = `${year}-${month}-${day}`;
   console.log('生成的北京日期字符串:', dateString);
@@ -26,8 +24,7 @@ export const getBeijingDateString = (date?: Date) => {
 // 获取北京时间的ISO字符串
 export const getBeijingTimeISO = (date?: Date) => {
   const targetDate = date || getBeijingTime();
-  const beijingTime = new Date(targetDate.getTime() + (8 * 60 * 60 * 1000));
-  const isoString = beijingTime.toISOString();
+  const isoString = targetDate.toISOString();
   console.log('北京时间ISO字符串:', isoString);
   return isoString;
 };
@@ -83,9 +80,8 @@ export const getCurrentBeijingTime = () => {
 
 // 获取月份的第一天和最后一天（北京时间）
 export const getMonthRange = (date: Date) => {
-  const beijingTime = new Date(date.getTime() + (8 * 60 * 60 * 1000));
-  const year = beijingTime.getUTCFullYear();
-  const month = beijingTime.getUTCMonth();
+  const year = date.getFullYear();
+  const month = date.getMonth();
   
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
