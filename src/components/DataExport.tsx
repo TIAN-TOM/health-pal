@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Download, Calendar, FileText, Database, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Download, Calendar, FileText, Database, ExternalLink, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,19 +17,224 @@ const DataExport = ({ onBack }: DataExportProps) => {
   const [loading, setLoading] = useState(false);
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+  const [copiedFormat, setCopiedFormat] = useState<'json' | 'text' | null>(null);
   const { toast } = useToast();
 
-  const handleAIAssistant = () => {
+  const handleDeepSeekAI = () => {
     const message = `我是梅尼埃症患者，想要分析我的症状记录。请帮我分析症状规律、诱发因素和治疗建议。我已经导出了记录文件，请告诉我如何更好地管理我的病情。`;
+    
+    window.open('https://chat.deepseek.com/?text=' + encodeURIComponent(message), '_blank');
+    toast({
+      title: "已跳转到DeepSeek AI",
+      description: "请将导出的记录数据粘贴给AI进行分析",
+    });
+  };
+
+  const handleDoubaoAI = () => {
+    const message = `我是梅尼埃症患者，想要分析我的症状记录。请帮我分析症状规律、诱发因素和治疗建议。我已经导出了记录数据，请告诉我如何更好地管理我的病情。`;
     
     window.open('https://www.doubao.com/chat/?text=' + encodeURIComponent(message), '_blank');
     toast({
       title: "已跳转到豆包AI",
-      description: "请将导出的记录文件上传给AI进行分析",
+      description: "请将导出的记录数据粘贴给AI进行分析",
     });
   };
 
-  const handleExport = async (timeRange: 'week' | 'month' | 'custom') => {
+  const copyToClipboard = async (text: string, format: 'json' | 'text') => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedFormat(format);
+      setTimeout(() => setCopiedFormat(null), 2000);
+      toast({
+        title: "复制成功",
+        description: `${format === 'json' ? 'JSON格式' : '纯文本格式'}数据已复制到剪贴板`,
+      });
+    } catch (error) {
+      toast({
+        title: "复制失败",
+        description: "请手动复制数据",
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const generateJSONFormat = (records: any[], startDate: string, endDate: string) => {
+    const events = records.map(record => {
+      const timestamp = new Date(record.timestamp).toISOString();
+      
+      if (record.type === 'dizziness') {
+        return {
+          timestamp,
+          eventType: "SymptomLog",
+          details: {
+            type: "Vertigo",
+            durationMinutes: convertDurationToMinutes(record.duration || record.data?.duration),
+            intensity: convertSeverityToNumber(record.severity || record.data?.severity),
+            associatedSymptoms: record.symptoms || record.data?.symptoms || []
+          }
+        };
+      } else if (record.type === 'lifestyle') {
+        const events = [];
+        
+        // 饮食记录
+        if (record.diet?.length > 0 || record.data?.diet?.length > 0) {
+          events.push({
+            timestamp,
+            eventType: "LifestyleLog",
+            details: {
+              type: "Diet",
+              tags: record.diet || record.data?.diet || []
+            }
+          });
+        }
+        
+        // 睡眠记录
+        if (record.sleep || record.data?.sleep) {
+          events.push({
+            timestamp,
+            eventType: "LifestyleLog",
+            details: {
+              type: "Sleep",
+              quality: record.sleep || record.data?.sleep
+            }
+          });
+        }
+        
+        // 压力记录
+        if (record.stress || record.data?.stress) {
+          events.push({
+            timestamp,
+            eventType: "LifestyleLog",
+            details: {
+              type: "Stress",
+              level: record.stress || record.data?.stress
+            }
+          });
+        }
+        
+        return events;
+      } else if (record.type === 'medication') {
+        return {
+          timestamp,
+          eventType: "MedicationLog",
+          details: {
+            medications: record.medications || record.data?.medications || [],
+            dosage: record.dosage || record.data?.dosage
+          }
+        };
+      } else if (record.type === 'voice') {
+        return {
+          timestamp,
+          eventType: "VoiceNote",
+          details: {
+            note: record.note || record.data?.note
+          }
+        };
+      }
+      
+      return null;
+    }).flat().filter(Boolean);
+
+    return {
+      patientId: "MeniereUser01",
+      exportDateRange: {
+        start: new Date(startDate).toISOString(),
+        end: new Date(endDate).toISOString()
+      },
+      events
+    };
+  };
+
+  const generateTextFormat = (records: any[], startDate: string, endDate: string) => {
+    let text = `梅尼埃症数据记录 (${startDate} - ${endDate})\n\n`;
+    
+    // 按日期分组
+    const recordsByDate = records.reduce((acc, record) => {
+      const date = new Date(record.timestamp).toLocaleDateString('zh-CN');
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(record);
+      return acc;
+    }, {});
+
+    Object.entries(recordsByDate).forEach(([date, dayRecords]: [string, any[]]) => {
+      text += `**${date}**\n\n`;
+      
+      dayRecords.forEach(record => {
+        const time = new Date(record.timestamp).toLocaleTimeString('zh-CN', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+        
+        if (record.type === 'dizziness') {
+          text += `- [${time}] 眩晕发作\n`;
+          text += `  持续时间: ${record.duration || record.data?.duration || '未记录'}\n`;
+          text += `  严重程度: ${record.severity || record.data?.severity || '未记录'}\n`;
+          const symptoms = record.symptoms || record.data?.symptoms || [];
+          if (symptoms.length > 0) {
+            text += `  伴随症状: ${symptoms.join(', ')}\n`;
+          }
+        } else if (record.type === 'lifestyle') {
+          const diet = record.diet || record.data?.diet || [];
+          const sleep = record.sleep || record.data?.sleep;
+          const stress = record.stress || record.data?.stress;
+          
+          if (diet.length > 0) {
+            text += `- [${time}] 饮食记录: ${diet.join(', ')}\n`;
+          }
+          if (sleep) {
+            text += `- [${time}] 睡眠质量: ${sleep}\n`;
+          }
+          if (stress) {
+            text += `- [${time}] 压力水平: ${stress}\n`;
+          }
+        } else if (record.type === 'medication') {
+          const medications = record.medications || record.data?.medications || [];
+          text += `- [${time}] 用药记录\n`;
+          if (medications.length > 0) {
+            text += `  药物: ${medications.join(', ')}\n`;
+          }
+          if (record.dosage || record.data?.dosage) {
+            text += `  剂量: ${record.dosage || record.data?.dosage}\n`;
+          }
+        } else if (record.type === 'voice') {
+          text += `- [${time}] 语音记事\n`;
+          text += `  内容: ${record.note || record.data?.note || ''}\n`;
+        }
+        
+        const note = record.note || record.data?.note || record.data?.manualInput;
+        if (note && record.type !== 'voice') {
+          text += `  备注: ${note}\n`;
+        }
+        
+        text += '\n';
+      });
+      
+      text += '\n';
+    });
+
+    return text;
+  };
+
+  const convertDurationToMinutes = (duration: string): number => {
+    if (!duration) return 0;
+    if (duration.includes('不到5分钟')) return 3;
+    if (duration.includes('5-15分钟')) return 10;
+    if (duration.includes('15-30分钟')) return 22;
+    if (duration.includes('30分钟-1小时')) return 45;
+    if (duration.includes('1-2小时')) return 90;
+    if (duration.includes('超过2小时')) return 150;
+    return 0;
+  };
+
+  const convertSeverityToNumber = (severity: string): number => {
+    if (!severity) return 0;
+    if (severity === '轻度') return 3;
+    if (severity === '中度') return 6;
+    if (severity === '重度') return 9;
+    return 0;
+  };
+
+  const handleExportFormat = async (timeRange: 'week' | 'month' | 'custom', format: 'json' | 'text') => {
     if (timeRange === 'custom') {
       if (!customStartDate || !customEndDate) {
         toast({
@@ -65,68 +270,37 @@ const DataExport = ({ onBack }: DataExportProps) => {
     setLoading(true);
     try {
       let records;
+      let startDateStr, endDateStr;
       
       if (timeRange === 'custom') {
-        // 获取自定义时间范围的记录
         records = await supabaseService.getRecordsByDateRange(
           new Date(customStartDate),
           new Date(customEndDate)
         );
+        startDateStr = customStartDate;
+        endDateStr = customEndDate;
       } else {
-        // 获取预设时间范围的记录
-        const { json: jsonData, text: textData } = await supabaseService.exportRecords(timeRange);
+        const now = new Date();
+        const timeLimit = new Date();
         
-        // 下载JSON文件
-        const jsonBlob = new Blob([jsonData], { type: 'application/json' });
-        const jsonUrl = URL.createObjectURL(jsonBlob);
-        const jsonLink = document.createElement('a');
-        jsonLink.href = jsonUrl;
-        jsonLink.download = `meniere_records_${timeRange}_${new Date().toISOString().split('T')[0]}.json`;
-        jsonLink.click();
-        URL.revokeObjectURL(jsonUrl);
-
-        // 下载文本文件
-        const textBlob = new Blob([textData], { type: 'text/plain;charset=utf-8' });
-        const textUrl = URL.createObjectURL(textBlob);
-        const textLink = document.createElement('a');
-        textLink.href = textUrl;
-        textLink.download = `meniere_records_${timeRange}_${new Date().toISOString().split('T')[0]}.txt`;
-        textLink.click();
-        URL.revokeObjectURL(textUrl);
-
-        toast({
-          title: '导出成功',
-          description: `${timeRange === 'week' ? '最近一周' : '最近一个月'}的记录已导出`,
-        });
-        return;
+        if (timeRange === 'week') {
+          timeLimit.setDate(now.getDate() - 7);
+        } else {
+          timeLimit.setMonth(now.getMonth() - 1);
+        }
+        
+        records = await supabaseService.getRecordsByDateRange(timeLimit, now);
+        startDateStr = timeLimit.toISOString().split('T')[0];
+        endDateStr = now.toISOString().split('T')[0];
       }
 
-      // 处理自定义时间范围的导出
-      const jsonData = JSON.stringify(records, null, 2);
-      const textData = formatRecordsAsText(records);
-
-      // 下载JSON文件
-      const jsonBlob = new Blob([jsonData], { type: 'application/json' });
-      const jsonUrl = URL.createObjectURL(jsonBlob);
-      const jsonLink = document.createElement('a');
-      jsonLink.href = jsonUrl;
-      jsonLink.download = `meniere_records_${customStartDate}_to_${customEndDate}.json`;
-      jsonLink.click();
-      URL.revokeObjectURL(jsonUrl);
-
-      // 下载文本文件
-      const textBlob = new Blob([textData], { type: 'text/plain;charset=utf-8' });
-      const textUrl = URL.createObjectURL(textBlob);
-      const textLink = document.createElement('a');
-      textLink.href = textUrl;
-      textLink.download = `meniere_records_${customStartDate}_to_${customEndDate}.txt`;
-      textLink.click();
-      URL.revokeObjectURL(textUrl);
-
-      toast({
-        title: '导出成功',
-        description: `${customStartDate} 到 ${customEndDate} 的记录已导出`,
-      });
+      if (format === 'json') {
+        const jsonData = generateJSONFormat(records, startDateStr, endDateStr);
+        await copyToClipboard(JSON.stringify(jsonData, null, 2), 'json');
+      } else {
+        const textData = generateTextFormat(records, startDateStr, endDateStr);
+        await copyToClipboard(textData, 'text');
+      }
 
     } catch (error) {
       console.error('导出失败:', error);
@@ -137,81 +311,6 @@ const DataExport = ({ onBack }: DataExportProps) => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const formatRecordsAsText = (records: any[]) => {
-    let text = `梅尼埃症记录报告\n生成时间: ${new Date().toLocaleString('zh-CN')}\n`;
-    text += `时间范围: ${customStartDate} 到 ${customEndDate}\n`;
-    text += `记录总数: ${records.length} 条\n\n`;
-    
-    // 按类型统计
-    const typeStats = records.reduce((acc, record) => {
-      acc[record.type] = (acc[record.type] || 0) + 1;
-      return acc;
-    }, {});
-    
-    text += `记录类型统计:\n`;
-    Object.entries(typeStats).forEach(([type, count]) => {
-      text += `- ${getRecordTypeText(type)}: ${count} 条\n`;
-    });
-    text += '\n';
-    
-    text += '详细记录:\n';
-    text += '=' .repeat(50) + '\n\n';
-    
-    records.forEach((record, index) => {
-      text += `${index + 1}. 【${getRecordTypeText(record.type)}】\n`;
-      text += `时间: ${new Date(record.timestamp).toLocaleString('zh-CN')}\n`;
-      
-      if (record.type === 'dizziness') {
-        text += `严重程度: ${record.severity || record.data?.severity || '未记录'}\n`;
-        text += `持续时间: ${record.duration || record.data?.duration || '未记录'}\n`;
-        const symptoms = record.symptoms || record.data?.symptoms || [];
-        if (symptoms.length > 0) {
-          text += `伴随症状: ${symptoms.join('、')}\n`;
-        }
-      } else if (record.type === 'lifestyle') {
-        text += `睡眠质量: ${record.sleep || record.data?.sleep || '未记录'}\n`;
-        text += `压力水平: ${record.stress || record.data?.stress || '未记录'}\n`;
-        const diet = record.diet || record.data?.diet || [];
-        if (diet.length > 0) {
-          text += `饮食情况: ${diet.join('、')}\n`;
-        }
-      } else if (record.type === 'medication') {
-        const medications = record.medications || record.data?.medications || [];
-        if (medications.length > 0) {
-          text += `用药情况: ${medications.join('、')}\n`;
-        }
-        if (record.dosage || record.data?.dosage) {
-          text += `用药剂量: ${record.dosage || record.data?.dosage}\n`;
-        }
-      } else if (record.type === 'daily_checkin') {
-        if (record.mood_score || record.data?.mood_score) {
-          text += `心情评分: ${record.mood_score || record.data?.mood_score}/5\n`;
-        }
-      }
-      
-      // 添加备注信息
-      const note = record.note || record.data?.note || record.data?.manualInput;
-      if (note) {
-        text += `详细说明: ${note}\n`;
-      }
-      
-      text += '\n';
-    });
-
-    return text;
-  };
-
-  const getRecordTypeText = (type: string): string => {
-    switch (type) {
-      case 'dizziness': return '眩晕症状';
-      case 'lifestyle': return '生活记录';
-      case 'medication': return '用药记录';
-      case 'voice': return '语音记事';
-      case 'daily_checkin': return '每日打卡';
-      default: return '未知类型';
     }
   };
 
@@ -254,26 +353,56 @@ const DataExport = ({ onBack }: DataExportProps) => {
                 <CardHeader>
                   <CardTitle className="flex items-center text-lg">
                     <Calendar className="h-5 w-5 mr-2" />
-                    快速时间范围
+                    最近一周记录
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3">
                   <Button
-                    onClick={() => handleExport('week')}
+                    onClick={() => handleExportFormat('week', 'json')}
                     disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4"
                   >
-                    <Download className="mr-2 h-5 w-5" />
-                    {loading ? '导出中...' : '导出最近一周记录'}
+                    {copiedFormat === 'json' ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                    {loading ? '导出中...' : '复制给AI的格式 (JSON)'}
                   </Button>
-
+                  
                   <Button
-                    onClick={() => handleExport('month')}
+                    onClick={() => handleExportFormat('week', 'text')}
                     disabled={loading}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg"
+                    variant="outline"
+                    className="w-full py-4"
                   >
-                    <Download className="mr-2 h-5 w-5" />
-                    {loading ? '导出中...' : '导出最近一个月记录'}
+                    {copiedFormat === 'text' ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                    {loading ? '导出中...' : '复制给人看的格式 (纯文本)'}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center text-lg">
+                    <Calendar className="h-5 w-5 mr-2" />
+                    最近一个月记录
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button
+                    onClick={() => handleExportFormat('month', 'json')}
+                    disabled={loading}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white py-4"
+                  >
+                    {copiedFormat === 'json' ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                    {loading ? '导出中...' : '复制给AI的格式 (JSON)'}
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handleExportFormat('month', 'text')}
+                    disabled={loading}
+                    variant="outline"
+                    className="w-full py-4"
+                  >
+                    {copiedFormat === 'text' ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                    {loading ? '导出中...' : '复制给人看的格式 (纯文本)'}
                   </Button>
                 </CardContent>
               </Card>
@@ -287,11 +416,10 @@ const DataExport = ({ onBack }: DataExportProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-gray-600 space-y-2">
-                    <p>• 导出包含JSON和文本两种格式</p>
-                    <p>• JSON格式便于数据分析和AI处理</p>
-                    <p>• 文本格式便于医生查看和阅读</p>
+                    <p>• <strong>JSON格式</strong>：适合复制给AI分析，结构化数据便于AI理解</p>
+                    <p>• <strong>纯文本格式</strong>：适合发送给家人或医生查看，人类可读</p>
+                    <p>• 数据会自动复制到剪贴板，直接粘贴即可使用</p>
                     <p>• 包含完整的症状、用药、生活记录信息</p>
-                    <p>• 文件将自动下载到您的设备</p>
                   </div>
                 </CardContent>
               </Card>
@@ -304,16 +432,25 @@ const DataExport = ({ onBack }: DataExportProps) => {
                     AI健康助手咨询
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-3">
                   <Button
-                    onClick={handleAIAssistant}
-                    className="w-full bg-orange-600 hover:bg-orange-700 text-white py-6 text-lg mb-4"
+                    onClick={handleDeepSeekAI}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white py-4"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    DeepSeek AI 健康分析
+                  </Button>
+                  
+                  <Button
+                    onClick={handleDoubaoAI}
+                    className="w-full bg-orange-600 hover:bg-orange-700 text-white py-4"
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
                     豆包AI 健康分析
                   </Button>
-                  <p className="text-xs text-gray-500">
-                    点击按钮跳转到豆包AI进行健康咨询，可上传导出的记录文件进行专业分析
+                  
+                  <p className="text-xs text-gray-500 text-center">
+                    先复制上述格式的数据，再跳转到AI进行专业健康咨询分析
                   </p>
                 </CardContent>
               </Card>
@@ -352,14 +489,26 @@ const DataExport = ({ onBack }: DataExportProps) => {
                   />
                 </div>
 
-                <Button
-                  onClick={() => handleExport('custom')}
-                  disabled={loading}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-6 text-lg"
-                >
-                  <Download className="mr-2 h-5 w-5" />
-                  {loading ? '导出中...' : '导出自定义时间范围记录'}
-                </Button>
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => handleExportFormat('custom', 'json')}
+                    disabled={loading}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white py-4"
+                  >
+                    {copiedFormat === 'json' ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                    {loading ? '导出中...' : '复制给AI的格式 (JSON)'}
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handleExportFormat('custom', 'text')}
+                    disabled={loading}
+                    variant="outline"
+                    className="w-full py-4"
+                  >
+                    {copiedFormat === 'text' ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                    {loading ? '导出中...' : '复制给人看的格式 (纯文本)'}
+                  </Button>
+                </div>
 
                 <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
                   <p className="font-medium mb-1">提示：</p>
@@ -380,9 +529,9 @@ const DataExport = ({ onBack }: DataExportProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-sm text-gray-600 space-y-2">
-              <p><strong>就医前：</strong>导出最近症状记录，便于医生了解病情发展</p>
-              <p><strong>复诊时：</strong>导出用药期间的记录，评估治疗效果</p>
-              <p><strong>AI分析：</strong>导出完整数据，便于AI工具分析症状规律和诱发因素</p>
+              <p><strong>就医前：</strong>复制纯文本格式，便于医生快速了解病情发展</p>
+              <p><strong>AI分析：</strong>复制JSON格式给AI，便于深度分析症状规律和诱发因素</p>
+              <p><strong>家人分享：</strong>复制纯文本格式，便于家人了解您的健康状况</p>
             </div>
           </CardContent>
         </Card>
