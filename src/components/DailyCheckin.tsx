@@ -1,168 +1,157 @@
 
 import React, { useState, useEffect } from 'react';
-import { Smile, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Calendar, Heart, Camera, MessageCircle, Check } from 'lucide-react';
 import { getTodayCheckin, createCheckin } from '@/services/dailyCheckinService';
 import { useToast } from '@/hooks/use-toast';
 import CheckinCalendar from './CheckinCalendar';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface DailyCheckinProps {
-  onBack: () => void;
-}
+type DailyCheckin = Tables<'daily_checkins'>;
 
-const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
-  const [hasCheckedIn, setHasCheckedIn] = useState(false);
+const DailyCheckin = () => {
+  const [todayCheckin, setTodayCheckin] = useState<DailyCheckin | null>(null);
   const [moodScore, setMoodScore] = useState(3);
   const [note, setNote] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    checkTodayCheckin();
+    loadTodayCheckin();
   }, []);
 
-  const checkTodayCheckin = async () => {
+  const loadTodayCheckin = async () => {
     try {
       const checkin = await getTodayCheckin();
-      setHasCheckedIn(!!checkin);
+      setTodayCheckin(checkin);
     } catch (error) {
-      console.error('检查今日打卡失败:', error);
+      console.error('获取今日打卡记录失败:', error);
     }
   };
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
+  const handleCheckin = async () => {
     try {
-      // 创建一个空的图片文件作为占位符
-      const emptyBlob = new Blob([''], { type: 'image/jpeg' });
-      const emptyFile = new File([emptyBlob], 'placeholder.jpg', { type: 'image/jpeg' });
-      
-      await createCheckin(emptyFile, moodScore, note);
-      
+      setLoading(true);
+      const newCheckin = await createCheckin(moodScore, note || undefined);
+      setTodayCheckin(newCheckin);
+      setNote('');
       toast({
         title: "打卡成功！",
-        description: "今天的心情已记录 😊"
+        description: "今日打卡已完成，继续保持好习惯！",
       });
-      
-      setHasCheckedIn(true);
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "打卡失败",
-        description: "请稍后重试",
-        variant: "destructive"
+        description: error.message,
+        variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  if (hasCheckedIn) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
-        <div className="container mx-auto max-w-md">
-          <div className="flex items-center mb-6">
-            <Button variant="ghost" onClick={onBack} className="mr-2">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h1 className="text-xl font-bold">每日打卡</h1>
-          </div>
+  const getMoodEmoji = (score: number) => {
+    if (score >= 5) return '😄';
+    if (score >= 4) return '😊';
+    if (score >= 3) return '😐';
+    if (score >= 2) return '😔';
+    return '😞';
+  };
 
-          <Card className="mb-6">
-            <CardContent className="p-6 text-center">
-              <Smile className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-green-600 mb-2">今日已打卡！</h2>
-              <p className="text-gray-600">感谢你记录今天的美好时光</p>
-            </CardContent>
-          </Card>
-
-          {/* 显示打卡日历 */}
-          <CheckinCalendar />
-        </div>
-      </div>
-    );
-  }
+  const getMoodText = (score: number) => {
+    if (score >= 5) return '很好';
+    if (score >= 4) return '不错';
+    if (score >= 3) return '一般';
+    if (score >= 2) return '不太好';
+    return '很糟糕';
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
-      <div className="container mx-auto max-w-md">
-        <div className="flex items-center mb-6">
-          <Button variant="ghost" onClick={onBack} className="mr-2">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-xl font-bold">每日打卡</h1>
-        </div>
-
-        {/* 显示打卡日历 */}
-        <CheckinCalendar />
-
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-center text-lg">
-              今天你的心情如何？ 😊
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <p className="text-center text-gray-600">
-              记录你今天的精神状态和心情感受
-            </p>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">心情评分 (1-5):</label>
-              <div className="flex space-x-2 justify-center">
-                {[1, 2, 3, 4, 5].map((score) => (
-                  <Button
-                    key={score}
-                    variant={moodScore === score ? "default" : "outline"}
-                    size="lg"
-                    onClick={() => setMoodScore(score)}
-                    className="w-12 h-12 rounded-full"
-                  >
-                    {score}
-                  </Button>
-                ))}
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+            每日打卡
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {todayCheckin ? (
+            <div className="text-center p-6 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center justify-center mb-3">
+                <Check className="h-8 w-8 text-green-600 mr-2" />
+                <span className="text-xl font-bold text-green-800">今日已打卡</span>
               </div>
-              <div className="text-center text-sm text-gray-500 mt-2">
-                {moodScore === 1 && "很糟糕"}
-                {moodScore === 2 && "不太好"}
-                {moodScore === 3 && "一般"}
-                {moodScore === 4 && "不错"}
-                {moodScore === 5 && "很棒"}
+              <div className="text-green-700">
+                <p>心情评分: {getMoodEmoji(todayCheckin.mood_score || 3)} {getMoodText(todayCheckin.mood_score || 3)} ({todayCheckin.mood_score}/5)</p>
+                {todayCheckin.note && (
+                  <p className="mt-2 text-sm">备注: {todayCheckin.note}</p>
+                )}
               </div>
             </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="text-lg font-medium mb-2">今日心情如何？</h3>
+                <div className="flex justify-center items-center space-x-4 mb-4">
+                  <span className="text-2xl">{getMoodEmoji(moodScore)}</span>
+                  <span className="font-medium">{getMoodText(moodScore)}</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2">
+                  <span className="text-sm text-gray-500">1</span>
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    value={moodScore}
+                    onChange={(e) => setMoodScore(Number(e.target.value))}
+                    className="w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-500">5</span>
+                </div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">今日感想 (可选):</label>
-              <Textarea 
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="记录今天的感受、想法或特别的事情..."
-                className="w-full"
-                rows={4}
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <MessageCircle className="h-4 w-4 inline mr-1" />
+                  今日感想（可选）
+                </label>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="记录今天的心情或感想..."
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  rows={3}
+                />
+              </div>
+
+              <Button 
+                onClick={handleCheckin}
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                <Heart className="h-4 w-4 mr-2" />
+                {loading ? '打卡中...' : '完成打卡'}
+              </Button>
             </div>
+          )}
 
-            <Button 
-              onClick={handleSubmit} 
-              disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-6 text-lg rounded-lg"
+          <div className="pt-4 border-t">
+            <Button
+              onClick={() => setShowCalendar(!showCalendar)}
+              variant="outline"
+              className="w-full"
             >
-              {isSubmitting ? '提交中...' : '完成打卡'}
+              <Calendar className="h-4 w-4 mr-2" />
+              {showCalendar ? '隐藏打卡日历' : '查看打卡日历'}
             </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-800 mb-2">💡 打卡说明</h4>
-              <ul className="text-sm text-blue-700 space-y-1">
-                <li>• 每日打卡帮助你跟踪心情变化</li>
-                <li>• 心情评分可以反映症状对生活的影响</li>
-                <li>• 定期记录有助于发现规律和趋势</li>
-                <li>• 这些数据可以在就医时提供给医生参考</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {showCalendar && <CheckinCalendar />}
     </div>
   );
 };

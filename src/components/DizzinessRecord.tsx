@@ -1,47 +1,51 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Activity } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { saveDizzinessRecord } from '@/services/meniereRecordService';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { AlertTriangle, Clock, Save, Zap } from 'lucide-react';
+import { saveMeniereRecord } from '@/services/meniereRecordService';
 import { useToast } from '@/hooks/use-toast';
 
 interface DizzinessRecordProps {
-  onBack: () => void;
+  onSave: () => void;
 }
 
-const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
+const DizzinessRecord = ({ onSave }: DizzinessRecordProps) => {
+  const [severity, setSeverity] = useState('轻度');
   const [duration, setDuration] = useState('');
-  const [severity, setSeverity] = useState('');
   const [symptoms, setSymptoms] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [note, setNote] = useState('');
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const durationOptions = [
-    { value: '5分钟以内', label: '5分钟以内' },
-    { value: '5-30分钟', label: '5-30分钟' },
-    { value: '30分钟-2小时', label: '30分钟-2小时' },
-    { value: '2小时以上', label: '2小时以上' },
+  const severityOptions = [
+    { value: '轻度', label: '轻度', emoji: '😌', color: 'bg-green-100 text-green-800' },
+    { value: '中度', label: '中度', emoji: '😐', color: 'bg-yellow-100 text-yellow-800' },
+    { value: '重度', label: '重度', emoji: '😵', color: 'bg-red-100 text-red-800' }
   ];
 
-  const severityOptions = [
-    { value: 'mild', label: '轻微 - 生活影响较小' },
-    { value: 'moderate', label: '中等 - 需要休息' },
-    { value: 'severe', label: '严重 - 无法正常活动' },
+  const durationOptions = [
+    '不到5分钟',
+    '5-15分钟',
+    '15-30分钟',
+    '30分钟-1小时',
+    '1-2小时',
+    '超过2小时'
   ];
 
   const symptomOptions = [
-    '眩晕/头晕',
-    '恶心/呕吐',
-    '耳鸣',
-    '听力下降',
-    '耳胀满感',
-    '头痛',
-    '平衡失调',
-    '冷汗',
+    { value: '旋转性眩晕', emoji: '🌪️' },
+    { value: '头晕', emoji: '😵‍💫' },
+    { value: '恶心', emoji: '🤢' },
+    { value: '呕吐', emoji: '🤮' },
+    { value: '耳鸣', emoji: '👂' },
+    { value: '听力下降', emoji: '🔇' },
+    { value: '耳胀感', emoji: '💨' },
+    { value: '平衡失调', emoji: '⚖️' }
   ];
 
-  const toggleSymptom = (symptom: string) => {
+  const handleSymptomToggle = (symptom: string) => {
     setSymptoms(prev => 
       prev.includes(symptom) 
         ? prev.filter(s => s !== symptom)
@@ -49,129 +53,168 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
     );
   };
 
-  const handleSubmit = async () => {
-    if (!duration || !severity || symptoms.length === 0) {
-      toast({
-        title: "请完整填写信息",
-        description: "持续时间、严重程度和症状都是必填项",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     try {
-      setIsSubmitting(true);
-      await saveDizzinessRecord({
-        duration,
+      setLoading(true);
+      
+      const recordData = {
+        type: 'dizziness' as const,
         severity,
-        symptoms
-      });
+        duration,
+        symptoms,
+        note: note.trim() || undefined,
+        data: {
+          severity,
+          duration,
+          symptoms,
+          note: note.trim() || undefined
+        }
+      };
+
+      await saveMeniereRecord(recordData);
       
       toast({
-        title: "记录保存成功",
-        description: "眩晕症状已记录"
+        title: "✅ 记录保存成功",
+        description: "眩晕症状记录已保存，继续关注您的健康",
       });
+
+      // 重置表单
+      setSeverity('轻度');
+      setDuration('');
+      setSymptoms([]);
+      setNote('');
       
-      onBack();
-    } catch (error) {
+      onSave();
+    } catch (error: any) {
       toast({
-        title: "保存失败",
-        description: "请稍后重试",
-        variant: "destructive"
+        title: "❌ 保存失败",
+        description: error.message,
+        variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
       <div className="container mx-auto max-w-md">
-        <div className="flex items-center mb-6">
-          <Button variant="ghost" onClick={onBack} className="mr-2">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-xl font-bold">记录眩晕症状</h1>
-        </div>
-
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Activity className="h-5 w-5 mr-2" />
-              症状详情
+              <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
+              记录眩晕症状
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* 持续时间 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                持续时间 <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-1 gap-2">
-                {durationOptions.map((option) => (
-                  <Button
-                    key={option.value}
-                    variant={duration === option.value ? "default" : "outline"}
-                    onClick={() => setDuration(option.value)}
-                    className="text-left justify-start h-auto py-3 px-4"
-                  >
-                    {option.label}
-                  </Button>
-                ))}
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* 严重程度 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <Zap className="h-4 w-4 inline mr-1" />
+                  症状严重程度
+                </label>
+                <div className="grid grid-cols-1 gap-3">
+                  {severityOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setSeverity(option.value)}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        severity === option.value
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{option.label}</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg">{option.emoji}</span>
+                          <span className={`text-xs px-2 py-1 rounded ${option.color}`}>
+                            {option.label}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* 严重程度 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                严重程度 <span className="text-red-500">*</span>
-              </label>
-              <div className="space-y-2">
-                {severityOptions.map((option) => (
-                  <Button
-                    key={option.value}
-                    variant={severity === option.value ? "default" : "outline"}
-                    onClick={() => setSeverity(option.value)}
-                    className="w-full text-left justify-start h-auto py-3 px-4 whitespace-normal leading-relaxed"
-                  >
-                    <span className="block">{option.label}</span>
-                  </Button>
-                ))}
+              {/* 持续时间 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <Clock className="h-4 w-4 inline mr-1" />
+                  持续时间
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {durationOptions.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setDuration(option)}
+                      className={`p-2 text-sm rounded-lg border transition-all ${
+                        duration === option
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* 伴随症状 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                伴随症状 <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {symptomOptions.map((symptom) => (
-                  <Button
-                    key={symptom}
-                    variant={symptoms.includes(symptom) ? "default" : "outline"}
-                    onClick={() => toggleSymptom(symptom)}
-                    size="sm"
-                    className="h-auto py-2 px-3 text-sm leading-relaxed"
-                  >
-                    {symptom}
-                  </Button>
-                ))}
+              {/* 伴随症状 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  💫 伴随症状（可多选）
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {symptomOptions.map((symptom) => (
+                    <button
+                      key={symptom.value}
+                      type="button"
+                      onClick={() => handleSymptomToggle(symptom.value)}
+                      className={`p-2 text-sm rounded-lg border transition-all ${
+                        symptoms.includes(symptom.value)
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>{symptom.emoji}</span>
+                        <span>{symptom.value}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
-              {symptoms.length > 0 && (
-                <p className="text-sm text-gray-600 mt-2">
-                  已选择: {symptoms.join(', ')}
-                </p>
-              )}
-            </div>
 
-            <Button 
-              onClick={handleSubmit} 
-              disabled={isSubmitting}
-              className="w-full py-6 text-lg"
-            >
-              {isSubmitting ? '保存中...' : '保存记录'}
-            </Button>
+              {/* 备注 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  📝 备注说明（可选）
+                </label>
+                <Textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="记录症状细节、诱发因素等..."
+                  className="w-full"
+                  rows={3}
+                />
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full bg-red-600 hover:bg-red-700"
+                disabled={loading || !duration}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {loading ? '保存中...' : '保存记录'}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>

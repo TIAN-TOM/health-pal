@@ -1,65 +1,106 @@
+
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 
-export interface DailyCheckin {
-  id: string;
-  user_id: string;
-  checkin_date: string;
-  photo_url?: string;
-  mood_score?: number;
-  note?: string;
-  created_at: string;
-  updated_at: string;
-}
+type DailyCheckin = Tables<'daily_checkins'>;
 
-export const getTodayCheckin = async (): Promise<DailyCheckin | null> => {
-  const today = new Date().toISOString().split('T')[0];
+export const createCheckin = async (
+  moodScore: number,
+  note?: string,
+  photoUrl?: string
+): Promise<DailyCheckin> => {
+  const { data: { user } } = await supabase.auth.getUser();
   
-  const { data, error } = await supabase
+  if (!user) {
+    throw new Error('用户未登录');
+  }
+
+  const checkinDate = new Date().toISOString().split('T')[0];
+
+  // 检查今日是否已打卡
+  const { data: existingCheckin } = await supabase
     .from('daily_checkins')
     .select('*')
-    .eq('checkin_date', today)
+    .eq('user_id', user.id)
+    .eq('checkin_date', checkinDate)
     .maybeSingle();
 
-  if (error) throw error;
-  return data;
-};
+  if (existingCheckin) {
+    throw new Error('今日已完成打卡');
+  }
 
-export const createCheckin = async (photoFile: File, moodScore: number, note?: string) => {
-  const user = await supabase.auth.getUser();
-  if (!user.data.user) throw new Error('用户未登录');
-
-  const today = new Date().toISOString().split('T')[0];
-
-  // 创建打卡记录，不再需要照片
+  // 创建新的打卡记录
   const { data, error } = await supabase
     .from('daily_checkins')
     .insert({
-      user_id: user.data.user.id,
-      checkin_date: today,
+      user_id: user.id,
+      checkin_date: checkinDate,
       mood_score: moodScore,
-      note: note
+      note,
+      photo_url: photoUrl
     })
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    throw new Error(`打卡失败: ${error.message}`);
+  }
+
+  // 获取用户资料用于通知
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', user.id)
+    .single();
+
+  // 异步调用通知管理员的Edge Function
+  try {
+    await supabase.functions.invoke('notify-admin-checkin', {
+      body: {
+        user_id: user.id,
+        user_name: profile?.full_name || '未知用户',
+        checkin_date: checkinDate,
+        mood_score: moodScore
+      }
+    });
+  } catch (notifyError) {
+    console.error('通知管理员失败:', notifyError);
+    // 不影响打卡成功，只是通知失败
+  }
+
   return data;
 };
 
-export const getCheckinHistory = async (days: number = 7) => {
+export const getTodayCheckin = async (): Promise<DailyCheckin | null> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return null;
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+
   const { data, error } = await supabase
     .from('daily_checkins')
     .select('*')
-    .order('checkin_date', { ascending: false })
-    .limit(days);
+    .eq('user_id', user.id)
+    .eq('checkin_date', today)
+    .maybeSingle();
 
-  if (error) throw error;
+  if (error) {
+    console.error('获取今日打卡记录失败:', error);
+    return null;
+  }
+
   return data;
 };
 
-export const getRecentCheckins = async (limit: number = 5) => {
+export const getRecentCheckins = async (limit: number = 10): Promise<DailyCheckin[]> => {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
+  
+  if (!user) {
+    return [];
+  }
 
   const { data, error } = await supabase
     .from('daily_checkins')
@@ -68,6 +109,36 @@ export const getRecentCheckins = async (limit: number = 5) => {
     .order('checkin_date', { ascending: false })
     .limit(limit);
 
-  if (error) throw error;
+  if (error) {
+    console.error('获取打卡记录失败:', error);
+    return [];
+  }
+
+  return data || [];
+};
+
+export const getCheckinsByDateRange = async (
+  startDate: string,
+  endDate: string
+): Promise<DailyCheckin[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('daily_checkins')
+    .select('*')
+    .eq('user_id', user.id)
+    .gte('checkin_date', startDate)
+    .lte('checkin_date', endDate)
+    .order('checkin_date', { ascending: false });
+
+  if (error) {
+    console.error('获取时间范围内打卡记录失败:', error);
+    return [];
+  }
+
   return data || [];
 };

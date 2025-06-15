@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Megaphone, BookOpen, Shield, Eye, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, Users, Megaphone, BookOpen, Shield, Eye, Trash2, Plus, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -129,23 +128,15 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
     </div>
   );
 
+  const renderNotificationsTab = () => (
+    <div className="space-y-4">
+      <AdminNotifications />
+    </div>
+  );
+
   const renderAnnouncementsTab = () => (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">公告管理</h3>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          发布公告
-        </Button>
-      </div>
-      
-      <div className="text-center py-8">
-        <Megaphone className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-        <h4 className="text-lg font-medium text-gray-700 mb-2">公告功能开发中</h4>
-        <p className="text-gray-500">
-          即将支持发布系统公告和重要通知功能
-        </p>
-      </div>
+      <AnnouncementManagement />
     </div>
   );
 
@@ -182,7 +173,7 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -198,6 +189,25 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
                 variant={activeTab === 'users' ? 'default' : 'outline'}
               >
                 查看用户数据
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Bell className="h-5 w-5 mr-2" />
+                系统通知
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-4">查看系统通知和提醒</p>
+              <Button 
+                onClick={() => setActiveTab('notifications')}
+                className="w-full"
+                variant={activeTab === 'notifications' ? 'default' : 'outline'}
+              >
+                查看通知
               </Button>
             </CardContent>
           </Card>
@@ -244,6 +254,7 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
         <Card>
           <CardContent className="p-6">
             {activeTab === 'users' && renderUsersTab()}
+            {activeTab === 'notifications' && renderNotificationsTab()}
             {activeTab === 'announcements' && renderAnnouncementsTab()}
             {activeTab === 'articles' && renderArticlesTab()}
           </CardContent>
