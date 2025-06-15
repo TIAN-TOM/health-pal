@@ -3,9 +3,16 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  userProfile: UserProfile | null;
   userRole: 'admin' | 'user' | null;
   loading: boolean;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
@@ -18,8 +25,38 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userRole, setUserRole] = useState<'admin' | 'user' | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      setUserProfile(profile);
+    } catch (error) {
+      console.error('获取用户资料失败:', error);
+    }
+  };
+
+  const fetchUserRole = async (userId: string) => {
+    try {
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+      
+      setUserRole(roles?.role || 'user');
+    } catch (error) {
+      console.error('获取用户角色失败:', error);
+      setUserRole('user');
+    }
+  };
 
   useEffect(() => {
     // 设置认证状态监听器
@@ -30,22 +67,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // 获取用户角色
-          setTimeout(async () => {
-            try {
-              const { data: roles } = await supabase
-                .from('user_roles')
-                .select('role')
-                .eq('user_id', session.user.id)
-                .single();
-              
-              setUserRole(roles?.role || 'user');
-            } catch (error) {
-              console.error('获取用户角色失败:', error);
-              setUserRole('user');
-            }
+          // 延迟获取用户资料和角色，避免阻塞主线程
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+            fetchUserRole(session.user.id);
           }, 0);
         } else {
+          setUserProfile(null);
           setUserRole(null);
         }
         
@@ -99,6 +127,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     <AuthContext.Provider value={{
       user,
       session,
+      userProfile,
       userRole,
       loading,
       signUp,

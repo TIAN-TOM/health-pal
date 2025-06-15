@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { ArrowLeft, Mic, Square, Play, Trash2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { ArrowLeft, Mic, Square, Play, Trash2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -15,33 +15,139 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
   const [recordingTime, setRecordingTime] = useState(0);
   const [hasRecording, setHasRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string>('');
+  const [isPlaying, setIsPlaying] = useState(false);
+  
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
-  const startRecording = () => {
-    setIsRecording(true);
-    setRecordingTime(0);
-    
-    // 模拟录音计时
-    const timer = setInterval(() => {
-      setRecordingTime(prev => prev + 1);
-    }, 1000);
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+  }, [audioUrl]);
 
-    // 存储timer ID用于后续清理
-    (window as any).recordingTimer = timer;
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      const chunks: BlobPart[] = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/wav' });
+        setAudioBlob(blob);
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+        setHasRecording(true);
+        
+        // 停止所有音轨
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      // 开始计时
+      timerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+
+      toast({
+        title: "开始录音",
+        description: "正在录制您的语音记录...",
+      });
+    } catch (error) {
+      console.error('录音失败:', error);
+      toast({
+        title: "录音失败",
+        description: "无法访问麦克风，请检查权限设置",
+        variant: "destructive"
+      });
+    }
   };
 
   const stopRecording = () => {
-    setIsRecording(false);
-    setHasRecording(true);
-    
-    if ((window as any).recordingTimer) {
-      clearInterval((window as any).recordingTimer);
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      toast({
+        title: "录音完成",
+        description: `录音时长: ${formatTime(recordingTime)}`,
+      });
+    }
+  };
+
+  const playRecording = () => {
+    if (audioUrl && audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.src = audioUrl;
+        audioRef.current.play();
+        setIsPlaying(true);
+        
+        audioRef.current.onended = () => {
+          setIsPlaying(false);
+        };
+      }
     }
   };
 
   const deleteRecording = () => {
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+    setAudioBlob(null);
+    setAudioUrl('');
     setHasRecording(false);
     setRecordingTime(0);
+    setIsPlaying(false);
+    
+    toast({
+      title: "录音已删除",
+      description: "可以重新开始录音",
+    });
+  };
+
+  const downloadRecording = () => {
+    if (audioBlob) {
+      const url = URL.createObjectURL(audioBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `voice-record-${new Date().toISOString().slice(0, 19)}.wav`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "下载完成",
+        description: "录音文件已保存到您的设备",
+      });
+    }
   };
 
   const saveRecording = async () => {
@@ -57,7 +163,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
     setIsLoading(true);
     try {
       await saveVoiceRecord({
-        note: `语音记录 - ${recordingTime}秒`,
+        note: `语音记录 - ${formatTime(recordingTime)}`,
         duration: recordingTime
       });
 
@@ -87,6 +193,8 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
+      <audio ref={audioRef} style={{ display: 'none' }} />
+      
       {/* 返回按钮 */}
       <div className="mb-6">
         <Button
@@ -129,7 +237,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                 >
                   <div className="flex flex-col items-center">
                     <Mic className="h-8 w-8 mb-2" />
-                    <span>按住说话</span>
+                    <span>开始录音</span>
                   </div>
                 </Button>
               )}
@@ -154,25 +262,34 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                   录音完成，时长 {formatTime(recordingTime)}
                 </div>
                 
-                <div className="flex justify-center space-x-4">
+                <div className="grid grid-cols-2 gap-3">
                   <Button
-                    onClick={() => {/* 播放录音 */}}
+                    onClick={playRecording}
                     variant="outline"
-                    className="px-6 py-3"
+                    className="px-4 py-3"
                   >
                     <Play className="mr-2 h-4 w-4" />
-                    播放
+                    {isPlaying ? '暂停' : '播放'}
                   </Button>
                   
                   <Button
-                    onClick={deleteRecording}
+                    onClick={downloadRecording}
                     variant="outline"
-                    className="px-6 py-3 text-red-600 border-red-300 hover:bg-red-50"
+                    className="px-4 py-3"
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    重录
+                    <Download className="mr-2 h-4 w-4" />
+                    下载
                   </Button>
                 </div>
+                
+                <Button
+                  onClick={deleteRecording}
+                  variant="outline"
+                  className="w-full px-6 py-3 text-red-600 border-red-300 hover:bg-red-50"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  重新录制
+                </Button>
               </div>
             )}
 
@@ -184,6 +301,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                 <li>• 说出您想记录的其他症状或感受</li>
                 <li>• 录音会自动保存到您的记录中</li>
                 <li>• 可以说出无法用选项表达的细节</li>
+                <li>• 支持播放和下载录音文件</li>
               </ul>
             </div>
 

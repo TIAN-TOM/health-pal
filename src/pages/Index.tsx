@@ -16,7 +16,7 @@ import HistoryView from '@/components/HistoryView';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<string>('home');
-  const { user, userRole, loading, signOut } = useAuth();
+  const { user, userProfile, userRole, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
   // 如果正在加载，显示加载状态
@@ -65,6 +65,19 @@ const Index = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
+  };
+
+  // 获取用户显示名称
+  const getUserDisplayName = () => {
+    if (userProfile?.full_name) {
+      return userProfile.full_name;
+    }
+    // 如果没有姓名，从邮箱中提取用户名部分
+    if (user?.email) {
+      const emailPrefix = user.email.split('@')[0];
+      return emailPrefix;
+    }
+    return '用户';
   };
 
   if (currentView === 'emergency') {
@@ -136,7 +149,7 @@ const Index = () => {
           </div>
           
           <div className="text-sm text-gray-600 mb-2 leading-relaxed">
-            欢迎回来，{user.email}
+            欢迎回来，{getUserDisplayName()}
           </div>
           
           <div className="flex justify-center mb-4">
