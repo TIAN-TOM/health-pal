@@ -1,6 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert } from '@/integrations/supabase/types';
+import { getBeijingTimeISO } from '@/utils/beijingTime';
 
 export interface MeniereRecord {
   id?: string;
@@ -17,21 +17,6 @@ export interface MeniereRecord {
   medications?: string[];
   dosage?: string;
 }
-
-// 获取正确的北京时间
-const getBeijingTime = () => {
-  const now = new Date();
-  // 获取UTC时间戳，然后加上8小时（北京时间是UTC+8）
-  const utcTime = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
-  const beijingTime = new Date(utcTime + (8 * 60 * 60 * 1000));
-  return beijingTime;
-};
-
-// 获取正确的北京时间ISO字符串
-const getBeijingTimeISO = () => {
-  const beijingTime = getBeijingTime();
-  return beijingTime.toISOString();
-};
 
 // Generic function to save any type of Meniere record
 export const saveMeniereRecord = async (record: MeniereRecord) => {

@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Calendar, Smile, Frown, Meh, RefreshCw } fro
 import { getDailyCheckins } from '@/services/dailyCheckinService';
 import { getMeniereRecords } from '@/services/meniereRecordService';
 import { useToast } from '@/hooks/use-toast';
+import { getBeijingTime, getBeijingDateString, getCurrentBeijingTime } from '@/utils/beijingTime';
 
 interface DayData {
   date: string;
@@ -16,31 +17,18 @@ interface DayData {
 }
 
 const CalendarView = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(getCurrentBeijingTime());
   const [monthData, setMonthData] = useState<DayData[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // 获取北京时间
-  const getBeijingTime = (date: Date = new Date()) => {
-    const utcTime = date.getTime() + (date.getTimezoneOffset() * 60 * 1000);
-    return new Date(utcTime + (8 * 60 * 60 * 1000));
-  };
-
-  // 格式化日期为 YYYY-MM-DD
+  // 格式化日期为 YYYY-MM-DD，使用统一的时间工具
   const formatDate = (date: Date) => {
-    const beijingDate = getBeijingTime(date);
-    return beijingDate.toISOString().split('T')[0];
+    return getBeijingDateString(date);
   };
 
-  // 初始化时使用北京时间的当前日期
   useEffect(() => {
-    const beijingNow = getBeijingTime();
-    setCurrentDate(beijingNow);
-    console.log('日历初始化，北京时间:', beijingNow.toISOString(), '当前月份:', beijingNow.getMonth() + 1);
-  }, []);
-
-  useEffect(() => {
+    console.log('日历组件初始化，当前北京时间:', currentDate.toISOString());
     loadMonthData();
   }, [currentDate]);
 
@@ -122,9 +110,9 @@ const CalendarView = () => {
   };
 
   const goToToday = () => {
-    const beijingNow = getBeijingTime();
-    setCurrentDate(beijingNow);
-    console.log('跳转到今天，北京时间:', beijingNow.toISOString());
+    const todayBeijing = getCurrentBeijingTime();
+    setCurrentDate(todayBeijing);
+    console.log('跳转到今天，北京时间:', todayBeijing.toISOString());
   };
 
   // 获取月份的第一天是星期几
@@ -151,7 +139,8 @@ const CalendarView = () => {
     month: 'long' 
   });
 
-  const today = formatDate(getBeijingTime());
+  const today = getBeijingDateString();
+  console.log('当前日期标记:', today);
 
   return (
     <Card>

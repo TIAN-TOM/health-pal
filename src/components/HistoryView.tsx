@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import type { Tables } from '@/integrations/supabase/types';
 import RecordDelete from '@/components/RecordDelete';
+import { formatBeijingTime } from '@/utils/beijingTime';
 
 type MeniereRecord = Tables<'meniere_records'>;
 
@@ -50,27 +51,6 @@ const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
       case 'lifestyle': return '生活方式记录';
       case 'medication': return '用药记录';
       default: return '其他记录';
-    }
-  };
-
-  // 修复的北京时间格式化函数
-  const formatBeijingTime = (dateString: string) => {
-    try {
-      if (!dateString) {
-        return '未知时间';
-      }
-      
-      const date = new Date(dateString);
-      
-      if (isNaN(date.getTime())) {
-        return '时间格式错误';
-      }
-      
-      // 直接使用传入的时间（已经是北京时间）
-      return format(date, 'MM月dd日 HH:mm', { locale: zhCN });
-    } catch (error) {
-      console.error('日期格式化失败:', error, '原始日期:', dateString);
-      return '时间格式错误';
     }
   };
 

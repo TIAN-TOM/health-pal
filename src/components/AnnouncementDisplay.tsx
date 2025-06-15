@@ -5,6 +5,7 @@ import { Megaphone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
+import { formatBeijingTime } from '@/utils/beijingTime';
 
 type Announcement = Tables<'announcements'>;
 
@@ -42,35 +43,6 @@ const AnnouncementDisplay = () => {
     const newDismissedIds = [...dismissedIds, id];
     setDismissedIds(newDismissedIds);
     localStorage.setItem('dismissedAnnouncements', JSON.stringify(newDismissedIds));
-  };
-
-  // 修复的北京时间格式化函数
-  const formatBeijingTime = (dateString: string) => {
-    try {
-      if (!dateString) {
-        return '未知时间';
-      }
-      
-      const date = new Date(dateString);
-      
-      // 检查日期是否有效
-      if (isNaN(date.getTime())) {
-        return '时间格式错误';
-      }
-      
-      // 使用正确的北京时区格式化
-      return date.toLocaleString('zh-CN', {
-        timeZone: 'Asia/Shanghai',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      });
-    } catch (error) {
-      console.error('日期格式化失败:', error, '原始日期:', dateString);
-      return '时间格式错误';
-    }
   };
 
   const visibleAnnouncements = announcements.filter(

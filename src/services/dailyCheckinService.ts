@@ -1,28 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
+import { getBeijingDateString, getBeijingTimeISO } from '@/utils/beijingTime';
 
 type DailyCheckin = Tables<'daily_checkins'>;
-
-// 获取正确的北京时间
-const getBeijingTime = () => {
-  const now = new Date();
-  // 获取UTC时间戳，然后加上8小时（北京时间是UTC+8）
-  const utcTime = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
-  const beijingTime = new Date(utcTime + (8 * 60 * 60 * 1000));
-  return beijingTime;
-};
-
-// 获取北京时间的日期字符串 (YYYY-MM-DD)
-const getBeijingDateString = () => {
-  const beijingTime = getBeijingTime();
-  return beijingTime.toISOString().split('T')[0];
-};
-
-// 获取北京时间的ISO字符串
-const getBeijingTimeISO = () => {
-  const beijingTime = getBeijingTime();
-  return beijingTime.toISOString();
-};
 
 export const createCheckin = async (
   moodScore: number,

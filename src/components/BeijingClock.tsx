@@ -1,28 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
+import { getBeijingTime, getCurrentBeijingTime } from '@/utils/beijingTime';
 
 const BeijingClock = () => {
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(getCurrentBeijingTime());
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(new Date());
+      setCurrentTime(getCurrentBeijingTime());
     }, 1000);
 
     return () => clearInterval(timer);
   }, []);
 
-  // 获取正确的北京时间 (UTC+8)
-  const getBeijingTime = () => {
-    const now = new Date();
-    // 获取UTC时间戳，然后加上8小时（北京时间是UTC+8）
-    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
-    const beijingTime = new Date(utcTime + (8 * 60 * 60 * 1000));
-    return beijingTime;
-  };
-
-  const beijingTime = getBeijingTime();
+  const beijingTime = getBeijingTime(currentTime);
   
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('zh-CN', {
@@ -43,8 +35,6 @@ const BeijingClock = () => {
       day: 'numeric'
     }) + ' ' + weekday;
   };
-
-  console.log('北京时钟显示时间:', beijingTime.toISOString(), '本地时间:', new Date().toISOString());
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 mb-6 shadow-sm border">
