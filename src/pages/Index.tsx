@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
@@ -19,12 +20,8 @@ import UserWelcome from '@/components/UserWelcome';
 import FunctionCards from '@/components/FunctionCards';
 import NavigationActions from '@/components/NavigationActions';
 import HistoryView from '@/components/HistoryView';
-import DailyCheckin from '@/components/DailyCheckin';
-import CheckinStatus from '@/components/CheckinStatus';
-import DailyData from '@/components/DailyData';
 import RecordDetail from '@/components/RecordDetail';
 import MedicationManagement from '@/components/MedicationManagement';
-import CheckinCalendar from '@/components/CheckinCalendar';
 import BeijingClock from '@/components/BeijingClock';
 import type { Tables } from '@/integrations/supabase/types';
 import AnnouncementDisplay from '@/components/AnnouncementDisplay';
@@ -110,10 +107,6 @@ const Index = () => {
     );
   }
 
-  if (currentView === 'daily-checkin') {
-    return <DailyCheckin onBack={navigateHome} />;
-  }
-
   if (currentView === 'dizziness-record') {
     return <DizzinessRecord onBack={navigateHome} />;
   }
@@ -133,10 +126,6 @@ const Index = () => {
 
   if (currentView === 'data-export') {
     return <DataExport onBack={navigateHome} />;
-  }
-
-  if (currentView === 'daily-data') {
-    return <DailyData onBack={navigateHome} />;
   }
 
   if (currentView === 'settings') {
@@ -176,10 +165,6 @@ const Index = () => {
     return <RecordDetail record={selectedRecord} onBack={navigateHome} />;
   }
 
-  if (currentView === 'checkin-calendar') {
-    return <CheckinCalendar onBack={navigateHome} />;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       {/* 紧急求助横幅 */}
@@ -200,9 +185,6 @@ const Index = () => {
         {/* 北京时间显示 */}
         <BeijingClock />
 
-        {/* 每日打卡状态 */}
-        <CheckinStatus onCheckinClick={() => navigateTo('daily-checkin')} />
-
         {/* 每日名言 */}
         <DailyQuote />
 
@@ -215,7 +197,6 @@ const Index = () => {
         {/* 导航操作 */}
         <NavigationActions 
           onDataExport={() => navigateTo('data-export')}
-          onDailyData={() => navigateTo('daily-data')}
         />
       </div>
     </div>
