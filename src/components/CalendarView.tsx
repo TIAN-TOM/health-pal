@@ -44,14 +44,15 @@ const CalendarView = () => {
       console.log('获取到的症状记录:', records.length, '条');
 
       // 生成当月的所有日期数据
-      const beijingTime = new Date(currentDate.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
-      const year = beijingTime.getFullYear();
-      const month = beijingTime.getMonth();
+      const beijingCurrentDate = getBeijingTime();
+      const year = beijingCurrentDate.getFullYear();
+      const month = beijingCurrentDate.getMonth();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const monthDays: DayData[] = [];
 
       for (let day = 1; day <= daysInMonth; day++) {
-        const date = getBeijingDateString(new Date(year, month, day));
+        const dayDate = new Date(year, month, day);
+        const date = getBeijingDateString(dayDate);
         
         const checkin = checkins.find(c => c.checkin_date === date);
         const dayRecords = records.filter(r => r.timestamp && r.timestamp.startsWith(date));
@@ -80,7 +81,6 @@ const CalendarView = () => {
 
   const getMoodIcon = (moodScore?: number) => {
     if (moodScore === undefined) return null;
-    // 修正心情评分范围为1-5
     if (moodScore >= 4) return <Smile className="h-4 w-4 text-green-500" />;
     if (moodScore >= 3) return <Meh className="h-4 w-4 text-yellow-500" />;
     return <Frown className="h-4 w-4 text-red-500" />;
@@ -103,9 +103,10 @@ const CalendarView = () => {
     console.log('跳转到今天，北京时间:', todayBeijing.toISOString());
   };
 
-  // 获取月份的第一天是星期几
-  const beijingCurrentDate = new Date(currentDate.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
-  const firstDayOfMonth = new Date(beijingCurrentDate.getFullYear(), beijingCurrentDate.getMonth(), 1);
+  // 获取当前显示月份的信息
+  const beijingCurrentDate = getBeijingTime();
+  const displayDate = new Date(currentDate);
+  const firstDayOfMonth = new Date(displayDate.getFullYear(), displayDate.getMonth(), 1);
   const startingDayOfWeek = firstDayOfMonth.getDay();
 
   // 创建日历网格
@@ -122,13 +123,14 @@ const CalendarView = () => {
   });
 
   const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
-  const monthName = beijingCurrentDate.toLocaleDateString('zh-CN', { 
+  const monthName = displayDate.toLocaleDateString('zh-CN', { 
     year: 'numeric', 
     month: 'long' 
   });
 
+  // 获取今天的北京时间日期用于比较
   const today = getTodayBeijingDate();
-  console.log('当前日期标记:', today);
+  console.log('今天的北京时间日期:', today);
 
   return (
     <Card>
@@ -197,19 +199,24 @@ const CalendarView = () => {
                 }
                 
                 const isToday = dayData.date === today;
-                const dayNumber = new Date(dayData.date).getDate();
+                const dayNumber = new Date(dayData.date + 'T00:00:00').getDate();
+                
+                console.log('检查日期:', dayData.date, '是否为今天:', isToday, '今天日期:', today);
                 
                 return (
                   <div
                     key={dayData.date}
                     className={`
                       p-2 h-16 border rounded-lg flex flex-col items-center justify-between
-                      ${isToday ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}
+                      ${isToday ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-300' : 'border-gray-200'}
                       ${dayData.hasCheckin ? 'bg-green-50' : ''}
                       ${dayData.hasSymptoms ? 'bg-red-50' : ''}
                     `}
                   >
-                    <div className="text-sm font-medium">{dayNumber}</div>
+                    <div className={`text-sm font-medium ${isToday ? 'text-blue-600 font-bold' : ''}`}>
+                      {dayNumber}
+                      {isToday && <div className="text-xs text-blue-600">今天</div>}
+                    </div>
                     
                     <div className="flex items-center space-x-1">
                       {/* 心情图标 */}
@@ -232,7 +239,7 @@ const CalendarView = () => {
               })}
             </div>
             
-            {/* 修正的图例 */}
+            {/* 图例 */}
             <div className="grid grid-cols-2 gap-4 pt-4 border-t text-sm">
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
@@ -258,6 +265,11 @@ const CalendarView = () => {
                   <span>心情不好 (1-2分)</span>
                 </div>
               </div>
+            </div>
+            
+            {/* 当前时间显示 */}
+            <div className="pt-2 border-t text-xs text-gray-500 text-center">
+              当前北京时间: {beijingCurrentDate.toLocaleString('zh-CN')}
             </div>
           </div>
         )}
