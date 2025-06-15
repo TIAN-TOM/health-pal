@@ -48,7 +48,8 @@ const NavigationActions = ({ onDataExport, onDailyData }: NavigationActionsProps
               href="https://www.linkedin.com/in/tom-tian-317580257/" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 underline ml-1"
+              className="text-blue-600 hover:text-blue-800 ml-1"
+              style={{ textDecoration: 'none' }}
             >
               Yushun Tian
             </a>

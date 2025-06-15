@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ArrowLeft, Download, Calendar, FileText, Database, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -214,39 +215,6 @@ const DataExport = ({ onBack }: DataExportProps) => {
           <h1 className="text-xl font-bold">整理记录给医生/AI</h1>
         </div>
 
-        {/* AI助手快速咨询 */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg">
-              <ExternalLink className="h-5 w-5 mr-2" />
-              AI健康助手咨询
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <Button
-                onClick={() => handleAIAssistant('doubao')}
-                variant="outline"
-                className="flex items-center justify-center border-orange-300 text-orange-600 hover:border-orange-400 py-4"
-              >
-                <ExternalLink className="h-4 w-4 mr-1" />
-                豆包AI
-              </Button>
-              <Button
-                onClick={() => handleAIAssistant('deepseek')}
-                variant="outline"
-                className="flex items-center justify-center border-purple-300 text-purple-600 hover:border-purple-400 py-4"
-              >
-                <ExternalLink className="h-4 w-4 mr-1" />
-                DeepSeek
-              </Button>
-            </div>
-            <p className="text-xs text-gray-500">
-              点击按钮跳转到AI应用进行健康咨询，可上传导出的记录文件进行分析
-            </p>
-          </CardContent>
-        </Card>
-
         <Tabs defaultValue="quick" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="quick">快速导出</TabsTrigger>
@@ -297,6 +265,39 @@ const DataExport = ({ onBack }: DataExportProps) => {
                     <p>• 文本格式便于医生查看</p>
                     <p>• 文件将自动下载到您的设备</p>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* AI助手快速咨询 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center text-lg">
+                    <ExternalLink className="h-5 w-5 mr-2" />
+                    AI健康助手咨询
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <Button
+                      onClick={() => handleAIAssistant('doubao')}
+                      variant="outline"
+                      className="flex items-center justify-center border-orange-300 text-orange-600 hover:border-orange-400 py-4"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      豆包AI
+                    </Button>
+                    <Button
+                      onClick={() => handleAIAssistant('deepseek')}
+                      variant="outline"
+                      className="flex items-center justify-center border-purple-300 text-purple-600 hover:border-purple-400 py-4"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      DeepSeek
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    点击按钮跳转到AI应用进行健康咨询，可上传导出的记录文件进行分析
+                  </p>
                 </CardContent>
               </Card>
             </div>

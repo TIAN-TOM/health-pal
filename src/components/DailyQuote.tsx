@@ -64,6 +64,31 @@ const DailyQuote = () => {
       text: "积极的心态是健康的良药。",
       english: "A positive attitude is good medicine for health.",
       author: "现代格言 (Modern Saying)"
+    },
+    {
+      text: "生命在于运动。",
+      english: "Life is movement.",
+      author: "伏尔泰 (Voltaire)"
+    },
+    {
+      text: "有规律的生活是健康与长寿的秘诀。",
+      english: "A regular life is the secret of health and longevity.",
+      author: "巴尔扎克 (Balzac)"
+    },
+    {
+      text: "锻炼身体要经常，要坚持，人和机器一样，经常运动才不能生锈。",
+      english: "Exercise should be regular and persistent. Like machines, people need regular movement to avoid rust.",
+      author: "朱德"
+    },
+    {
+      text: "健全的心智寓于健全的身体。",
+      english: "A sound mind in a sound body.",
+      author: "古罗马格言 (Ancient Roman Saying)"
+    },
+    {
+      text: "忧愁、顾虑和悲观，可以使人得病；积极、愉快和坚强的意志和乐观的情绪，可以战胜疾病。",
+      english: "Worry, anxiety and pessimism can make people sick; positive, happy and strong will and optimistic mood can overcome disease.",
+      author: "巴甫洛夫 (Pavlov)"
     }
   ];
 
@@ -82,7 +107,7 @@ const DailyQuote = () => {
     setTimeout(() => {
       setCurrentIndex(prev => (prev + 1) % quotes.length);
       setIsAnimating(false);
-    }, 150);
+    }, 200);
   };
 
   const handlePrevious = () => {
@@ -91,7 +116,7 @@ const DailyQuote = () => {
     setTimeout(() => {
       setCurrentIndex(prev => prev === 0 ? quotes.length - 1 : prev - 1);
       setIsAnimating(false);
-    }, 150);
+    }, 200);
   };
 
   const currentQuote = quotes[currentIndex];
@@ -102,7 +127,7 @@ const DailyQuote = () => {
         <div className="flex items-start space-x-3">
           <Quote className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
           <div className="flex-1">
-            <div className={`transition-all duration-300 ${isAnimating ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
+            <div className={`transition-all duration-300 ease-in-out ${isAnimating ? 'opacity-0 transform translate-x-4' : 'opacity-100 transform translate-x-0'}`}>
               <div className="text-gray-800 text-lg leading-relaxed mb-2 font-medium">
                 {currentQuote.text}
               </div>
