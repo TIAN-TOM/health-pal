@@ -13,6 +13,11 @@ interface DailyDataProps {
 const DailyData = ({ onBack }: DailyDataProps) => {
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
 
+  const handleRecordClick = (record: any) => {
+    // 处理记录点击事件
+    console.log('记录被点击:', record);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
       <div className="mb-6 flex items-center justify-between">
@@ -56,7 +61,7 @@ const DailyData = ({ onBack }: DailyDataProps) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <HistoryView />
+              <HistoryView onRecordClick={handleRecordClick} />
             </CardContent>
           </Card>
         )}

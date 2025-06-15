@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Calendar, Smile, Frown, Meh } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Smile, Frown, Meh, RefreshCw } from 'lucide-react';
 import { getDailyCheckins } from '@/services/dailyCheckinService';
 import { getMeniereRecords } from '@/services/meniereRecordService';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +33,13 @@ const CalendarView = () => {
     return beijingDate.toISOString().split('T')[0];
   };
 
+  // 初始化时使用北京时间的当前日期
+  useEffect(() => {
+    const beijingNow = getBeijingTime();
+    setCurrentDate(beijingNow);
+    console.log('日历初始化，北京时间:', beijingNow.toISOString(), '当前月份:', beijingNow.getMonth() + 1);
+  }, []);
+
   useEffect(() => {
     loadMonthData();
   }, [currentDate]);
@@ -40,8 +47,11 @@ const CalendarView = () => {
   const loadMonthData = async () => {
     setLoading(true);
     try {
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
+      const beijingDate = getBeijingTime(currentDate);
+      const year = beijingDate.getFullYear();
+      const month = beijingDate.getMonth();
+      
+      console.log('加载月度数据，年月:', year, month + 1);
       
       // 获取当月的第一天和最后一天
       const firstDay = new Date(year, month, 1);
@@ -50,11 +60,16 @@ const CalendarView = () => {
       const startDate = formatDate(firstDay);
       const endDate = formatDate(lastDay);
 
+      console.log('查询日期范围:', startDate, '到', endDate);
+
       // 获取打卡数据和症状记录
       const [checkins, records] = await Promise.all([
         getDailyCheckins(startDate, endDate),
         getMeniereRecords(startDate, endDate)
       ]);
+
+      console.log('获取到的打卡数据:', checkins.length, '条');
+      console.log('获取到的症状记录:', records.length, '条');
 
       // 生成当月的所有日期数据
       const daysInMonth = lastDay.getDate();
@@ -64,7 +79,7 @@ const CalendarView = () => {
         const date = formatDate(new Date(year, month, day));
         
         const checkin = checkins.find(c => c.checkin_date === date);
-        const dayRecords = records.filter(r => r.timestamp.startsWith(date));
+        const dayRecords = records.filter(r => r.timestamp && r.timestamp.startsWith(date));
         
         monthDays.push({
           date,
@@ -103,14 +118,18 @@ const CalendarView = () => {
       newDate.setMonth(newDate.getMonth() + 1);
     }
     setCurrentDate(newDate);
+    console.log('切换月份到:', newDate.getFullYear(), newDate.getMonth() + 1);
   };
 
   const goToToday = () => {
-    setCurrentDate(getBeijingTime());
+    const beijingNow = getBeijingTime();
+    setCurrentDate(beijingNow);
+    console.log('跳转到今天，北京时间:', beijingNow.toISOString());
   };
 
   // 获取月份的第一天是星期几
-  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  const beijingCurrentDate = getBeijingTime(currentDate);
+  const firstDayOfMonth = new Date(beijingCurrentDate.getFullYear(), beijingCurrentDate.getMonth(), 1);
   const startingDayOfWeek = firstDayOfMonth.getDay();
 
   // 创建日历网格
@@ -127,7 +146,7 @@ const CalendarView = () => {
   });
 
   const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
-  const monthName = currentDate.toLocaleDateString('zh-CN', { 
+  const monthName = beijingCurrentDate.toLocaleDateString('zh-CN', { 
     year: 'numeric', 
     month: 'long' 
   });
@@ -142,9 +161,14 @@ const CalendarView = () => {
             <Calendar className="h-5 w-5 mr-2" />
             每日数据日历
           </CardTitle>
-          <Button onClick={goToToday} variant="outline" size="sm">
-            今天
-          </Button>
+          <div className="flex space-x-2">
+            <Button onClick={loadMonthData} variant="ghost" size="sm">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            <Button onClick={goToToday} variant="outline" size="sm">
+              今天
+            </Button>
+          </div>
         </div>
         
         <div className="flex items-center justify-between">
@@ -171,6 +195,7 @@ const CalendarView = () => {
       <CardContent>
         {loading ? (
           <div className="text-center py-8">
+            <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
             <p className="text-gray-500">加载中...</p>
           </div>
         ) : (

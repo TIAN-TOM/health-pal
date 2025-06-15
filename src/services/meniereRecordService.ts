@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert } from '@/integrations/supabase/types';
 
@@ -207,7 +208,22 @@ export const getMeniereRecords = async (startDate?: string, endDate?: string): P
 
     if (error) throw error;
 
-    return data || [];
+    // 转换数据库记录为 MeniereRecord 格式
+    return (data || []).map(record => ({
+      id: record.id,
+      type: record.type as 'dizziness' | 'lifestyle' | 'medication' | 'voice',
+      timestamp: record.timestamp,
+      data: record.data,
+      note: record.note,
+      severity: record.severity,
+      duration: record.duration,
+      symptoms: record.symptoms,
+      diet: record.diet,
+      sleep: record.sleep,
+      stress: record.stress,
+      medications: record.medications,
+      dosage: record.dosage,
+    }));
   } catch (error) {
     console.error('获取梅尼埃记录失败:', error);
     throw error;
