@@ -8,7 +8,7 @@ import type { Tables } from '@/integrations/supabase/types';
 type MeniereRecord = Tables<'meniere_records'>;
 
 interface HistoryViewProps {
-  onRecordClick?: (record: MeniereRecord) => void;
+  onRecordClick: (record: MeniereRecord) => void;
 }
 
 const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
@@ -67,15 +67,6 @@ const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
     });
   };
 
-  const handleRecordClick = (record: MeniereRecord) => {
-    if (onRecordClick) {
-      onRecordClick(record);
-    } else {
-      // 默认行为：显示记录详情
-      alert(`记录详情：\n类型：${record.type}\n时间：${formatDateTime(record.timestamp)}\n备注：${record.note || '无'}`);
-    }
-  };
-
   if (isLoading) {
     return (
       <Card className="mb-6">
@@ -107,7 +98,7 @@ const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
           <Card 
             key={record.id} 
             className="cursor-pointer hover:shadow-md transition-shadow duration-200 hover:bg-blue-50"
-            onClick={() => handleRecordClick(record)}
+            onClick={() => onRecordClick(record)}
           >
             <CardContent className="p-4">
               <div className="flex items-center justify-between min-h-[48px]">

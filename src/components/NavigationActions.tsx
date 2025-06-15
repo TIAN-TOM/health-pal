@@ -1,18 +1,29 @@
 
 import React from 'react';
-import { Download, LogOut } from 'lucide-react';
+import { Download, Calendar, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface NavigationActionsProps {
   onDataExport: () => void;
-  onSignOut: () => void;
+  onDailyData: () => void;
 }
 
-const NavigationActions = ({ onDataExport, onSignOut }: NavigationActionsProps) => {
+const NavigationActions = ({ onDataExport, onDailyData }: NavigationActionsProps) => {
   return (
-    <>
+    <div className="space-y-4">
+      {/* 每日数据查看 */}
+      <div>
+        <Button
+          onClick={onDailyData}
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-medium py-6 rounded-lg min-h-[64px]"
+        >
+          <TrendingUp className="mr-3 h-5 w-5" />
+          <span className="leading-relaxed">查看每日数据</span>
+        </Button>
+      </div>
+
       {/* 数据导出 */}
-      <div className="mt-8">
+      <div>
         <Button
           onClick={onDataExport}
           className="w-full bg-teal-600 hover:bg-teal-700 text-white text-lg font-medium py-6 rounded-lg min-h-[64px]"
@@ -22,21 +33,17 @@ const NavigationActions = ({ onDataExport, onSignOut }: NavigationActionsProps) 
         </Button>
       </div>
 
-      {/* 退出登录 - 移到底部不显眼位置 */}
-      <div className="mt-8 pt-4 border-t border-gray-200">
-        <div className="flex justify-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onSignOut}
-            className="text-gray-400 hover:text-gray-600 text-sm"
-          >
-            <LogOut className="h-4 w-4 mr-1" />
-            退出登录
-          </Button>
-        </div>
+      {/* 作者声明 */}
+      <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+        <p className="text-xs text-gray-500 leading-relaxed">
+          © 2024 梅尼埃症生活伴侣 - 专注于梅尼埃症患者的健康管理
+          <br />
+          本应用仅供参考，不能替代专业医疗建议
+          <br />
+          如有严重症状请及时就医
+        </p>
       </div>
-    </>
+    </div>
   );
 };
 

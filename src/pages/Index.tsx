@@ -10,7 +10,6 @@ import LifestyleRecord from '@/components/LifestyleRecord';
 import MedicationRecord from '@/components/MedicationRecord';
 import DataExport from '@/components/DataExport';
 import Settings from '@/components/Settings';
-import HistoryView from '@/components/HistoryView';
 import MedicalRecords from '@/components/MedicalRecords';
 import EducationCenter from '@/components/EducationCenter';
 import DailyQuote from '@/components/DailyQuote';
@@ -18,10 +17,19 @@ import EmergencyBanner from '@/components/EmergencyBanner';
 import UserWelcome from '@/components/UserWelcome';
 import FunctionCards from '@/components/FunctionCards';
 import NavigationActions from '@/components/NavigationActions';
+import HistoryView from '@/components/HistoryView';
+import DailyCheckin from '@/components/DailyCheckin';
+import CheckinStatus from '@/components/CheckinStatus';
+import DailyData from '@/components/DailyData';
+import RecordDetail from '@/components/RecordDetail';
+import type { Tables } from '@/integrations/supabase/types';
+
+type MeniereRecord = Tables<'meniere_records'>;
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<string>('home');
-  const { user, userProfile, userRole, loading, signOut } = useAuth();
+  const [selectedRecord, setSelectedRecord] = useState<MeniereRecord | null>(null);
+  const { user, userProfile, userRole, loading } = useAuth();
   const navigate = useNavigate();
 
   // 如果正在加载，显示加载状态
@@ -61,15 +69,17 @@ const Index = () => {
 
   const navigateTo = (view: string) => {
     setCurrentView(view);
+    setSelectedRecord(null);
   };
 
   const navigateHome = () => {
     setCurrentView('home');
+    setSelectedRecord(null);
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+  const handleRecordClick = (record: MeniereRecord) => {
+    setSelectedRecord(record);
+    setCurrentView('record-detail');
   };
 
   // 获取用户显示名称
@@ -85,8 +95,13 @@ const Index = () => {
     return '用户';
   };
 
+  // 路由处理
   if (currentView === 'emergency') {
     return <EmergencyMode onBack={navigateHome} />;
+  }
+
+  if (currentView === 'daily-checkin') {
+    return <DailyCheckin onBack={navigateHome} />;
   }
 
   if (currentView === 'dizziness-record') {
@@ -105,6 +120,10 @@ const Index = () => {
     return <DataExport onBack={navigateHome} />;
   }
 
+  if (currentView === 'daily-data') {
+    return <DailyData onBack={navigateHome} />;
+  }
+
   if (currentView === 'settings') {
     return <Settings onBack={navigateHome} />;
   }
@@ -115,6 +134,10 @@ const Index = () => {
 
   if (currentView === 'education') {
     return <EducationCenter onBack={navigateHome} />;
+  }
+
+  if (currentView === 'record-detail' && selectedRecord) {
+    return <RecordDetail record={selectedRecord} onBack={navigateHome} />;
   }
 
   return (
@@ -131,6 +154,9 @@ const Index = () => {
           onSettingsClick={() => navigateTo('settings')}
         />
 
+        {/* 每日打卡状态 */}
+        <CheckinStatus onCheckinClick={() => navigateTo('daily-checkin')} />
+
         {/* 每日名言 */}
         <DailyQuote />
 
@@ -138,12 +164,12 @@ const Index = () => {
         <FunctionCards onNavigate={navigateTo} />
 
         {/* 历史记录 */}
-        <HistoryView onRecordClick={(record) => console.log('查看记录详情:', record)} />
+        <HistoryView onRecordClick={handleRecordClick} />
 
         {/* 导航操作 */}
         <NavigationActions 
           onDataExport={() => navigateTo('data-export')}
-          onSignOut={handleSignOut}
+          onDailyData={() => navigateTo('daily-data')}
         />
       </div>
     </div>
