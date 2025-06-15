@@ -4,8 +4,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Megaphone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Announcement = Tables<'announcements'>;
@@ -53,7 +51,6 @@ const AnnouncementDisplay = () => {
         return '未知时间';
       }
       
-      // 直接使用 date-fns 解析日期，不手动添加时区
       const date = new Date(dateString);
       
       // 检查日期是否有效
@@ -61,10 +58,15 @@ const AnnouncementDisplay = () => {
         return '时间格式错误';
       }
       
-      // 转换为北京时间 (UTC+8)
-      const beijingTime = new Date(date.getTime() + (8 * 60 * 60 * 1000));
-      
-      return format(beijingTime, 'MM月dd日 HH:mm', { locale: zhCN });
+      // 使用北京时区格式化时间
+      return new Date(dateString).toLocaleString('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
     } catch (error) {
       console.error('日期格式化失败:', error, '原始日期:', dateString);
       return '时间格式错误';

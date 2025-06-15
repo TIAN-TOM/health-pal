@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { supabaseService } from '@/services/supabaseService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DataExportProps {
   onBack: () => void;
@@ -73,6 +73,85 @@ const DataExport = ({ onBack }: DataExportProps) => {
         description: "请手动复制数据",
         variant: 'destructive'
       });
+    }
+  };
+
+  // 修复数据获取函数 - 确保正确获取用户数据
+  const getRecordsByDateRange = async (startDate: Date, endDate: Date) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('用户未登录');
+      }
+
+      console.log('获取用户记录，用户ID:', user.id);
+      console.log('日期范围:', startDate.toISOString(), '-', endDate.toISOString());
+
+      // 获取所有用户记录
+      const { data: records, error: recordsError } = await supabase
+        .from('meniere_records')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('timestamp', startDate.toISOString())
+        .lte('timestamp', endDate.toISOString())
+        .order('timestamp', { ascending: false });
+
+      if (recordsError) {
+        console.error('获取记录失败:', recordsError);
+        throw recordsError;
+      }
+
+      console.log('获取到的记录数量:', records?.length || 0);
+      
+      // 获取用户打卡记录
+      const { data: checkins, error: checkinsError } = await supabase
+        .from('daily_checkins')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('checkin_date', startDate.toISOString().split('T')[0])
+        .lte('checkin_date', endDate.toISOString().split('T')[0])
+        .order('checkin_date', { ascending: false });
+
+      if (checkinsError) {
+        console.error('获取打卡记录失败:', checkinsError);
+      }
+
+      console.log('获取到的打卡记录数量:', checkins?.length || 0);
+
+      // 合并记录，将打卡记录转换为统一格式
+      const allRecords = [...(records || [])];
+      
+      if (checkins && checkins.length > 0) {
+        checkins.forEach(checkin => {
+          allRecords.push({
+            id: `checkin-${checkin.id}`,
+            type: 'checkin',
+            timestamp: checkin.created_at,
+            created_at: checkin.created_at,
+            updated_at: checkin.updated_at,
+            user_id: checkin.user_id,
+            note: checkin.note,
+            data: {
+              mood_score: checkin.mood_score,
+              checkin_date: checkin.checkin_date,
+              note: checkin.note
+            },
+            severity: null,
+            duration: null,
+            symptoms: null,
+            diet: null,
+            sleep: null,
+            stress: null,
+            medications: null,
+            dosage: null
+          } as any);
+        });
+      }
+
+      return allRecords;
+    } catch (error) {
+      console.error('获取数据失败:', error);
+      throw error;
     }
   };
 
@@ -148,6 +227,15 @@ const DataExport = ({ onBack }: DataExportProps) => {
             note: record.note || record.data?.note
           }
         };
+      } else if (record.type === 'checkin') {
+        return {
+          timestamp,
+          eventType: "DailyCheckin",
+          details: {
+            mood_score: record.data?.mood_score,
+            note: record.data?.note
+          }
+        };
       }
       
       return null;
@@ -211,9 +299,17 @@ const DataExport = ({ onBack }: DataExportProps) => {
         } else if (record.type === 'voice') {
           text += `- [${time}] 语音记事\n`;
           text += `  内容: ${record.note || ''}\n`;
+        } else if (record.type === 'checkin') {
+          text += `- [${time}] 每日打卡\n`;
+          if (record.data?.mood_score) {
+            text += `  心情评分: ${record.data.mood_score}/5\n`;
+          }
+          if (record.data?.note) {
+            text += `  备注: ${record.data.note}\n`;
+          }
         }
         
-        if (record.note && record.type !== 'voice') {
+        if (record.note && record.type !== 'voice' && record.type !== 'checkin') {
           text += `  备注: ${record.note}\n`;
         }
         
@@ -284,7 +380,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
       let startDateStr, endDateStr;
       
       if (timeRange === 'custom') {
-        records = await supabaseService.getRecordsByDateRange(
+        records = await getRecordsByDateRange(
           new Date(customStartDate),
           new Date(customEndDate)
         );
@@ -300,9 +396,19 @@ const DataExport = ({ onBack }: DataExportProps) => {
           timeLimit.setMonth(now.getMonth() - 1);
         }
         
-        records = await supabaseService.getRecordsByDateRange(timeLimit, now);
+        records = await getRecordsByDateRange(timeLimit, now);
         startDateStr = timeLimit.toISOString().split('T')[0];
         endDateStr = now.toISOString().split('T')[0];
+      }
+
+      console.log('导出的记录数量:', records?.length || 0);
+
+      if (!records || records.length === 0) {
+        toast({
+          title: '提示',
+          description: '选定时间范围内没有记录数据',
+        });
+        return;
       }
 
       if (format === 'json') {
@@ -317,7 +423,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
       console.error('导出失败:', error);
       toast({
         title: '导出失败',
-        description: '请稍后重试',
+        description: error instanceof Error ? error.message : '请稍后重试',
         variant: 'destructive'
       });
     } finally {
@@ -430,7 +536,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
                     <p>• <strong>JSON格式</strong>：适合复制给AI分析，结构化数据便于AI理解</p>
                     <p>• <strong>纯文本格式</strong>：适合发送给家人或医生查看，人类可读</p>
                     <p>• 数据会自动复制到剪贴板，直接粘贴即可使用</p>
-                    <p>• 包含完整的症状、用药、生活记录信息</p>
+                    <p>• 包含完整的症状、用药、生活记录、每日打卡信息</p>
                   </div>
                 </CardContent>
               </Card>

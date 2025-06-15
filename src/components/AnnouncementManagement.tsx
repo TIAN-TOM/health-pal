@@ -11,6 +11,13 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type Announcement = Tables<'announcements'>;
 
+// 获取正确的北京时间ISO字符串
+const getBeijingTimeISO = () => {
+  const now = new Date();
+  const beijingTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+  return beijingTime.toISOString();
+};
+
 const AnnouncementManagement = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -61,6 +68,8 @@ const AnnouncementManagement = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('用户未登录');
 
+      const beijingTime = getBeijingTimeISO();
+
       if (editingId) {
         const { error } = await supabase
           .from('announcements')
@@ -68,7 +77,7 @@ const AnnouncementManagement = () => {
             title: formData.title,
             content: formData.content,
             is_active: formData.is_active,
-            updated_at: new Date().toISOString()
+            updated_at: beijingTime
           })
           .eq('id', editingId);
 
@@ -84,7 +93,9 @@ const AnnouncementManagement = () => {
             title: formData.title,
             content: formData.content,
             author_id: user.id,
-            is_active: formData.is_active
+            is_active: formData.is_active,
+            created_at: beijingTime,
+            updated_at: beijingTime
           });
 
         if (error) throw error;
@@ -145,11 +156,13 @@ const AnnouncementManagement = () => {
 
   const toggleStatus = async (id: string, currentStatus: boolean) => {
     try {
+      const beijingTime = getBeijingTimeISO();
+      
       const { error } = await supabase
         .from('announcements')
         .update({ 
           is_active: !currentStatus,
-          updated_at: new Date().toISOString()
+          updated_at: beijingTime
         })
         .eq('id', id);
 
@@ -257,9 +270,9 @@ const AnnouncementManagement = () => {
                   </div>
                   <p className="text-gray-600 text-sm mb-2">{announcement.content}</p>
                   <p className="text-xs text-gray-500">
-                    发布时间: {new Date(announcement.created_at).toLocaleString()}
+                    发布时间: {new Date(announcement.created_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
                     {announcement.updated_at !== announcement.created_at && (
-                      <span> · 更新时间: {new Date(announcement.updated_at).toLocaleString()}</span>
+                      <span> · 更新时间: {new Date(announcement.updated_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}</span>
                     )}
                   </p>
                 </div>

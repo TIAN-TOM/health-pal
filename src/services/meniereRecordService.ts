@@ -18,11 +18,11 @@ export interface MeniereRecord {
   dosage?: string;
 }
 
-// 获取北京时间的ISO字符串
+// 获取正确的北京时间ISO字符串
 const getBeijingTimeISO = () => {
   const now = new Date();
-  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-  const beijingTime = new Date(utc + (8 * 3600000));
+  // 直接使用当前时间并转换为北京时区
+  const beijingTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
   return beijingTime.toISOString();
 };
 
@@ -33,6 +33,8 @@ export const saveMeniereRecord = async (record: MeniereRecord) => {
   if (!user) {
     throw new Error('用户未登录');
   }
+
+  const beijingTime = getBeijingTimeISO();
 
   const { data, error } = await supabase
     .from('meniere_records')
@@ -49,9 +51,9 @@ export const saveMeniereRecord = async (record: MeniereRecord) => {
       note: record.note,
       data: record.data,
       user_id: user.id,
-      timestamp: getBeijingTimeISO(), // 使用北京时间
-      created_at: getBeijingTimeISO(),
-      updated_at: getBeijingTimeISO()
+      timestamp: beijingTime,
+      created_at: beijingTime,
+      updated_at: beijingTime
     });
 
   if (error) throw error;
@@ -63,6 +65,8 @@ export const saveDizzinessRecord = async (record: {
   severity: string;
   symptoms: string[];
 }) => {
+  const beijingTime = getBeijingTimeISO();
+  
   const { data, error } = await supabase
     .from('meniere_records')
     .insert({
@@ -72,9 +76,9 @@ export const saveDizzinessRecord = async (record: {
       symptoms: record.symptoms,
       data: record,
       user_id: (await supabase.auth.getUser()).data.user?.id!,
-      timestamp: getBeijingTimeISO(),
-      created_at: getBeijingTimeISO(),
-      updated_at: getBeijingTimeISO()
+      timestamp: beijingTime,
+      created_at: beijingTime,
+      updated_at: beijingTime
     });
 
   if (error) throw error;
@@ -87,6 +91,8 @@ export const saveLifestyleRecord = async (record: {
   stress: string;
   manualInput?: string;
 }) => {
+  const beijingTime = getBeijingTimeISO();
+  
   const { data, error } = await supabase
     .from('meniere_records')
     .insert({
@@ -97,9 +103,9 @@ export const saveLifestyleRecord = async (record: {
       note: record.manualInput,
       data: record,
       user_id: (await supabase.auth.getUser()).data.user?.id!,
-      timestamp: getBeijingTimeISO(),
-      created_at: getBeijingTimeISO(),
-      updated_at: getBeijingTimeISO()
+      timestamp: beijingTime,
+      created_at: beijingTime,
+      updated_at: beijingTime
     });
 
   if (error) throw error;
@@ -111,6 +117,8 @@ export const saveMedicationRecord = async (record: {
   dosage: string;
   manualInput?: string;
 }) => {
+  const beijingTime = getBeijingTimeISO();
+  
   const { data, error } = await supabase
     .from('meniere_records')
     .insert({
@@ -120,9 +128,9 @@ export const saveMedicationRecord = async (record: {
       note: record.manualInput,
       data: record,
       user_id: (await supabase.auth.getUser()).data.user?.id!,
-      timestamp: getBeijingTimeISO(),
-      created_at: getBeijingTimeISO(),
-      updated_at: getBeijingTimeISO()
+      timestamp: beijingTime,
+      created_at: beijingTime,
+      updated_at: beijingTime
     });
 
   if (error) throw error;
@@ -133,6 +141,8 @@ export const saveVoiceRecord = async (record: {
   note: string;
   duration?: number;
 }) => {
+  const beijingTime = getBeijingTimeISO();
+  
   const { data, error } = await supabase
     .from('meniere_records')
     .insert({
@@ -140,9 +150,9 @@ export const saveVoiceRecord = async (record: {
       note: record.note,
       data: record,
       user_id: (await supabase.auth.getUser()).data.user?.id!,
-      timestamp: getBeijingTimeISO(),
-      created_at: getBeijingTimeISO(),
-      updated_at: getBeijingTimeISO()
+      timestamp: beijingTime,
+      created_at: beijingTime,
+      updated_at: beijingTime
     });
 
   if (error) throw error;
