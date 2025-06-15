@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ArrowLeft, Download, Calendar, FileText, Database, ExternalLink, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { getBeijingDateString, getBeijingTime } from '@/utils/beijingTime';
+import { getBeijingDateString, getBeijingTime, formatBeijingTime } from '@/utils/beijingTime';
 
 interface DataExportProps {
   onBack: () => void;
@@ -167,7 +168,10 @@ const DataExport = ({ onBack }: DataExportProps) => {
 
   const generateJSONFormat = (records: any[], startDate: string, endDate: string) => {
     const events = records.map(record => {
-      const timestamp = new Date(record.timestamp || record.created_at).toISOString();
+      // 将时间戳转换为北京时间
+      const originalTime = new Date(record.timestamp || record.created_at);
+      const beijingTime = new Date(originalTime.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+      const timestamp = beijingTime.toISOString();
       
       if (record.type === 'dizziness') {
         return {
@@ -264,9 +268,11 @@ const DataExport = ({ onBack }: DataExportProps) => {
   const generateTextFormat = (records: any[], startDate: string, endDate: string) => {
     let text = `梅尼埃症数据记录 (${startDate} - ${endDate})\n\n`;
     
-    // 按日期分组
+    // 按日期分组 - 使用北京时间
     const recordsByDate = records.reduce((acc, record) => {
-      const date = new Date(record.timestamp || record.created_at).toLocaleDateString('zh-CN');
+      const originalTime = new Date(record.timestamp || record.created_at);
+      const beijingTime = new Date(originalTime.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+      const date = beijingTime.toLocaleDateString('zh-CN');
       if (!acc[date]) acc[date] = [];
       acc[date].push(record);
       return acc;
@@ -276,7 +282,9 @@ const DataExport = ({ onBack }: DataExportProps) => {
       text += `**${date}**\n\n`;
       
       dayRecords.forEach(record => {
-        const time = new Date(record.timestamp || record.created_at).toLocaleTimeString('zh-CN', { 
+        const originalTime = new Date(record.timestamp || record.created_at);
+        const beijingTime = new Date(originalTime.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+        const time = beijingTime.toLocaleTimeString('zh-CN', { 
           hour: '2-digit', 
           minute: '2-digit' 
         });
