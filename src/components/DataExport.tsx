@@ -4,6 +4,10 @@ import { ArrowLeft, Copy, Download, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { getRecordsForPeriod } from '@/services/meniereRecordService';
+import type { Tables } from '@/integrations/supabase/types';
+
+type MeniereRecord = Tables<'meniere_records'>;
 
 interface DataExportProps {
   onBack: () => void;
@@ -11,42 +15,37 @@ interface DataExportProps {
 
 const DataExport = ({ onBack }: DataExportProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [recordCount, setRecordCount] = useState<number>(0);
   const { toast } = useToast();
 
-  const getRecordsForPeriod = (period: string) => {
-    const records = JSON.parse(localStorage.getItem('meniereRecords') || '[]');
-    const now = new Date();
-    let startDate: Date;
-
-    switch (period) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case 'month':
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        return records;
+  const handlePeriodSelect = async (period: string) => {
+    setSelectedPeriod(period);
+    try {
+      const days = period === 'week' ? 7 : 30;
+      const records = await getRecordsForPeriod(days);
+      setRecordCount(records?.length || 0);
+    } catch (error) {
+      console.error('获取记录数量失败:', error);
+      setRecordCount(0);
     }
-
-    return records.filter((record: any) => 
-      new Date(record.timestamp) >= startDate
-    );
   };
 
-  const generateJSONExport = (period: string) => {
-    const records = getRecordsForPeriod(period);
+  const generateJSONExport = async (period: string) => {
+    const days = period === 'week' ? 7 : 30;
+    const records = await getRecordsForPeriod(days);
     const exportData = {
       exportDate: new Date().toISOString(),
       period: period,
-      totalRecords: records.length,
-      records: records
+      totalRecords: records?.length || 0,
+      records: records || []
     };
     return JSON.stringify(exportData, null, 2);
   };
 
-  const generateTextExport = (period: string) => {
-    const records = getRecordsForPeriod(period);
+  const generateTextExport = async (period: string) => {
+    const days = period === 'week' ? 7 : 30;
+    const records = await getRecordsForPeriod(days) || [];
     const periodLabel = period === 'week' ? '上周' : '上月';
     
     let text = `梅尼埃症记录报告 - ${periodLabel}\n`;
@@ -54,10 +53,10 @@ const DataExport = ({ onBack }: DataExportProps) => {
     text += `记录总数: ${records.length} 条\n\n`;
 
     // 按类型分组统计
-    const dizzinessRecords = records.filter((r: any) => r.type === 'dizziness');
-    const lifestyleRecords = records.filter((r: any) => r.type === 'lifestyle');
-    const medicationRecords = records.filter((r: any) => r.type === 'medication');
-    const voiceRecords = records.filter((r: any) => r.type === 'voice');
+    const dizzinessRecords = records.filter((r: MeniereRecord) => r.type === 'dizziness');
+    const lifestyleRecords = records.filter((r: MeniereRecord) => r.type === 'lifestyle');
+    const medicationRecords = records.filter((r: MeniereRecord) => r.type === 'medication');
+    const voiceRecords = records.filter((r: MeniereRecord) => r.type === 'voice');
 
     text += `📊 记录统计:\n`;
     text += `- 眩晕发作: ${dizzinessRecords.length} 次\n`;
@@ -66,25 +65,25 @@ const DataExport = ({ onBack }: DataExportProps) => {
     text += `- 语音记录: ${voiceRecords.length} 条\n\n`;
 
     // 详细记录
-    records.forEach((record: any, index: number) => {
+    records.forEach((record: MeniereRecord, index: number) => {
       const date = new Date(record.timestamp).toLocaleString('zh-CN');
       text += `${index + 1}. [${date}] `;
       
       switch (record.type) {
         case 'dizziness':
           text += `眩晕发作 - 持续时间: ${record.duration}, 严重程度: ${record.severity}`;
-          if (record.symptoms.length > 0) {
+          if (record.symptoms && record.symptoms.length > 0) {
             text += `, 伴随症状: ${record.symptoms.join(', ')}`;
           }
           break;
         case 'lifestyle':
           text += `生活记录 - 睡眠: ${record.sleep}, 压力: ${record.stress}`;
-          if (record.diet.length > 0) {
+          if (record.diet && record.diet.length > 0) {
             text += `, 饮食: ${record.diet.join(', ')}`;
           }
           break;
         case 'medication':
-          text += `用药记录 - 药物: ${record.medications.join(', ')}`;
+          text += `用药记录 - 药物: ${record.medications?.join(', ')}`;
           if (record.dosage) {
             text += `, 剂量: ${record.dosage}`;
           }
@@ -114,7 +113,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
     });
   };
 
-  const handleJSONExport = () => {
+  const handleJSONExport = async () => {
     if (!selectedPeriod) {
       toast({
         title: "请选择时期",
@@ -124,11 +123,23 @@ const DataExport = ({ onBack }: DataExportProps) => {
       return;
     }
     
-    const jsonData = generateJSONExport(selectedPeriod);
-    copyToClipboard(jsonData, 'json');
+    setIsLoading(true);
+    try {
+      const jsonData = await generateJSONExport(selectedPeriod);
+      copyToClipboard(jsonData, 'json');
+    } catch (error) {
+      console.error('导出失败:', error);
+      toast({
+        title: "导出失败",
+        description: "请检查网络连接后重试",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleTextExport = () => {
+  const handleTextExport = async () => {
     if (!selectedPeriod) {
       toast({
         title: "请选择时期",
@@ -138,8 +149,20 @@ const DataExport = ({ onBack }: DataExportProps) => {
       return;
     }
     
-    const textData = generateTextExport(selectedPeriod);
-    copyToClipboard(textData, 'text');
+    setIsLoading(true);
+    try {
+      const textData = await generateTextExport(selectedPeriod);
+      copyToClipboard(textData, 'text');
+    } catch (error) {
+      console.error('导出失败:', error);
+      toast({
+        title: "导出失败",
+        description: "请检查网络连接后重试",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -177,7 +200,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
                 ].map(option => (
                   <Button
                     key={option.value}
-                    onClick={() => setSelectedPeriod(option.value)}
+                    onClick={() => handlePeriodSelect(option.value)}
                     variant={selectedPeriod === option.value ? "default" : "outline"}
                     className={`w-full py-4 text-lg ${
                       selectedPeriod === option.value 
@@ -199,7 +222,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h4 className="font-medium text-blue-800 mb-2">📋 记录预览</h4>
                 <div className="text-sm text-blue-700">
-                  {selectedPeriod === 'week' ? '上周' : '上月'}共有 {getRecordsForPeriod(selectedPeriod).length} 条记录
+                  {selectedPeriod === 'week' ? '上周' : '上月'}共有 {recordCount} 条记录
                 </div>
               </div>
             )}
@@ -213,20 +236,20 @@ const DataExport = ({ onBack }: DataExportProps) => {
               <Button
                 onClick={handleJSONExport}
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white text-lg py-6 rounded-lg"
-                disabled={!selectedPeriod}
+                disabled={!selectedPeriod || isLoading}
               >
                 <Copy className="mr-3 h-5 w-5" />
-                复制给AI分析
+                {isLoading ? '处理中...' : '复制给AI分析'}
                 <div className="text-sm opacity-90 ml-2">(JSON格式)</div>
               </Button>
 
               <Button
                 onClick={handleTextExport}
                 className="w-full bg-green-600 hover:bg-green-700 text-white text-lg py-6 rounded-lg"
-                disabled={!selectedPeriod}
+                disabled={!selectedPeriod || isLoading}
               >
                 <Download className="mr-3 h-5 w-5" />
-                复制文字版
+                {isLoading ? '处理中...' : '复制文字版'}
                 <div className="text-sm opacity-90 ml-2">(可读格式)</div>
               </Button>
             </div>
@@ -237,6 +260,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
               <ul className="text-sm text-yellow-700 space-y-1">
                 <li>• JSON格式适合AI分析，包含完整结构化数据</li>
                 <li>• 文字版适合发给家人或医生阅读</li>
+                <li>• 数据已从云端数据库获取，确保最新最全</li>
                 <li>• 数据已复制到剪贴板，可直接粘贴使用</li>
               </ul>
             </div>

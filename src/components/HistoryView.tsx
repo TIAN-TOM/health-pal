@@ -2,35 +2,29 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Activity, Home, Pill, Mic } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { getRecentRecords } from '@/services/meniereRecordService';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface MeniereRecord {
-  id: string;
-  type: 'dizziness' | 'lifestyle' | 'medication' | 'voice';
-  timestamp: string;
-  data: any;
-  note?: string;
-  severity?: string;
-  sleep?: string;
-  medications?: string[];
-}
+type MeniereRecord = Tables<'meniere_records'>;
 
 const HistoryView = () => {
   const [records, setRecords] = useState<MeniereRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadRecords();
   }, []);
 
-  const loadRecords = () => {
+  const loadRecords = async () => {
     try {
-      const storedRecords = localStorage.getItem('meniereRecords');
-      if (storedRecords) {
-        const parsedRecords = JSON.parse(storedRecords);
-        setRecords(parsedRecords.slice(-5).reverse()); // 显示最近5条记录
-      }
+      setIsLoading(true);
+      const data = await getRecentRecords(5);
+      setRecords(data || []);
     } catch (error) {
       console.error('加载记录失败:', error);
       setRecords([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -70,6 +64,17 @@ const HistoryView = () => {
     return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
   };
 
+  if (isLoading) {
+    return (
+      <Card className="mb-6">
+        <CardContent className="p-6 text-center">
+          <Clock className="h-8 w-8 text-gray-400 mx-auto mb-3 animate-pulse" />
+          <p className="text-gray-500 leading-relaxed">加载记录中...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (records.length === 0) {
     return (
       <Card className="mb-6">
@@ -86,8 +91,8 @@ const HistoryView = () => {
     <div className="mb-6">
       <h3 className="text-lg font-medium text-gray-800 mb-4 leading-relaxed">最近记录</h3>
       <div className="space-y-3">
-        {records.map((record: MeniereRecord, index: number) => (
-          <Card key={record.id || index} className="hover:shadow-md transition-shadow duration-200">
+        {records.map((record: MeniereRecord) => (
+          <Card key={record.id} className="hover:shadow-md transition-shadow duration-200">
             <CardContent className="p-4">
               <div className="flex items-center justify-between min-h-[48px]">
                 <div className="flex items-center space-x-3">

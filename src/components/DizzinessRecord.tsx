@@ -4,6 +4,7 @@ import { ArrowLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { saveDizzinessRecord } from '@/services/meniereRecordService';
 
 interface DizzinessRecordProps {
   onBack: () => void;
@@ -13,6 +14,7 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
   const [duration, setDuration] = useState<string>('');
   const [severity, setSeverity] = useState<string>('');
   const [symptoms, setSymptoms] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const toggleSymptom = (symptom: string) => {
@@ -23,7 +25,7 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
     );
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!duration || !severity) {
       toast({
         title: "请完善信息",
@@ -33,25 +35,30 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
       return;
     }
 
-    // 保存记录到本地存储（后续可连接Supabase）
-    const record = {
-      type: 'dizziness',
-      timestamp: new Date().toISOString(),
-      duration,
-      severity,
-      symptoms
-    };
+    setIsLoading(true);
+    try {
+      await saveDizzinessRecord({
+        duration,
+        severity,
+        symptoms
+      });
 
-    const existingRecords = JSON.parse(localStorage.getItem('meniereRecords') || '[]');
-    existingRecords.push(record);
-    localStorage.setItem('meniereRecords', JSON.stringify(existingRecords));
+      toast({
+        title: "记录已保存",
+        description: "眩晕症状已成功记录到数据库",
+      });
 
-    toast({
-      title: "记录已保存",
-      description: "眩晕症状已成功记录",
-    });
-
-    onBack();
+      onBack();
+    } catch (error) {
+      console.error('保存记录失败:', error);
+      toast({
+        title: "保存失败",
+        description: "请检查网络连接后重试",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -170,9 +177,10 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
             {/* 保存按钮 */}
             <Button
               onClick={handleSave}
+              disabled={isLoading}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xl py-6 rounded-lg mt-8"
             >
-              保存记录
+              {isLoading ? '保存中...' : '保存记录'}
             </Button>
           </CardContent>
         </Card>

@@ -4,6 +4,7 @@ import { ArrowLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { saveMedicationRecord } from '@/services/meniereRecordService';
 
 interface MedicationRecordProps {
   onBack: () => void;
@@ -12,6 +13,7 @@ interface MedicationRecordProps {
 const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
   const [medications, setMedications] = useState<string[]>([]);
   const [dosage, setDosage] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   // 常用药物列表
@@ -31,7 +33,7 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
     );
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (medications.length === 0) {
       toast({
         title: "请选择药物",
@@ -41,24 +43,29 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
       return;
     }
 
-    // 保存记录到本地存储
-    const record = {
-      type: 'medication',
-      timestamp: new Date().toISOString(),
-      medications,
-      dosage
-    };
+    setIsLoading(true);
+    try {
+      await saveMedicationRecord({
+        medications,
+        dosage
+      });
 
-    const existingRecords = JSON.parse(localStorage.getItem('meniereRecords') || '[]');
-    existingRecords.push(record);
-    localStorage.setItem('meniereRecords', JSON.stringify(existingRecords));
+      toast({
+        title: "记录已保存",
+        description: "用药记录已成功保存到数据库",
+      });
 
-    toast({
-      title: "记录已保存",
-      description: "用药记录已成功保存",
-    });
-
-    onBack();
+      onBack();
+    } catch (error) {
+      console.error('保存记录失败:', error);
+      toast({
+        title: "保存失败",
+        description: "请检查网络连接后重试",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -149,9 +156,10 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
             {/* 保存按钮 */}
             <Button
               onClick={handleSave}
+              disabled={isLoading}
               className="w-full bg-purple-600 hover:bg-purple-700 text-white text-xl py-6 rounded-lg mt-8"
             >
-              保存记录
+              {isLoading ? '保存中...' : '保存记录'}
             </Button>
           </CardContent>
         </Card>

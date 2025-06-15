@@ -9,6 +9,63 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      meniere_records: {
+        Row: {
+          created_at: string
+          data: Json
+          diet: string[] | null
+          dosage: string | null
+          duration: string | null
+          id: string
+          medications: string[] | null
+          note: string | null
+          severity: string | null
+          sleep: string | null
+          stress: string | null
+          symptoms: string[] | null
+          timestamp: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          diet?: string[] | null
+          dosage?: string | null
+          duration?: string | null
+          id?: string
+          medications?: string[] | null
+          note?: string | null
+          severity?: string | null
+          sleep?: string | null
+          stress?: string | null
+          symptoms?: string[] | null
+          timestamp?: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          diet?: string[] | null
+          dosage?: string | null
+          duration?: string | null
+          id?: string
+          medications?: string[] | null
+          note?: string | null
+          severity?: string | null
+          sleep?: string | null
+          stress?: string | null
+          symptoms?: string[] | null
+          timestamp?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

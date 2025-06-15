@@ -4,6 +4,7 @@ import { ArrowLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { saveLifestyleRecord } from '@/services/meniereRecordService';
 
 interface LifestyleRecordProps {
   onBack: () => void;
@@ -13,6 +14,7 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
   const [diet, setDiet] = useState<string[]>([]);
   const [sleep, setSleep] = useState<string>('');
   const [stress, setStress] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const toggleDiet = (item: string) => {
@@ -23,7 +25,7 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
     );
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!sleep || !stress) {
       toast({
         title: "请完善信息",
@@ -33,25 +35,30 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
       return;
     }
 
-    // 保存记录到本地存储
-    const record = {
-      type: 'lifestyle',
-      timestamp: new Date().toISOString(),
-      diet,
-      sleep,
-      stress
-    };
+    setIsLoading(true);
+    try {
+      await saveLifestyleRecord({
+        diet,
+        sleep,
+        stress
+      });
 
-    const existingRecords = JSON.parse(localStorage.getItem('meniereRecords') || '[]');
-    existingRecords.push(record);
-    localStorage.setItem('meniereRecords', JSON.stringify(existingRecords));
+      toast({
+        title: "记录已保存",
+        description: "生活记录已成功保存到数据库",
+      });
 
-    toast({
-      title: "记录已保存",
-      description: "生活记录已成功保存",
-    });
-
-    onBack();
+      onBack();
+    } catch (error) {
+      console.error('保存记录失败:', error);
+      toast({
+        title: "保存失败",
+        description: "请检查网络连接后重试",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -171,9 +178,10 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
             {/* 保存按钮 */}
             <Button
               onClick={handleSave}
+              disabled={isLoading}
               className="w-full bg-green-600 hover:bg-green-700 text-white text-xl py-6 rounded-lg mt-8"
             >
-              保存记录
+              {isLoading ? '保存中...' : '保存记录'}
             </Button>
           </CardContent>
         </Card>

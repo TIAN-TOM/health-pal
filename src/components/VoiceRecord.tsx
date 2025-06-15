@@ -4,6 +4,7 @@ import { ArrowLeft, Mic, Square, Play, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { saveVoiceRecord } from '@/services/meniereRecordService';
 
 interface VoiceRecordProps {
   onBack: () => void;
@@ -13,6 +14,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [hasRecording, setHasRecording] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const startRecording = () => {
@@ -42,7 +44,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
     setRecordingTime(0);
   };
 
-  const saveRecording = () => {
+  const saveRecording = async () => {
     if (!hasRecording) {
       toast({
         title: "没有录音",
@@ -52,24 +54,29 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
       return;
     }
 
-    // 保存记录到本地存储
-    const record = {
-      type: 'voice',
-      timestamp: new Date().toISOString(),
-      duration: recordingTime,
-      note: `语音记录 - ${recordingTime}秒`
-    };
+    setIsLoading(true);
+    try {
+      await saveVoiceRecord({
+        note: `语音记录 - ${recordingTime}秒`,
+        duration: recordingTime
+      });
 
-    const existingRecords = JSON.parse(localStorage.getItem('meniereRecords') || '[]');
-    existingRecords.push(record);
-    localStorage.setItem('meniereRecords', JSON.stringify(existingRecords));
+      toast({
+        title: "记录已保存",
+        description: "语音记录已成功保存到数据库",
+      });
 
-    toast({
-      title: "记录已保存",
-      description: "语音记录已成功保存",
-    });
-
-    onBack();
+      onBack();
+    } catch (error) {
+      console.error('保存记录失败:', error);
+      toast({
+        title: "保存失败",
+        description: "请检查网络连接后重试",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -184,9 +191,9 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
             <Button
               onClick={saveRecording}
               className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xl py-6 rounded-lg mt-8"
-              disabled={!hasRecording}
+              disabled={!hasRecording || isLoading}
             >
-              保存语音记录
+              {isLoading ? '保存中...' : '保存语音记录'}
             </Button>
           </CardContent>
         </Card>
