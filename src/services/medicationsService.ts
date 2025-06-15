@@ -1,13 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 
-export interface Medication {
-  id?: string;
-  name: string;
-  frequency: string;
-}
+// 使用数据库表类型
+export type Medication = Tables<'user_medications'>;
 
-export const saveMedication = async (medication: Omit<Medication, 'id'>) => {
+export const saveMedication = async (medication: Omit<Medication, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('用户未登录');
 

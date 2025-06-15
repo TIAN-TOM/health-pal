@@ -1,14 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 
-export interface Contact {
-  id?: string;
-  name: string;
-  phone: string;
-  avatar: string;
-}
+// 使用数据库表类型
+export type Contact = Tables<'emergency_contacts'>;
 
-export const saveContact = async (contact: Omit<Contact, 'id'>) => {
+export const saveContact = async (contact: Omit<Contact, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('用户未登录');
 
