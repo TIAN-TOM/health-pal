@@ -40,7 +40,7 @@ const UserWelcome = ({ userDisplayName, userRole, onSettingsClick }: UserWelcome
       </div>
       
       {shouldShowWelcomeBack ? (
-        <div className="text-sm text-gray-600 mb-2 leading-relaxed">
+        <div className="text-gray-600 text-lg leading-relaxed">
           欢迎回来，{userDisplayName}
         </div>
       ) : (

@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { saveMedicationRecord } from '@/services/meniereRecordService';
 import { Medication, getMedications } from '@/services/medicationsService';
@@ -13,6 +15,7 @@ interface MedicationRecordProps {
 const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
   const [medications, setMedications] = useState<string[]>([]);
   const [dosage, setDosage] = useState<string>('');
+  const [manualInput, setManualInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [userMedications, setUserMedications] = useState<Medication[]>([]);
   const [loadingMeds, setLoadingMeds] = useState(true);
@@ -28,7 +31,6 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
       setUserMedications(medsData);
     } catch (error) {
       console.error('加载药物失败:', error);
-      // 如果加载失败，使用默认药物
       const fallbackMedications: Medication[] = [
         {
           id: 'fallback-1',
@@ -85,6 +87,31 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
     );
   };
 
+  const handleAIAssistant = (aiType: 'doubao' | 'deepseek') => {
+    const medications_text = medications.join('、');
+    const dosage_text = dosage === 'normal' ? '正常剂量' : dosage === 'half' ? '减半剂量' : dosage === 'extra' ? '加强剂量' : '';
+    
+    const record_text = `我有梅尼埃症，今天服用的药物：${medications_text}，用药剂量：${dosage_text}。${manualInput ? `补充信息：${manualInput}` : ''}请给我一些用药建议和指导。`;
+    
+    if (aiType === 'doubao') {
+      window.open('doubao://chat?text=' + encodeURIComponent(record_text), '_blank');
+      setTimeout(() => {
+        toast({
+          title: "如果没有自动打开豆包APP",
+          description: "请手动复制用药记录到豆包中咨询",
+        });
+      }, 1000);
+    } else if (aiType === 'deepseek') {
+      window.open('deepseek://chat?text=' + encodeURIComponent(record_text), '_blank');
+      setTimeout(() => {
+        toast({
+          title: "如果没有自动打开DeepSeek APP",
+          description: "请手动复制用药记录到DeepSeek中咨询",
+        });
+      }, 1000);
+    }
+  };
+
   const handleSave = async () => {
     if (medications.length === 0) {
       toast({
@@ -99,7 +126,8 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
     try {
       await saveMedicationRecord({
         medications,
-        dosage
+        dosage,
+        manualInput: manualInput.trim() || undefined
       });
 
       toast({
@@ -141,20 +169,22 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
-      {/* 返回按钮 */}
-      <div className="mb-6">
-        <Button
-          onClick={onBack}
-          variant="ghost"
-          className="text-gray-600 hover:text-gray-800"
-        >
-          <ArrowLeft className="mr-2 h-5 w-5" />
-          返回
-        </Button>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <div className="container mx-auto px-4 py-6 max-w-md">
+        {/* 返回按钮 */}
+        <div className="flex items-center mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="mr-2"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            返回
+          </Button>
+          <h1 className="text-xl font-bold text-gray-800">记录用药情况</h1>
+        </div>
 
-      <div className="max-w-md mx-auto space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl text-center text-gray-800">
@@ -236,6 +266,50 @@ const MedicationRecord = ({ onBack }: MedicationRecordProps) => {
                       </Button>
                     ))}
                   </div>
+                </div>
+
+                {/* 手动输入框 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    补充信息（可选）
+                  </label>
+                  <Textarea
+                    value={manualInput}
+                    onChange={(e) => setManualInput(e.target.value)}
+                    placeholder="可以手动输入其他用药相关信息..."
+                    className="w-full"
+                    rows={3}
+                  />
+                </div>
+
+                {/* AI助手按钮 */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    AI健康助手咨询
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleAIAssistant('doubao')}
+                      className="flex items-center justify-center border-orange-300 text-orange-600 hover:border-orange-400"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      豆包AI
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleAIAssistant('deepseek')}
+                      className="flex items-center justify-center border-purple-300 text-purple-600 hover:border-purple-400"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      DeepSeek
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    点击按钮跳转到对应AI应用进行健康咨询
+                  </p>
                 </div>
 
                 {/* 温馨提示 */}

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertTriangle, Clock, Save, Zap, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, Clock, Save, Zap, ArrowLeft, ExternalLink } from 'lucide-react';
 import { saveMeniereRecord } from '@/services/meniereRecordService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,6 +16,7 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
   const [duration, setDuration] = useState('');
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [note, setNote] = useState('');
+  const [manualInput, setManualInput] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -53,6 +54,31 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
     );
   };
 
+  const handleAIAssistant = (aiType: 'doubao' | 'deepseek') => {
+    const symptoms_text = symptoms.join('、');
+    const record_text = `我有梅尼埃症，刚才出现了${severity}眩晕症状，持续${duration}，伴随症状包括：${symptoms_text}。${note ? `其他说明：${note}` : ''}${manualInput ? `补充信息：${manualInput}` : ''}请给我一些建议和指导。`;
+    
+    if (aiType === 'doubao') {
+      // 尝试打开豆包APP，如果没有安装则提示用户
+      window.open('doubao://chat?text=' + encodeURIComponent(record_text), '_blank');
+      setTimeout(() => {
+        toast({
+          title: "如果没有自动打开豆包APP",
+          description: "请手动复制症状信息到豆包中咨询",
+        });
+      }, 1000);
+    } else if (aiType === 'deepseek') {
+      // 尝试打开DeepSeek APP
+      window.open('deepseek://chat?text=' + encodeURIComponent(record_text), '_blank');
+      setTimeout(() => {
+        toast({
+          title: "如果没有自动打开DeepSeek APP",
+          description: "请手动复制症状信息到DeepSeek中咨询",
+        });
+      }, 1000);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -69,7 +95,8 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
           severity,
           duration,
           symptoms,
-          note: note.trim() || undefined
+          note: note.trim() || undefined,
+          manualInput: manualInput.trim() || undefined
         }
       };
 
@@ -85,6 +112,7 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
       setDuration('');
       setSymptoms([]);
       setNote('');
+      setManualInput('');
       
       onBack();
     } catch (error: any) {
@@ -99,13 +127,20 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
-      <div className="container mx-auto max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <div className="container mx-auto px-4 py-6 max-w-md">
+        {/* 返回按钮 */}
         <div className="flex items-center mb-6">
-          <Button variant="ghost" size="sm" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="mr-2"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
             返回
           </Button>
+          <h1 className="text-xl font-bold text-gray-800">记录眩晕症状</h1>
         </div>
 
         <Card>
@@ -205,6 +240,50 @@ const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
                   className="w-full"
                   rows={3}
                 />
+              </div>
+
+              {/* 手动输入框 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  补充信息（可选）
+                </label>
+                <Textarea
+                  value={manualInput}
+                  onChange={(e) => setManualInput(e.target.value)}
+                  placeholder="可以手动输入其他相关信息..."
+                  className="w-full"
+                  rows={2}
+                />
+              </div>
+
+              {/* AI助手按钮 */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  AI健康助手咨询
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleAIAssistant('doubao')}
+                    className="flex items-center justify-center border-orange-300 text-orange-600 hover:border-orange-400"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    豆包AI
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleAIAssistant('deepseek')}
+                    className="flex items-center justify-center border-purple-300 text-purple-600 hover:border-purple-400"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    DeepSeek
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500">
+                  点击按钮跳转到对应AI应用进行健康咨询
+                </p>
               </div>
 
               <Button 
