@@ -143,12 +143,13 @@ const Index = () => {
                 </div>
               )}
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={() => navigateTo('settings')}
-                className="text-gray-500 hover:text-gray-700 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="text-gray-600 hover:text-gray-800 border border-gray-300 px-3 py-2 h-auto"
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-4 w-4 mr-1" />
+                <span className="text-sm">设置</span>
               </Button>
             </div>
           </div>
@@ -249,7 +250,7 @@ const Index = () => {
         </div>
 
         {/* 历史记录 */}
-        <HistoryView />
+        <HistoryView onRecordClick={(record) => console.log('查看记录详情:', record)} />
 
         {/* 数据导出 */}
         <div className="mt-8">

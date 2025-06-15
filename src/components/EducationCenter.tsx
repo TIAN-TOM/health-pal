@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, BookOpen, Clock, Heart, Brain, Pill, Home, Smile } from 'lucide-react';
+import { ArrowLeft, BookOpen, Heart, Brain, Pill, Home, Smile } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -75,12 +75,6 @@ const EducationCenter = ({ onBack }: EducationCenterProps) => {
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-white text-sm ${getCategoryInfo(selectedArticle.category).color}`}>
                   {getCategoryInfo(selectedArticle.category).label}
                 </span>
-                {selectedArticle.reading_time && (
-                  <span className="ml-3 flex items-center text-gray-500 text-sm">
-                    <Clock className="h-4 w-4 mr-1" />
-                    {selectedArticle.reading_time} 分钟阅读
-                  </span>
-                )}
               </div>
               <CardTitle className="text-2xl text-gray-800">
                 {selectedArticle.title}
@@ -187,23 +181,15 @@ const EducationCenter = ({ onBack }: EducationCenterProps) => {
                             <IconComponent className="h-6 w-6 text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-2">
-                              <h3 className="text-lg font-medium text-gray-800 truncate">
-                                {article.title}
-                              </h3>
-                              {article.reading_time && (
-                                <span className="flex items-center text-gray-500 text-sm">
-                                  <Clock className="h-4 w-4 mr-1" />
-                                  {article.reading_time}分钟
-                                </span>
-                              )}
-                            </div>
+                            <h3 className="text-lg font-medium text-gray-800 mb-2">
+                              {article.title}
+                            </h3>
                             {article.summary && (
-                              <p className="text-gray-600 text-sm leading-relaxed">
+                              <p className="text-gray-600 text-sm leading-relaxed mb-3">
                                 {article.summary}
                               </p>
                             )}
-                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-white text-xs mt-3 ${categoryInfo.color}`}>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-white text-xs ${categoryInfo.color}`}>
                               {categoryInfo.label}
                             </span>
                           </div>

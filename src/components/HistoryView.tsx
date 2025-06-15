@@ -1,13 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import { Clock, Activity, Home, Pill, Mic } from 'lucide-react';
+import { Clock, Activity, Home, Pill, Mic, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { getRecentRecords } from '@/services/meniereRecordService';
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
 
-const HistoryView = () => {
+interface HistoryViewProps {
+  onRecordClick?: (record: MeniereRecord) => void;
+}
+
+const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
   const [records, setRecords] = useState<MeniereRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -63,6 +67,15 @@ const HistoryView = () => {
     });
   };
 
+  const handleRecordClick = (record: MeniereRecord) => {
+    if (onRecordClick) {
+      onRecordClick(record);
+    } else {
+      // 默认行为：显示记录详情
+      alert(`记录详情：\n类型：${record.type}\n时间：${formatDateTime(record.timestamp)}\n备注：${record.note || '无'}`);
+    }
+  };
+
   if (isLoading) {
     return (
       <Card className="mb-6">
@@ -91,14 +104,18 @@ const HistoryView = () => {
       <h3 className="text-lg font-medium text-gray-800 mb-4 leading-relaxed">最近记录</h3>
       <div className="space-y-3">
         {records.map((record: MeniereRecord) => (
-          <Card key={record.id} className="hover:shadow-md transition-shadow duration-200">
+          <Card 
+            key={record.id} 
+            className="cursor-pointer hover:shadow-md transition-shadow duration-200 hover:bg-blue-50"
+            onClick={() => handleRecordClick(record)}
+          >
             <CardContent className="p-4">
               <div className="flex items-center justify-between min-h-[48px]">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 flex-1">
                   <div className="flex-shrink-0">
                     {getRecordIcon(record.type)}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="font-medium text-gray-800 leading-relaxed">
                       {getRecordTitle(record)}
                     </div>
@@ -107,7 +124,10 @@ const HistoryView = () => {
                     </div>
                   </div>
                 </div>
-                <div className="w-3 h-3 rounded-full bg-green-400 flex-shrink-0"></div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-green-400 flex-shrink-0"></div>
+                  <ChevronRight className="h-4 w-4 text-gray-400" />
+                </div>
               </div>
             </CardContent>
           </Card>
