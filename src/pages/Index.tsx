@@ -25,6 +25,7 @@ import DailyData from '@/components/DailyData';
 import RecordDetail from '@/components/RecordDetail';
 import MedicationManagement from '@/components/MedicationManagement';
 import CheckinCalendar from '@/components/CheckinCalendar';
+import BeijingClock from '@/components/BeijingClock';
 import type { Tables } from '@/integrations/supabase/types';
 import AnnouncementDisplay from '@/components/AnnouncementDisplay';
 
@@ -101,7 +102,12 @@ const Index = () => {
 
   // 路由处理
   if (currentView === 'emergency') {
-    return <EmergencyMode onBack={navigateHome} />;
+    return (
+      <EmergencyMode 
+        onBack={navigateHome} 
+        onNavigateToContacts={() => navigateTo('emergency-contacts')} 
+      />
+    );
   }
 
   if (currentView === 'daily-checkin') {
@@ -190,6 +196,9 @@ const Index = () => {
           userRole={userRole}
           onSettingsClick={() => navigateTo('settings')}
         />
+
+        {/* 北京时间显示 */}
+        <BeijingClock />
 
         {/* 每日打卡状态 */}
         <CheckinStatus onCheckinClick={() => navigateTo('daily-checkin')} />

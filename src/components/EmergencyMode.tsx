@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Phone, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,9 +7,10 @@ import { Contact, getContacts } from '@/services/contactsService';
 
 interface EmergencyModeProps {
   onBack: () => void;
+  onNavigateToContacts?: () => void;
 }
 
-const EmergencyMode = ({ onBack }: EmergencyModeProps) => {
+const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -153,7 +153,7 @@ const EmergencyMode = ({ onBack }: EmergencyModeProps) => {
             <div className="text-center py-8">
               <div className="text-lg text-gray-600 mb-4">还没有设置紧急联系人</div>
               <Button
-                onClick={onBack}
+                onClick={onNavigateToContacts || onBack}
                 className="bg-blue-500 hover:bg-blue-600 text-white"
               >
                 去设置联系人
