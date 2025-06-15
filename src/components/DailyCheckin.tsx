@@ -100,7 +100,10 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
   // 获取正确的北京时间
   const getBeijingTime = () => {
     const now = new Date();
-    return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+    // 获取UTC时间戳，然后加上8小时（北京时间是UTC+8）
+    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
+    const beijingTime = new Date(utcTime + (8 * 60 * 60 * 1000));
+    return beijingTime;
   };
 
   // 修复的北京时间格式化函数

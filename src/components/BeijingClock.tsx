@@ -16,8 +16,9 @@ const BeijingClock = () => {
   // 获取正确的北京时间 (UTC+8)
   const getBeijingTime = () => {
     const now = new Date();
-    // 创建一个新的Date对象，直接设置为北京时间
-    const beijingTime = new Date(now.getTime() + (8 * 60 * 60 * 1000) - (now.getTimezoneOffset() * 60 * 1000));
+    // 获取UTC时间戳，然后加上8小时（北京时间是UTC+8）
+    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
+    const beijingTime = new Date(utcTime + (8 * 60 * 60 * 1000));
     return beijingTime;
   };
 

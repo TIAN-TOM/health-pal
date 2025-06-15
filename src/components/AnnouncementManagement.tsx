@@ -14,7 +14,9 @@ type Announcement = Tables<'announcements'>;
 // 获取正确的北京时间ISO字符串
 const getBeijingTimeISO = () => {
   const now = new Date();
-  const beijingTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+  // 获取UTC时间戳，然后加上8小时（北京时间是UTC+8）
+  const utcTime = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
+  const beijingTime = new Date(utcTime + (8 * 60 * 60 * 1000));
   return beijingTime.toISOString();
 };
 
@@ -270,9 +272,27 @@ const AnnouncementManagement = () => {
                   </div>
                   <p className="text-gray-600 text-sm mb-2">{announcement.content}</p>
                   <p className="text-xs text-gray-500">
-                    发布时间: {new Date(announcement.created_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
+                    发布时间: {new Date(announcement.created_at).toLocaleString('zh-CN', { 
+                      timeZone: 'Asia/Shanghai',
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: false
+                    })} (北京时间)
                     {announcement.updated_at !== announcement.created_at && (
-                      <span> · 更新时间: {new Date(announcement.updated_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}</span>
+                      <span> · 更新时间: {new Date(announcement.updated_at).toLocaleString('zh-CN', { 
+                        timeZone: 'Asia/Shanghai',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                      })} (北京时间)</span>
                     )}
                   </p>
                 </div>

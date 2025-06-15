@@ -58,8 +58,8 @@ const AnnouncementDisplay = () => {
         return '时间格式错误';
       }
       
-      // 直接使用传入的时间（已经是北京时间）并格式化
-      return new Date(dateString).toLocaleString('zh-CN', {
+      // 使用正确的北京时区格式化
+      return date.toLocaleString('zh-CN', {
         timeZone: 'Asia/Shanghai',
         month: 'short',
         day: 'numeric',
