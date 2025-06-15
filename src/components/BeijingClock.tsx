@@ -13,14 +13,10 @@ const BeijingClock = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // 获取北京时间 (UTC+8)
+  // 获取正确的北京时间 (Asia/Shanghai)
   const getBeijingTime = () => {
     const now = new Date();
-    // 获取UTC时间
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-    // 北京时间 = UTC + 8小时
-    const beijingTime = new Date(utc + (8 * 3600000));
-    return beijingTime;
+    return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
   };
 
   const beijingTime = getBeijingTime();

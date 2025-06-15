@@ -44,7 +44,7 @@ const AnnouncementDisplay = () => {
     localStorage.setItem('dismissedAnnouncements', JSON.stringify(newDismissedIds));
   };
 
-  // 获取北京时间格式化 - 修复日期处理
+  // 修复的北京时间格式化函数
   const formatBeijingTime = (dateString: string) => {
     try {
       if (!dateString) {
@@ -58,7 +58,7 @@ const AnnouncementDisplay = () => {
         return '时间格式错误';
       }
       
-      // 使用北京时区格式化时间
+      // 直接使用传入的时间（已经是北京时间）并格式化
       return new Date(dateString).toLocaleString('zh-CN', {
         timeZone: 'Asia/Shanghai',
         month: 'short',

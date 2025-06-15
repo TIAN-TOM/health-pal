@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -96,15 +97,13 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
     );
   };
 
-  // 获取北京时间
+  // 获取正确的北京时间
   const getBeijingTime = () => {
     const now = new Date();
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const beijingTime = new Date(utc + (8 * 3600000));
-    return beijingTime;
+    return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
   };
 
-  // 统一的北京时间格式化函数
+  // 修复的北京时间格式化函数
   const formatBeijingTime = (dateString: string) => {
     try {
       if (!dateString) {
@@ -117,10 +116,8 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
         return '时间格式错误';
       }
       
-      // 转换为北京时间 (UTC+8)
-      const beijingTime = new Date(date.getTime() + (8 * 60 * 60 * 1000));
-      
-      return format(beijingTime, 'HH:mm', { locale: zhCN });
+      // 直接使用传入的时间（已经是北京时间）
+      return format(date, 'HH:mm', { locale: zhCN });
     } catch (error) {
       console.error('日期格式化失败:', error, '原始日期:', dateString);
       return '时间格式错误';

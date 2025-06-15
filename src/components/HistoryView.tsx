@@ -53,7 +53,7 @@ const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
     }
   };
 
-  // 统一的北京时间格式化函数
+  // 修复的北京时间格式化函数
   const formatBeijingTime = (dateString: string) => {
     try {
       if (!dateString) {
@@ -66,10 +66,8 @@ const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
         return '时间格式错误';
       }
       
-      // 转换为北京时间 (UTC+8)
-      const beijingTime = new Date(date.getTime() + (8 * 60 * 60 * 1000));
-      
-      return format(beijingTime, 'MM月dd日 HH:mm', { locale: zhCN });
+      // 直接使用传入的时间（已经是北京时间）
+      return format(date, 'MM月dd日 HH:mm', { locale: zhCN });
     } catch (error) {
       console.error('日期格式化失败:', error, '原始日期:', dateString);
       return '时间格式错误';

@@ -18,11 +18,16 @@ export interface MeniereRecord {
   dosage?: string;
 }
 
+// 获取正确的北京时间
+const getBeijingTime = () => {
+  const now = new Date();
+  // 使用正确的时区转换方法
+  return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+};
+
 // 获取正确的北京时间ISO字符串
 const getBeijingTimeISO = () => {
-  const now = new Date();
-  // 直接使用当前时间并转换为北京时区
-  const beijingTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+  const beijingTime = getBeijingTime();
   return beijingTime.toISOString();
 };
 

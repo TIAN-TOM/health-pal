@@ -4,19 +4,22 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type DailyCheckin = Tables<'daily_checkins'>;
 
+// 获取正确的北京时间
+const getBeijingTime = () => {
+  const now = new Date();
+  // 使用正确的时区转换方法
+  return new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+};
+
 // 获取北京时间的日期字符串 (YYYY-MM-DD)
 const getBeijingDateString = () => {
-  const now = new Date();
-  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-  const beijingTime = new Date(utc + (8 * 3600000));
+  const beijingTime = getBeijingTime();
   return beijingTime.toISOString().split('T')[0];
 };
 
 // 获取北京时间的ISO字符串
 const getBeijingTimeISO = () => {
-  const now = new Date();
-  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-  const beijingTime = new Date(utc + (8 * 3600000));
+  const beijingTime = getBeijingTime();
   return beijingTime.toISOString();
 };
 
