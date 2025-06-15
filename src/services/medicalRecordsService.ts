@@ -43,7 +43,7 @@ export const getMedicalRecords = async (): Promise<MedicalRecord[]> => {
     .order('date', { ascending: false });
 
   if (error) throw error;
-  return data || [];
+  return (data || []) as MedicalRecord[];
 };
 
 export const updateMedicalRecord = async (id: string, updates: Partial<MedicalRecord>) => {

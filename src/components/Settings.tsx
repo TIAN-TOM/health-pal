@@ -1,134 +1,91 @@
+
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Phone, Plus, Trash2, Pill, Edit } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Phone, Pill, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Contact, saveContact, getContacts, updateContact, deleteContact } from '@/services/contactsService';
-import { Medication, saveMedication, getMedications, deleteMedication } from '@/services/medicationsService';
+import { getEmergencyContacts, saveEmergencyContact, deleteEmergencyContact } from '@/services/contactsService';
+import { getUserMedications, saveMedication, deleteMedication } from '@/services/medicationsService';
+import type { EmergencyContact, UserMedication } from '@/integrations/supabase/types';
 
 interface SettingsProps {
   onBack: () => void;
 }
 
 const Settings = ({ onBack }: SettingsProps) => {
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [medications, setMedications] = useState<Medication[]>([]);
-  const [newContactName, setNewContactName] = useState('');
-  const [newContactPhone, setNewContactPhone] = useState('');
-  const [newContactAvatar, setNewContactAvatar] = useState('👤');
-  const [newMedicationFrequency, setNewMedicationFrequency] = useState('daily');
-  const [editingContact, setEditingContact] = useState<Contact | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [contacts, setContacts] = useState<EmergencyContact[]>([]);
+  const [medications, setMedications] = useState<UserMedication[]>([]);
+  const [newContact, setNewContact] = useState({ name: '', phone: '', avatar: '👤' });
+  const [newMedication, setNewMedication] = useState({ name: '', frequency: 'daily' });
+  const [showAddContact, setShowAddContact] = useState(false);
+  const [showAddMedication, setShowAddMedication] = useState(false);
   const { toast } = useToast();
 
-  // 头像选项
-  const avatarOptions = ['👤', '👵', '👴', '👨', '👩', '🧑', '👦', '👧', '👶', '🤱'];
-
-  // 服药频率选项
-  const frequencyOptions = [
-    { value: 'daily', label: '每天一次' },
-    { value: 'twice_daily', label: '每天两次' },
-    { value: 'three_times_daily', label: '每天三次' },
-    { value: 'as_needed', label: '按需服用' }
-  ];
-
-  // 常用梅尼埃药物选项
-  const commonMedications = [
-    { name: '倍他司汀', frequency: 'three_times_daily' },
-    { name: '甲磺酸倍他司汀', frequency: 'twice_daily' },
-    { name: '地西泮', frequency: 'as_needed' },
-    { name: '异丙嗪', frequency: 'as_needed' },
-    { name: '氢氯噻嗪', frequency: 'daily' },
-    { name: '维生素B6', frequency: 'daily' },
-    { name: '盐酸氟桂利嗪', frequency: 'daily' },
-    { name: '茶苯海明', frequency: 'as_needed' },
-    { name: '尼莫地平', frequency: 'three_times_daily' },
-    { name: '银杏叶提取物', frequency: 'twice_daily' }
-  ];
+  const avatarOptions = ['👤', '👨', '👩', '👴', '👵', '🧑‍⚕️', '👨‍⚕️', '👩‍⚕️', '🚑', '☎️'];
 
   useEffect(() => {
-    loadData();
+    loadContacts();
+    loadMedications();
   }, []);
 
-  const loadData = async () => {
+  const loadContacts = async () => {
     try {
-      setIsLoading(true);
-      const [contactsData, medicationsData] = await Promise.all([
-        getContacts(),
-        getMedications()
-      ]);
-      setContacts(contactsData);
-      setMedications(medicationsData);
+      const data = await getEmergencyContacts();
+      setContacts(data);
     } catch (error) {
-      console.error('加载数据失败:', error);
-      toast({
-        title: "加载失败",
-        description: "请检查网络连接后重试",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
+      console.error('加载联系人失败:', error);
     }
   };
 
-  const addContact = async () => {
-    if (!newContactName || !newContactPhone) {
+  const loadMedications = async () => {
+    try {
+      const data = await getUserMedications();
+      setMedications(data);
+    } catch (error) {
+      console.error('加载药物失败:', error);
+    }
+  };
+
+  const handleAddContact = async () => {
+    if (!newContact.name || !newContact.phone) {
       toast({
         title: "请填写完整信息",
-        description: "请输入联系人姓名和电话",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (contacts.length >= 3) {
-      toast({
-        title: "联系人已满",
-        description: "最多只能添加3个紧急联系人",
         variant: "destructive"
       });
       return;
     }
 
     try {
-      const newContact = await saveContact({
-        name: newContactName,
-        phone: newContactPhone,
-        avatar: newContactAvatar
-      });
-
-      setContacts([...contacts, newContact]);
-      setNewContactName('');
-      setNewContactPhone('');
-      setNewContactAvatar('👤');
+      await saveEmergencyContact(newContact);
+      await loadContacts();
+      setNewContact({ name: '', phone: '', avatar: '👤' });
+      setShowAddContact(false);
       
       toast({
         title: "添加成功",
-        description: "紧急联系人已添加",
+        description: "紧急联系人已保存",
       });
     } catch (error) {
-      console.error('添加联系人失败:', error);
+      console.error('保存失败:', error);
       toast({
-        title: "添加失败",
+        title: "保存失败",
         description: "请检查网络连接后重试",
         variant: "destructive"
       });
     }
   };
 
-  const removeContact = async (contact: Contact) => {
-    if (!contact.id) return;
-
+  const handleDeleteContact = async (id: string) => {
     try {
-      await deleteContact(contact.id);
-      setContacts(contacts.filter(c => c.id !== contact.id));
+      await deleteEmergencyContact(id);
+      await loadContacts();
       toast({
         title: "删除成功",
         description: "联系人已删除",
       });
     } catch (error) {
-      console.error('删除联系人失败:', error);
+      console.error('删除失败:', error);
       toast({
         title: "删除失败",
         description: "请检查网络连接后重试",
@@ -137,61 +94,8 @@ const Settings = ({ onBack }: SettingsProps) => {
     }
   };
 
-  const updateContactAvatar = async (contact: Contact, newAvatar: string) => {
-    if (!contact.id) return;
-
-    try {
-      const updated = await updateContact(contact.id, { avatar: newAvatar });
-      setContacts(contacts.map(c => c.id === contact.id ? updated : c));
-      setEditingContact(null);
-      
-      toast({
-        title: "更新成功",
-        description: "头像已更新",
-      });
-    } catch (error) {
-      console.error('更新头像失败:', error);
-      toast({
-        title: "更新失败",
-        description: "请检查网络连接后重试",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const addCommonMedication = async (medication: { name: string; frequency: string }) => {
-    if (medications.some(m => m.name === medication.name)) {
-      toast({
-        title: "药物已存在",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const newMed = await saveMedication({
-        name: medication.name,
-        frequency: medication.frequency
-      });
-
-      setMedications([...medications, newMed]);
-      
-      toast({
-        title: "添加成功",
-        description: `${medication.name} 已添加到常用药物`,
-      });
-    } catch (error) {
-      console.error('添加药物失败:', error);
-      toast({
-        title: "添加失败",
-        description: "请检查网络连接后重试",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const addMedication = async () => {
-    if (!newMedication) {
+  const handleAddMedication = async () => {
+    if (!newMedication.name) {
       toast({
         title: "请输入药物名称",
         variant: "destructive"
@@ -199,50 +103,36 @@ const Settings = ({ onBack }: SettingsProps) => {
       return;
     }
 
-    if (medications.some(m => m.name === newMedication)) {
-      toast({
-        title: "药物已存在",
-        variant: "destructive"
-      });
-      return;
-    }
-
     try {
-      const newMed = await saveMedication({
-        name: newMedication,
-        frequency: newMedicationFrequency
-      });
-
-      setMedications([...medications, newMed]);
-      setNewMedication('');
-      setNewMedicationFrequency('daily');
+      await saveMedication(newMedication);
+      await loadMedications();
+      setNewMedication({ name: '', frequency: 'daily' });
+      setShowAddMedication(false);
       
       toast({
         title: "添加成功",
-        description: "常用药物已添加",
+        description: "常用药物已保存",
       });
     } catch (error) {
-      console.error('添加药物失败:', error);
+      console.error('保存失败:', error);
       toast({
-        title: "添加失败",
+        title: "保存失败",
         description: "请检查网络连接后重试",
         variant: "destructive"
       });
     }
   };
 
-  const removeMedication = async (medication: Medication) => {
-    if (!medication.id) return;
-
+  const handleDeleteMedication = async (id: string) => {
     try {
-      await deleteMedication(medication.id);
-      setMedications(medications.filter(m => m.id !== medication.id));
+      await deleteMedication(id);
+      await loadMedications();
       toast({
         title: "删除成功",
         description: "药物已删除",
       });
     } catch (error) {
-      console.error('删除药物失败:', error);
+      console.error('删除失败:', error);
       toast({
         title: "删除失败",
         description: "请检查网络连接后重试",
@@ -251,24 +141,8 @@ const Settings = ({ onBack }: SettingsProps) => {
     }
   };
 
-  const getFrequencyLabel = (frequency: string) => {
-    const option = frequencyOptions.find(opt => opt.value === frequency);
-    return option ? option.label : frequency;
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-lg text-gray-600">加载中...</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
-      {/* 返回按钮 */}
       <div className="mb-6">
         <Button
           onClick={onBack}
@@ -280,238 +154,225 @@ const Settings = ({ onBack }: SettingsProps) => {
         </Button>
       </div>
 
-      <div className="max-w-md mx-auto space-y-6">
-        {/* 紧急联系人设置 */}
+      <div className="max-w-2xl mx-auto space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl text-gray-800 flex items-center">
+            <CardTitle className="text-2xl text-center text-gray-800">
+              设置
+            </CardTitle>
+          </CardHeader>
+        </Card>
+
+        {/* 紧急联系人管理 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center text-lg text-gray-800">
               <Phone className="mr-2 h-5 w-5" />
-              紧急联系人设置
+              紧急联系人管理
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* 现有联系人列表 */}
-            <div className="space-y-3">
-              {contacts.map((contact) => (
-                <div key={contact.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <span className="text-2xl cursor-pointer" onClick={() => setEditingContact(contact)}>
-                        {contact.avatar}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditingContact(contact)}
-                        className="absolute -top-1 -right-1 w-5 h-5 p-0 text-xs bg-blue-500 text-white rounded-full hover:bg-blue-600"
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div>
-                      <div className="font-medium">{contact.name}</div>
-                      <div className="text-sm text-gray-600">{contact.phone}</div>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => removeContact(contact)}
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+            <Button
+              onClick={() => setShowAddContact(!showAddContact)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              添加紧急联系人
+            </Button>
 
-            {/* 头像编辑弹窗 */}
-            {editingContact && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
-                  <h3 className="text-lg font-medium mb-4">选择头像</h3>
-                  <div className="grid grid-cols-5 gap-3 mb-4">
+            {showAddContact && (
+              <Card className="p-4 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    选择头像
+                  </label>
+                  <div className="grid grid-cols-5 gap-2">
                     {avatarOptions.map((avatar) => (
-                      <button
+                      <Button
                         key={avatar}
-                        onClick={() => updateContactAvatar(editingContact, avatar)}
-                        className={`text-2xl p-2 rounded-lg border-2 hover:bg-gray-50 ${
-                          editingContact.avatar === avatar 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200'
-                        }`}
+                        onClick={() => setNewContact({ ...newContact, avatar })}
+                        variant={newContact.avatar === avatar ? "default" : "outline"}
+                        className="text-2xl p-2 h-12"
                       >
                         {avatar}
-                      </button>
+                      </Button>
                     ))}
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <User className="inline h-4 w-4 mr-1" />
+                    姓名
+                  </label>
+                  <Input
+                    placeholder="如：张医生"
+                    value={newContact.name}
+                    onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
+                    className="text-lg py-3"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <Phone className="inline h-4 w-4 mr-1" />
+                    电话号码
+                  </label>
+                  <Input
+                    placeholder="如：138****8888"
+                    value={newContact.phone}
+                    onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
+                    className="text-lg py-3"
+                  />
+                </div>
+
+                <div className="flex gap-3">
                   <Button
-                    onClick={() => setEditingContact(null)}
+                    onClick={handleAddContact}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    保存
+                  </Button>
+                  <Button
+                    onClick={() => setShowAddContact(false)}
                     variant="outline"
-                    className="w-full"
+                    className="flex-1"
                   >
                     取消
                   </Button>
                 </div>
-              </div>
+              </Card>
             )}
 
-            {/* 添加新联系人 */}
-            {contacts.length < 3 && (
-              <div className="space-y-3 border-t pt-4">
-                <h4 className="font-medium text-gray-700">添加新联系人</h4>
-                
-                {/* 头像选择 */}
+            <div className="space-y-3">
+              {contacts.map((contact) => (
+                <Card key={contact.id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="text-2xl">{contact.avatar}</div>
+                      <div>
+                        <div className="font-medium text-gray-800">{contact.name}</div>
+                        <div className="text-sm text-gray-500">{contact.phone}</div>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleDeleteContact(contact.id)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+              {contacts.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  还没有紧急联系人，点击上方按钮添加
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 常用药物管理 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center text-lg text-gray-800">
+              <Pill className="mr-2 h-5 w-5" />
+              常用药物管理
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button
+              onClick={() => setShowAddMedication(!showAddMedication)}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              添加常用药物
+            </Button>
+
+            {showAddMedication && (
+              <Card className="p-4 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">选择头像</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {avatarOptions.slice(0, 5).map((avatar) => (
-                      <button
-                        key={avatar}
-                        onClick={() => setNewContactAvatar(avatar)}
-                        className={`text-xl p-2 rounded border-2 hover:bg-gray-50 ${
-                          newContactAvatar === avatar 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200'
-                        }`}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">药物名称</label>
+                  <Input
+                    placeholder="如：倍他司汀"
+                    value={newMedication.name}
+                    onChange={(e) => setNewMedication({ ...newMedication, name: e.target.value })}
+                    className="text-lg py-3"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">服用频率</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: 'daily', label: '每日一次' },
+                      { value: 'twice_daily', label: '每日两次' },
+                      { value: 'three_times_daily', label: '每日三次' },
+                      { value: 'as_needed', label: '按需服用' }
+                    ].map(freq => (
+                      <Button
+                        key={freq.value}
+                        onClick={() => setNewMedication({ ...newMedication, frequency: freq.value })}
+                        variant={newMedication.frequency === freq.value ? "default" : "outline"}
+                        className="text-sm"
                       >
-                        {avatar}
-                      </button>
+                        {freq.label}
+                      </Button>
                     ))}
                   </div>
                 </div>
 
-                <Input
-                  placeholder="联系人姓名"
-                  value={newContactName}
-                  onChange={(e) => setNewContactName(e.target.value)}
-                  className="text-lg py-3"
-                />
-                <Input
-                  placeholder="手机号码"
-                  value={newContactPhone}
-                  onChange={(e) => setNewContactPhone(e.target.value)}
-                  className="text-lg py-3"
-                />
-                <Button
-                  onClick={addContact}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  添加联系人
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* 常用药物设置 */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl text-gray-800 flex items-center">
-              <Pill className="mr-2 h-5 w-5" />
-              常用药物设置
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* 现有药物列表 */}
-            <div className="space-y-2">
-              {medications.map((medication) => (
-                <div key={medication.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <div className="font-medium">{medication.name}</div>
-                    <div className="text-sm text-gray-600">{getFrequencyLabel(medication.frequency)}</div>
-                  </div>
+                <div className="flex gap-3">
                   <Button
-                    onClick={() => removeMedication(medication)}
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-600 hover:text-red-800"
+                    onClick={handleAddMedication}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    保存
+                  </Button>
+                  <Button
+                    onClick={() => setShowAddMedication(false)}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    取消
                   </Button>
                 </div>
-              ))}
-            </div>
+              </Card>
+            )}
 
-            {/* 常用药物快速添加 */}
-            <div className="space-y-3 border-t pt-4">
-              <h4 className="font-medium text-gray-700">常用梅尼埃药物（一键添加）</h4>
-              
-              <div className="grid gap-2 max-h-60 overflow-y-auto">
-                {commonMedications.map((medication, index) => (
-                  <Button
-                    key={index}
-                    onClick={() => addCommonMedication(medication)}
-                    variant="outline"
-                    className="justify-between text-left h-auto p-3"
-                    disabled={medications.some(m => m.name === medication.name)}
-                  >
+            <div className="space-y-3">
+              {medications.map((medication) => (
+                <Card key={medication.id} className="p-4">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-medium">{medication.name}</div>
-                      <div className="text-xs text-gray-500">
-                        {getFrequencyLabel(medication.frequency)}
+                      <div className="font-medium text-gray-800">{medication.name}</div>
+                      <div className="text-sm text-gray-500">
+                        {medication.frequency === 'daily' && '每日一次'}
+                        {medication.frequency === 'twice_daily' && '每日两次'}
+                        {medication.frequency === 'three_times_daily' && '每日三次'}
+                        {medication.frequency === 'as_needed' && '按需服用'}
                       </div>
                     </div>
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* 自定义添加药物 */}
-            <div className="space-y-3 border-t pt-4">
-              <h4 className="font-medium text-gray-700">添加其他药物</h4>
-              
-              <Input
-                placeholder="药物名称"
-                value={newMedication}
-                onChange={(e) => setNewMedication(e.target.value)}
-                className="text-lg py-3"
-              />
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">服药频率</label>
-                <div className="grid gap-2">
-                  {frequencyOptions.map((option) => (
                     <Button
-                      key={option.value}
-                      onClick={() => setNewMedicationFrequency(option.value)}
-                      variant={newMedicationFrequency === option.value ? "default" : "outline"}
-                      className={`justify-start ${
-                        newMedicationFrequency === option.value 
-                          ? 'bg-purple-500 hover:bg-purple-600' 
-                          : 'hover:border-purple-300'
-                      }`}
+                      onClick={() => handleDeleteMedication(medication.id)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-800"
                     >
-                      {option.label}
+                      <Trash2 className="h-4 w-4" />
                     </Button>
-                  ))}
+                  </div>
+                </Card>
+              ))}
+              {medications.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  还没有常用药物，点击上方按钮添加
                 </div>
-              </div>
-              
-              <Button
-                onClick={addMedication}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                添加药物
-              </Button>
+              )}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* 说明信息 */}
-        <Card>
-          <CardContent className="p-6">
-            <h4 className="font-medium text-gray-800 mb-3">💡 设置说明</h4>
-            <ul className="text-sm text-gray-600 space-y-2">
-              <li>• 紧急联系人将显示在紧急模式中，方便一键拨打</li>
-              <li>• 常用药物将出现在用药记录页面中</li>
-              <li>• 点击联系人头像旁的编辑按钮可更换头像</li>
-              <li>• 所有设置会自动同步到云端</li>
-              <li>• 建议让家人帮助初次设置</li>
-            </ul>
           </CardContent>
         </Card>
       </div>

@@ -17,7 +17,7 @@ export const getEducationArticles = async (): Promise<EducationArticle[]> => {
     .order('created_at', { ascending: true });
 
   if (error) throw error;
-  return data || [];
+  return (data || []) as EducationArticle[];
 };
 
 export const getArticlesByCategory = async (category: string): Promise<EducationArticle[]> => {
@@ -28,5 +28,5 @@ export const getArticlesByCategory = async (category: string): Promise<Education
     .order('created_at', { ascending: true });
 
   if (error) throw error;
-  return data || [];
+  return (data || []) as EducationArticle[];
 };

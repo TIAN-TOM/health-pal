@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Phone, Menu, Download, AlertCircle, Home, LogOut, Shield, FileText, BookOpen, Stethoscope } from 'lucide-react';
@@ -14,6 +13,7 @@ import Settings from '@/components/Settings';
 import HistoryView from '@/components/HistoryView';
 import MedicalRecords from '@/components/MedicalRecords';
 import EducationCenter from '@/components/EducationCenter';
+import DailyQuote from '@/components/DailyQuote';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<string>('home');
@@ -161,6 +161,9 @@ const Index = () => {
             记录症状，守护健康
           </p>
         </div>
+
+        {/* 每日名言 */}
+        <DailyQuote />
 
         {/* 功能卡片 */}
         <div className="grid gap-4 mb-8">

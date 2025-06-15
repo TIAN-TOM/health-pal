@@ -53,15 +53,14 @@ const HistoryView = () => {
     }
   };
 
-  const formatTime = (timestamp: string) => {
+  const formatDateTime = (timestamp: string) => {
     const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return '刚刚';
-    if (diffInHours < 24) return `${diffInHours}小时前`;
-    if (diffInHours < 48) return '昨天';
-    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+    return date.toLocaleString('zh-CN', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (isLoading) {
@@ -104,7 +103,7 @@ const HistoryView = () => {
                       {getRecordTitle(record)}
                     </div>
                     <div className="text-sm text-gray-500 leading-relaxed">
-                      {formatTime(record.timestamp)}
+                      {formatDateTime(record.timestamp)}
                     </div>
                   </div>
                 </div>
