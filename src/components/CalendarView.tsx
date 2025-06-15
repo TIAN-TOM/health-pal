@@ -43,10 +43,10 @@ const CalendarView = () => {
       console.log('获取到的打卡数据:', checkins.length, '条');
       console.log('获取到的症状记录:', records.length, '条');
 
-      // 生成当月的所有日期数据
-      const beijingCurrentDate = getBeijingTime();
-      const year = beijingCurrentDate.getFullYear();
-      const month = beijingCurrentDate.getMonth();
+      // 使用 currentDate 来生成当前显示月份的日期数据
+      const displayDate = new Date(currentDate);
+      const year = displayDate.getFullYear();
+      const month = displayDate.getMonth();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const monthDays: DayData[] = [];
 
@@ -131,6 +131,7 @@ const CalendarView = () => {
   // 获取今天的北京时间日期用于比较
   const today = getTodayBeijingDate();
   console.log('今天的北京时间日期:', today);
+  console.log('当前北京时间完整:', beijingCurrentDate.toISOString());
 
   return (
     <Card>

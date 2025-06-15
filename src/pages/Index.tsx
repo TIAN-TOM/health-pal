@@ -100,7 +100,6 @@ const Index = () => {
     return '用户';
   };
 
-  // 路由处理
   if (currentView === 'emergency') {
     return (
       <EmergencyMode 
@@ -196,9 +195,6 @@ const Index = () => {
 
         {/* 北京时间显示 */}
         <BeijingClock />
-
-        {/* 每日打卡状态 */}
-        <CheckinStatus onCheckinClick={() => navigateTo('daily-checkin')} />
 
         {/* 每日名言 */}
         <DailyQuote />
