@@ -2,8 +2,8 @@
 // 北京时间工具函数 - 统一时间处理
 export const getBeijingTime = () => {
   const now = new Date();
-  // 获取北京时间（UTC+8）
-  const beijingTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (8 * 60 * 60 * 1000));
+  // 获取北京时间（UTC+8）- 正确的时区转换
+  const beijingTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
   console.log('当前北京时间:', beijingTime.toISOString());
   return beijingTime;
 };
