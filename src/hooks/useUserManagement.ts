@@ -90,24 +90,30 @@ export const useUserManagement = () => {
     }
   };
 
-  const loadUserCheckins = async (userId: string) => {
+  const loadUserCheckins = async (userId: string, forceRefresh: boolean = false) => {
     try {
       console.log('加载用户打卡记录:', userId);
       
-      const { data, error } = await supabase
-        .from('daily_checkins')
-        .select('*')
-        .eq('user_id', userId)
-        .order('checkin_date', { ascending: false })
-        .limit(30);
+      // 如果需要强制刷新或者没有缓存数据，则重新加载
+      if (forceRefresh || !userCheckins[userId]) {
+        const { data, error } = await supabase
+          .from('daily_checkins')
+          .select('*')
+          .eq('user_id', userId)
+          .order('checkin_date', { ascending: false })
+          .limit(30);
 
-      if (error) {
-        console.error('加载打卡记录错误:', error);
-        throw error;
+        if (error) {
+          console.error('加载打卡记录错误:', error);
+          throw error;
+        }
+        
+        console.log('用户打卡记录:', data);
+        setUserCheckins(prev => ({ ...prev, [userId]: data || [] }));
+        return data || [];
       }
       
-      console.log('用户打卡记录:', data);
-      setUserCheckins(prev => ({ ...prev, [userId]: data || [] }));
+      return userCheckins[userId] || [];
     } catch (error: any) {
       console.error('加载用户打卡记录失败:', error);
       toast({
@@ -115,6 +121,7 @@ export const useUserManagement = () => {
         description: error.message,
         variant: "destructive"
       });
+      return [];
     }
   };
 
@@ -170,6 +177,12 @@ export const useUserManagement = () => {
       if (error) throw error;
 
       setUsers(prevUsers => prevUsers.filter(u => u.id !== userId));
+      // 清除用户的缓存数据
+      setUserCheckins(prev => {
+        const newCheckins = { ...prev };
+        delete newCheckins[userId];
+        return newCheckins;
+      });
 
       const user = users.find(u => u.id === userId);
       toast({
@@ -190,6 +203,15 @@ export const useUserManagement = () => {
     }
   };
 
+  // 清除特定用户的缓存数据
+  const clearUserCache = (userId: string) => {
+    setUserCheckins(prev => {
+      const newCheckins = { ...prev };
+      delete newCheckins[userId];
+      return newCheckins;
+    });
+  };
+
   useEffect(() => {
     loadUsers();
   }, []);
@@ -201,6 +223,7 @@ export const useUserManagement = () => {
     loadUsers,
     loadUserCheckins,
     updateUserRole,
-    deleteUser
+    deleteUser,
+    clearUserCache
   };
 };

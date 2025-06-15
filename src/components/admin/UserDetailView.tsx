@@ -1,10 +1,9 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, Calendar } from 'lucide-react';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import { User, Calendar, Activity, FileText, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 type UserRole = 'admin' | 'user';
 
@@ -25,13 +24,37 @@ interface CheckinRecord {
   created_at: string;
 }
 
+interface MeniereRecord {
+  id: string;
+  type: string;
+  timestamp: string;
+  severity?: string;
+  duration?: string;
+  note?: string;
+}
+
+interface MedicalRecord {
+  id: string;
+  record_type: string;
+  date: string;
+  hospital?: string;
+  doctor?: string;
+  diagnosis?: string;
+  created_at: string;
+}
+
 interface UserDetailViewProps {
   user: UserWithProfile;
   checkins: CheckinRecord[];
   onBack: () => void;
 }
 
-const UserDetailView = ({ user, checkins, onBack }: UserDetailViewProps) => {
+const UserDetailView = ({ user, checkins: initialCheckins, onBack }: UserDetailViewProps) => {
+  const [checkins, setCheckins] = useState<CheckinRecord[]>(initialCheckins);
+  const [meniereRecords, setMeniereRecords] = useState<MeniereRecord[]>([]);
+  const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const formatBeijingTime = (dateString: string) => {
     try {
       if (!dateString) {
@@ -44,14 +67,61 @@ const UserDetailView = ({ user, checkins, onBack }: UserDetailViewProps) => {
         return '时间格式错误';
       }
       
-      const beijingTime = new Date(date.getTime() + (8 * 60 * 60 * 1000));
-      
-      return format(beijingTime, 'yyyy年MM月dd日 HH:mm', { locale: zhCN });
+      return date.toLocaleString('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
     } catch (error) {
       console.error('日期格式化失败:', error, '原始日期:', dateString);
       return '时间格式错误';
     }
   };
+
+  const loadAllData = async () => {
+    setLoading(true);
+    try {
+      // 加载打卡记录
+      const { data: checkinsData } = await supabase
+        .from('daily_checkins')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('checkin_date', { ascending: false })
+        .limit(30);
+
+      // 加载梅尼埃记录
+      const { data: meniereData } = await supabase
+        .from('meniere_records')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('timestamp', { ascending: false })
+        .limit(30);
+
+      // 加载医疗记录
+      const { data: medicalData } = await supabase
+        .from('medical_records')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+        .limit(30);
+
+      setCheckins(checkinsData || []);
+      setMeniereRecords(meniereData || []);
+      setMedicalRecords(medicalData || []);
+    } catch (error) {
+      console.error('加载用户数据失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAllData();
+  }, [user.id]);
 
   return (
     <div className="space-y-6">
@@ -65,6 +135,15 @@ const UserDetailView = ({ user, checkins, onBack }: UserDetailViewProps) => {
           </Button>
           用户详情
         </h2>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={loadAllData}
+          disabled={loading}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          刷新数据
+        </Button>
       </div>
 
       <Card>
@@ -78,7 +157,7 @@ const UserDetailView = ({ user, checkins, onBack }: UserDetailViewProps) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <p className="text-gray-600 text-sm">姓名</p>
-              <p className="font-medium">{user.full_name}</p>
+              <p className="font-medium">{user.full_name || '未设置'}</p>
             </div>
             <div>
               <p className="text-gray-600 text-sm">邮箱</p>
@@ -100,12 +179,12 @@ const UserDetailView = ({ user, checkins, onBack }: UserDetailViewProps) => {
         <CardHeader>
           <CardTitle className="flex items-center">
             <Calendar className="h-4 w-4 mr-2" />
-            打卡记录 (最近30天)
+            打卡记录 (最近30天) - {checkins.length} 条
           </CardTitle>
         </CardHeader>
         <CardContent>
           {checkins.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-96 overflow-y-auto">
               {checkins.map((checkin) => (
                 <div key={checkin.id} className="border-l-4 border-l-green-500 pl-4 py-2 bg-green-50">
                   <div className="flex justify-between items-center">
@@ -133,28 +212,90 @@ const UserDetailView = ({ user, checkins, onBack }: UserDetailViewProps) => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 mr-2">
-              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17.93A1 1 0 0112 17h-2a1 1 0 01-.93-.93l.83-.83a4 4 0 007.46 0l.83.83zM17 10a1 1 0 00-1 1h-1a1 1 0 100 2h1a1 1 0 001-1v-1zm-9 0a1 1 0 00-1 1v1a1 1 0 100 2v-1a1 1 0 001-1h1a1 1 0 100-2H8z" />
-            </svg>
-            梅尼埃记录
+            <Activity className="h-4 w-4 mr-2" />
+            梅尼埃记录 (最近30天) - {meniereRecords.length} 条
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-500 text-center py-4">暂无梅尼埃记录</p>
+          {meniereRecords.length > 0 ? (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {meniereRecords.map((record) => (
+                <div key={record.id} className="border-l-4 border-l-blue-500 pl-4 py-2 bg-blue-50">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium">
+                        {record.type === 'dizziness' && '眩晕记录'}
+                        {record.type === 'lifestyle' && '生活记录'}
+                        {record.type === 'medication' && '用药记录'}
+                        {record.type === 'voice' && '语音记录'}
+                      </p>
+                      {record.severity && (
+                        <p className="text-sm text-gray-600">严重程度: {record.severity}</p>
+                      )}
+                      {record.duration && (
+                        <p className="text-sm text-gray-600">持续时间: {record.duration}</p>
+                      )}
+                      {record.note && (
+                        <p className="text-sm text-gray-600 mt-1">备注: {record.note}</p>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {formatBeijingTime(record.timestamp)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-4">暂无梅尼埃记录</p>
+          )}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 mr-2">
-              <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 4.586L15.414 8A2 2 0 0116 9.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-            </svg>
-            医疗记录
+            <FileText className="h-4 w-4 mr-2" />
+            医疗记录 (最近30天) - {medicalRecords.length} 条
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-500 text-center py-4">暂无医疗记录</p>
+          {medicalRecords.length > 0 ? (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {medicalRecords.map((record) => (
+                <div key={record.id} className="border-l-4 border-l-purple-500 pl-4 py-2 bg-purple-50">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium">
+                        {record.record_type === 'visit' && '就诊记录'}
+                        {record.record_type === 'diagnosis' && '诊断记录'}
+                        {record.record_type === 'prescription' && '处方记录'}
+                      </p>
+                      {record.hospital && (
+                        <p className="text-sm text-gray-600">医院: {record.hospital}</p>
+                      )}
+                      {record.doctor && (
+                        <p className="text-sm text-gray-600">医生: {record.doctor}</p>
+                      )}
+                      {record.diagnosis && (
+                        <p className="text-sm text-gray-600">诊断: {record.diagnosis}</p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-gray-500 block">
+                        {record.date}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {formatBeijingTime(record.created_at)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-4">暂无医疗记录</p>
+          )}
         </CardContent>
       </Card>
     </div>

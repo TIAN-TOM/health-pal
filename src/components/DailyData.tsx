@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Calendar, TrendingUp, Smile, Activity, Clock, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,12 +21,13 @@ const DailyData = ({ onBack }: DailyDataProps) => {
   // 获取北京时间的今日日期
   const getBeijingDateString = () => {
     const now = new Date();
-    const beijingTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+    // 创建正确的北京时间 Date 对象
+    const beijingTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (8 * 3600000));
     return beijingTime.toISOString().split('T')[0];
   };
 
   useEffect(() => {
-    // 设置默认选中今天的日期
+    // 设置默认选中今天的日期（北京时间）
     setSelectedDate(getBeijingDateString());
     loadData();
   }, []);
@@ -63,11 +63,13 @@ const DailyData = ({ onBack }: DailyDataProps) => {
 
   const getLast7Days = () => {
     const days = [];
+    const now = new Date();
+    
     for (let i = 6; i >= 0; i--) {
-      const now = new Date();
-      const beijingTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
-      beijingTime.setDate(beijingTime.getDate() - i);
-      days.push(beijingTime.toISOString().split('T')[0]);
+      // 为每一天创建正确的北京时间
+      const targetDate = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (8 * 3600000));
+      targetDate.setDate(targetDate.getDate() - i);
+      days.push(targetDate.toISOString().split('T')[0]);
     }
     return days;
   };
