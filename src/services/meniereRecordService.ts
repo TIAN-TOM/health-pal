@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert } from '@/integrations/supabase/types';
 
@@ -190,4 +189,27 @@ export const getRecordsForPeriod = async (days: number) => {
 
   if (error) throw error;
   return data;
+};
+
+export const getMeniereRecords = async (startDate?: string, endDate?: string): Promise<MeniereRecord[]> => {
+  try {
+    let query = supabase
+      .from('meniere_records')
+      .select('*')
+      .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+    if (startDate && endDate) {
+      query = query.gte('timestamp', startDate + 'T00:00:00.000Z')
+                  .lte('timestamp', endDate + 'T23:59:59.999Z');
+    }
+
+    const { data, error } = await query.order('timestamp', { ascending: false });
+
+    if (error) throw error;
+
+    return data || [];
+  } catch (error) {
+    console.error('获取梅尼埃记录失败:', error);
+    throw error;
+  }
 };

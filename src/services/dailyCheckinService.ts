@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -170,4 +169,26 @@ export const getCheckinsByDateRange = async (
 
 export const getCheckinHistory = async (limit: number = 30): Promise<DailyCheckin[]> => {
   return getRecentCheckins(limit);
+};
+
+export const getDailyCheckins = async (startDate?: string, endDate?: string): Promise<DailyCheckin[]> => {
+  try {
+    let query = supabase
+      .from('daily_checkins')
+      .select('*')
+      .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+    if (startDate && endDate) {
+      query = query.gte('checkin_date', startDate).lte('checkin_date', endDate);
+    }
+
+    const { data, error } = await query.order('checkin_date', { ascending: false });
+
+    if (error) throw error;
+
+    return data || [];
+  } catch (error) {
+    console.error('获取每日打卡记录失败:', error);
+    throw error;
+  }
 };
