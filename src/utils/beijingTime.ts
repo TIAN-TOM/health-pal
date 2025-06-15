@@ -1,32 +1,61 @@
 
 // 北京时间工具函数 - 统一时间处理
 export const getBeijingTime = () => {
-  // 直接使用当前时间并转换为北京时区
+  // 获取当前时间
   const now = new Date();
-  // 创建一个新的Date对象，表示北京时间
-  const beijingTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
   console.log('原始UTC时间:', now.toISOString());
+  
+  // 使用Intl.DateTimeFormat获取北京时间
+  const beijingDate = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }).format(now);
+  
+  const beijingTime = new Date(beijingDate);
   console.log('转换后北京时间:', beijingTime.toISOString());
   return beijingTime;
 };
 
 // 获取北京时间的日期字符串 (YYYY-MM-DD)
 export const getBeijingDateString = (date?: Date) => {
-  const targetDate = date || getBeijingTime();
-  // 确保使用北京时区
-  const beijingTime = new Date(targetDate.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
-  const year = beijingTime.getFullYear();
-  const month = String(beijingTime.getMonth() + 1).padStart(2, '0');
-  const day = String(beijingTime.getDate()).padStart(2, '0');
-  const dateString = `${year}-${month}-${day}`;
-  console.log('生成的北京日期字符串:', dateString);
-  return dateString;
+  const targetDate = date || new Date();
+  
+  // 使用Intl.DateTimeFormat获取北京时区的日期
+  const beijingDateStr = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(targetDate);
+  
+  console.log('生成的北京日期字符串:', beijingDateStr);
+  return beijingDateStr;
 };
 
 // 获取北京时间的ISO字符串
 export const getBeijingTimeISO = (date?: Date) => {
-  const beijingTime = date || getBeijingTime();
-  return beijingTime.toISOString();
+  const targetDate = date || new Date();
+  
+  // 使用Intl.DateTimeFormat获取北京时间的完整格式
+  const beijingDateTimeStr = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }).format(targetDate);
+  
+  // 转换为ISO格式
+  const isoString = beijingDateTimeStr.replace(' ', 'T') + '.000Z';
+  console.log('北京时间ISO字符串:', isoString);
+  return isoString;
 };
 
 // 格式化北京时间显示
@@ -64,7 +93,9 @@ export const getTodayBeijingDate = () => {
 
 // 检查是否是今天（北京时间）
 export const isToday = (dateString: string) => {
-  return dateString === getTodayBeijingDate();
+  const today = getTodayBeijingDate();
+  console.log('比较日期:', dateString, '今天:', today);
+  return dateString === today;
 };
 
 // 获取当前北京时间并打印日志
@@ -77,15 +108,42 @@ export const getCurrentBeijingTime = () => {
 
 // 获取月份的第一天和最后一天（北京时间）
 export const getMonthRange = (date: Date) => {
-  const beijingTime = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
-  const year = beijingTime.getFullYear();
-  const month = beijingTime.getMonth();
+  // 先转换为北京时区的日期
+  const beijingDateStr = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date);
   
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
+  const [year, month] = beijingDateStr.split('-').map(Number);
+  
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0);
   
   return {
     start: getBeijingDateString(firstDay),
     end: getBeijingDateString(lastDay)
   };
+};
+
+// 删除所有打卡记录的函数
+export const deleteAllCheckins = async () => {
+  const { supabase } = await import('@/integrations/supabase/client');
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('用户未登录');
+  }
+
+  const { error } = await supabase
+    .from('daily_checkins')
+    .delete()
+    .eq('user_id', user.id);
+
+  if (error) {
+    throw new Error(`删除打卡记录失败: ${error.message}`);
+  }
+
+  console.log('所有打卡记录已删除');
 };

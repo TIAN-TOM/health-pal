@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, Calendar, Smile, Frown, Meh, RefreshCw } fro
 import { getDailyCheckins } from '@/services/dailyCheckinService';
 import { getMeniereRecords } from '@/services/meniereRecordService';
 import { useToast } from '@/hooks/use-toast';
-import { getBeijingTime, getBeijingDateString, getMonthRange, getTodayBeijingDate } from '@/utils/beijingTime';
+import { getBeijingTime, getBeijingDateString, getMonthRange, getTodayBeijingDate, deleteAllCheckins } from '@/utils/beijingTime';
 
 interface DayData {
   date: string;
@@ -79,6 +79,26 @@ const CalendarView = () => {
     }
   };
 
+  const handleDeleteAllCheckins = async () => {
+    try {
+      setLoading(true);
+      await deleteAllCheckins();
+      await loadMonthData(); // 重新加载数据
+      toast({
+        title: "删除成功",
+        description: "所有打卡记录已删除",
+      });
+    } catch (error: any) {
+      toast({
+        title: "删除失败",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getMoodIcon = (moodScore?: number) => {
     if (moodScore === undefined) return null;
     if (moodScore >= 4) return <Smile className="h-4 w-4 text-green-500" />;
@@ -144,6 +164,9 @@ const CalendarView = () => {
           <div className="flex space-x-2">
             <Button onClick={loadMonthData} variant="ghost" size="sm">
               <RefreshCw className="h-4 w-4" />
+            </Button>
+            <Button onClick={handleDeleteAllCheckins} variant="destructive" size="sm">
+              清空记录
             </Button>
             <Button onClick={goToToday} variant="outline" size="sm">
               今天
@@ -270,7 +293,7 @@ const CalendarView = () => {
             
             {/* 当前时间显示 */}
             <div className="pt-2 border-t text-xs text-gray-500 text-center">
-              当前北京时间: {beijingCurrentDate.toLocaleString('zh-CN')}
+              当前北京时间: {beijingCurrentDate.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
             </div>
           </div>
         )}
