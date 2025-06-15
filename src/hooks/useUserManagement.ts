@@ -92,6 +92,8 @@ export const useUserManagement = () => {
 
   const loadUserCheckins = async (userId: string) => {
     try {
+      console.log('加载用户打卡记录:', userId);
+      
       const { data, error } = await supabase
         .from('daily_checkins')
         .select('*')
@@ -99,7 +101,12 @@ export const useUserManagement = () => {
         .order('checkin_date', { ascending: false })
         .limit(30);
 
-      if (error) throw error;
+      if (error) {
+        console.error('加载打卡记录错误:', error);
+        throw error;
+      }
+      
+      console.log('用户打卡记录:', data);
       setUserCheckins(prev => ({ ...prev, [userId]: data || [] }));
     } catch (error: any) {
       console.error('加载用户打卡记录失败:', error);

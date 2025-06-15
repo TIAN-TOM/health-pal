@@ -7,6 +7,7 @@ import AdminNotifications from '@/components/AdminNotifications';
 import AnnouncementManagement from '@/components/AnnouncementManagement';
 import AdminUserManagement from '@/components/AdminUserManagement';
 import AdminEducationManagement from '@/components/AdminEducationManagement';
+import { useAdminStats } from '@/hooks/useAdminStats';
 
 interface AdminPanelProps {
   onBack: () => void;
@@ -14,6 +15,7 @@ interface AdminPanelProps {
 
 const AdminPanel = ({ onBack }: AdminPanelProps) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const { stats, refreshStats } = useAdminStats();
 
   const tabs = [
     { id: 'overview', label: '系统概览', icon: BarChart3 },
@@ -49,19 +51,27 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">总记录数</span>
-                    <span className="font-medium text-2xl text-blue-600">--</span>
+                    <span className="font-medium text-2xl text-blue-600">
+                      {stats.loading ? '--' : (stats.symptomRecords + stats.lifestyleRecords)}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">症状记录</span>
-                    <span className="font-medium text-xl text-red-600">--</span>
+                    <span className="font-medium text-xl text-red-600">
+                      {stats.loading ? '--' : stats.symptomRecords}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">生活记录</span>
-                    <span className="font-medium text-xl text-green-600">--</span>
+                    <span className="font-medium text-xl text-green-600">
+                      {stats.loading ? '--' : stats.lifestyleRecords}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">用药记录</span>
-                    <span className="font-medium text-xl text-orange-600">--</span>
+                    <span className="text-gray-600">今日打卡</span>
+                    <span className="font-medium text-xl text-orange-600">
+                      {stats.loading ? '--' : stats.todayCheckins}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -73,9 +83,9 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button variant="outline" className="w-full justify-start" onClick={refreshStats}>
                     <Database className="h-4 w-4 mr-2" />
-                    数据备份
+                    刷新统计数据
                   </Button>
                   <Button variant="outline" className="w-full justify-start">
                     <BarChart3 className="h-4 w-4 mr-2" />
@@ -155,15 +165,21 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
                 <div className="space-y-4">
                   <div className="flex justify-between">
                     <span>总用户数</span>
-                    <span className="font-medium text-2xl text-blue-600">--</span>
+                    <span className="font-medium text-2xl text-blue-600">
+                      {stats.loading ? '--' : stats.totalUsers}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>活跃用户</span>
-                    <span className="font-medium text-xl text-green-600">--</span>
+                    <span className="font-medium text-xl text-green-600">
+                      {stats.loading ? '--' : stats.activeUsers}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>新注册用户</span>
-                    <span className="font-medium text-lg text-orange-600">--</span>
+                    <span className="font-medium text-lg text-orange-600">
+                      {stats.loading ? '--' : stats.newUsers}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -180,15 +196,21 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
                 <div className="space-y-4">
                   <div className="flex justify-between">
                     <span>今日打卡</span>
-                    <span className="font-medium text-2xl text-green-600">--</span>
+                    <span className="font-medium text-2xl text-green-600">
+                      {stats.loading ? '--' : stats.todayCheckins}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>症状记录</span>
-                    <span className="font-medium text-xl text-red-600">--</span>
+                    <span className="font-medium text-xl text-red-600">
+                      {stats.loading ? '--' : stats.symptomRecords}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>生活记录</span>
-                    <span className="font-medium text-lg text-blue-600">--</span>
+                    <span className="font-medium text-lg text-blue-600">
+                      {stats.loading ? '--' : stats.lifestyleRecords}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -221,7 +243,12 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
 
             <Card className="md:col-span-3">
               <CardHeader>
-                <CardTitle>快速操作</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  快速操作
+                  <Button onClick={refreshStats} variant="outline" size="sm">
+                    刷新数据
+                  </Button>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
