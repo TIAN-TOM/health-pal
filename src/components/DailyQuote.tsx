@@ -63,7 +63,6 @@ const DailyQuote = () => {
       english: "A positive attitude is good medicine for health.",
       author: "现代格言 (Modern Saying)"
     },
-    // Adding more quotes to reach 365+
     {
       text: "生命在于运动。",
       english: "Life lies in movement.",
@@ -113,90 +112,8 @@ const DailyQuote = () => {
       text: "预防胜于治疗。",
       english: "Prevention is better than cure.",
       author: "德斯马雷·伊拉斯谟 (Desiderius Erasmus)"
-    },
-    // Continue adding quotes to reach 365... (I'll add a representative sample)
-    {
-      text: "健康是人生第一财富。",
-      english: "Health is the first wealth in life.",
-      author: "现代格言 (Modern Saying)"
-    },
-    {
-      text: "心情愉快是身体健康的最好良药。",
-      english: "A cheerful heart is the best medicine for the body.",
-      author: "现代心理学 (Modern Psychology)"
-    },
-    {
-      text: "适度的运动是健康的保证。",
-      english: "Moderate exercise is the guarantee of health.",
-      author: "现代医学 (Modern Medicine)"
-    },
-    {
-      text: "良好的睡眠是健康的基石。",
-      english: "Good sleep is the cornerstone of health.",
-      author: "现代医学 (Modern Medicine)"
-    },
-    {
-      text: "健康的生活方式是最好的投资。",
-      english: "A healthy lifestyle is the best investment.",
-      author: "现代格言 (Modern Saying)"
-    },
-    // Adding quotes about mental health and wellbeing
-    {
-      text: "身心健康相互依存，缺一不可。",
-      english: "Physical and mental health are interdependent and indispensable.",
-      author: "现代医学 (Modern Medicine)"
-    },
-    {
-      text: "压力是健康的无形杀手。",
-      english: "Stress is the invisible killer of health.",
-      author: "现代心理学 (Modern Psychology)"
-    },
-    {
-      text: "定期检查是健康的保护神。",
-      english: "Regular check-ups are the guardian of health.",
-      author: "现代医学 (Modern Medicine)"
-    },
-    {
-      text: "健康的饮食习惯是长寿的秘诀。",
-      english: "Healthy eating habits are the secret to longevity.",
-      author: "营养学 (Nutrition Science)"
-    },
-    {
-      text: "水是生命之源，也是健康之源。",
-      english: "Water is the source of life and the source of health.",
-      author: "现代医学 (Modern Medicine)"
     }
-    // Note: In a real implementation, you would want to add all 365+ quotes here
-    // For brevity, I'm including a representative sample
   ];
-
-  // Generate additional quotes programmatically to reach 365+
-  const generateAdditionalQuotes = () => {
-    const additionalQuotes: QuoteData[] = [];
-    const healthTopics = [
-      "运动", "营养", "睡眠", "心理健康", "预防", "康复", "养生", "保健",
-      "锻炼", "休息", "放松", "冥想", "呼吸", "平衡", "调理", "滋养"
-    ];
-    
-    const authors = [
-      "现代医学", "古代养生学", "中医理论", "西方医学", "营养学家", 
-      "心理学家", "运动医学", "康复医学", "预防医学", "健康专家"
-    ];
-
-    for (let i = 0; i < 335; i++) { // Adding 335 more to reach 365 total
-      const topic = healthTopics[i % healthTopics.length];
-      const author = authors[i % authors.length];
-      additionalQuotes.push({
-        text: `${topic}是健康生活的重要组成部分，坚持良好习惯受益终生。`,
-        english: `${topic} is an important part of a healthy life, and maintaining good habits benefits you for life.`,
-        author: `${author} (${author})`
-      });
-    }
-    
-    return additionalQuotes;
-  };
-
-  const allQuotes = [...quotes, ...generateAdditionalQuotes()];
 
   useEffect(() => {
     // 根据当天日期选择名言，确保每天都是同一条
@@ -209,8 +126,8 @@ const DailyQuote = () => {
     } else {
       // 使用日期作为种子生成伪随机数，确保每天显示固定的名言
       const dateSum = today.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-      const randomIndex = dateSum % allQuotes.length;
-      const selectedQuote = allQuotes[randomIndex];
+      const randomIndex = dateSum % quotes.length;
+      const selectedQuote = quotes[randomIndex];
       
       setQuote(selectedQuote);
       localStorage.setItem('dailyQuote', JSON.stringify({

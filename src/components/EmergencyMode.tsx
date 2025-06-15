@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Phone, Volume2, VolumeX, Heart } from 'lucide-react';
+import { ArrowLeft, Phone, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -10,28 +11,12 @@ interface EmergencyModeProps {
 }
 
 const EmergencyMode = ({ onBack }: EmergencyModeProps) => {
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const [audioType, setAudioType] = useState<'white-noise' | 'nature' | 'breathing'>('white-noise');
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     loadContacts();
-    
-    // 创建音频元素
-    const audio = new Audio();
-    audio.loop = true;
-    audio.volume = 0.3;
-    setAudioElement(audio);
-
-    return () => {
-      if (audio) {
-        audio.pause();
-        audio.src = '';
-      }
-    };
   }, []);
 
   const loadContacts = async () => {
@@ -76,38 +61,6 @@ const EmergencyMode = ({ onBack }: EmergencyModeProps) => {
     }
   };
 
-  useEffect(() => {
-    if (audioElement) {
-      // 根据音频类型设置不同的音频源
-      switch (audioType) {
-        case 'white-noise':
-          // 使用在线白噪音音频
-          audioElement.src = 'https://www.soundjay.com/misc/sounds/white-noise-1.wav';
-          break;
-        case 'nature':
-          // 使用在线自然声音
-          audioElement.src = 'https://www.soundjay.com/nature/sounds/rain-02.wav';
-          break;
-        case 'breathing':
-          // 使用在线呼吸引导音频
-          audioElement.src = 'https://www.soundjay.com/meditation/sounds/breathing-1.wav';
-          break;
-      }
-
-      if (isAudioPlaying) {
-        audioElement.play().catch(() => {
-          // 如果音频加载失败，模拟播放状态
-          toast({
-            title: "音频播放",
-            description: `正在播放${getAudioLabel()}（模拟播放）`,
-          });
-        });
-      } else {
-        audioElement.pause();
-      }
-    }
-  }, [audioType, isAudioPlaying, audioElement, toast]);
-
   const handleCall = (phone: string, name: string) => {
     console.log(`正在呼叫 ${name}: ${phone}`);
     
@@ -122,36 +75,6 @@ const EmergencyMode = ({ onBack }: EmergencyModeProps) => {
           description: `请手动拨打 ${name} 的电话: ${phone}`,
         });
       }
-    }
-  };
-
-  const toggleAudio = () => {
-    setIsAudioPlaying(!isAudioPlaying);
-    toast({
-      title: isAudioPlaying ? "音频已停止" : "音频已开始",
-      description: isAudioPlaying ? "舒缓音频已停止播放" : `正在播放${getAudioLabel()}`,
-    });
-  };
-
-  const changeAudio = () => {
-    const types: Array<'white-noise' | 'nature' | 'breathing'> = ['white-noise', 'nature', 'breathing'];
-    const currentIndex = types.indexOf(audioType);
-    const nextIndex = (currentIndex + 1) % types.length;
-    setAudioType(types[nextIndex]);
-    
-    toast({
-      title: "音频切换",
-      description: `已切换到${getAudioLabel(types[nextIndex])}`,
-    });
-  };
-
-  const getAudioLabel = (type?: 'white-noise' | 'nature' | 'breathing') => {
-    const currentType = type || audioType;
-    switch (currentType) {
-      case 'white-noise': return '白噪音';
-      case 'nature': return '自然声';
-      case 'breathing': return '呼吸引导';
-      default: return '白噪音';
     }
   };
 
@@ -192,49 +115,6 @@ const EmergencyMode = ({ onBack }: EmergencyModeProps) => {
             <div className="flex items-center p-4 bg-yellow-50 rounded-lg">
               <span className="text-3xl mr-4 text-yellow-600 font-bold">4.</span>
               <span className="text-gray-800">如需帮助，点击下方呼叫家人</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 舒缓音频控制 */}
-      <Card className="mb-8 bg-white shadow-lg">
-        <CardContent className="p-6">
-          <h3 className="text-xl font-bold text-center mb-4 text-gray-800">
-            舒缓音频
-          </h3>
-          <div className="text-center space-y-4">
-            <div className="text-lg text-gray-600">
-              {isAudioPlaying ? '正在播放' : '已暂停'}: {getAudioLabel()}
-            </div>
-            <div className="flex justify-center space-x-4">
-              <Button
-                onClick={toggleAudio}
-                className={`px-8 py-4 text-lg ${
-                  isAudioPlaying 
-                    ? 'bg-red-500 hover:bg-red-600' 
-                    : 'bg-green-500 hover:bg-green-600'
-                }`}
-              >
-                {isAudioPlaying ? (
-                  <>
-                    <VolumeX className="mr-2 h-5 w-5" />
-                    暂停音频
-                  </>
-                ) : (
-                  <>
-                    <Volume2 className="mr-2 h-5 w-5" />
-                    播放音频
-                  </>
-                )}
-              </Button>
-              <Button
-                onClick={changeAudio}
-                variant="outline"
-                className="px-8 py-4 text-lg border-2 hover:border-blue-400"
-              >
-                换个声音
-              </Button>
             </div>
           </div>
         </CardContent>

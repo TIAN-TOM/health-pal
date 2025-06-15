@@ -10,8 +10,9 @@ interface UserWelcomeProps {
 }
 
 const UserWelcome = ({ userDisplayName, userRole, onSettingsClick }: UserWelcomeProps) => {
-  // 随机选择显示"欢迎回来"或"记录症状，守护健康"
-  const shouldShowWelcomeBack = Math.random() > 0.5;
+  // 使用固定的种子值确保50%的概率
+  const todayDateNumber = new Date().getDate();
+  const shouldShowWelcomeBack = todayDateNumber % 2 === 0;
 
   return (
     <div className="text-center mb-8">
@@ -44,9 +45,9 @@ const UserWelcome = ({ userDisplayName, userRole, onSettingsClick }: UserWelcome
           欢迎回来，{userDisplayName}
         </div>
       ) : (
-        <p className="text-gray-600 text-lg leading-relaxed">
+        <div className="text-gray-600 text-lg leading-relaxed">
           记录症状，守护健康
-        </p>
+        </div>
       )}
     </div>
   );
