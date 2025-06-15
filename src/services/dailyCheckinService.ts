@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface DailyCheckin {
@@ -56,4 +55,19 @@ export const getCheckinHistory = async (days: number = 7) => {
 
   if (error) throw error;
   return data;
+};
+
+export const getRecentCheckins = async (limit: number = 5) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from('daily_checkins')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('checkin_date', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return data || [];
 };

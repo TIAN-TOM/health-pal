@@ -11,9 +11,10 @@ interface SettingsProps {
   onEmergencyContacts?: () => void;
   onMedicalRecords?: () => void;
   onEducation?: () => void;
+  onMedicationManagement?: () => void;
 }
 
-const Settings = ({ onBack, onAdminPanel, onEmergencyContacts, onMedicalRecords, onEducation }: SettingsProps) => {
+const Settings = ({ onBack, onAdminPanel, onEmergencyContacts, onMedicalRecords, onEducation, onMedicationManagement }: SettingsProps) => {
   const { userProfile, userRole, signOut } = useAuth();
 
   const handleSignOut = async () => {
@@ -115,6 +116,17 @@ const Settings = ({ onBack, onAdminPanel, onEmergencyContacts, onMedicalRecords,
               </Button>
             )}
 
+            {onMedicationManagement && (
+              <Button
+                onClick={onMedicationManagement}
+                variant="outline"
+                className="w-full justify-start"
+              >
+                <Pill className="h-4 w-4 mr-2" />
+                常用药物管理
+              </Button>
+            )}
+
             {onEducation && (
               <Button
                 onClick={onEducation}
@@ -151,12 +163,12 @@ const Settings = ({ onBack, onAdminPanel, onEmergencyContacts, onMedicalRecords,
             <br />
             开发者：
             <a 
-              href="https://www.linkedin.com/in/tom-tian-317580257/" 
+              href="https://www.linkedin.com/in/yushun-tian-317580257/" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-800 underline ml-1"
             >
-              Tom Tian
+              Yushun Tian
             </a>
           </p>
         </div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
@@ -24,6 +23,7 @@ import DailyCheckin from '@/components/DailyCheckin';
 import CheckinStatus from '@/components/CheckinStatus';
 import DailyData from '@/components/DailyData';
 import RecordDetail from '@/components/RecordDetail';
+import MedicationManagement from '@/components/MedicationManagement';
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
@@ -134,6 +134,7 @@ const Index = () => {
         onEmergencyContacts={() => navigateTo('emergency-contacts')}
         onMedicalRecords={() => navigateTo('medical-records')}
         onEducation={() => navigateTo('education')}
+        onMedicationManagement={() => navigateTo('medication-management')}
       />
     );
   }
@@ -152,6 +153,10 @@ const Index = () => {
 
   if (currentView === 'education') {
     return <EducationCenter onBack={navigateHome} />;
+  }
+
+  if (currentView === 'medication-management') {
+    return <MedicationManagement onBack={() => navigateTo('settings')} />;
   }
 
   if (currentView === 'record-detail' && selectedRecord) {

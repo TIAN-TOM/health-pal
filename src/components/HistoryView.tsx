@@ -1,11 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import { Clock, Activity, Home, Pill, Mic, ChevronRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Calendar, Clock, Thermometer, Droplets, Pill, RefreshCw } from 'lucide-react';
 import { getRecentRecords } from '@/services/meniereRecordService';
+import { getRecentCheckins } from '@/services/dailyCheckinService';
+import { format } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import type { Tables } from '@/integrations/supabase/types';
+import RecordDelete from '@/components/RecordDelete';
 
 type MeniereRecord = Tables<'meniere_records'>;
+type DailyCheckin = Tables<'daily_checkins'>;
 
 interface HistoryViewProps {
   onRecordClick: (record: MeniereRecord) => void;
@@ -13,118 +19,142 @@ interface HistoryViewProps {
 
 const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
   const [records, setRecords] = useState<MeniereRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [checkins, setCheckins] = useState<DailyCheckin[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadRecords();
+    loadHistory();
   }, []);
 
-  const loadRecords = async () => {
+  const loadHistory = async () => {
     try {
-      setIsLoading(true);
-      const data = await getRecentRecords(5);
-      setRecords(data || []);
+      setLoading(true);
+      const [recordsData, checkinsData] = await Promise.all([
+        getRecentRecords(5),
+        getRecentCheckins(5)
+      ]);
+      setRecords(recordsData || []);
+      setCheckins(checkinsData || []);
     } catch (error) {
-      console.error('加载记录失败:', error);
-      setRecords([]);
+      console.error('加载历史记录失败:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const getRecordIcon = (type: string) => {
     switch (type) {
-      case 'dizziness': return <Activity className="h-4 w-4 text-blue-600" />;
-      case 'lifestyle': return <Home className="h-4 w-4 text-green-600" />;
-      case 'medication': return <Pill className="h-4 w-4 text-purple-600" />;
-      case 'voice': return <Mic className="h-4 w-4 text-orange-600" />;
-      default: return <Clock className="h-4 w-4 text-gray-600" />;
+      case 'dizziness': return <Thermometer className="h-4 w-4 text-red-500" />;
+      case 'lifestyle': return <Droplets className="h-4 w-4 text-blue-500" />;
+      case 'medication': return <Pill className="h-4 w-4 text-purple-500" />;
+      default: return <Calendar className="h-4 w-4 text-gray-500" />;
     }
   };
 
   const getRecordTitle = (record: MeniereRecord) => {
     switch (record.type) {
-      case 'dizziness': 
-        return `眩晕发作 - ${record.severity === 'mild' ? '轻微' : record.severity === 'moderate' ? '中等' : '严重'}`;
-      case 'lifestyle': 
-        return `生活记录 - 睡眠${record.sleep === 'good' ? '良好' : record.sleep === 'average' ? '一般' : '不佳'}`;
-      case 'medication': 
-        return `用药记录 - ${record.medications?.[0] || '药物'}`;
-      case 'voice': 
-        return record.note || '语音记录';
-      default: 
-        return '记录';
+      case 'dizziness': return '眩晕记录';
+      case 'lifestyle': return '生活方式记录';
+      case 'medication': return '用药记录';
+      default: return '其他记录';
     }
   };
 
-  const formatDateTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString('zh-CN', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const getMoodEmoji = (score?: number) => {
+    if (!score) return '😐';
+    if (score >= 8) return '😄';
+    if (score >= 6) return '😊';
+    if (score >= 4) return '😐';
+    return '😞';
   };
 
-  if (isLoading) {
-    return (
-      <Card className="mb-6">
-        <CardContent className="p-6 text-center">
-          <Clock className="h-8 w-8 text-gray-400 mx-auto mb-3 animate-pulse" />
-          <p className="text-gray-500 leading-relaxed">加载记录中...</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const handleRecordDeleted = () => {
+    loadHistory(); // 重新加载历史记录
+  };
 
-  if (records.length === 0) {
+  if (loading) {
     return (
       <Card className="mb-6">
         <CardContent className="p-6 text-center">
-          <Clock className="h-8 w-8 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-500 leading-relaxed">还没有记录</p>
-          <p className="text-sm text-gray-400 leading-relaxed mt-2">开始记录您的症状和生活状况吧</p>
+          <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+          <p className="text-gray-500">加载历史记录中...</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="mb-6">
-      <h3 className="text-lg font-medium text-gray-800 mb-4 leading-relaxed">最近记录</h3>
-      <div className="space-y-3">
-        {records.map((record: MeniereRecord) => (
-          <Card 
-            key={record.id} 
-            className="cursor-pointer hover:shadow-md transition-shadow duration-200 hover:bg-blue-50"
-            onClick={() => onRecordClick(record)}
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span>最近记录</span>
+          <Button
+            onClick={loadHistory}
+            variant="ghost"
+            size="sm"
+            className="text-blue-600 hover:text-blue-800"
           >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between min-h-[48px]">
-                <div className="flex items-center space-x-3 flex-1">
-                  <div className="flex-shrink-0">
-                    {getRecordIcon(record.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-800 leading-relaxed">
-                      {getRecordTitle(record)}
-                    </div>
-                    <div className="text-sm text-gray-500 leading-relaxed">
-                      {formatDateTime(record.timestamp)}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-green-400 flex-shrink-0"></div>
-                  <ChevronRight className="h-4 w-4 text-gray-400" />
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {/* 最近打卡记录 */}
+        {checkins.map((checkin) => (
+          <div key={checkin.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+            <div className="flex items-center space-x-3">
+              <Calendar className="h-4 w-4 text-green-600" />
+              <div>
+                <div className="font-medium text-green-800">每日打卡</div>
+                <div className="text-sm text-green-600">
+                  {format(new Date(checkin.checkin_date), 'MM月dd日', { locale: zhCN })} 
+                  {checkin.mood_score && (
+                    <span className="ml-2">
+                      心情: {getMoodEmoji(checkin.mood_score)} {checkin.mood_score}/10
+                    </span>
+                  )}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <RecordDelete
+              recordId={checkin.id}
+              recordType="daily_checkins"
+              onDeleted={handleRecordDeleted}
+            />
+          </div>
         ))}
-      </div>
-    </div>
+
+        {/* 症状记录 */}
+        {records.map((record) => (
+          <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+            <div 
+              className="flex items-center space-x-3 flex-1 cursor-pointer"
+              onClick={() => onRecordClick(record)}
+            >
+              {getRecordIcon(record.type)}
+              <div>
+                <div className="font-medium">{getRecordTitle(record)}</div>
+                <div className="text-sm text-gray-500 flex items-center">
+                  <Clock className="h-3 w-3 mr-1" />
+                  {format(new Date(record.timestamp), 'MM月dd日 HH:mm', { locale: zhCN })}
+                </div>
+              </div>
+            </div>
+            <RecordDelete
+              recordId={record.id}
+              recordType="meniere_records"
+              onDeleted={handleRecordDeleted}
+            />
+          </div>
+        ))}
+
+        {records.length === 0 && checkins.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            还没有记录，开始记录您的症状吧
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
