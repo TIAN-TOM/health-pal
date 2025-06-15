@@ -1,11 +1,24 @@
 
 // 北京时间工具函数 - 统一时间处理
 export const getBeijingTime = () => {
-  // 获取当前UTC时间
+  // 获取当前时间
   const now = new Date();
+  console.log('原始UTC时间:', now.toISOString());
   
-  // 直接使用当前时间，让浏览器处理时区转换
-  return now;
+  // 使用Intl.DateTimeFormat获取北京时间
+  const beijingDate = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }).format(now);
+  
+  const beijingTime = new Date(beijingDate);
+  console.log('转换后北京时间:', beijingTime.toISOString());
+  return beijingTime;
 };
 
 // 获取北京时间的日期字符串 (YYYY-MM-DD)
@@ -39,8 +52,8 @@ export const getBeijingTimeISO = (date?: Date) => {
     second: '2-digit'
   }).format(targetDate);
   
-  // 转换为ISO格式，保持北京时间
-  const isoString = beijingDateTimeStr.replace(' ', 'T') + '+08:00';
+  // 转换为ISO格式
+  const isoString = beijingDateTimeStr.replace(' ', 'T') + '.000Z';
   console.log('北京时间ISO字符串:', isoString);
   return isoString;
 };
