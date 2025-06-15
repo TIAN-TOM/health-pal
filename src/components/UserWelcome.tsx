@@ -10,6 +10,9 @@ interface UserWelcomeProps {
 }
 
 const UserWelcome = ({ userDisplayName, userRole, onSettingsClick }: UserWelcomeProps) => {
+  // 随机选择显示"欢迎回来"或"记录症状，守护健康"
+  const shouldShowWelcomeBack = Math.random() > 0.5;
+
   return (
     <div className="text-center mb-8">
       <div className="flex justify-between items-center mb-4 min-h-[48px]">
@@ -36,13 +39,15 @@ const UserWelcome = ({ userDisplayName, userRole, onSettingsClick }: UserWelcome
         </div>
       </div>
       
-      <div className="text-sm text-gray-600 mb-2 leading-relaxed">
-        欢迎回来，{userDisplayName}
-      </div>
-      
-      <p className="text-gray-600 text-lg leading-relaxed">
-        记录症状，守护健康
-      </p>
+      {shouldShowWelcomeBack ? (
+        <div className="text-sm text-gray-600 mb-2 leading-relaxed">
+          欢迎回来，{userDisplayName}
+        </div>
+      ) : (
+        <p className="text-gray-600 text-lg leading-relaxed">
+          记录症状，守护健康
+        </p>
+      )}
     </div>
   );
 };
