@@ -9,6 +9,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import type { Tables } from '@/integrations/supabase/types';
+import { getBeijingTime, formatBeijingTime } from '@/utils/beijingTime';
 
 type DailyCheckin = Tables<'daily_checkins'>;
 
@@ -22,7 +23,7 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [checkinDates, setCheckinDates] = useState<Date[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(getBeijingTime());
   const { toast } = useToast();
 
   useEffect(() => {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft, Download, Calendar, FileText, Database, ExternalLink, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { getBeijingDateString, getBeijingTime } from '@/utils/beijingTime';
 
 interface DataExportProps {
   onBack: () => void;
@@ -19,6 +19,16 @@ const DataExport = ({ onBack }: DataExportProps) => {
   const [customEndDate, setCustomEndDate] = useState('');
   const [copiedFormat, setCopiedFormat] = useState<'json' | 'text' | null>(null);
   const { toast } = useToast();
+
+  // 设置默认日期（最近一个月）- 使用北京时间
+  React.useEffect(() => {
+    const today = getBeijingTime();
+    const oneMonthAgo = new Date(today);
+    oneMonthAgo.setMonth(today.getMonth() - 1);
+    
+    setCustomEndDate(getBeijingDateString(today));
+    setCustomStartDate(getBeijingDateString(oneMonthAgo));
+  }, []);
 
   const handleDeepSeekAI = () => {
     const message = `我是梅尼埃症患者，想要分析我的症状记录。请帮我分析症状规律、诱发因素和治疗建议。我已经导出了记录文件，请告诉我如何更好地管理我的病情。`;
@@ -108,8 +118,8 @@ const DataExport = ({ onBack }: DataExportProps) => {
         .from('daily_checkins')
         .select('*')
         .eq('user_id', user.id)
-        .gte('checkin_date', startDate.toISOString().split('T')[0])
-        .lte('checkin_date', endDate.toISOString().split('T')[0])
+        .gte('checkin_date', getBeijingDateString(startDate))
+        .lte('checkin_date', getBeijingDateString(endDate))
         .order('checkin_date', { ascending: false });
 
       if (checkinsError) {
@@ -364,7 +374,8 @@ const DataExport = ({ onBack }: DataExportProps) => {
         return;
       }
 
-      if (endDate > new Date()) {
+      const today = getBeijingTime();
+      if (endDate > today) {
         toast({
           title: '错误',
           description: '结束日期不能是未来时间',
@@ -387,8 +398,8 @@ const DataExport = ({ onBack }: DataExportProps) => {
         startDateStr = customStartDate;
         endDateStr = customEndDate;
       } else {
-        const now = new Date();
-        const timeLimit = new Date();
+        const now = getBeijingTime();
+        const timeLimit = new Date(now);
         
         if (timeRange === 'week') {
           timeLimit.setDate(now.getDate() - 7);
@@ -397,8 +408,8 @@ const DataExport = ({ onBack }: DataExportProps) => {
         }
         
         records = await getRecordsByDateRange(timeLimit, now);
-        startDateStr = timeLimit.toISOString().split('T')[0];
-        endDateStr = now.toISOString().split('T')[0];
+        startDateStr = getBeijingDateString(timeLimit);
+        endDateStr = getBeijingDateString(now);
       }
 
       console.log('导出的记录数量:', records?.length || 0);
@@ -430,16 +441,6 @@ const DataExport = ({ onBack }: DataExportProps) => {
       setLoading(false);
     }
   };
-
-  // 设置默认日期（最近一个月）
-  React.useEffect(() => {
-    const today = new Date();
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(today.getMonth() - 1);
-    
-    setCustomEndDate(today.toISOString().split('T')[0]);
-    setCustomStartDate(oneMonthAgo.toISOString().split('T')[0]);
-  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">

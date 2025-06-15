@@ -1,21 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
-import { getBeijingTime, getCurrentBeijingTime } from '@/utils/beijingTime';
+import { getBeijingTime } from '@/utils/beijingTime';
 
 const BeijingClock = () => {
-  const [currentTime, setCurrentTime] = useState(getCurrentBeijingTime());
+  const [currentTime, setCurrentTime] = useState(getBeijingTime());
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(getCurrentBeijingTime());
+      setCurrentTime(getBeijingTime());
     }, 1000);
 
     return () => clearInterval(timer);
   }, []);
 
-  const beijingTime = getBeijingTime(currentTime);
-  
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('zh-CN', {
       hour12: true,
@@ -42,10 +40,10 @@ const BeijingClock = () => {
         <Clock className="h-4 w-4 text-blue-600" />
         <div className="text-center">
           <div className="text-lg font-mono font-bold text-gray-800">
-            {formatTime(beijingTime)}
+            {formatTime(currentTime)}
           </div>
           <div className="text-sm text-gray-600">
-            {formatDate(beijingTime)} (北京时间)
+            {formatDate(currentTime)} (北京时间)
           </div>
         </div>
       </div>

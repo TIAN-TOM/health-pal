@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { getBeijingDateString, getBeijingTimeISO } from '@/utils/beijingTime';
@@ -153,10 +154,16 @@ export const getCheckinHistory = async (limit: number = 30): Promise<DailyChecki
 
 export const getDailyCheckins = async (startDate?: string, endDate?: string): Promise<DailyCheckin[]> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return [];
+    }
+
     let query = supabase
       .from('daily_checkins')
       .select('*')
-      .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+      .eq('user_id', user.id);
 
     if (startDate && endDate) {
       query = query.gte('checkin_date', startDate).lte('checkin_date', endDate);

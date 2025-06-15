@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, Calendar, Smile, Frown, Meh, RefreshCw } fro
 import { getDailyCheckins } from '@/services/dailyCheckinService';
 import { getMeniereRecords } from '@/services/meniereRecordService';
 import { useToast } from '@/hooks/use-toast';
-import { getBeijingTime, getBeijingDateString, getCurrentBeijingTime } from '@/utils/beijingTime';
+import { getBeijingTime, getBeijingDateString, getMonthRange, getTodayBeijingDate } from '@/utils/beijingTime';
 
 interface DayData {
   date: string;
@@ -17,15 +17,10 @@ interface DayData {
 }
 
 const CalendarView = () => {
-  const [currentDate, setCurrentDate] = useState(getCurrentBeijingTime());
+  const [currentDate, setCurrentDate] = useState(getBeijingTime());
   const [monthData, setMonthData] = useState<DayData[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-
-  // 格式化日期为 YYYY-MM-DD，使用统一的时间工具
-  const formatDate = (date: Date) => {
-    return getBeijingDateString(date);
-  };
 
   useEffect(() => {
     console.log('日历组件初始化，当前北京时间:', currentDate.toISOString());
@@ -35,19 +30,8 @@ const CalendarView = () => {
   const loadMonthData = async () => {
     setLoading(true);
     try {
-      const beijingDate = getBeijingTime(currentDate);
-      const year = beijingDate.getFullYear();
-      const month = beijingDate.getMonth();
+      const { start: startDate, end: endDate } = getMonthRange(currentDate);
       
-      console.log('加载月度数据，年月:', year, month + 1);
-      
-      // 获取当月的第一天和最后一天
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      
-      const startDate = formatDate(firstDay);
-      const endDate = formatDate(lastDay);
-
       console.log('查询日期范围:', startDate, '到', endDate);
 
       // 获取打卡数据和症状记录
@@ -60,11 +44,14 @@ const CalendarView = () => {
       console.log('获取到的症状记录:', records.length, '条');
 
       // 生成当月的所有日期数据
-      const daysInMonth = lastDay.getDate();
+      const beijingTime = new Date(currentDate.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
+      const year = beijingTime.getFullYear();
+      const month = beijingTime.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
       const monthDays: DayData[] = [];
 
       for (let day = 1; day <= daysInMonth; day++) {
-        const date = formatDate(new Date(year, month, day));
+        const date = getBeijingDateString(new Date(year, month, day));
         
         const checkin = checkins.find(c => c.checkin_date === date);
         const dayRecords = records.filter(r => r.timestamp && r.timestamp.startsWith(date));
@@ -110,13 +97,13 @@ const CalendarView = () => {
   };
 
   const goToToday = () => {
-    const todayBeijing = getCurrentBeijingTime();
+    const todayBeijing = getBeijingTime();
     setCurrentDate(todayBeijing);
     console.log('跳转到今天，北京时间:', todayBeijing.toISOString());
   };
 
   // 获取月份的第一天是星期几
-  const beijingCurrentDate = getBeijingTime(currentDate);
+  const beijingCurrentDate = new Date(currentDate.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
   const firstDayOfMonth = new Date(beijingCurrentDate.getFullYear(), beijingCurrentDate.getMonth(), 1);
   const startingDayOfWeek = firstDayOfMonth.getDay();
 
@@ -139,7 +126,7 @@ const CalendarView = () => {
     month: 'long' 
   });
 
-  const today = getBeijingDateString();
+  const today = getTodayBeijingDate();
   console.log('当前日期标记:', today);
 
   return (

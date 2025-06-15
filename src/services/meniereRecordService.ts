@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { getBeijingTimeISO } from '@/utils/beijingTime';
@@ -153,9 +154,16 @@ export const saveVoiceRecord = async (record: {
 };
 
 export const getRecentRecords = async (limit: number = 5) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return [];
+  }
+
   const { data, error } = await supabase
     .from('meniere_records')
     .select('*')
+    .eq('user_id', user.id)
     .order('timestamp', { ascending: false })
     .limit(limit);
 
@@ -164,12 +172,19 @@ export const getRecentRecords = async (limit: number = 5) => {
 };
 
 export const getRecordsForPeriod = async (days: number) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return [];
+  }
+
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
   const { data, error } = await supabase
     .from('meniere_records')
     .select('*')
+    .eq('user_id', user.id)
     .gte('timestamp', startDate.toISOString())
     .order('timestamp', { ascending: false });
 
@@ -179,10 +194,16 @@ export const getRecordsForPeriod = async (days: number) => {
 
 export const getMeniereRecords = async (startDate?: string, endDate?: string): Promise<MeniereRecord[]> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return [];
+    }
+
     let query = supabase
       .from('meniere_records')
       .select('*')
-      .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+      .eq('user_id', user.id);
 
     if (startDate && endDate) {
       query = query.gte('timestamp', startDate + 'T00:00:00.000Z')
