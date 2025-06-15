@@ -53,6 +53,29 @@ const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
     }
   };
 
+  // 统一的北京时间格式化函数
+  const formatBeijingTime = (dateString: string) => {
+    try {
+      if (!dateString) {
+        return '未知时间';
+      }
+      
+      const date = new Date(dateString);
+      
+      if (isNaN(date.getTime())) {
+        return '时间格式错误';
+      }
+      
+      // 转换为北京时间 (UTC+8)
+      const beijingTime = new Date(date.getTime() + (8 * 60 * 60 * 1000));
+      
+      return format(beijingTime, 'MM月dd日 HH:mm', { locale: zhCN });
+    } catch (error) {
+      console.error('日期格式化失败:', error, '原始日期:', dateString);
+      return '时间格式错误';
+    }
+  };
+
   const handleRecordDeleted = () => {
     loadHistory(); // 重新加载历史记录
   };
@@ -96,7 +119,7 @@ const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
                 <div className="font-medium">{getRecordTitle(record)}</div>
                 <div className="text-sm text-gray-500 flex items-center">
                   <Clock className="h-3 w-3 mr-1" />
-                  {format(new Date(record.timestamp), 'MM月dd日 HH:mm', { locale: zhCN })}
+                  {formatBeijingTime(record.timestamp)}
                 </div>
               </div>
             </div>

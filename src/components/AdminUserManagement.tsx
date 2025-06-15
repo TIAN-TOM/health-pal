@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ type UserProfile = Tables<'profiles'>;
 
 interface UserWithProfile extends UserProfile {
   email: string;
-  id: string;
+  auth_id: string;
   role: string;
   created_at: string;
   updated_at: string;
@@ -39,38 +40,66 @@ const AdminUserManagement = () => {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers();
-      if (usersError) throw usersError;
-
-      const userIDs = usersData.users.map(user => user.id);
-
+      console.log('开始加载用户...');
+      
+      // 获取所有用户资料
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, full_name')
-        .in('id', userIDs);
+        .select('*');
 
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('获取用户资料失败:', profilesError);
+        throw profilesError;
+      }
 
-      const profilesMap = new Map();
-      profilesData?.forEach(profile => {
-        profilesMap.set(profile.id, profile);
+      console.log('获取到的用户资料:', profilesData);
+
+      if (!profilesData || profilesData.length === 0) {
+        console.log('没有找到用户资料');
+        setUsers([]);
+        return;
+      }
+
+      // 获取用户角色
+      const userIds = profilesData.map(profile => profile.id);
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*')
+        .in('user_id', userIds);
+
+      if (rolesError) {
+        console.error('获取用户角色失败:', rolesError);
+        throw rolesError;
+      }
+
+      console.log('获取到的用户角色:', rolesData);
+
+      // 构建角色映射
+      const rolesMap = new Map();
+      rolesData?.forEach(role => {
+        rolesMap.set(role.user_id, role.role);
       });
 
-      const usersWithProfile = usersData.users.map(user => {
-        const profile = profilesMap.get(user.id) || {};
-        return {
-          id: user.id,
-          email: user.email || 'N/A',
-          full_name: profile.full_name || '未设置',
-          role: user.app_metadata?.role || 'user',
-          created_at: user.created_at,
-          updated_at: user.updated_at,
-          ...profile,
-        };
-      });
+      // 组合用户数据
+      const usersWithProfile = profilesData.map(profile => ({
+        ...profile,
+        auth_id: profile.id,
+        email: profile.email || 'N/A',
+        full_name: profile.full_name || '未设置',
+        role: rolesMap.get(profile.id) || 'user',
+        created_at: profile.created_at,
+        updated_at: profile.updated_at
+      }));
 
+      console.log('最终用户数据:', usersWithProfile);
       setUsers(usersWithProfile);
+      
+      toast({
+        title: "用户加载成功",
+        description: `成功加载 ${usersWithProfile.length} 个用户`
+      });
     } catch (error: any) {
+      console.error('加载用户失败:', error);
       toast({
         title: "加载用户失败",
         description: error.message,
@@ -128,13 +157,20 @@ const AdminUserManagement = () => {
 
     try {
       setLoading(true);
-      const { error } = await supabase.auth.admin.updateUserById(selectedUser.id, {
-        app_metadata: { role: newRole }
-      });
+      
+      // 更新用户角色表
+      const { error } = await supabase
+        .from('user_roles')
+        .upsert({
+          user_id: selectedUser.id,
+          role: newRole
+        }, {
+          onConflict: 'user_id'
+        });
 
       if (error) throw error;
 
-      // Optimistically update the user's role in the local state
+      // 乐观更新本地状态
       setUsers(prevUsers =>
         prevUsers.map(user =>
           user.id === selectedUser.id ? { ...user, role: newRole } : user
@@ -158,15 +194,20 @@ const AdminUserManagement = () => {
   };
 
   const handleDeleteUser = async (user: UserWithProfile) => {
-    if (!confirm(`确定要删除用户 ${user.email} 吗？`)) return;
+    if (!confirm(`确定要删除用户 ${user.email} 吗？此操作不可恢复！`)) return;
 
     try {
       setLoading(true);
-      const { error } = await supabase.auth.admin.deleteUser(user.id);
+      
+      // 删除用户资料（会级联删除相关数据）
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
 
       if (error) throw error;
 
-      // Optimistically update the user list
+      // 乐观更新用户列表
       setUsers(prevUsers => prevUsers.filter(u => u.id !== user.id));
 
       toast({
@@ -197,16 +238,15 @@ const AdminUserManagement = () => {
     setSelectedUser(null);
   };
 
+  // 统一的北京时间格式化函数
   const formatBeijingTime = (dateString: string) => {
     try {
       if (!dateString) {
         return '未知时间';
       }
       
-      // 直接使用 date-fns 解析日期，不手动添加时区
       const date = new Date(dateString);
       
-      // 检查日期是否有效
       if (isNaN(date.getTime())) {
         return '时间格式错误';
       }
@@ -234,6 +274,9 @@ const AdminUserManagement = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold">用户管理</h2>
+          <Button onClick={loadUsers} variant="outline">
+            刷新用户列表
+          </Button>
         </div>
 
         <div className="flex space-x-4">
@@ -298,6 +341,12 @@ const AdminUserManagement = () => {
             </Card>
           ))}
         </div>
+
+        {filteredUsers.length === 0 && !loading && (
+          <div className="text-center py-8 text-gray-500">
+            {users.length === 0 ? '暂无用户数据' : '没有找到匹配的用户'}
+          </div>
+        )}
 
         {isEditingRole && selectedUser && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">

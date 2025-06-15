@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -105,6 +104,29 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
     return beijingTime;
   };
 
+  // 统一的北京时间格式化函数
+  const formatBeijingTime = (dateString: string) => {
+    try {
+      if (!dateString) {
+        return '未知时间';
+      }
+      
+      const date = new Date(dateString);
+      
+      if (isNaN(date.getTime())) {
+        return '时间格式错误';
+      }
+      
+      // 转换为北京时间 (UTC+8)
+      const beijingTime = new Date(date.getTime() + (8 * 60 * 60 * 1000));
+      
+      return format(beijingTime, 'HH:mm', { locale: zhCN });
+    } catch (error) {
+      console.error('日期格式化失败:', error, '原始日期:', dateString);
+      return '时间格式错误';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <div className="container mx-auto px-4 py-6 max-w-md">
@@ -143,7 +165,7 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
                     <p className="mt-2 text-sm">备注: {todayCheckin.note}</p>
                   )}
                   <p className="text-xs text-green-600 mt-2">
-                    打卡时间: {format(new Date(todayCheckin.created_at + '+08:00'), 'HH:mm', { locale: zhCN })} (北京时间)
+                    打卡时间: {formatBeijingTime(todayCheckin.created_at)} (北京时间)
                   </p>
                 </div>
               </div>

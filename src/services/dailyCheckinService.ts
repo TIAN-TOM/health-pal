@@ -12,6 +12,14 @@ const getBeijingDateString = () => {
   return beijingTime.toISOString().split('T')[0];
 };
 
+// 获取北京时间的ISO字符串
+const getBeijingTimeISO = () => {
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const beijingTime = new Date(utc + (8 * 3600000));
+  return beijingTime.toISOString();
+};
+
 export const createCheckin = async (
   moodScore: number,
   note?: string,
@@ -37,7 +45,7 @@ export const createCheckin = async (
     throw new Error('今日已完成打卡');
   }
 
-  // 创建新的打卡记录
+  // 创建新的打卡记录，使用北京时间
   const { data, error } = await supabase
     .from('daily_checkins')
     .insert({
@@ -45,7 +53,9 @@ export const createCheckin = async (
       checkin_date: checkinDate,
       mood_score: moodScore,
       note,
-      photo_url: photoUrl
+      photo_url: photoUrl,
+      created_at: getBeijingTimeISO(),
+      updated_at: getBeijingTimeISO()
     })
     .select()
     .single();
