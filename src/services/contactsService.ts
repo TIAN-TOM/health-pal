@@ -61,3 +61,8 @@ export const deleteContact = async (id: string) => {
 
   if (error) throw error;
 };
+
+// 添加别名函数以匹配 Settings 组件中的调用
+export const getEmergencyContacts = getContacts;
+export const saveEmergencyContact = saveContact;
+export const deleteEmergencyContact = deleteContact;

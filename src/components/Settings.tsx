@@ -7,7 +7,11 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { getEmergencyContacts, saveEmergencyContact, deleteEmergencyContact } from '@/services/contactsService';
 import { getUserMedications, saveMedication, deleteMedication } from '@/services/medicationsService';
-import type { EmergencyContact, UserMedication } from '@/integrations/supabase/types';
+import type { Tables } from '@/integrations/supabase/types';
+
+// 使用数据库表类型
+type EmergencyContact = Tables<'emergency_contacts'>;
+type UserMedication = Tables<'user_medications'>;
 
 interface SettingsProps {
   onBack: () => void;
