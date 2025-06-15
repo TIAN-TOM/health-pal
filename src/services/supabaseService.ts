@@ -13,6 +13,9 @@ interface MeniereRecord {
   dosage?: string;
   duration?: string;
   symptoms?: string[];
+  created_at?: string;
+  updated_at?: string;
+  user_id?: string;
 }
 
 class SupabaseService {
@@ -66,8 +69,24 @@ class SupabaseService {
     try {
       const allRecords = await this.getRecords();
       return allRecords.filter(record => {
-        const recordDate = new Date(record.timestamp);
+        // 使用 timestamp 或 created_at 字段
+        const recordDate = new Date(record.timestamp || record.created_at || '');
         return recordDate >= startDate && recordDate <= endDate;
+      }).map(record => {
+        // 确保返回的记录包含所有必要字段
+        return {
+          ...record,
+          // 从 data 字段中提取信息到顶级字段
+          severity: record.severity || record.data?.severity,
+          duration: record.duration || record.data?.duration,
+          symptoms: record.symptoms || record.data?.symptoms || [],
+          diet: record.diet || record.data?.diet || [],
+          sleep: record.sleep || record.data?.sleep,
+          stress: record.stress || record.data?.stress,
+          medications: record.medications || record.data?.medications || [],
+          dosage: record.dosage || record.data?.dosage,
+          note: record.note || record.data?.note || record.data?.manualInput
+        };
       });
     } catch (error) {
       console.error('获取时间范围记录失败:', error);

@@ -23,7 +23,16 @@ const DataExport = ({ onBack }: DataExportProps) => {
   const handleDeepSeekAI = () => {
     const message = `我是梅尼埃症患者，想要分析我的症状记录。请帮我分析症状规律、诱发因素和治疗建议。我已经导出了记录文件，请告诉我如何更好地管理我的病情。`;
     
-    window.open('https://chat.deepseek.com/?text=' + encodeURIComponent(message), '_blank');
+    // 使用移动端应用链接
+    const deepSeekAppUrl = `deepseek://chat?message=${encodeURIComponent(message)}`;
+    const deepSeekWebFallback = `https://chat.deepseek.com/?text=${encodeURIComponent(message)}`;
+    
+    // 尝试打开移动应用，失败则使用网页版
+    window.location.href = deepSeekAppUrl;
+    setTimeout(() => {
+      window.open(deepSeekWebFallback, '_blank');
+    }, 1000);
+    
     toast({
       title: "已跳转到DeepSeek AI",
       description: "请将导出的记录数据粘贴给AI进行分析",
@@ -33,7 +42,16 @@ const DataExport = ({ onBack }: DataExportProps) => {
   const handleDoubaoAI = () => {
     const message = `我是梅尼埃症患者，想要分析我的症状记录。请帮我分析症状规律、诱发因素和治疗建议。我已经导出了记录数据，请告诉我如何更好地管理我的病情。`;
     
-    window.open('https://www.doubao.com/chat/?text=' + encodeURIComponent(message), '_blank');
+    // 使用移动端应用链接
+    const doubaoAppUrl = `doubao://chat?message=${encodeURIComponent(message)}`;
+    const doubaoWebFallback = `https://www.doubao.com/chat/?text=${encodeURIComponent(message)}`;
+    
+    // 尝试打开移动应用，失败则使用网页版
+    window.location.href = doubaoAppUrl;
+    setTimeout(() => {
+      window.open(doubaoWebFallback, '_blank');
+    }, 1000);
+    
     toast({
       title: "已跳转到豆包AI",
       description: "请将导出的记录数据粘贴给AI进行分析",
@@ -60,7 +78,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
 
   const generateJSONFormat = (records: any[], startDate: string, endDate: string) => {
     const events = records.map(record => {
-      const timestamp = new Date(record.timestamp).toISOString();
+      const timestamp = new Date(record.timestamp || record.created_at).toISOString();
       
       if (record.type === 'dizziness') {
         return {
@@ -68,46 +86,46 @@ const DataExport = ({ onBack }: DataExportProps) => {
           eventType: "SymptomLog",
           details: {
             type: "Vertigo",
-            durationMinutes: convertDurationToMinutes(record.duration || record.data?.duration),
-            intensity: convertSeverityToNumber(record.severity || record.data?.severity),
-            associatedSymptoms: record.symptoms || record.data?.symptoms || []
+            durationMinutes: convertDurationToMinutes(record.duration),
+            intensity: convertSeverityToNumber(record.severity),
+            associatedSymptoms: record.symptoms || []
           }
         };
       } else if (record.type === 'lifestyle') {
         const events = [];
         
         // 饮食记录
-        if (record.diet?.length > 0 || record.data?.diet?.length > 0) {
+        if (record.diet?.length > 0) {
           events.push({
             timestamp,
             eventType: "LifestyleLog",
             details: {
               type: "Diet",
-              tags: record.diet || record.data?.diet || []
+              tags: record.diet
             }
           });
         }
         
         // 睡眠记录
-        if (record.sleep || record.data?.sleep) {
+        if (record.sleep) {
           events.push({
             timestamp,
             eventType: "LifestyleLog",
             details: {
               type: "Sleep",
-              quality: record.sleep || record.data?.sleep
+              quality: record.sleep
             }
           });
         }
         
         // 压力记录
-        if (record.stress || record.data?.stress) {
+        if (record.stress) {
           events.push({
             timestamp,
             eventType: "LifestyleLog",
             details: {
               type: "Stress",
-              level: record.stress || record.data?.stress
+              level: record.stress
             }
           });
         }
@@ -118,8 +136,8 @@ const DataExport = ({ onBack }: DataExportProps) => {
           timestamp,
           eventType: "MedicationLog",
           details: {
-            medications: record.medications || record.data?.medications || [],
-            dosage: record.dosage || record.data?.dosage
+            medications: record.medications || [],
+            dosage: record.dosage
           }
         };
       } else if (record.type === 'voice') {
@@ -150,7 +168,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
     
     // 按日期分组
     const recordsByDate = records.reduce((acc, record) => {
-      const date = new Date(record.timestamp).toLocaleDateString('zh-CN');
+      const date = new Date(record.timestamp || record.created_at).toLocaleDateString('zh-CN');
       if (!acc[date]) acc[date] = [];
       acc[date].push(record);
       return acc;
@@ -160,50 +178,43 @@ const DataExport = ({ onBack }: DataExportProps) => {
       text += `**${date}**\n\n`;
       
       dayRecords.forEach(record => {
-        const time = new Date(record.timestamp).toLocaleTimeString('zh-CN', { 
+        const time = new Date(record.timestamp || record.created_at).toLocaleTimeString('zh-CN', { 
           hour: '2-digit', 
           minute: '2-digit' 
         });
         
         if (record.type === 'dizziness') {
           text += `- [${time}] 眩晕发作\n`;
-          text += `  持续时间: ${record.duration || record.data?.duration || '未记录'}\n`;
-          text += `  严重程度: ${record.severity || record.data?.severity || '未记录'}\n`;
-          const symptoms = record.symptoms || record.data?.symptoms || [];
-          if (symptoms.length > 0) {
-            text += `  伴随症状: ${symptoms.join(', ')}\n`;
+          text += `  持续时间: ${record.duration || '未记录'}\n`;
+          text += `  严重程度: ${record.severity || '未记录'}\n`;
+          if (record.symptoms?.length > 0) {
+            text += `  伴随症状: ${record.symptoms.join(', ')}\n`;
           }
         } else if (record.type === 'lifestyle') {
-          const diet = record.diet || record.data?.diet || [];
-          const sleep = record.sleep || record.data?.sleep;
-          const stress = record.stress || record.data?.stress;
-          
-          if (diet.length > 0) {
-            text += `- [${time}] 饮食记录: ${diet.join(', ')}\n`;
+          if (record.diet?.length > 0) {
+            text += `- [${time}] 饮食记录: ${record.diet.join(', ')}\n`;
           }
-          if (sleep) {
-            text += `- [${time}] 睡眠质量: ${sleep}\n`;
+          if (record.sleep) {
+            text += `- [${time}] 睡眠质量: ${record.sleep}\n`;
           }
-          if (stress) {
-            text += `- [${time}] 压力水平: ${stress}\n`;
+          if (record.stress) {
+            text += `- [${time}] 压力水平: ${record.stress}\n`;
           }
         } else if (record.type === 'medication') {
-          const medications = record.medications || record.data?.medications || [];
           text += `- [${time}] 用药记录\n`;
-          if (medications.length > 0) {
-            text += `  药物: ${medications.join(', ')}\n`;
+          if (record.medications?.length > 0) {
+            text += `  药物: ${record.medications.join(', ')}\n`;
           }
-          if (record.dosage || record.data?.dosage) {
-            text += `  剂量: ${record.dosage || record.data?.dosage}\n`;
+          if (record.dosage) {
+            text += `  剂量: ${record.dosage}\n`;
           }
         } else if (record.type === 'voice') {
           text += `- [${time}] 语音记事\n`;
-          text += `  内容: ${record.note || record.data?.note || ''}\n`;
+          text += `  内容: ${record.note || ''}\n`;
         }
         
-        const note = record.note || record.data?.note || record.data?.manualInput;
-        if (note && record.type !== 'voice') {
-          text += `  备注: ${note}\n`;
+        if (record.note && record.type !== 'voice') {
+          text += `  备注: ${record.note}\n`;
         }
         
         text += '\n';
@@ -429,7 +440,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
                 <CardHeader>
                   <CardTitle className="flex items-center text-lg">
                     <ExternalLink className="h-5 w-5 mr-2" />
-                    AI健康助手咨询
+                    AI健康助手咨询 (移动端优先)
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -451,6 +462,8 @@ const DataExport = ({ onBack }: DataExportProps) => {
                   
                   <p className="text-xs text-gray-500 text-center">
                     先复制上述格式的数据，再跳转到AI进行专业健康咨询分析
+                    <br />
+                    <span className="text-blue-600">优先打开移动应用，若无应用则打开网页版</span>
                   </p>
                 </CardContent>
               </Card>
