@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import type { Tables } from '@/integrations/supabase/types';
 import RecordDelete from '@/components/RecordDelete';
+import { formatBeijingTime } from '@/utils/beijingTime';
 
 type MeniereRecord = Tables<'meniere_records'>;
 
@@ -53,24 +54,6 @@ const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
     }
   };
 
-  const formatRecordTime = (timestamp: string) => {
-    try {
-      const date = new Date(timestamp);
-      // 转换为北京时间显示
-      const beijingTime = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Shanghai"}));
-      return beijingTime.toLocaleString('zh-CN', {
-        month: 'numeric',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      });
-    } catch (error) {
-      console.error('时间格式化错误:', error);
-      return '时间错误';
-    }
-  };
-
   const handleRecordDeleted = () => {
     loadHistory(); // 重新加载历史记录
   };
@@ -102,6 +85,7 @@ const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        {/* 症状记录 */}
         {records.map((record) => (
           <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
             <div 
@@ -113,7 +97,7 @@ const HistoryView = ({ onRecordClick }: HistoryViewProps) => {
                 <div className="font-medium">{getRecordTitle(record)}</div>
                 <div className="text-sm text-gray-500 flex items-center">
                   <Clock className="h-3 w-3 mr-1" />
-                  {formatRecordTime(record.timestamp)}
+                  {formatBeijingTime(record.timestamp)}
                 </div>
               </div>
             </div>
