@@ -131,21 +131,21 @@ const EmergencyContacts = ({ onBack }: EmergencyContactsProps) => {
                 添加
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="w-[95vw] max-w-sm mx-auto">
               <DialogHeader>
-                <DialogTitle>{editingContact ? '编辑联系人' : '添加紧急联系人'}</DialogTitle>
+                <DialogTitle className="text-center">{editingContact ? '编辑联系人' : '添加紧急联系人'}</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-4 px-2">
                 <div>
-                  <label className="block text-sm font-medium mb-1">头像</label>
-                  <div className="flex space-x-2">
+                  <label className="block text-sm font-medium mb-2">头像</label>
+                  <div className="grid grid-cols-5 gap-2">
                     {['👤', '👨', '👩', '👴', '👵', '👨‍⚕️', '👩‍⚕️', '👮', '👨‍🚒'].map((emoji) => (
                       <Button
                         key={emoji}
                         variant={formData.avatar === emoji ? "default" : "outline"}
                         size="sm"
                         onClick={() => setFormData(prev => ({ ...prev, avatar: emoji }))}
-                        className="text-lg"
+                        className="text-lg h-10 p-0"
                       >
                         {emoji}
                       </Button>
@@ -158,6 +158,7 @@ const EmergencyContacts = ({ onBack }: EmergencyContactsProps) => {
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="输入联系人姓名"
+                    className="w-full"
                   />
                 </div>
                 <div>
@@ -167,6 +168,7 @@ const EmergencyContacts = ({ onBack }: EmergencyContactsProps) => {
                     onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                     placeholder="输入电话号码"
                     type="tel"
+                    className="w-full"
                   />
                 </div>
                 <Button onClick={handleSave} className="w-full">
