@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ArrowLeft, Calendar, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,11 +9,18 @@ import HistoryView from './HistoryView';
 import CheckinSection from './dailyData/CheckinSection';
 import CheckinCalendarSection from './dailyData/CheckinCalendarSection';
 import { useDailyCheckinData } from '@/hooks/useDailyCheckinData';
+import type { Tables } from '@/integrations/supabase/types';
+
+type MeniereRecord = Tables<'meniere_records'>;
+
 interface DailyDataHubProps {
   onBack: () => void;
+  onRecordClick?: (record: MeniereRecord) => void;
 }
+
 const DailyDataHub = ({
-  onBack
+  onBack,
+  onRecordClick
 }: DailyDataHubProps) => {
   const {
     todayCheckin,
@@ -22,10 +30,16 @@ const DailyDataHub = ({
     loadCheckinHistory,
     handleDateSelect
   } = useDailyCheckinData();
-  const handleRecordClick = (record: any) => {
+
+  const handleRecordClick = (record: MeniereRecord) => {
     console.log('记录被点击:', record);
+    if (onRecordClick) {
+      onRecordClick(record);
+    }
   };
-  return <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         {/* 返回按钮 */}
         <div className="flex items-center mb-6">
@@ -61,7 +75,7 @@ const DailyDataHub = ({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <HistoryView onRecordClick={handleRecordClick} />
+                <HistoryView onRecordClick={handleRecordClick} showEnhancedFeatures={true} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -71,6 +85,8 @@ const DailyDataHub = ({
           </TabsContent>
         </Tabs>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default DailyDataHub;

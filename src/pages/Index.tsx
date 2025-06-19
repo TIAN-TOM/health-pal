@@ -111,7 +111,7 @@ const Index = () => {
 
   // 合并每日打卡和每日数据查看
   if (currentView === 'daily-checkin' || currentView === 'daily-data') {
-    return <DailyDataHub onBack={navigateHome} />;
+    return <DailyDataHub onBack={navigateHome} onRecordClick={handleRecordClick} />;
   }
 
   if (currentView === 'dizziness-record') {
