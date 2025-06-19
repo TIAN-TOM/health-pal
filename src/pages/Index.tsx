@@ -229,18 +229,6 @@ const Index = () => {
       </div>
     </div>
   );
-
-  function getUserDisplayName() {
-    if (userProfile?.full_name) {
-      return userProfile.full_name;
-    }
-    // 如果没有姓名，从邮箱中提取用户名部分
-    if (user?.email) {
-      const emailPrefix = user.email.split('@')[0];
-      return emailPrefix;
-    }
-    return '用户';
-  }
 };
 
 export default Index;

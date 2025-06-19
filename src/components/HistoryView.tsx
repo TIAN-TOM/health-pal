@@ -228,45 +228,6 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false }: HistoryVie
       </CardContent>
     </Card>
   );
-
-  function getRecordIcon(type: string) {
-    switch (type) {
-      case 'dizziness': return <Thermometer className="h-4 w-4 text-red-500" />;
-      case 'lifestyle': return <Droplets className="h-4 w-4 text-blue-500" />;
-      case 'medication': return <Pill className="h-4 w-4 text-purple-500" />;
-      default: return <Calendar className="h-4 w-4 text-gray-500" />;
-    }
-  }
-
-  function getRecordTitle(record: MeniereRecord) {
-    switch (record.type) {
-      case 'dizziness': return '眩晕记录';
-      case 'lifestyle': return '生活方式记录';
-      case 'medication': return '用药记录';
-      default: return '其他记录';
-    }
-  }
-
-  function getRecordSubtitle(record: MeniereRecord) {
-    const date = new Date(record.timestamp).toLocaleDateString('zh-CN');
-    const time = new Date(record.timestamp).toLocaleTimeString('zh-CN', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-    
-    let subtitle = `${date} ${time}`;
-    
-    if (record.type === 'dizziness' && record.severity) {
-      const severityMap = { mild: '轻微', moderate: '中等', severe: '严重' };
-      subtitle += ` • ${severityMap[record.severity as keyof typeof severityMap] || record.severity}`;
-    }
-    
-    return subtitle;
-  }
-
-  function handleRecordDeleted() {
-    loadHistory();
-  }
 };
 
 export default HistoryView;
