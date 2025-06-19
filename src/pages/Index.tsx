@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
@@ -34,6 +35,7 @@ type MeniereRecord = Tables<'meniere_records'>;
 const Index = () => {
   const [currentView, setCurrentView] = useState<string>('home');
   const [selectedRecord, setSelectedRecord] = useState<MeniereRecord | null>(null);
+  const [navigationHistory, setNavigationHistory] = useState<string[]>(['home']);
   const { user, userProfile, userRole, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -73,6 +75,7 @@ const Index = () => {
   }
 
   const navigateTo = (view: string) => {
+    setNavigationHistory(prev => [...prev, currentView]);
     setCurrentView(view);
     setSelectedRecord(null);
   };
@@ -80,9 +83,22 @@ const Index = () => {
   const navigateHome = () => {
     setCurrentView('home');
     setSelectedRecord(null);
+    setNavigationHistory(['home']);
+  };
+
+  const navigateBack = () => {
+    if (navigationHistory.length > 1) {
+      const previousView = navigationHistory[navigationHistory.length - 1];
+      setNavigationHistory(prev => prev.slice(0, -1));
+      setCurrentView(previousView);
+      setSelectedRecord(null);
+    } else {
+      navigateHome();
+    }
   };
 
   const handleRecordClick = (record: MeniereRecord) => {
+    setNavigationHistory(prev => [...prev, currentView]);
     setSelectedRecord(record);
     setCurrentView('record-detail');
   };
@@ -111,34 +127,34 @@ const Index = () => {
 
   // 合并每日打卡和每日数据查看
   if (currentView === 'daily-checkin' || currentView === 'daily-data') {
-    return <DailyDataHub onBack={navigateHome} onRecordClick={handleRecordClick} />;
+    return <DailyDataHub onBack={navigateBack} onRecordClick={handleRecordClick} />;
   }
 
   if (currentView === 'dizziness-record') {
-    return <DizzinessRecord onBack={navigateHome} />;
+    return <DizzinessRecord onBack={navigateBack} />;
   }
 
   if (currentView === 'lifestyle-record') {
-    return <LifestyleRecord onBack={navigateHome} />;
+    return <LifestyleRecord onBack={navigateBack} />;
   }
 
   if (currentView === 'medication-record') {
     return (
       <MedicationRecord 
-        onBack={navigateHome} 
+        onBack={navigateBack} 
         onNavigateToMedicationManagement={() => navigateTo('medication-management')}
       />
     );
   }
 
   if (currentView === 'data-export') {
-    return <DataExport onBack={navigateHome} />;
+    return <DataExport onBack={navigateBack} />;
   }
 
   if (currentView === 'settings') {
     return (
       <Settings 
-        onBack={navigateHome} 
+        onBack={navigateBack} 
         onAdminPanel={userRole === 'admin' ? () => navigateTo('admin-panel') : undefined}
         onEmergencyContacts={() => navigateTo('emergency-contacts')}
         onMedicalRecords={() => navigateTo('medical-records')}
@@ -149,31 +165,31 @@ const Index = () => {
   }
 
   if (currentView === 'admin-panel') {
-    return <AdminPanel onBack={() => navigateTo('settings')} />;
+    return <AdminPanel onBack={navigateBack} />;
   }
 
   if (currentView === 'emergency-contacts') {
-    return <EmergencyContacts onBack={() => navigateTo('settings')} />;
+    return <EmergencyContacts onBack={navigateBack} />;
   }
 
   if (currentView === 'medical-records') {
-    return <MedicalRecords onBack={navigateHome} />;
+    return <MedicalRecords onBack={navigateBack} />;
   }
 
   if (currentView === 'education') {
-    return <EducationCenter onBack={navigateHome} />;
+    return <EducationCenter onBack={navigateBack} />;
   }
 
   if (currentView === 'medication-management') {
-    return <MedicationManagement onBack={() => navigateTo('settings')} />;
+    return <MedicationManagement onBack={navigateBack} />;
   }
 
   if (currentView === 'record-detail' && selectedRecord) {
-    return <RecordDetail record={selectedRecord} onBack={navigateHome} />;
+    return <RecordDetail record={selectedRecord} onBack={navigateBack} />;
   }
 
   if (currentView === 'checkin-calendar') {
-    return <CheckinCalendar onBack={navigateHome} />;
+    return <CheckinCalendar onBack={navigateBack} />;
   }
 
   return (
@@ -213,6 +229,18 @@ const Index = () => {
       </div>
     </div>
   );
+
+  function getUserDisplayName() {
+    if (userProfile?.full_name) {
+      return userProfile.full_name;
+    }
+    // 如果没有姓名，从邮箱中提取用户名部分
+    if (user?.email) {
+      const emailPrefix = user.email.split('@')[0];
+      return emailPrefix;
+    }
+    return '用户';
+  }
 };
 
 export default Index;
