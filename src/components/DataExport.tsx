@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,9 @@ const DataExport = ({ onBack }: DataExportProps) => {
 
   // 设置默认日期（最近一个月）- 使用北京时间
   React.useEffect(() => {
+    // 页面加载时滚动到顶部
+    window.scrollTo(0, 0);
+    
     const today = getBeijingTime();
     const oneMonthAgo = new Date(today);
     oneMonthAgo.setMonth(today.getMonth() - 1);
@@ -244,6 +248,9 @@ const DataExport = ({ onBack }: DataExportProps) => {
               onEndDateChange={setCustomEndDate}
               onExport={handleCustomExport}
             />
+            <div className="mt-6">
+              <AIAssistantSection />
+            </div>
           </TabsContent>
         </Tabs>
 
