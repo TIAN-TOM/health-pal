@@ -1,9 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Phone, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Contact, getContacts } from '@/services/contactsService';
+import { useAuth } from '@/hooks/useAuth';
+import EmergencySMS from '@/components/EmergencySMS';
 
 interface EmergencyModeProps {
   onBack: () => void;
@@ -13,6 +16,7 @@ interface EmergencyModeProps {
 const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { userProfile, user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -78,6 +82,17 @@ const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => 
     }
   };
 
+  const getUserDisplayName = () => {
+    if (userProfile?.full_name) {
+      return userProfile.full_name;
+    }
+    if (user?.email) {
+      const emailPrefix = user.email.split('@')[0];
+      return emailPrefix;
+    }
+    return '用户';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-green-100 p-4">
       {/* 返回按钮 */}
@@ -114,11 +129,16 @@ const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => 
             </div>
             <div className="flex items-center p-4 bg-yellow-50 rounded-lg">
               <span className="text-3xl mr-4 text-yellow-600 font-bold">4.</span>
-              <span className="text-gray-800">如需帮助，点击下方呼叫家人</span>
+              <span className="text-gray-800">如需帮助，点击下方呼叫或发送短信</span>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* 紧急短信功能 */}
+      {!isLoading && contacts.length > 0 && (
+        <EmergencySMS contacts={contacts} userName={getUserDisplayName()} />
+      )}
 
       {/* 紧急联系人 */}
       <Card className="bg-white shadow-lg">

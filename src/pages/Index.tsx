@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
@@ -29,6 +28,7 @@ import CheckinCalendar from '@/components/CheckinCalendar';
 import BeijingClock from '@/components/BeijingClock';
 import type { Tables } from '@/integrations/supabase/types';
 import AnnouncementDisplay from '@/components/AnnouncementDisplay';
+import ProfileEdit from '@/components/ProfileEdit';
 
 type MeniereRecord = Tables<'meniere_records'>;
 
@@ -160,8 +160,13 @@ const Index = () => {
         onMedicalRecords={() => navigateTo('medical-records')}
         onEducation={() => navigateTo('education')}
         onMedicationManagement={() => navigateTo('medication-management')}
+        onProfileEdit={() => navigateTo('profile-edit')}
       />
     );
+  }
+
+  if (currentView === 'profile-edit') {
+    return <ProfileEdit onBack={navigateBack} />;
   }
 
   if (currentView === 'admin-panel') {

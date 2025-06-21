@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowLeft, User, Shield, LogOut, Settings2, Phone, FileText, Pill } from 'lucide-react';
+import { ArrowLeft, User, Shield, LogOut, Settings2, Phone, FileText, Pill, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,9 +12,18 @@ interface SettingsProps {
   onMedicalRecords?: () => void;
   onEducation?: () => void;
   onMedicationManagement?: () => void;
+  onProfileEdit?: () => void;
 }
 
-const Settings = ({ onBack, onAdminPanel, onEmergencyContacts, onMedicalRecords, onEducation, onMedicationManagement }: SettingsProps) => {
+const Settings = ({ 
+  onBack, 
+  onAdminPanel, 
+  onEmergencyContacts, 
+  onMedicalRecords, 
+  onEducation, 
+  onMedicationManagement,
+  onProfileEdit
+}: SettingsProps) => {
   const { userProfile, userRole, signOut } = useAuth();
 
   const handleSignOut = async () => {
@@ -65,9 +74,21 @@ const Settings = ({ onBack, onAdminPanel, onEmergencyContacts, onMedicalRecords,
         {/* 用户信息 */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <User className="h-5 w-5 mr-2" />
-              用户信息
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <User className="h-5 w-5 mr-2" />
+                用户信息
+              </div>
+              {onProfileEdit && (
+                <Button
+                  onClick={onProfileEdit}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  编辑
+                </Button>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">

@@ -165,6 +165,47 @@ export type Database = {
         }
         Relationships: []
       }
+      emergency_sms_logs: {
+        Row: {
+          contact_id: string
+          created_at: string
+          id: string
+          location_data: Json | null
+          message: string
+          sent_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          id?: string
+          location_data?: Json | null
+          message: string
+          sent_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          id?: string
+          location_data?: Json | null
+          message?: string
+          sent_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_sms_logs_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medical_records: {
         Row: {
           created_at: string
