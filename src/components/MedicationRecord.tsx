@@ -1,12 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Check, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Check, ExternalLink, Clock, AlertCircle, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
 import { saveMedicationRecord } from '@/services/meniereRecordService';
 import { Medication, getMedications } from '@/services/medicationsService';
+import { formatBeijingDateTime, getBeijingTime } from '@/utils/beijingTime';
 
 interface MedicationRecordProps {
   onBack: () => void;
@@ -17,13 +20,23 @@ const MedicationRecord = ({ onBack, onNavigateToMedicationManagement }: Medicati
   const [medications, setMedications] = useState<string[]>([]);
   const [dosage, setDosage] = useState<string>('');
   const [note, setNote] = useState('');
+  const [medicationTime, setMedicationTime] = useState('');
+  const [sideEffects, setSideEffects] = useState('');
+  const [effectiveness, setEffectiveness] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [userMedications, setUserMedications] = useState<Medication[]>([]);
   const [loadingMeds, setLoadingMeds] = useState(true);
+  const [quickDosageOpen, setQuickDosageOpen] = useState(false);
+  const [effectivenessOpen, setEffectivenessOpen] = useState(false);
+  const [sideEffectsOpen, setSideEffectsOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     loadUserMedications();
+    // 默认设置当前时间
+    const currentTime = getBeijingTime();
+    const timeString = currentTime.toTimeString().slice(0, 5); // HH:MM 格式
+    setMedicationTime(timeString);
   }, []);
 
   const loadUserMedications = async () => {
@@ -32,6 +45,7 @@ const MedicationRecord = ({ onBack, onNavigateToMedicationManagement }: Medicati
       setUserMedications(medsData);
     } catch (error) {
       console.error('加载药物失败:', error);
+      // ... keep existing code (fallback medications)
       const fallbackMedications: Medication[] = [
         {
           id: 'fallback-1',
@@ -100,10 +114,18 @@ const MedicationRecord = ({ onBack, onNavigateToMedicationManagement }: Medicati
 
     setIsLoading(true);
     try {
+      // 构建详细的用药记录
+      const detailedNote = [
+        note.trim(),
+        medicationTime ? `用药时间: ${medicationTime}` : '',
+        effectiveness ? `药效评价: ${effectiveness}` : '',
+        sideEffects ? `副作用记录: ${sideEffects}` : ''
+      ].filter(Boolean).join('\n');
+
       await saveMedicationRecord({
         medications,
         dosage,
-        manualInput: note.trim() || undefined
+        manualInput: detailedNote || undefined
       });
 
       toast({
@@ -167,16 +189,11 @@ const MedicationRecord = ({ onBack, onNavigateToMedicationManagement }: Medicati
           <h1 className="text-xl font-bold text-gray-800">记录用药情况</h1>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl text-center text-gray-800">
-              记录用药情况
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* 提示信息 */}
-            {userMedications.length === 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div className="space-y-4">
+          {/* 提示信息 */}
+          {userMedications.length === 0 && (
+            <Card className="border-yellow-200 bg-yellow-50">
+              <CardContent className="p-4">
                 <p className="text-sm text-yellow-800 mb-3">
                   💡 请先添加常用药物才能进行用药记录
                 </p>
@@ -187,11 +204,13 @@ const MedicationRecord = ({ onBack, onNavigateToMedicationManagement }: Medicati
                 >
                   去设置常用药物
                 </Button>
-              </div>
-            )}
+              </CardContent>
+            </Card>
+          )}
 
-            {userMedications.length > 0 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          {userMedications.length > 0 && (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="p-4">
                 <p className="text-sm text-blue-800 mb-3">
                   💡 如需添加更多药物，请先到常用药物管理中设置
                 </p>
@@ -203,16 +222,20 @@ const MedicationRecord = ({ onBack, onNavigateToMedicationManagement }: Medicati
                 >
                   管理常用药物
                 </Button>
-              </div>
-            )}
+              </CardContent>
+            </Card>
+          )}
 
-            {/* 药物选择 */}
-            {userMedications.length > 0 && (
-              <>
-                <div>
-                  <h3 className="text-lg font-medium mb-4 text-gray-700">
+          {/* 药物选择 */}
+          {userMedications.length > 0 && (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg text-gray-700">
                     选择药物 (可多选)
-                  </h3>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   <div className="grid gap-3">
                     {userMedications.map((medication, index) => (
                       <Button
@@ -237,71 +260,217 @@ const MedicationRecord = ({ onBack, onNavigateToMedicationManagement }: Medicati
                       </Button>
                     ))}
                   </div>
-                </div>
+                </CardContent>
+              </Card>
 
-                {/* 用药剂量 */}
-                <div>
-                  <h3 className="text-lg font-medium mb-4 text-gray-700">
-                    用药剂量
-                  </h3>
-                  <div className="grid gap-3">
-                    {[
-                      { value: 'normal', label: '按医嘱正常剂量' },
-                      { value: 'half', label: '减半剂量' },
-                      { value: 'extra', label: '加强剂量' }
-                    ].map(option => (
-                      <Button
-                        key={option.value}
-                        onClick={() => setDosage(option.value)}
-                        variant={dosage === option.value ? "default" : "outline"}
-                        className={`w-full py-4 text-lg ${
-                          dosage === option.value 
-                            ? 'bg-teal-500 hover:bg-teal-600 text-white' 
-                            : 'border-2 hover:border-teal-300'
-                        }`}
-                      >
-                        {dosage === option.value && (
-                          <Check className="mr-2 h-5 w-5" />
-                        )}
-                        {option.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
+              {/* 用药时间 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg text-gray-700 flex items-center">
+                    <Clock className="h-5 w-5 mr-2" />
+                    用药时间
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Input
+                    type="time"
+                    value={medicationTime}
+                    onChange={(e) => setMedicationTime(e.target.value)}
+                    className="w-full"
+                  />
+                  <p className="text-sm text-gray-500 mt-2">
+                    当前北京时间: {formatBeijingDateTime()}
+                  </p>
+                </CardContent>
+              </Card>
 
-                {/* 详细说明 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    详细说明（可选）
-                  </label>
+              {/* 快速剂量选择 */}
+              <Collapsible open={quickDosageOpen} onOpenChange={setQuickDosageOpen}>
+                <Card>
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer hover:bg-gray-50">
+                      <CardTitle className="text-lg text-gray-700 flex items-center justify-between">
+                        用药剂量
+                        <span className="text-sm text-gray-500">
+                          {quickDosageOpen ? '收起' : '展开'}
+                        </span>
+                      </CardTitle>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent>
+                      <div className="grid gap-3">
+                        {[
+                          { value: 'normal', label: '按医嘱正常剂量' },
+                          { value: 'half', label: '减半剂量' },
+                          { value: 'extra', label: '加强剂量' }
+                        ].map(option => (
+                          <Button
+                            key={option.value}
+                            onClick={() => setDosage(option.value)}
+                            variant={dosage === option.value ? "default" : "outline"}
+                            className={`w-full py-4 text-lg ${
+                              dosage === option.value 
+                                ? 'bg-teal-500 hover:bg-teal-600 text-white' 
+                                : 'border-2 hover:border-teal-300'
+                            }`}
+                          >
+                            {dosage === option.value && (
+                              <Check className="mr-2 h-5 w-5" />
+                            )}
+                            {option.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+
+              {/* 药效评价 */}
+              <Collapsible open={effectivenessOpen} onOpenChange={setEffectivenessOpen}>
+                <Card>
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer hover:bg-gray-50">
+                      <CardTitle className="text-lg text-gray-700 flex items-center justify-between">
+                        <span className="flex items-center">
+                          <Check className="h-5 w-5 mr-2" />
+                          药效评价 (可选)
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {effectivenessOpen ? '收起' : '展开'}
+                        </span>
+                      </CardTitle>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { value: '非常有效', color: 'bg-green-500' },
+                            { value: '有效', color: 'bg-blue-500' },
+                            { value: '一般', color: 'bg-yellow-500' },
+                            { value: '效果不明显', color: 'bg-orange-500' },
+                            { value: '无效', color: 'bg-red-500' }
+                          ].map(option => (
+                            <Button
+                              key={option.value}
+                              onClick={() => setEffectiveness(option.value)}
+                              variant={effectiveness === option.value ? "default" : "outline"}
+                              className={`text-sm ${
+                                effectiveness === option.value 
+                                  ? `${option.color} hover:opacity-90 text-white` 
+                                  : 'hover:border-gray-400'
+                              }`}
+                            >
+                              {option.value}
+                            </Button>
+                          ))}
+                        </div>
+                        <Textarea
+                          placeholder="详细描述药效情况..."
+                          value={effectiveness.includes('非常有效') || effectiveness.includes('有效') || effectiveness.includes('一般') || effectiveness.includes('效果不明显') || effectiveness.includes('无效') ? '' : effectiveness}
+                          onChange={(e) => setEffectiveness(e.target.value)}
+                          className="mt-2"
+                          rows={2}
+                        />
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+
+              {/* 副作用记录 */}
+              <Collapsible open={sideEffectsOpen} onOpenChange={setSideEffectsOpen}>
+                <Card>
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer hover:bg-gray-50">
+                      <CardTitle className="text-lg text-gray-700 flex items-center justify-between">
+                        <span className="flex items-center">
+                          <AlertCircle className="h-5 w-5 mr-2" />
+                          副作用记录 (可选)
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {sideEffectsOpen ? '收起' : '展开'}
+                        </span>
+                      </CardTitle>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            '无副作用',
+                            '轻微头晕',
+                            '恶心',
+                            '困倦',
+                            '食欲不振',
+                            '其他'
+                          ].map(option => (
+                            <Button
+                              key={option}
+                              onClick={() => setSideEffects(option === '无副作用' ? option : (sideEffects === option ? '' : option))}
+                              variant={sideEffects === option ? "default" : "outline"}
+                              size="sm"
+                              className={sideEffects === option ? 'bg-red-500 hover:bg-red-600 text-white' : ''}
+                            >
+                              {option}
+                            </Button>
+                          ))}
+                        </div>
+                        <Textarea
+                          placeholder="详细描述副作用情况..."
+                          value={sideEffects === '无副作用' || sideEffects === '轻微头晕' || sideEffects === '恶心' || sideEffects === '困倦' || sideEffects === '食欲不振' ? '' : sideEffects}
+                          onChange={(e) => setSideEffects(e.target.value)}
+                          className="mt-2"
+                          rows={2}
+                        />
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+
+              {/* 详细说明 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg text-gray-700">
+                    详细说明 (可选)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   <Textarea
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    placeholder="可以记录用药时间、服药后感受、副作用等相关信息..."
+                    placeholder="可以记录服药后感受、注意事项等相关信息..."
                     className="w-full"
                     rows={3}
                   />
-                </div>
+                </CardContent>
+              </Card>
 
-                {/* 温馨提示 */}
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              {/* 温馨提示 */}
+              <Card className="border-yellow-200 bg-yellow-50">
+                <CardContent className="p-4">
                   <p className="text-sm text-yellow-800">
                     💡 温馨提示：请严格按照医生处方用药，如有疑问请及时咨询医生
                   </p>
-                </div>
+                </CardContent>
+              </Card>
 
-                {/* 保存按钮 */}
-                <Button
-                  onClick={handleSave}
-                  disabled={isLoading}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white text-xl py-6 rounded-lg mt-8"
-                >
-                  {isLoading ? '保存中...' : '保存记录'}
-                </Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              {/* 保存按钮 */}
+              <Button
+                onClick={handleSave}
+                disabled={isLoading}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white text-xl py-6 rounded-lg"
+              >
+                {isLoading ? '保存中...' : '保存记录'}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

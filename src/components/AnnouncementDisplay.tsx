@@ -5,7 +5,7 @@ import { Megaphone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
-import { formatBeijingTime } from '@/utils/beijingTime';
+import { formatBeijingDateTime } from '@/utils/beijingTime';
 
 type Announcement = Tables<'announcements'>;
 
@@ -66,7 +66,7 @@ const AnnouncementDisplay = () => {
                 </div>
                 <p className="text-gray-700 text-sm mb-2">{announcement.content}</p>
                 <p className="text-xs text-gray-500">
-                  发布时间: {formatBeijingTime(announcement.created_at)} (北京时间)
+                  发布时间: {formatBeijingDateTime(new Date(announcement.created_at))} (北京时间)
                 </p>
               </div>
               <Button
