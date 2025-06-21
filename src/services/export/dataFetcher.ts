@@ -1,8 +1,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { getBeijingDateString, getCurrentBeijingTime } from '@/utils/beijingTime';
+import type { MeniereRecord } from '@/services/meniereRecordService';
 
-export const getRecordsByDateRange = async (startDate: Date, endDate: Date) => {
+export const getRecordsByDateRange = async (startDate: Date, endDate: Date): Promise<MeniereRecord[]> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -59,7 +60,21 @@ export const getRecordsByDateRange = async (startDate: Date, endDate: Date) => {
     console.log('获取到的医疗记录数量:', medicalRecords?.length || 0);
 
     // 合并记录，将打卡记录和医疗记录转换为统一格式
-    const allRecords = [...(records || [])];
+    const allRecords: MeniereRecord[] = [...(records || [])].map(record => ({
+      id: record.id,
+      type: record.type as 'dizziness' | 'lifestyle' | 'medication' | 'voice',
+      timestamp: record.timestamp,
+      data: record.data,
+      note: record.note,
+      severity: record.severity,
+      duration: record.duration,
+      symptoms: record.symptoms,
+      diet: record.diet,
+      sleep: record.sleep,
+      stress: record.stress,
+      medications: record.medications,
+      dosage: record.dosage
+    }));
     
     if (checkins && checkins.length > 0) {
       checkins.forEach(checkin => {
@@ -67,9 +82,6 @@ export const getRecordsByDateRange = async (startDate: Date, endDate: Date) => {
           id: `checkin-${checkin.id}`,
           type: 'checkin',
           timestamp: checkin.created_at,
-          created_at: checkin.created_at,
-          updated_at: checkin.updated_at,
-          user_id: checkin.user_id,
           note: checkin.note,
           data: {
             mood_score: checkin.mood_score,
@@ -77,15 +89,15 @@ export const getRecordsByDateRange = async (startDate: Date, endDate: Date) => {
             note: checkin.note,
             photo_url: checkin.photo_url
           },
-          severity: null,
-          duration: null,
-          symptoms: null,
-          diet: null,
-          sleep: null,
-          stress: null,
-          medications: null,
-          dosage: null
-        } as any);
+          severity: undefined,
+          duration: undefined,
+          symptoms: undefined,
+          diet: undefined,
+          sleep: undefined,
+          stress: undefined,
+          medications: undefined,
+          dosage: undefined
+        });
       });
     }
 
@@ -96,9 +108,6 @@ export const getRecordsByDateRange = async (startDate: Date, endDate: Date) => {
           id: `medical-${medRecord.id}`,
           type: 'medical',
           timestamp: medRecord.created_at,
-          created_at: medRecord.created_at,
-          updated_at: medRecord.updated_at,
-          user_id: medRecord.user_id,
           note: medRecord.notes,
           data: {
             record_type: medRecord.record_type,
@@ -112,15 +121,15 @@ export const getRecordsByDateRange = async (startDate: Date, endDate: Date) => {
             notes: medRecord.notes,
             next_appointment: medRecord.next_appointment
           },
-          severity: null,
-          duration: null,
-          symptoms: null,
-          diet: null,
-          sleep: null,
-          stress: null,
-          medications: null,
-          dosage: null
-        } as any);
+          severity: undefined,
+          duration: undefined,
+          symptoms: undefined,
+          diet: undefined,
+          sleep: undefined,
+          stress: undefined,
+          medications: undefined,
+          dosage: undefined
+        });
       });
     }
 

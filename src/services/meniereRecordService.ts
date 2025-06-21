@@ -5,7 +5,7 @@ import { getBeijingTimeISO } from '@/utils/beijingTime';
 
 export interface MeniereRecord {
   id?: string;
-  type: 'dizziness' | 'lifestyle' | 'medication' | 'voice';
+  type: 'dizziness' | 'lifestyle' | 'medication' | 'voice' | 'checkin' | 'medical';
   timestamp?: string;
   data?: any;
   note?: string;

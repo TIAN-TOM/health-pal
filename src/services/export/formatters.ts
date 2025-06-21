@@ -82,7 +82,9 @@ export const generateJSONFormat = (records: MeniereRecord[], startDate: string, 
         dizziness: records.filter(r => r.type === 'dizziness').length,
         lifestyle: records.filter(r => r.type === 'lifestyle').length,
         medication: records.filter(r => r.type === 'medication').length,
-        voice: records.filter(r => r.type === 'voice').length
+        voice: records.filter(r => r.type === 'voice').length,
+        checkin: records.filter(r => r.type === 'checkin').length,
+        medical: records.filter(r => r.type === 'medical').length
       }
     },
     records: records.map(record => ({
@@ -107,6 +109,19 @@ export const generateJSONFormat = (records: MeniereRecord[], startDate: string, 
         exerciseType: record.data.exercise_type,
         exerciseDuration: record.data.exercise_duration,
         saltPreference: record.data.salt_preference ? formatSaltPreference(record.data.salt_preference) : undefined,
+        // 打卡记录数据
+        moodScore: record.data.mood_score,
+        checkinDate: record.data.checkin_date,
+        photoUrl: record.data.photo_url,
+        // 医疗记录数据
+        recordType: record.data.record_type,
+        date: record.data.date,
+        hospital: record.data.hospital,
+        doctor: record.data.doctor,
+        department: record.data.department,
+        diagnosis: record.data.diagnosis,
+        prescribedMedications: record.data.prescribed_medications,
+        nextAppointment: record.data.next_appointment,
         ...record.data
       } : undefined
     }))
@@ -126,6 +141,8 @@ export const generateTextFormat = (records: MeniereRecord[], startDate: string, 
 - 饮食作息记录: ${records.filter(r => r.type === 'lifestyle').length} 条
 - 用药记录: ${records.filter(r => r.type === 'medication').length} 条
 - 语音记录: ${records.filter(r => r.type === 'voice').length} 条
+- 每日打卡记录: ${records.filter(r => r.type === 'checkin').length} 条
+- 医疗记录: ${records.filter(r => r.type === 'medical').length} 条
 
 =====================================
 
@@ -168,6 +185,25 @@ export const generateTextFormat = (records: MeniereRecord[], startDate: string, 
       }
       if (record.dosage) text += `   剂量: ${record.dosage}\n`;
     }
+
+    // 打卡记录详情
+    if (record.type === 'checkin') {
+      if (record.data?.mood_score) text += `   心情评分: ${record.data.mood_score}/10\n`;
+      if (record.data?.checkin_date) text += `   打卡日期: ${record.data.checkin_date}\n`;
+    }
+
+    // 医疗记录详情
+    if (record.type === 'medical') {
+      if (record.data?.record_type) text += `   记录类型: ${record.data.record_type}\n`;
+      if (record.data?.hospital) text += `   医院: ${record.data.hospital}\n`;
+      if (record.data?.doctor) text += `   医生: ${record.data.doctor}\n`;
+      if (record.data?.department) text += `   科室: ${record.data.department}\n`;
+      if (record.data?.diagnosis) text += `   诊断: ${record.data.diagnosis}\n`;
+      if (record.data?.prescribed_medications && record.data.prescribed_medications.length > 0) {
+        text += `   处方药物: ${record.data.prescribed_medications.join(', ')}\n`;
+      }
+      if (record.data?.next_appointment) text += `   下次复诊: ${record.data.next_appointment}\n`;
+    }
     
     // 备注
     if (record.note) {
@@ -186,7 +222,9 @@ const getRecordTypeText = (type: string): string => {
     'dizziness': '眩晕症状',
     'lifestyle': '饮食作息',
     'medication': '用药记录',
-    'voice': '语音记录'
+    'voice': '语音记录',
+    'checkin': '每日打卡',
+    'medical': '医疗记录'
   };
   return typeMap[type] || type;
 };
