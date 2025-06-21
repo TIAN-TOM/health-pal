@@ -102,17 +102,24 @@ export const generateJSONFormat = (records: MeniereRecord[], startDate: string, 
       dosage: record.dosage,
       note: record.note,
       additionalData: record.data ? {
+        // 睡眠相关数据
         sleepQuality: record.data.sleep_quality ? formatSleepQuality(record.data.sleep_quality) : undefined,
         bedTime: record.data.bed_time,
         wakeTime: record.data.wake_time,
+        
+        // 饮食相关数据
         waterIntake: record.data.water_intake,
+        saltPreference: record.data.salt_preference ? formatSaltPreference(record.data.salt_preference) : undefined,
+        
+        // 运动相关数据
         exerciseType: record.data.exercise_type,
         exerciseDuration: record.data.exercise_duration,
-        saltPreference: record.data.salt_preference ? formatSaltPreference(record.data.salt_preference) : undefined,
+        
         // 打卡记录数据
         moodScore: record.data.mood_score,
         checkinDate: record.data.checkin_date,
         photoUrl: record.data.photo_url,
+        
         // 医疗记录数据
         recordType: record.data.record_type,
         date: record.data.date,
@@ -122,6 +129,14 @@ export const generateJSONFormat = (records: MeniereRecord[], startDate: string, 
         diagnosis: record.data.diagnosis,
         prescribedMedications: record.data.prescribed_medications,
         nextAppointment: record.data.next_appointment,
+        symptoms: record.data.symptoms,
+        
+        // 用药记录的详细数据（增强版）
+        medicationTime: record.data.medication_time,
+        effectiveness: record.data.effectiveness,
+        sideEffects: record.data.side_effects,
+        
+        // 其他任何数据
         ...record.data
       } : undefined
     }))
@@ -178,12 +193,15 @@ export const generateTextFormat = (records: MeniereRecord[], startDate: string, 
       if (record.stress) text += `   压力程度: ${formatStress(record.stress)}\n`;
     }
     
-    // 用药记录详情
+    // 用药记录详情（增强版）
     if (record.type === 'medication') {
       if (record.medications && record.medications.length > 0) {
         text += `   药物: ${record.medications.join(', ')}\n`;
       }
       if (record.dosage) text += `   剂量: ${record.dosage}\n`;
+      if (record.data?.medication_time) text += `   用药时间: ${record.data.medication_time}\n`;
+      if (record.data?.effectiveness) text += `   药效评价: ${record.data.effectiveness}\n`;
+      if (record.data?.side_effects) text += `   副作用: ${record.data.side_effects}\n`;
     }
 
     // 打卡记录详情
@@ -203,6 +221,7 @@ export const generateTextFormat = (records: MeniereRecord[], startDate: string, 
         text += `   处方药物: ${record.data.prescribed_medications.join(', ')}\n`;
       }
       if (record.data?.next_appointment) text += `   下次复诊: ${record.data.next_appointment}\n`;
+      if (record.data?.symptoms) text += `   症状描述: ${record.data.symptoms}\n`;
     }
     
     // 备注
