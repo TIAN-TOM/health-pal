@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { ArrowLeft, Settings as SettingsIcon, Shield, Phone, FileText, GraduationCap, Pill2, User, Mail } from 'lucide-react';
+import { ArrowLeft, Settings as SettingsIcon, Shield, Phone, FileText, GraduationCap, Pill, User, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
@@ -87,7 +86,7 @@ const Settings = ({
                 variant="outline"
                 className="w-full justify-start"
               >
-                <Pill2 className="h-4 w-4 mr-2" />
+                <Pill className="h-4 w-4 mr-2" />
                 常用药物管理
               </Button>
               
