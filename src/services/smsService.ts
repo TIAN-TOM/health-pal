@@ -64,7 +64,7 @@ export const logEmergencySMS = async (data: EmergencySMSData) => {
       user_id: user.id,
       contact_id: data.contactId,
       message: data.message,
-      location_data: data.location || null
+      location_data: data.location ? JSON.parse(JSON.stringify(data.location)) : null
     });
 
   if (error) throw error;
