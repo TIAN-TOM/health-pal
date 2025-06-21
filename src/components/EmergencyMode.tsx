@@ -135,13 +135,8 @@ const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => 
         </CardContent>
       </Card>
 
-      {/* 紧急短信功能 */}
-      {!isLoading && contacts.length > 0 && (
-        <EmergencySMS contacts={contacts} userName={getUserDisplayName()} />
-      )}
-
       {/* 紧急联系人 */}
-      <Card className="bg-white shadow-lg">
+      <Card className="mb-6 bg-white shadow-lg">
         <CardContent className="p-6">
           <h3 className="text-xl font-bold text-center mb-6 text-gray-800">
             呼叫家人
@@ -182,6 +177,11 @@ const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => 
           )}
         </CardContent>
       </Card>
+
+      {/* 紧急短信功能 */}
+      {!isLoading && contacts.length > 0 && (
+        <EmergencySMS contacts={contacts} userName={getUserDisplayName()} />
+      )}
     </div>
   );
 };

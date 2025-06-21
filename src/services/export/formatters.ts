@@ -1,253 +1,192 @@
 
-import { getBeijingTime } from '@/utils/beijingTime';
+import type { MeniereRecord } from '@/services/meniereRecordService';
 
-const convertDurationToMinutes = (duration: string): number => {
-  if (!duration) return 0;
-  if (duration.includes('不到5分钟')) return 3;
-  if (duration.includes('5-15分钟')) return 10;
-  if (duration.includes('15-30分钟')) return 22;
-  if (duration.includes('30分钟-1小时')) return 45;
-  if (duration.includes('1-2小时')) return 90;
-  if (duration.includes('超过2小时')) return 150;
-  return 0;
+// 格式化严重程度
+const formatSeverity = (severity: string): string => {
+  const severityMap: { [key: string]: string } = {
+    'mild': '轻微',
+    'moderate': '中度',
+    'severe': '严重',
+    'very-severe': '非常严重'
+  };
+  return severityMap[severity] || severity;
 };
 
-const convertSeverityToNumber = (severity: string): number => {
-  if (!severity) return 0;
-  if (severity === '轻度') return 3;
-  if (severity === '中度') return 6;
-  if (severity === '重度') return 9;
-  return 0;
+// 格式化持续时间
+const formatDuration = (duration: string): string => {
+  const durationMap: { [key: string]: string } = {
+    'few-minutes': '几分钟',
+    'few-hours': '几小时',
+    'half-day': '半天',
+    'full-day': '一整天',
+    'multiple-days': '多天'
+  };
+  return durationMap[duration] || duration;
 };
 
-export const generateJSONFormat = (records: any[], startDate: string, endDate: string) => {
-  const events = records.map(record => {
-    const originalTime = new Date(record.timestamp || record.created_at);
-    const beijingTime = new Date(originalTime.getTime() + (8 * 3600000) - (originalTime.getTimezoneOffset() * 60000));
-    const timestamp = beijingTime.toISOString();
-    
-    if (record.type === 'dizziness') {
-      return {
-        timestamp,
-        eventType: "SymptomLog",
-        details: {
-          type: "Vertigo",
-          durationMinutes: convertDurationToMinutes(record.duration),
-          intensity: convertSeverityToNumber(record.severity),
-          associatedSymptoms: record.symptoms || [],
-          note: record.note || undefined
-        }
-      };
-    } else if (record.type === 'lifestyle') {
-      const events = [];
-      
-      if (record.diet?.length > 0) {
-        events.push({
-          timestamp,
-          eventType: "LifestyleLog",
-          details: {
-            type: "Diet",
-            tags: record.diet,
-            note: record.note || undefined
-          }
-        });
-      }
-      
-      if (record.sleep) {
-        events.push({
-          timestamp,
-          eventType: "LifestyleLog",
-          details: {
-            type: "Sleep",
-            quality: record.sleep,
-            note: record.note || undefined
-          }
-        });
-      }
-      
-      if (record.stress) {
-        events.push({
-          timestamp,
-          eventType: "LifestyleLog",
-          details: {
-            type: "Stress",
-            level: record.stress,
-            note: record.note || undefined
-          }
-        });
-      }
-      
-      return events;
-    } else if (record.type === 'medication') {
-      return {
-        timestamp,
-        eventType: "MedicationLog",
-        details: {
-          medications: record.medications || [],
-          dosage: record.dosage,
-          note: record.note || undefined
-        }
-      };
-    } else if (record.type === 'voice') {
-      return {
-        timestamp,
-        eventType: "VoiceNote",
-        details: {
-          note: record.note || record.data?.note
-        }
-      };
-    } else if (record.type === 'checkin') {
-      return {
-        timestamp,
-        eventType: "DailyCheckin",
-        details: {
-          mood_score: record.data?.mood_score,
-          note: record.data?.note,
-          photo_url: record.data?.photo_url
-        }
-      };
-    } else if (record.type === 'medical') {
-      return {
-        timestamp,
-        eventType: "MedicalRecord",
-        details: {
-          record_type: record.data?.record_type,
-          hospital: record.data?.hospital,
-          doctor: record.data?.doctor,
-          department: record.data?.department,
-          diagnosis: record.data?.diagnosis,
-          symptoms: record.data?.symptoms,
-          prescribed_medications: record.data?.prescribed_medications,
-          notes: record.data?.notes,
-          next_appointment: record.data?.next_appointment
-        }
-      };
-    }
-    
-    return null;
-  }).flat().filter(Boolean);
+// 格式化压力程度
+const formatStress = (stress: string): string => {
+  const stressMap: { [key: string]: string } = {
+    'none': '无压力',
+    'low': '轻微压力',
+    'moderate': '中等压力',
+    'high': '较大压力',
+    'severe': '重度压力'
+  };
+  return stressMap[stress] || stress;
+};
 
-  const currentBeijingTime = getBeijingTime();
-  console.log('导出数据时的北京时间:', currentBeijingTime.toISOString());
-  
+// 格式化睡眠质量
+const formatSleepQuality = (quality: string): string => {
+  const qualityMap: { [key: string]: string } = {
+    'excellent': '非常好',
+    'good': '良好',
+    'fair': '一般',
+    'poor': '较差',
+    'very-poor': '很差'
+  };
+  return qualityMap[quality] || quality;
+};
+
+// 格式化口味偏好
+const formatSaltPreference = (preference: string): string => {
+  const preferenceMap: { [key: string]: string } = {
+    'light': '清淡',
+    'normal': '适中',
+    'salty': '偏咸',
+    'very-salty': '很咸'
+  };
+  return preferenceMap[preference] || preference;
+};
+
+// 格式化时间戳为北京时间
+const formatTimestamp = (timestamp: string): string => {
+  return new Date(timestamp).toLocaleString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+// 生成JSON格式数据
+export const generateJSONFormat = (records: MeniereRecord[], startDate: string, endDate: string) => {
   return {
-    patientId: "MeniereUser01",
-    exportDateRange: {
-      start: new Date(startDate + 'T00:00:00').toISOString(),
-      end: new Date(endDate + 'T23:59:59').toISOString()
+    exportInfo: {
+      exportDate: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
+      dateRange: `${startDate} 至 ${endDate}`,
+      totalRecords: records.length,
+      recordTypes: {
+        dizziness: records.filter(r => r.type === 'dizziness').length,
+        lifestyle: records.filter(r => r.type === 'lifestyle').length,
+        medication: records.filter(r => r.type === 'medication').length,
+        voice: records.filter(r => r.type === 'voice').length
+      }
     },
-    exportedAt: currentBeijingTime.toISOString(),
-    events
+    records: records.map(record => ({
+      id: record.id,
+      type: record.type,
+      timestamp: record.timestamp,
+      beijingTime: formatTimestamp(record.timestamp || ''),
+      severity: record.severity ? formatSeverity(record.severity) : undefined,
+      duration: record.duration ? formatDuration(record.duration) : undefined,
+      symptoms: record.symptoms,
+      diet: record.diet,
+      sleep: record.sleep,
+      stress: record.stress ? formatStress(record.stress) : undefined,
+      medications: record.medications,
+      dosage: record.dosage,
+      note: record.note,
+      additionalData: record.data ? {
+        sleepQuality: record.data.sleep_quality ? formatSleepQuality(record.data.sleep_quality) : undefined,
+        bedTime: record.data.bed_time,
+        wakeTime: record.data.wake_time,
+        waterIntake: record.data.water_intake,
+        exerciseType: record.data.exercise_type,
+        exerciseDuration: record.data.exercise_duration,
+        saltPreference: record.data.salt_preference ? formatSaltPreference(record.data.salt_preference) : undefined,
+        ...record.data
+      } : undefined
+    }))
   };
 };
 
-export const generateTextFormat = (records: any[], startDate: string, endDate: string) => {
-  const currentBeijingTime = getBeijingTime();
-  let text = `梅尼埃症数据记录 (${startDate} - ${endDate})\n`;
-  text += `导出时间: ${currentBeijingTime.toLocaleString('zh-CN')} (北京时间)\n\n`;
-  
-  // 按日期分组 - 使用北京时间
-  const recordsByDate = records.reduce((acc, record) => {
-    const originalTime = new Date(record.timestamp || record.created_at);
-    const beijingTime = new Date(originalTime.getTime() + (8 * 3600000) - (originalTime.getTimezoneOffset() * 60000));
-    const date = beijingTime.toLocaleDateString('zh-CN');
-    if (!acc[date]) acc[date] = [];
-    acc[date].push(record);
-    return acc;
-  }, {});
+// 生成纯文本格式数据
+export const generateTextFormat = (records: MeniereRecord[], startDate: string, endDate: string): string => {
+  const header = `梅尼埃症记录导出报告
+=====================================
+导出时间: ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
+记录时间范围: ${startDate} 至 ${endDate}
+总记录数: ${records.length}
 
-  Object.entries(recordsByDate).forEach(([date, dayRecords]: [string, any[]]) => {
-    text += `**${date}**\n\n`;
+记录类型统计:
+- 眩晕症状记录: ${records.filter(r => r.type === 'dizziness').length} 条
+- 饮食作息记录: ${records.filter(r => r.type === 'lifestyle').length} 条
+- 用药记录: ${records.filter(r => r.type === 'medication').length} 条
+- 语音记录: ${records.filter(r => r.type === 'voice').length} 条
+
+=====================================
+
+详细记录:
+`;
+
+  const recordTexts = records.map((record, index) => {
+    let text = `${index + 1}. 【${getRecordTypeText(record.type)}】\n`;
+    text += `   时间: ${formatTimestamp(record.timestamp || '')}\n`;
     
-    dayRecords.forEach(record => {
-      const originalTime = new Date(record.timestamp || record.created_at);
-      const beijingTime = new Date(originalTime.getTime() + (8 * 3600000) - (originalTime.getTimezoneOffset() * 60000));
-      const time = beijingTime.toLocaleTimeString('zh-CN', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
-      
-      if (record.type === 'dizziness') {
-        text += `- [${time}] 眩晕发作\n`;
-        text += `  持续时间: ${record.duration || '未记录'}\n`;
-        text += `  严重程度: ${record.severity || '未记录'}\n`;
-        if (record.symptoms?.length > 0) {
-          text += `  伴随症状: ${record.symptoms.join(', ')}\n`;
-        }
-        if (record.note) {
-          text += `  备注: ${record.note}\n`;
-        }
-      } else if (record.type === 'lifestyle') {
-        if (record.diet?.length > 0) {
-          text += `- [${time}] 饮食记录: ${record.diet.join(', ')}\n`;
-        }
-        if (record.sleep) {
-          text += `- [${time}] 睡眠质量: ${record.sleep}\n`;
-        }
-        if (record.stress) {
-          text += `- [${time}] 压力水平: ${record.stress}\n`;
-        }
-        if (record.note) {
-          text += `  备注: ${record.note}\n`;
-        }
-      } else if (record.type === 'medication') {
-        text += `- [${time}] 用药记录\n`;
-        if (record.medications?.length > 0) {
-          text += `  药物: ${record.medications.join(', ')}\n`;
-        }
-        if (record.dosage) {
-          text += `  剂量: ${record.dosage}\n`;
-        }
-        if (record.note) {
-          text += `  备注: ${record.note}\n`;
-        }
-      } else if (record.type === 'voice') {
-        text += `- [${time}] 语音记事\n`;
-        text += `  内容: ${record.note || ''}\n`;
-      } else if (record.type === 'checkin') {
-        text += `- [${time}] 每日打卡\n`;
-        if (record.data?.mood_score) {
-          text += `  心情评分: ${record.data.mood_score}/5\n`;
-        }
-        if (record.data?.note) {
-          text += `  备注: ${record.data.note}\n`;
-        }
-        if (record.data?.photo_url) {
-          text += `  照片: ${record.data.photo_url}\n`;
-        }
-      } else if (record.type === 'medical') {
-        text += `- [${time}] 医疗记录 (${record.data?.record_type || '未知类型'})\n`;
-        if (record.data?.hospital) {
-          text += `  医院: ${record.data.hospital}\n`;
-        }
-        if (record.data?.doctor) {
-          text += `  医生: ${record.data.doctor}\n`;
-        }
-        if (record.data?.department) {
-          text += `  科室: ${record.data.department}\n`;
-        }
-        if (record.data?.diagnosis) {
-          text += `  诊断: ${record.data.diagnosis}\n`;
-        }
-        if (record.data?.symptoms) {
-          text += `  症状: ${record.data.symptoms}\n`;
-        }
-        if (record.data?.prescribed_medications?.length > 0) {
-          text += `  处方药物: ${record.data.prescribed_medications.join(', ')}\n`;
-        }
-        if (record.data?.notes) {
-          text += `  备注: ${record.data.notes}\n`;
-        }
-        if (record.data?.next_appointment) {
-          text += `  下次预约: ${record.data.next_appointment}\n`;
-        }
+    // 眩晕记录详情
+    if (record.type === 'dizziness') {
+      if (record.severity) text += `   严重程度: ${formatSeverity(record.severity)}\n`;
+      if (record.duration) text += `   持续时间: ${formatDuration(record.duration)}\n`;
+      if (record.symptoms && record.symptoms.length > 0) {
+        text += `   症状: ${record.symptoms.join(', ')}\n`;
       }
-      
-      text += '\n';
-    });
+    }
     
-    text += '\n';
-  });
+    // 生活方式记录详情
+    if (record.type === 'lifestyle') {
+      if (record.sleep) text += `   睡眠时长: ${record.sleep}\n`;
+      if (record.data?.sleep_quality) text += `   睡眠质量: ${formatSleepQuality(record.data.sleep_quality)}\n`;
+      if (record.data?.bed_time) text += `   入睡时间: ${record.data.bed_time}\n`;
+      if (record.data?.wake_time) text += `   起床时间: ${record.data.wake_time}\n`;
+      if (record.data?.water_intake) text += `   饮水量: ${record.data.water_intake}\n`;
+      if (record.data?.exercise_type) text += `   运动类型: ${record.data.exercise_type}\n`;
+      if (record.data?.exercise_duration) text += `   运动时长: ${record.data.exercise_duration}\n`;
+      if (record.data?.salt_preference) text += `   口味偏好: ${formatSaltPreference(record.data.salt_preference)}\n`;
+      if (record.diet && record.diet.length > 0) {
+        text += `   饮食: ${record.diet.join(', ')}\n`;
+      }
+      if (record.stress) text += `   压力程度: ${formatStress(record.stress)}\n`;
+    }
+    
+    // 用药记录详情
+    if (record.type === 'medication') {
+      if (record.medications && record.medications.length > 0) {
+        text += `   药物: ${record.medications.join(', ')}\n`;
+      }
+      if (record.dosage) text += `   剂量: ${record.dosage}\n`;
+    }
+    
+    // 备注
+    if (record.note) {
+      text += `   备注: ${record.note}\n`;
+    }
+    
+    return text;
+  }).join('\n');
 
-  return text;
+  return header + recordTexts + '\n\n报告结束';
+};
+
+// 获取记录类型的中文名称
+const getRecordTypeText = (type: string): string => {
+  const typeMap: { [key: string]: string } = {
+    'dizziness': '眩晕症状',
+    'lifestyle': '饮食作息',
+    'medication': '用药记录',
+    'voice': '语音记录'
+  };
+  return typeMap[type] || type;
 };
