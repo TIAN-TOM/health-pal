@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import DailyCheckin from "@/components/DailyCheckin";
@@ -28,7 +29,7 @@ import AnnouncementDisplay from "@/components/AnnouncementDisplay";
 import AuthPage from "./AuthPage";
 
 export default function Index() {
-  const { user, loading } = useAuth();
+  const { user, userProfile, userRole, loading } = useAuth();
   const [currentPage, setCurrentPage] = useState<string>("home");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -40,6 +41,11 @@ export default function Index() {
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
     setCurrentPage("history");
+  };
+
+  const handleEmergencyClick = () => {
+    // TODO: Implement emergency functionality
+    console.log("Emergency button clicked");
   };
 
   if (loading) {
@@ -70,11 +76,13 @@ export default function Index() {
       case "voice":
         return <VoiceRecord onBack={() => setCurrentPage("home")} />;
       case "history":
-        return <HistoryView onBack={() => setCurrentPage("home")} selectedDate={selectedDate} />;
+        return <HistoryView onRecordClick={(record) => console.log('Record clicked:', record)} selectedDate={selectedDate} />;
       case "calendar":
-        return <CalendarView onBack={() => setCurrentPage("home")} onDateSelect={handleDateSelect} />;
+        return <CalendarView onDateSelect={handleDateSelect} />;
       case "export":
         return <DataExport onBack={() => setCurrentPage("home")} />;
+      case "daily-data":
+        return <DailyDataHub onBack={() => setCurrentPage("home")} onRecordClick={(record) => console.log('Record clicked:', record)} />;
       case "settings":
         return (
           <Settings
@@ -109,14 +117,24 @@ export default function Index() {
         return (
           <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
             <div className="container mx-auto px-4 py-6 max-w-md">
-              <UserWelcome />
+              <UserWelcome 
+                userDisplayName={userProfile?.full_name || user.email || "用户"}
+                userRole={userRole}
+                onSettingsClick={() => handleNavigation("settings")}
+              />
               <BeijingClock />
               <AnnouncementDisplay />
-              <EmergencyBanner />
-              <DailyDataHub />
+              <EmergencyBanner onEmergencyClick={handleEmergencyClick} />
+              <DailyDataHub 
+                onBack={() => setCurrentPage("home")}
+                onRecordClick={(record) => console.log('Record clicked:', record)}
+              />
               <FunctionCards onNavigate={handleNavigation} />
               <DailyQuote />
-              <NavigationActions onNavigate={handleNavigation} />
+              <NavigationActions 
+                onDataExport={() => handleNavigation("export")}
+                onDailyData={() => handleNavigation("daily-data")}
+              />
             </div>
           </div>
         );

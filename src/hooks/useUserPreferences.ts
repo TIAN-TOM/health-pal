@@ -38,7 +38,25 @@ export const useUserPreferences = () => {
         throw error;
       }
 
-      setPreferences(data || {});
+      // Type-safe mapping from database to interface
+      if (data) {
+        const mappedData: UserPreferences = {
+          id: data.id,
+          gender: data.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say',
+          age: data.age,
+          height: data.height,
+          weight: data.weight,
+          medical_history: data.medical_history,
+          allergies: data.allergies,
+          emergency_contact_name: data.emergency_contact_name,
+          emergency_contact_phone: data.emergency_contact_phone,
+          preferred_language: data.preferred_language,
+          timezone: data.timezone
+        };
+        setPreferences(mappedData);
+      } else {
+        setPreferences({});
+      }
     } catch (error: any) {
       console.error('加载用户偏好设置失败:', error);
       toast({
