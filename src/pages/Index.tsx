@@ -26,21 +26,27 @@ import DailyDataHub from "@/components/DailyDataHub";
 import DailyQuote from "@/components/DailyQuote";
 import BeijingClock from "@/components/BeijingClock";
 import AnnouncementDisplay from "@/components/AnnouncementDisplay";
+import RecordDetail from "@/components/RecordDetail";
 import AuthPage from "./AuthPage";
+import type { Tables } from '@/integrations/supabase/types';
+
+type MeniereRecord = Tables<'meniere_records'>;
 
 export default function Index() {
   const { user, userProfile, userRole, loading } = useAuth();
   const [currentPage, setCurrentPage] = useState<string>("home");
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<MeniereRecord | null>(null);
+  const [navigationSource, setNavigationSource] = useState<string>("home");
 
-  const handleNavigation = (page: string) => {
+  const handleNavigation = (page: string, source: string = "home") => {
     setCurrentPage(page);
-    setSelectedDate(null);
+    setNavigationSource(source);
+    setSelectedRecord(null);
   };
 
-  const handleDateSelect = (date: Date) => {
-    setSelectedDate(date);
-    setCurrentPage("history");
+  const handleRecordClick = (record: MeniereRecord) => {
+    setSelectedRecord(record);
+    setCurrentPage("record-detail");
   };
 
   const handleEmergencyClick = () => {
@@ -76,43 +82,50 @@ export default function Index() {
       case "voice":
         return <VoiceRecord onBack={() => setCurrentPage("home")} />;
       case "history":
-        return <HistoryView onRecordClick={(record) => console.log('Record clicked:', record)} />;
+        return <HistoryView onRecordClick={handleRecordClick} showEnhancedFeatures={true} />;
       case "calendar":
         return <CalendarView />;
       case "export":
         return <DataExport onBack={() => setCurrentPage("home")} />;
       case "daily-data":
-        return <DailyDataHub onBack={() => setCurrentPage("home")} onRecordClick={(record) => console.log('Record clicked:', record)} />;
+        return <DailyDataHub onBack={() => setCurrentPage("home")} onRecordClick={handleRecordClick} />;
+      case "record-detail":
+        return selectedRecord ? (
+          <RecordDetail 
+            record={selectedRecord} 
+            onBack={() => setCurrentPage("history")} 
+          />
+        ) : null;
       case "settings":
         return (
           <Settings
             onBack={() => setCurrentPage("home")}
-            onAdminPanel={() => setCurrentPage("admin")}
-            onEmergencyContacts={() => setCurrentPage("emergency-contacts")}
-            onMedicalRecords={() => setCurrentPage("medical-records")}
-            onEducation={() => setCurrentPage("education")}
-            onMedicationManagement={() => setCurrentPage("medication-management")}
-            onProfileEdit={() => setCurrentPage("profile-edit")}
-            onUserPreferences={() => setCurrentPage("user-preferences")}
-            onUserManual={() => setCurrentPage("user-manual")}
+            onAdminPanel={() => handleNavigation("admin", "settings")}
+            onEmergencyContacts={() => handleNavigation("emergency-contacts", "settings")}
+            onMedicalRecords={() => handleNavigation("medical-records", "settings")}
+            onEducation={() => handleNavigation("education", "settings")}
+            onMedicationManagement={() => handleNavigation("medication-management", "settings")}
+            onProfileEdit={() => handleNavigation("profile-edit", "settings")}
+            onUserPreferences={() => handleNavigation("user-preferences", "settings")}
+            onUserManual={() => handleNavigation("user-manual", "settings")}
           />
         );
       case "user-preferences":
-        return <UserPreferences onBack={() => setCurrentPage("settings")} />;
+        return <UserPreferences onBack={() => setCurrentPage(navigationSource)} />;
       case "user-manual":
-        return <UserManual onBack={() => setCurrentPage("settings")} />;
+        return <UserManual onBack={() => setCurrentPage(navigationSource)} />;
       case "profile-edit":
-        return <ProfileEdit onBack={() => setCurrentPage("settings")} />;
+        return <ProfileEdit onBack={() => setCurrentPage(navigationSource)} />;
       case "admin":
-        return <AdminPanel onBack={() => setCurrentPage("settings")} />;
+        return <AdminPanel onBack={() => setCurrentPage(navigationSource)} />;
       case "emergency-contacts":
-        return <EmergencyContacts onBack={() => setCurrentPage("settings")} />;
+        return <EmergencyContacts onBack={() => setCurrentPage(navigationSource)} />;
       case "medical-records":
-        return <MedicalRecords onBack={() => setCurrentPage("settings")} />;
+        return <MedicalRecords onBack={() => setCurrentPage(navigationSource)} />;
       case "education":
-        return <EducationCenter onBack={() => setCurrentPage("settings")} />;
+        return <EducationCenter onBack={() => setCurrentPage(navigationSource)} />;
       case "medication-management":
-        return <MedicationManagement onBack={() => setCurrentPage("settings")} />;
+        return <MedicationManagement onBack={() => setCurrentPage(navigationSource)} />;
       default:
         return (
           <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -125,7 +138,7 @@ export default function Index() {
               <BeijingClock />
               <AnnouncementDisplay />
               <EmergencyBanner onEmergencyClick={handleEmergencyClick} />
-              <FunctionCards onNavigate={handleNavigation} />
+              <FunctionCards onNavigate={(page) => handleNavigation(page, "home")} />
               <DailyQuote />
               <NavigationActions 
                 onDataExport={() => handleNavigation("export")}

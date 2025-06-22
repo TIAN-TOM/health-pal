@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface FunctionCardsProps {
-  onNavigate: (view: string) => void;
+  onNavigate: (view: string, source?: string) => void;
 }
 
 const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
@@ -14,7 +14,7 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       <Card className="hover:shadow-lg transition-shadow duration-200">
         <CardContent className="p-6">
           <Button 
-            onClick={() => onNavigate('dizziness')} 
+            onClick={() => onNavigate('dizziness', 'home')} 
             className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
             <div className="flex flex-col items-center">
@@ -30,7 +30,7 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       <Card className="hover:shadow-lg transition-shadow duration-200">
         <CardContent className="p-6">
           <Button 
-            onClick={() => onNavigate('lifestyle')} 
+            onClick={() => onNavigate('lifestyle', 'home')} 
             className="w-full bg-green-500 hover:bg-green-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
             <div className="flex flex-col items-center">
@@ -46,7 +46,7 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       <Card className="hover:shadow-lg transition-shadow duration-200">
         <CardContent className="p-6">
           <Button 
-            onClick={() => onNavigate('medication')} 
+            onClick={() => onNavigate('medication', 'home')} 
             className="w-full bg-purple-500 hover:bg-purple-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
             <div className="flex flex-col items-center">
@@ -62,7 +62,7 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       <Card className="hover:shadow-lg transition-shadow duration-200">
         <CardContent className="p-6">
           <Button 
-            onClick={() => onNavigate('medical-records')} 
+            onClick={() => onNavigate('medical-records', 'home')} 
             className="w-full bg-indigo-500 hover:bg-indigo-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
             <div className="flex flex-col items-center">
@@ -78,7 +78,7 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       <Card className="hover:shadow-lg transition-shadow duration-200">
         <CardContent className="p-6">
           <Button 
-            onClick={() => onNavigate('education')} 
+            onClick={() => onNavigate('education', 'home')} 
             className="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
             <div className="flex flex-col items-center">

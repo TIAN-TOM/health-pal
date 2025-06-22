@@ -56,6 +56,10 @@ const Settings = ({
         </div>
 
         <div className="space-y-4">
+          {userRole === 'admin' && onAdminPanel && (
+            <AdminSection onAdminPanel={onAdminPanel} />
+          )}
+          
           <PersonalSettings onProfileEdit={onProfileEdit} />
           
           <UserPreferencesSection onUserPreferences={onUserPreferences} />
@@ -70,10 +74,6 @@ const Settings = ({
           <LearningResources onEducation={onEducation} />
 
           <UserManualSection onUserManual={onUserManual} />
-
-          {userRole === 'admin' && onAdminPanel && (
-            <AdminSection onAdminPanel={onAdminPanel} />
-          )}
 
           <AccountManagement />
 

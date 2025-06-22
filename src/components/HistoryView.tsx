@@ -22,7 +22,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false }: HistoryVie
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [dateFilter, setDateFilter] = useState<string>('7');
+  const [dateFilter, setDateFilter] = useState<string>('recent');
 
   useEffect(() => {
     loadHistory();
@@ -30,18 +30,21 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false }: HistoryVie
 
   useEffect(() => {
     filterRecords();
-  }, [records, searchQuery, typeFilter]);
+  }, [records, searchQuery, typeFilter, dateFilter]);
 
   const loadHistory = async () => {
     try {
       setLoading(true);
       let recordsData;
       
-      if (showEnhancedFeatures && dateFilter !== 'recent') {
+      if (dateFilter === 'all') {
+        // 获取所有记录
+        recordsData = await getRecordsForPeriod(365); // 获取一年内的记录
+      } else if (dateFilter === 'recent') {
+        recordsData = await getRecentRecords(5);
+      } else {
         const days = parseInt(dateFilter);
         recordsData = await getRecordsForPeriod(days);
-      } else {
-        recordsData = await getRecentRecords(showEnhancedFeatures ? 20 : 5);
       }
       
       setRecords(recordsData || []);
@@ -58,6 +61,11 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false }: HistoryVie
     // 类型筛选
     if (typeFilter !== 'all') {
       filtered = filtered.filter(record => record.type === typeFilter);
+    }
+
+    // 时间范围筛选
+    if (dateFilter === 'recent') {
+      filtered = filtered.slice(0, 5);
     }
 
     // 搜索筛选
@@ -177,6 +185,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false }: HistoryVie
                   <SelectItem value="3">近3天</SelectItem>
                   <SelectItem value="7">近7天</SelectItem>
                   <SelectItem value="30">近30天</SelectItem>
+                  <SelectItem value="all">全部时间</SelectItem>
                 </SelectContent>
               </Select>
             </div>
