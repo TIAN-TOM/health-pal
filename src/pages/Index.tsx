@@ -125,10 +125,6 @@ export default function Index() {
               <BeijingClock />
               <AnnouncementDisplay />
               <EmergencyBanner onEmergencyClick={handleEmergencyClick} />
-              <DailyDataHub 
-                onBack={() => setCurrentPage("home")}
-                onRecordClick={(record) => console.log('Record clicked:', record)}
-              />
               <FunctionCards onNavigate={handleNavigation} />
               <DailyQuote />
               <NavigationActions 
