@@ -76,9 +76,9 @@ export default function Index() {
       case "voice":
         return <VoiceRecord onBack={() => setCurrentPage("home")} />;
       case "history":
-        return <HistoryView onRecordClick={(record) => console.log('Record clicked:', record)} selectedDate={selectedDate} />;
+        return <HistoryView onRecordClick={(record) => console.log('Record clicked:', record)} />;
       case "calendar":
-        return <CalendarView onDateSelect={handleDateSelect} />;
+        return <CalendarView />;
       case "export":
         return <DataExport onBack={() => setCurrentPage("home")} />;
       case "daily-data":
