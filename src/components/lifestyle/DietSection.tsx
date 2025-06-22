@@ -55,16 +55,16 @@ const DietSection = ({
   const hasDietData = diet.length > 0 || waterIntake || saltPreference;
 
   const handleFoodToggle = (food: string) => {
-    setDiet(prev => 
-      prev.includes(food) 
-        ? prev.filter(f => f !== food)
-        : [...prev, food]
-    );
+    if (diet.includes(food)) {
+      setDiet(diet.filter(f => f !== food));
+    } else {
+      setDiet([...diet, food]);
+    }
   };
 
   const handleAddCustomFood = () => {
     if (customFood.trim() && !diet.includes(customFood.trim())) {
-      setDiet(prev => [...prev, customFood.trim()]);
+      setDiet([...diet, customFood.trim()]);
       setCustomFood('');
     }
   };
