@@ -59,6 +59,16 @@ const formatSaltPreference = (preference: string): string => {
   return preferenceMap[preference] || preference;
 };
 
+// 格式化性别
+const formatGender = (gender: string): string => {
+  const genderMap: { [key: string]: string } = {
+    'male': '男',
+    'female': '女',
+    'other': '其他'
+  };
+  return genderMap[gender] || gender;
+};
+
 // 格式化时间戳为北京时间
 const formatTimestamp = (timestamp: string): string => {
   return new Date(timestamp).toLocaleString('zh-CN', {
@@ -106,19 +116,29 @@ export const generateJSONFormat = (records: MeniereRecord[], startDate: string, 
         sleepQuality: record.data.sleep_quality ? formatSleepQuality(record.data.sleep_quality) : undefined,
         bedTime: record.data.bed_time,
         wakeTime: record.data.wake_time,
+        sleepDuration: record.data.sleep_duration,
         
-        // 饮食相关数据
+        // 饮食相关数据  
         waterIntake: record.data.water_intake,
         saltPreference: record.data.salt_preference ? formatSaltPreference(record.data.salt_preference) : undefined,
+        mealTimes: record.data.meal_times,
+        dietNotes: record.data.diet_notes,
         
         // 运动相关数据
         exerciseType: record.data.exercise_type,
         exerciseDuration: record.data.exercise_duration,
+        exerciseIntensity: record.data.exercise_intensity,
+        
+        // 心情和情绪数据
+        moodScore: record.data.mood_score,
+        stressLevel: record.data.stress_level,
+        anxietyLevel: record.data.anxiety_level,
         
         // 打卡记录数据
-        moodScore: record.data.mood_score,
         checkinDate: record.data.checkin_date,
         photoUrl: record.data.photo_url,
+        dailyGoals: record.data.daily_goals,
+        accomplishments: record.data.accomplishments,
         
         // 医疗记录数据
         recordType: record.data.record_type,
@@ -129,12 +149,34 @@ export const generateJSONFormat = (records: MeniereRecord[], startDate: string, 
         diagnosis: record.data.diagnosis,
         prescribedMedications: record.data.prescribed_medications,
         nextAppointment: record.data.next_appointment,
-        symptoms: record.data.symptoms,
+        testResults: record.data.test_results,
+        treatmentPlan: record.data.treatment_plan,
         
         // 用药记录的详细数据（增强版）
         medicationTime: record.data.medication_time,
         effectiveness: record.data.effectiveness,
         sideEffects: record.data.side_effects,
+        adherence: record.data.adherence,
+        medicationNotes: record.data.medication_notes,
+        
+        // 环境因素数据
+        weather: record.data.weather,
+        temperature: record.data.temperature,
+        humidity: record.data.humidity,
+        barometricPressure: record.data.barometric_pressure,
+        
+        // 个人信息相关数据
+        age: record.data.age,
+        gender: record.data.gender ? formatGender(record.data.gender) : undefined,
+        height: record.data.height,
+        weight: record.data.weight,
+        medicalHistory: record.data.medical_history,
+        allergies: record.data.allergies,
+        
+        // 语音记录数据
+        audioUrl: record.data.audio_url,
+        transcription: record.data.transcription,
+        audioLength: record.data.audio_length,
         
         // 其他任何数据
         ...record.data
@@ -186,11 +228,13 @@ export const generateTextFormat = (records: MeniereRecord[], startDate: string, 
       if (record.data?.water_intake) text += `   饮水量: ${record.data.water_intake}\n`;
       if (record.data?.exercise_type) text += `   运动类型: ${record.data.exercise_type}\n`;
       if (record.data?.exercise_duration) text += `   运动时长: ${record.data.exercise_duration}\n`;
+      if (record.data?.exercise_intensity) text += `   运动强度: ${record.data.exercise_intensity}\n`;
       if (record.data?.salt_preference) text += `   口味偏好: ${formatSaltPreference(record.data.salt_preference)}\n`;
       if (record.diet && record.diet.length > 0) {
         text += `   饮食: ${record.diet.join(', ')}\n`;
       }
       if (record.stress) text += `   压力程度: ${formatStress(record.stress)}\n`;
+      if (record.data?.mood_score) text += `   心情评分: ${record.data.mood_score}/10\n`;
     }
     
     // 用药记录详情（增强版）
@@ -202,12 +246,15 @@ export const generateTextFormat = (records: MeniereRecord[], startDate: string, 
       if (record.data?.medication_time) text += `   用药时间: ${record.data.medication_time}\n`;
       if (record.data?.effectiveness) text += `   药效评价: ${record.data.effectiveness}\n`;
       if (record.data?.side_effects) text += `   副作用: ${record.data.side_effects}\n`;
+      if (record.data?.adherence) text += `   服药依从性: ${record.data.adherence}\n`;
     }
 
     // 打卡记录详情
     if (record.type === 'checkin') {
       if (record.data?.mood_score) text += `   心情评分: ${record.data.mood_score}/10\n`;
       if (record.data?.checkin_date) text += `   打卡日期: ${record.data.checkin_date}\n`;
+      if (record.data?.daily_goals) text += `   每日目标: ${record.data.daily_goals}\n`;
+      if (record.data?.accomplishments) text += `   完成情况: ${record.data.accomplishments}\n`;
     }
 
     // 医疗记录详情
@@ -222,7 +269,20 @@ export const generateTextFormat = (records: MeniereRecord[], startDate: string, 
       }
       if (record.data?.next_appointment) text += `   下次复诊: ${record.data.next_appointment}\n`;
       if (record.data?.symptoms) text += `   症状描述: ${record.data.symptoms}\n`;
+      if (record.data?.test_results) text += `   检查结果: ${record.data.test_results}\n`;
+      if (record.data?.treatment_plan) text += `   治疗方案: ${record.data.treatment_plan}\n`;
     }
+
+    // 语音记录详情
+    if (record.type === 'voice') {
+      if (record.data?.transcription) text += `   语音转录: ${record.data.transcription}\n`;
+      if (record.data?.audio_length) text += `   音频时长: ${record.data.audio_length}秒\n`;
+    }
+
+    // 环境因素
+    if (record.data?.weather) text += `   天气: ${record.data.weather}\n`;
+    if (record.data?.temperature) text += `   温度: ${record.data.temperature}°C\n`;
+    if (record.data?.humidity) text += `   湿度: ${record.data.humidity}%\n`;
     
     // 备注
     if (record.note) {

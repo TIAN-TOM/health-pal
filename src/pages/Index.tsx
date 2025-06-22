@@ -21,6 +21,7 @@ import MedicationManagement from "@/components/MedicationManagement";
 import UserWelcome from "@/components/UserWelcome";
 import NavigationActions from "@/components/NavigationActions";
 import EmergencyBanner from "@/components/EmergencyBanner";
+import EmergencyMode from "@/components/EmergencyMode";
 import FunctionCards from "@/components/FunctionCards";
 import DailyDataHub from "@/components/DailyDataHub";
 import DailyQuote from "@/components/DailyQuote";
@@ -50,8 +51,7 @@ export default function Index() {
   };
 
   const handleEmergencyClick = () => {
-    // TODO: Implement emergency functionality
-    console.log("Emergency button clicked");
+    setCurrentPage("emergency");
   };
 
   if (loading) {
@@ -71,6 +71,8 @@ export default function Index() {
 
   const renderPage = () => {
     switch (currentPage) {
+      case "emergency":
+        return <EmergencyMode onBack={() => setCurrentPage("home")} />;
       case "checkin":
         return <DailyCheckin onBack={() => setCurrentPage("home")} />;
       case "dizziness":
@@ -78,7 +80,12 @@ export default function Index() {
       case "lifestyle":
         return <LifestyleRecord onBack={() => setCurrentPage("home")} />;
       case "medication":
-        return <MedicationRecord onBack={() => setCurrentPage("home")} />;
+        return (
+          <MedicationRecord 
+            onBack={() => setCurrentPage("home")} 
+            onNavigateToMedicationManagement={() => handleNavigation("medication-management", "medication")}
+          />
+        );
       case "voice":
         return <VoiceRecord onBack={() => setCurrentPage("home")} />;
       case "history":
@@ -121,9 +128,9 @@ export default function Index() {
       case "emergency-contacts":
         return <EmergencyContacts onBack={() => setCurrentPage(navigationSource)} />;
       case "medical-records":
-        return <MedicalRecords onBack={() => setCurrentPage(navigationSource)} />;
+        return <MedicalRecords onBack={() => setCurrentPage(navigationSource === "home" ? "home" : navigationSource)} />;
       case "education":
-        return <EducationCenter onBack={() => setCurrentPage(navigationSource)} />;
+        return <EducationCenter onBack={() => setCurrentPage(navigationSource === "home" ? "home" : navigationSource)} />;
       case "medication-management":
         return <MedicationManagement onBack={() => setCurrentPage(navigationSource)} />;
       default:
