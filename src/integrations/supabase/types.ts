@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      account_deletions: {
+        Row: {
+          deleted_at: string
+          deleted_by: string | null
+          deletion_reason: string | null
+          id: string
+          user_email: string
+          user_id: string
+        }
+        Insert: {
+          deleted_at?: string
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          id?: string
+          user_email: string
+          user_id: string
+        }
+        Update: {
+          deleted_at?: string
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          id?: string
+          user_email?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           admin_id: string
@@ -338,6 +365,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_manual: {
+        Row: {
+          content: string
+          created_at: string
+          icon: string | null
+          id: string
+          order_index: number | null
+          section: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          order_index?: number | null
+          section: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          order_index?: number | null
+          section?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_medications: {
         Row: {
           created_at: string
@@ -362,6 +422,57 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          age: number | null
+          allergies: string[] | null
+          created_at: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          gender: string | null
+          height: number | null
+          id: string
+          medical_history: string[] | null
+          preferred_language: string | null
+          timezone: string | null
+          updated_at: string
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          age?: number | null
+          allergies?: string[] | null
+          created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          gender?: string | null
+          height?: number | null
+          id?: string
+          medical_history?: string[] | null
+          preferred_language?: string | null
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          age?: number | null
+          allergies?: string[] | null
+          created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          gender?: string | null
+          height?: number | null
+          id?: string
+          medical_history?: string[] | null
+          preferred_language?: string | null
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+          weight?: number | null
         }
         Relationships: []
       }

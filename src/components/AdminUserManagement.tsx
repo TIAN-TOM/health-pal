@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import UserListView from './admin/UserListView';
-import UserDetailView from './admin/UserDetailView';
+import EnhancedUserDetailView from './admin/EnhancedUserDetailView';
 import RoleEditModal from './admin/RoleEditModal';
 import { useUserManagement } from '@/hooks/useUserManagement';
 
@@ -28,9 +28,7 @@ const AdminUserManagement = () => {
   const {
     users,
     loading,
-    userCheckins,
     loadUsers,
-    loadUserCheckins,
     updateUserRole,
     deleteUser
   } = useUserManagement();
@@ -67,7 +65,6 @@ const AdminUserManagement = () => {
   const handleViewUser = async (user: UserWithProfile) => {
     setSelectedUser(user);
     setCurrentView('detail');
-    await loadUserCheckins(user.id);
   };
 
   const handleBackToList = () => {
@@ -104,12 +101,9 @@ const AdminUserManagement = () => {
   }
 
   if (currentView === 'detail' && selectedUser) {
-    const checkins = userCheckins[selectedUser.id] || [];
-    
     return (
-      <UserDetailView
+      <EnhancedUserDetailView
         user={selectedUser}
-        checkins={checkins}
         onBack={handleBackToList}
       />
     );

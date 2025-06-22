@@ -4,21 +4,26 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import PersonalSettings from './settings/PersonalSettings';
+import UserPreferencesSection from './settings/UserPreferencesSection';
 import HealthManagement from './settings/HealthManagement';
 import SecurityAndContacts from './settings/SecurityAndContacts';
 import LearningResources from './settings/LearningResources';
+import UserManualSection from './settings/UserManualSection';
 import AdminSection from './settings/AdminSection';
+import AccountManagement from './settings/AccountManagement';
 import DeveloperContact from './settings/DeveloperContact';
 import UserInfo from './settings/UserInfo';
 
 interface SettingsProps {
   onBack: () => void;
   onAdminPanel?: () => void;
-  onEmergencyContacts: () => void;
+  onEmergencyContacts: ()=> void;
   onMedicalRecords: () => void;
   onEducation: () => void;
   onMedicationManagement: () => void;
   onProfileEdit: () => void;
+  onUserPreferences: () => void;
+  onUserManual: () => void;
 }
 
 const Settings = ({ 
@@ -28,14 +33,15 @@ const Settings = ({
   onMedicalRecords, 
   onEducation,
   onMedicationManagement,
-  onProfileEdit
+  onProfileEdit,
+  onUserPreferences,
+  onUserManual
 }: SettingsProps) => {
   const { user, userRole } = useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <div className="container mx-auto px-4 py-6 max-w-md">
-        {/* 返回按钮 */}
         <div className="flex items-center mb-6">
           <Button
             variant="ghost"
@@ -52,6 +58,8 @@ const Settings = ({
         <div className="space-y-4">
           <PersonalSettings onProfileEdit={onProfileEdit} />
           
+          <UserPreferencesSection onUserPreferences={onUserPreferences} />
+          
           <HealthManagement 
             onMedicationManagement={onMedicationManagement}
             onMedicalRecords={onMedicalRecords}
@@ -61,9 +69,13 @@ const Settings = ({
           
           <LearningResources onEducation={onEducation} />
 
+          <UserManualSection onUserManual={onUserManual} />
+
           {userRole === 'admin' && onAdminPanel && (
             <AdminSection onAdminPanel={onAdminPanel} />
           )}
+
+          <AccountManagement />
 
           <DeveloperContact />
 
