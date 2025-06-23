@@ -48,6 +48,9 @@ export const LanguageProvider = ({ children }: LanguageProviderProps) => {
       'required': '必填',
       'optional': '可选',
       'please_select': '请选择',
+      'welcome': '欢迎',
+      'admin_role': '管理员',
+      'user_role': '用户',
       
       // 个人偏好设置
       'user_preferences': '个人偏好设置',
@@ -101,6 +104,9 @@ export const LanguageProvider = ({ children }: LanguageProviderProps) => {
       'required': 'Required',
       'optional': 'Optional',
       'please_select': 'Please select',
+      'welcome': 'Welcome',
+      'admin_role': 'Administrator',
+      'user_role': 'User',
       
       // User Preferences
       'user_preferences': 'User Preferences',
@@ -143,7 +149,12 @@ export const LanguageProvider = ({ children }: LanguageProviderProps) => {
   };
 
   const t = (key: string): string => {
-    return translations[language][key] || key;
+    const translation = translations[language]?.[key];
+    if (!translation) {
+      console.warn(`Translation missing for key: ${key} in language: ${language}`);
+      return key;
+    }
+    return translation;
   };
 
   return (
