@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import DailyCheckin from "@/components/DailyCheckin";
 import DizzinessRecord from "@/components/DizzinessRecord";
@@ -38,21 +38,65 @@ export default function Index() {
   const [currentPage, setCurrentPage] = useState<string>("home");
   const [selectedRecord, setSelectedRecord] = useState<MeniereRecord | null>(null);
   const [navigationSource, setNavigationSource] = useState<string>("home");
+  
+  // 用于记忆页面滚动位置
+  const scrollPositions = useRef<Record<string, number>>({});
+  const homeRef = useRef<HTMLDivElement>(null);
+
+  // 保存当前页面的滚动位置
+  const saveScrollPosition = (page: string) => {
+    if (page === "home" && homeRef.current) {
+      scrollPositions.current[page] = homeRef.current.scrollTop;
+    } else {
+      scrollPositions.current[page] = window.scrollY;
+    }
+  };
+
+  // 恢复页面的滚动位置
+  const restoreScrollPosition = (page: string) => {
+    setTimeout(() => {
+      const savedPosition = scrollPositions.current[page] || 0;
+      if (page === "home" && homeRef.current) {
+        homeRef.current.scrollTo(0, savedPosition);
+      } else {
+        window.scrollTo(0, savedPosition);
+      }
+    }, 50);
+  };
 
   const handleNavigation = (page: string, source: string = "home") => {
+    saveScrollPosition(currentPage);
     setCurrentPage(page);
     setNavigationSource(source);
     setSelectedRecord(null);
+    
+    if (page !== "home") {
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const handleBack = (targetPage: string = "home") => {
+    saveScrollPosition(currentPage);
+    setCurrentPage(targetPage);
+    restoreScrollPosition(targetPage);
   };
 
   const handleRecordClick = (record: MeniereRecord) => {
+    saveScrollPosition(currentPage);
     setSelectedRecord(record);
     setCurrentPage("record-detail");
   };
 
   const handleEmergencyClick = () => {
+    saveScrollPosition(currentPage);
     setCurrentPage("emergency");
   };
+
+  useEffect(() => {
+    if (currentPage === "home") {
+      restoreScrollPosition("home");
+    }
+  }, [currentPage]);
 
   if (loading) {
     return (
@@ -72,41 +116,41 @@ export default function Index() {
   const renderPage = () => {
     switch (currentPage) {
       case "emergency":
-        return <EmergencyMode onBack={() => setCurrentPage("home")} />;
+        return <EmergencyMode onBack={() => handleBack("home")} />;
       case "checkin":
-        return <DailyCheckin onBack={() => setCurrentPage("home")} />;
+        return <DailyCheckin onBack={() => handleBack("home")} />;
       case "dizziness":
-        return <DizzinessRecord onBack={() => setCurrentPage("home")} />;
+        return <DizzinessRecord onBack={() => handleBack("home")} />;
       case "lifestyle":
-        return <LifestyleRecord onBack={() => setCurrentPage("home")} />;
+        return <LifestyleRecord onBack={() => handleBack("home")} />;
       case "medication":
         return (
           <MedicationRecord 
-            onBack={() => setCurrentPage("home")} 
+            onBack={() => handleBack("home")} 
             onNavigateToMedicationManagement={() => handleNavigation("medication-management", "medication")}
           />
         );
       case "voice":
-        return <VoiceRecord onBack={() => setCurrentPage("home")} />;
+        return <VoiceRecord onBack={() => handleBack("home")} />;
       case "history":
         return <HistoryView onRecordClick={handleRecordClick} showEnhancedFeatures={true} />;
       case "calendar":
         return <CalendarView />;
       case "export":
-        return <DataExport onBack={() => setCurrentPage("home")} />;
+        return <DataExport onBack={() => handleBack("home")} />;
       case "daily-data":
-        return <DailyDataHub onBack={() => setCurrentPage("home")} onRecordClick={handleRecordClick} />;
+        return <DailyDataHub onBack={() => handleBack("home")} onRecordClick={handleRecordClick} />;
       case "record-detail":
         return selectedRecord ? (
           <RecordDetail 
             record={selectedRecord} 
-            onBack={() => setCurrentPage("history")} 
+            onBack={() => handleBack("history")} 
           />
         ) : null;
       case "settings":
         return (
           <Settings
-            onBack={() => setCurrentPage("home")}
+            onBack={() => handleBack("home")}
             onAdminPanel={() => handleNavigation("admin", "settings")}
             onEmergencyContacts={() => handleNavigation("emergency-contacts", "settings")}
             onMedicalRecords={() => handleNavigation("medical-records", "settings")}
@@ -118,24 +162,24 @@ export default function Index() {
           />
         );
       case "user-preferences":
-        return <UserPreferences onBack={() => setCurrentPage(navigationSource)} />;
+        return <UserPreferences onBack={() => handleBack(navigationSource)} />;
       case "user-manual":
-        return <UserManual onBack={() => setCurrentPage(navigationSource)} />;
+        return <UserManual onBack={() => handleBack(navigationSource)} />;
       case "profile-edit":
-        return <ProfileEdit onBack={() => setCurrentPage(navigationSource)} />;
+        return <ProfileEdit onBack={() => handleBack(navigationSource)} />;
       case "admin":
-        return <AdminPanel onBack={() => setCurrentPage(navigationSource)} />;
+        return <AdminPanel onBack={() => handleBack(navigationSource)} />;
       case "emergency-contacts":
-        return <EmergencyContacts onBack={() => setCurrentPage(navigationSource)} />;
+        return <EmergencyContacts onBack={() => handleBack(navigationSource)} />;
       case "medical-records":
-        return <MedicalRecords onBack={() => setCurrentPage(navigationSource === "home" ? "home" : navigationSource)} />;
+        return <MedicalRecords onBack={() => handleBack(navigationSource === "home" ? "home" : navigationSource)} />;
       case "education":
-        return <EducationCenter onBack={() => setCurrentPage(navigationSource === "home" ? "home" : navigationSource)} />;
+        return <EducationCenter onBack={() => handleBack(navigationSource === "home" ? "home" : navigationSource)} />;
       case "medication-management":
-        return <MedicationManagement onBack={() => setCurrentPage(navigationSource)} />;
+        return <MedicationManagement onBack={() => handleBack(navigationSource)} />;
       default:
         return (
-          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50" ref={homeRef}>
             <div className="container mx-auto px-4 py-6 max-w-md">
               <UserWelcome 
                 userDisplayName={userProfile?.full_name || user.email || "用户"}

@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, User, Heart, Globe, Save } from 'lucide-react';
+import { User, Heart, Globe, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import PageLayout from '@/components/layout/PageLayout';
 
 interface UserPreferencesProps {
   onBack: () => void;
@@ -56,7 +58,7 @@ const UserPreferences = ({ onBack }: UserPreferencesProps) => {
         age: formData.age ? parseInt(formData.age) : undefined,
         height: formData.height ? parseInt(formData.height) : undefined,
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
-        gender: formData.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say' | undefined,
+        gender: formData.gender || undefined,
         medical_history: medicalHistoryInput ? 
           medicalHistoryInput.split(',').map(item => item.trim()).filter(Boolean) : [],
         allergies: allergiesInput ? 
@@ -65,6 +67,7 @@ const UserPreferences = ({ onBack }: UserPreferencesProps) => {
         timezone: formData.timezone
       };
 
+      console.log('保存数据:', updatedData);
       const success = await savePreferences(updatedData);
       
       if (success) {
@@ -87,36 +90,20 @@ const UserPreferences = ({ onBack }: UserPreferencesProps) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+      <PageLayout title="个人偏好设置" onBack={onBack}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">加载中...</p>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
-      <div className="mb-6">
-        <Button
-          onClick={onBack}
-          variant="ghost"
-          className="text-gray-600 hover:text-gray-800"
-        >
-          <ArrowLeft className="mr-2 h-5 w-5" />
-          返回
-        </Button>
-      </div>
-
-      <div className="max-w-md mx-auto space-y-6">
+    <PageLayout title="个人偏好设置" onBack={onBack}>
+      <div className="space-y-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl text-center text-gray-800">
-              个人偏好设置
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 pt-6">
             {/* 基本信息 */}
             <div className="space-y-4">
               <div className="flex items-center mb-3">
@@ -146,6 +133,7 @@ const UserPreferences = ({ onBack }: UserPreferencesProps) => {
                       <SelectItem value="male">男</SelectItem>
                       <SelectItem value="female">女</SelectItem>
                       <SelectItem value="other">其他</SelectItem>
+                      <SelectItem value="prefer_not_to_say">不愿透露</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -255,7 +243,7 @@ const UserPreferences = ({ onBack }: UserPreferencesProps) => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageLayout>
   );
 };
 
