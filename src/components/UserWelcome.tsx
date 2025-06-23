@@ -1,55 +1,49 @@
 
 import React from 'react';
-import { Heart, Menu, Shield } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface UserWelcomeProps {
   userDisplayName: string;
-  userRole: 'admin' | 'user' | null;
+  userRole?: string;
   onSettingsClick: () => void;
 }
 
 const UserWelcome = ({ userDisplayName, userRole, onSettingsClick }: UserWelcomeProps) => {
-  // 使用固定的种子值确保50%的概率
-  const todayDateNumber = new Date().getDate();
-  const shouldShowWelcomeBack = todayDateNumber % 2 === 0;
+  const { t } = useLanguage();
 
   return (
-    <div className="text-center mb-8">
-      <div className="flex justify-between items-center mb-4 min-h-[48px]">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center leading-tight">
-          <Heart className="mr-2 h-6 w-6 text-blue-600 flex-shrink-0" />
-          <span className="leading-normal">梅尼埃症生活伴侣</span>
-        </h1>
-        <div className="flex items-center space-x-2">
-          {userRole === 'admin' && (
-            <div className="flex items-center text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">
-              <Shield className="h-3 w-3 mr-1" />
-              管理员
-            </div>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onSettingsClick}
-            className="text-gray-600 hover:text-gray-800 border border-gray-300 px-3 py-2 h-auto"
-          >
-            <Menu className="h-4 w-4 mr-1" />
-            <span className="text-sm">设置</span>
-          </Button>
+    <Card className="mb-6">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h2 className="text-xl font-semibold text-gray-800">
+              {t('welcome')}, {userDisplayName}
+            </h2>
+            {userRole && (
+              <p className="text-sm text-gray-600 mt-1">
+                {userRole === 'admin' ? t('admin_role') : t('user_role')}
+              </p>
+            )}
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            <LanguageSwitcher />
+            <Button
+              onClick={onSettingsClick}
+              variant="ghost"
+              size="sm"
+              className="text-gray-600 hover:text-gray-800"
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
-      </div>
-      
-      {shouldShowWelcomeBack ? (
-        <div className="text-gray-600 text-lg leading-relaxed">
-          欢迎回来，{userDisplayName}
-        </div>
-      ) : (
-        <div className="text-gray-600 text-lg leading-relaxed">
-          记录症状，守护健康
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
