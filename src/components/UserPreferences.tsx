@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, User, Heart, Globe, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,7 @@ interface UserPreferencesProps {
 
 const UserPreferences = ({ onBack }: UserPreferencesProps) => {
   const { toast } = useToast();
-  const { preferences, loading, updatePreferences } = useUserPreferences();
+  const { preferences, loading, savePreferences } = useUserPreferences();
   
   const [formData, setFormData] = useState({
     age: '',
@@ -64,12 +63,14 @@ const UserPreferences = ({ onBack }: UserPreferencesProps) => {
           allergiesInput.split(',').map(item => item.trim()).filter(Boolean) : []
       };
 
-      await updatePreferences(updatedData);
+      const success = await savePreferences(updatedData);
       
-      toast({
-        title: "保存成功",
-        description: "个人偏好设置已更新",
-      });
+      if (success) {
+        toast({
+          title: "保存成功",
+          description: "个人偏好设置已更新",
+        });
+      }
     } catch (error) {
       console.error('保存失败:', error);
       toast({
