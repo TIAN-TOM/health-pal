@@ -58,7 +58,7 @@ const UserPreferences = ({ onBack }: UserPreferencesProps) => {
         age: formData.age ? parseInt(formData.age) : undefined,
         height: formData.height ? parseInt(formData.height) : undefined,
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
-        gender: formData.gender || undefined,
+        gender: formData.gender ? formData.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say' : undefined,
         medical_history: medicalHistoryInput ? 
           medicalHistoryInput.split(',').map(item => item.trim()).filter(Boolean) : [],
         allergies: allergiesInput ? 
