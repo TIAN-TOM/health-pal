@@ -53,14 +53,16 @@ const UserPreferences = ({ onBack }: UserPreferencesProps) => {
     setIsLoading(true);
     try {
       const updatedData = {
-        ...formData,
         age: formData.age ? parseInt(formData.age) : undefined,
         height: formData.height ? parseInt(formData.height) : undefined,
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
+        gender: formData.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say' | undefined,
         medical_history: medicalHistoryInput ? 
           medicalHistoryInput.split(',').map(item => item.trim()).filter(Boolean) : [],
         allergies: allergiesInput ? 
-          allergiesInput.split(',').map(item => item.trim()).filter(Boolean) : []
+          allergiesInput.split(',').map(item => item.trim()).filter(Boolean) : [],
+        preferred_language: formData.preferred_language,
+        timezone: formData.timezone
       };
 
       const success = await savePreferences(updatedData);
