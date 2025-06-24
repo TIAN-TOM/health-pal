@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 interface FormData {
   age: string;
@@ -11,13 +10,10 @@ interface FormData {
   weight: string;
   medical_history: string[];
   allergies: string[];
-  preferred_language: string;
-  timezone: string;
 }
 
 export const useUserPreferencesForm = () => {
   const { toast } = useToast();
-  const { t } = useLanguage();
   const { preferences, loading, savePreferences } = useUserPreferences();
   
   const [formData, setFormData] = useState<FormData>({
@@ -26,9 +22,7 @@ export const useUserPreferencesForm = () => {
     height: '',
     weight: '',
     medical_history: [],
-    allergies: [],
-    preferred_language: 'zh-CN',
-    timezone: 'Asia/Shanghai'
+    allergies: []
   });
 
   const [medicalHistoryInput, setMedicalHistoryInput] = useState('');
@@ -43,9 +37,7 @@ export const useUserPreferencesForm = () => {
         height: preferences.height?.toString() || '',
         weight: preferences.weight?.toString() || '',
         medical_history: preferences.medical_history || [],
-        allergies: preferences.allergies || [],
-        preferred_language: preferences.preferred_language || 'zh-CN',
-        timezone: preferences.timezone || 'Asia/Shanghai'
+        allergies: preferences.allergies || []
       });
       setMedicalHistoryInput(preferences.medical_history?.join(', ') || '');
       setAllergiesInput(preferences.allergies?.join(', ') || '');
@@ -67,9 +59,7 @@ export const useUserPreferencesForm = () => {
         medical_history: medicalHistoryInput ? 
           medicalHistoryInput.split(',').map(item => item.trim()).filter(Boolean) : [],
         allergies: allergiesInput ? 
-          allergiesInput.split(',').map(item => item.trim()).filter(Boolean) : [],
-        preferred_language: formData.preferred_language,
-        timezone: formData.timezone
+          allergiesInput.split(',').map(item => item.trim()).filter(Boolean) : []
       };
 
       console.log('Saving preferences:', updatedData);
@@ -77,15 +67,15 @@ export const useUserPreferencesForm = () => {
       
       if (success) {
         toast({
-          title: t('success'),
-          description: t('preferences_saved'),
+          title: '成功',
+          description: '偏好设置已保存',
         });
       }
     } catch (error) {
       console.error('Save failed:', error);
       toast({
-        title: t('error'),
-        description: t('preferences_save_failed'),
+        title: '错误',
+        description: '保存失败，请重试',
         variant: "destructive"
       });
     } finally {

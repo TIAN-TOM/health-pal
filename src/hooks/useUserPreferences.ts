@@ -14,8 +14,6 @@ interface UserPreferences {
   allergies?: string[];
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
-  preferred_language?: string;
-  timezone?: string;
 }
 
 export const useUserPreferences = () => {
@@ -32,13 +30,12 @@ export const useUserPreferences = () => {
         .from('user_preferences')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle(); // 使用 maybeSingle 避免错误
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+      if (error) {
         throw error;
       }
 
-      // Type-safe mapping from database to interface
       if (data) {
         const mappedData: UserPreferences = {
           id: data.id,
@@ -50,8 +47,6 @@ export const useUserPreferences = () => {
           allergies: data.allergies,
           emergency_contact_name: data.emergency_contact_name,
           emergency_contact_phone: data.emergency_contact_phone,
-          preferred_language: data.preferred_language,
-          timezone: data.timezone
         };
         setPreferences(mappedData);
       } else {
@@ -73,14 +68,31 @@ export const useUserPreferences = () => {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
+      // 先检查是否已存在记录
+      const { data: existingData } = await supabase
         .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          ...newPreferences
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (error) throw error;
+      let result;
+      if (existingData) {
+        // 更新现有记录
+        result = await supabase
+          .from('user_preferences')
+          .update(newPreferences)
+          .eq('user_id', user.id);
+      } else {
+        // 插入新记录
+        result = await supabase
+          .from('user_preferences')
+          .insert({
+            user_id: user.id,
+            ...newPreferences
+          });
+      }
+
+      if (result.error) throw result.error;
 
       setPreferences(newPreferences);
       toast({

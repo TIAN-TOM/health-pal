@@ -59,7 +59,44 @@ export const getRecordsByDateRange = async (startDate: Date, endDate: Date): Pro
 
     console.log('获取到的医疗记录数量:', medicalRecords?.length || 0);
 
-    // 合并记录，将打卡记录和医疗记录转换为统一格式
+    // 获取用药记录
+    const { data: medications, error: medicationsError } = await supabase
+      .from('user_medications')
+      .select('*')
+      .eq('user_id', user.id)
+      .gte('created_at', startDate.toISOString())
+      .lte('created_at', endDate.toISOString())
+      .order('created_at', { ascending: false });
+
+    if (medicationsError) {
+      console.error('获取用药记录失败:', medicationsError);
+    }
+
+    console.log('获取到的用药记录数量:', medications?.length || 0);
+
+    // 获取紧急联系人记录
+    const { data: emergencyContacts, error: emergencyError } = await supabase
+      .from('emergency_contacts')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (emergencyError) {
+      console.error('获取紧急联系人失败:', emergencyError);
+    }
+
+    // 获取用户偏好设置
+    const { data: userPrefs, error: prefsError } = await supabase
+      .from('user_preferences')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (prefsError) {
+      console.error('获取用户偏好设置失败:', prefsError);
+    }
+
+    // 合并记录，将所有记录转换为统一格式
     const allRecords: MeniereRecord[] = [...(records || [])].map(record => ({
       id: record.id,
       type: record.type as 'dizziness' | 'lifestyle' | 'medication' | 'voice',
@@ -76,6 +113,7 @@ export const getRecordsByDateRange = async (startDate: Date, endDate: Date): Pro
       dosage: record.dosage
     }));
     
+    // 添加打卡记录
     if (checkins && checkins.length > 0) {
       checkins.forEach(checkin => {
         allRecords.push({
@@ -132,6 +170,89 @@ export const getRecordsByDateRange = async (startDate: Date, endDate: Date): Pro
         });
       });
     }
+
+    // 添加用药管理记录
+    if (medications && medications.length > 0) {
+      medications.forEach(med => {
+        allRecords.push({
+          id: `medication-management-${med.id}`,
+          type: 'medication',
+          timestamp: med.created_at,
+          note: `用药管理 - ${med.name}`,
+          data: {
+            medication_name: med.name,
+            frequency: med.frequency,
+            medication_type: 'management'
+          },
+          severity: undefined,
+          duration: undefined,
+          symptoms: undefined,
+          diet: undefined,
+          sleep: undefined,
+          stress: undefined,
+          medications: [med.name],
+          dosage: med.frequency
+        });
+      });
+    }
+
+    // 添加用户偏好设置信息（作为一条特殊记录）
+    if (userPrefs) {
+      allRecords.push({
+        id: `user-preferences-${userPrefs.id}`,
+        type: 'checkin',
+        timestamp: userPrefs.updated_at,
+        note: '用户基本信息',
+        data: {
+          age: userPrefs.age,
+          gender: userPrefs.gender,
+          height: userPrefs.height,
+          weight: userPrefs.weight,
+          medical_history: userPrefs.medical_history,
+          allergies: userPrefs.allergies,
+          emergency_contact_name: userPrefs.emergency_contact_name,
+          emergency_contact_phone: userPrefs.emergency_contact_phone,
+          record_type: 'user_profile'
+        },
+        severity: undefined,
+        duration: undefined,
+        symptoms: undefined,
+        diet: undefined,
+        sleep: undefined,
+        stress: undefined,
+        medications: undefined,
+        dosage: undefined
+      });
+    }
+
+    // 添加紧急联系人信息
+    if (emergencyContacts && emergencyContacts.length > 0) {
+      emergencyContacts.forEach(contact => {
+        allRecords.push({
+          id: `emergency-contact-${contact.id}`,
+          type: 'checkin',
+          timestamp: contact.created_at,
+          note: `紧急联系人 - ${contact.name}`,
+          data: {
+            contact_name: contact.name,
+            contact_phone: contact.phone,
+            contact_avatar: contact.avatar,
+            record_type: 'emergency_contact'
+          },
+          severity: undefined,
+          duration: undefined,
+          symptoms: undefined,
+          diet: undefined,
+          sleep: undefined,
+          stress: undefined,
+          medications: undefined,
+          dosage: undefined
+        });
+      });
+    }
+
+    // 按时间排序
+    allRecords.sort((a, b) => new Date(b.timestamp || '').getTime() - new Date(a.timestamp || '').getTime());
 
     return allRecords;
   } catch (error) {
