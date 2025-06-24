@@ -9,7 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useToast } from '@/hooks/use-toast';
 import { saveMedicationRecord } from '@/services/meniereRecordService';
 import { Medication, getMedications } from '@/services/medicationsService';
-import { formatBeijingDateTime, getBeijingTime } from '@/utils/beijingTime';
+import { getBeijingTime } from '@/utils/beijingTime';
 
 interface MedicationRecordProps {
   onBack: () => void;
@@ -45,7 +45,6 @@ const MedicationRecord = ({ onBack, onNavigateToMedicationManagement }: Medicati
       setUserMedications(medsData);
     } catch (error) {
       console.error('加载药物失败:', error);
-      // ... keep existing code (fallback medications)
       const fallbackMedications: Medication[] = [
         {
           id: 'fallback-1',
@@ -263,7 +262,7 @@ const MedicationRecord = ({ onBack, onNavigateToMedicationManagement }: Medicati
                 </CardContent>
               </Card>
 
-              {/* 用药时间 */}
+              {/* 用药时间 - 删除当前北京时间显示 */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg text-gray-700 flex items-center">
@@ -278,9 +277,6 @@ const MedicationRecord = ({ onBack, onNavigateToMedicationManagement }: Medicati
                     onChange={(e) => setMedicationTime(e.target.value)}
                     className="w-full"
                   />
-                  <p className="text-sm text-gray-500 mt-2">
-                    当前北京时间: {formatBeijingDateTime()}
-                  </p>
                 </CardContent>
               </Card>
 

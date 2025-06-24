@@ -9,6 +9,7 @@ import {
   formatTimestamp, 
   getRecordTypeText 
 } from './FormatUtils';
+import { extractPersonalInfo } from './PersonalInfoHandler';
 
 export const generateTextFormat = (records: MeniereRecord[], startDate: string, endDate: string): string => {
   const header = `梅尼埃症记录导出报告
@@ -24,13 +25,25 @@ export const generateTextFormat = (records: MeniereRecord[], startDate: string, 
 - 语音记录: ${records.filter(r => r.type === 'voice').length} 条
 - 每日打卡记录: ${records.filter(r => r.type === 'checkin').length} 条
 - 医疗记录: ${records.filter(r => r.type === 'medical').length} 条
+`;
 
+  // 添加个人基本信息
+  const personalInfo = extractPersonalInfo(records);
+
+  const detailsHeader = `
 =====================================
 
 详细记录:
 `;
 
-  const recordTexts = records.map((record, index) => {
+  // 过滤掉个人信息记录，避免重复显示
+  const filteredRecords = records.filter(r => 
+    !(r.data?.record_type === 'user_profile' || 
+      (r.type === 'checkin' && (r.data?.age || r.data?.gender || r.data?.height || r.data?.weight || 
+       r.data?.medical_history || r.data?.allergies)))
+  );
+
+  const recordTexts = filteredRecords.map((record, index) => {
     let text = `${index + 1}. 【${getRecordTypeText(record.type)}】\n`;
     text += `   时间: ${formatTimestamp(record.timestamp || '')}\n`;
     
@@ -76,34 +89,12 @@ export const generateTextFormat = (records: MeniereRecord[], startDate: string, 
       if (record.data?.medication_type) text += `   记录类型: ${record.data.medication_type}\n`;
     }
 
-    // 打卡记录详情
+    // 打卡记录详情 - 修复分类错误，只显示相关医疗信息
     if (record.type === 'checkin') {
       if (record.data?.mood_score) text += `   心情评分: ${record.data.mood_score}/10\n`;
       if (record.data?.checkin_date) text += `   打卡日期: ${record.data.checkin_date}\n`;
       if (record.data?.daily_goals) text += `   每日目标: ${record.data.daily_goals}\n`;
       if (record.data?.accomplishments) text += `   完成情况: ${record.data.accomplishments}\n`;
-      
-      // 用户基本信息
-      if (record.data?.record_type === 'user_profile') {
-        if (record.data?.age) text += `   年龄: ${record.data.age}\n`;
-        if (record.data?.gender) text += `   性别: ${record.data.gender}\n`;
-        if (record.data?.height) text += `   身高: ${record.data.height}cm\n`;
-        if (record.data?.weight) text += `   体重: ${record.data.weight}kg\n`;
-        if (record.data?.medical_history && record.data.medical_history.length > 0) {
-          text += `   既往病史: ${record.data.medical_history.join(', ')}\n`;
-        }
-        if (record.data?.allergies && record.data.allergies.length > 0) {
-          text += `   过敏史: ${record.data.allergies.join(', ')}\n`;
-        }
-        if (record.data?.emergency_contact_name) text += `   紧急联系人: ${record.data.emergency_contact_name}\n`;
-        if (record.data?.emergency_contact_phone) text += `   紧急联系电话: ${record.data.emergency_contact_phone}\n`;
-      }
-      
-      // 紧急联系人信息
-      if (record.data?.record_type === 'emergency_contact') {
-        if (record.data?.contact_name) text += `   联系人姓名: ${record.data.contact_name}\n`;
-        if (record.data?.contact_phone) text += `   联系电话: ${record.data.contact_phone}\n`;
-      }
     }
 
     // 医疗记录详情
@@ -128,10 +119,11 @@ export const generateTextFormat = (records: MeniereRecord[], startDate: string, 
       if (record.data?.audio_length) text += `   音频时长: ${record.data.audio_length}秒\n`;
     }
 
-    // 环境因素
+    // 环境因素（对病情分析有帮助）
     if (record.data?.weather) text += `   天气: ${record.data.weather}\n`;
     if (record.data?.temperature) text += `   温度: ${record.data.temperature}°C\n`;
     if (record.data?.humidity) text += `   湿度: ${record.data.humidity}%\n`;
+    if (record.data?.barometric_pressure) text += `   气压: ${record.data.barometric_pressure}hPa\n`;
     
     // 备注
     if (record.note) {
@@ -141,5 +133,5 @@ export const generateTextFormat = (records: MeniereRecord[], startDate: string, 
     return text;
   }).join('\n');
 
-  return header + recordTexts + '\n\n报告结束';
+  return header + personalInfo + detailsHeader + recordTexts + '\n\n报告结束';
 };

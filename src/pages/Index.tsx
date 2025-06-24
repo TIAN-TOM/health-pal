@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import DailyCheckin from "@/components/DailyCheckin";
@@ -18,14 +17,13 @@ import EmergencyContacts from "@/components/EmergencyContacts";
 import MedicalRecords from "@/components/MedicalRecords";
 import EducationCenter from "@/components/EducationCenter";
 import MedicationManagement from "@/components/MedicationManagement";
-import UserWelcome from "@/components/UserWelcome";
+import UserWelcomeWithClock from "@/components/UserWelcomeWithClock";
 import NavigationActions from "@/components/NavigationActions";
 import EmergencyBanner from "@/components/EmergencyBanner";
 import EmergencyMode from "@/components/EmergencyMode";
 import FunctionCards from "@/components/FunctionCards";
 import DailyDataHub from "@/components/DailyDataHub";
 import DailyQuote from "@/components/DailyQuote";
-import BeijingClock from "@/components/BeijingClock";
 import AnnouncementDisplay from "@/components/AnnouncementDisplay";
 import RecordDetail from "@/components/RecordDetail";
 import AuthPage from "./AuthPage";
@@ -181,12 +179,11 @@ export default function Index() {
         return (
           <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50" ref={homeRef}>
             <div className="container mx-auto px-4 py-6 max-w-md">
-              <UserWelcome 
+              <UserWelcomeWithClock 
                 userDisplayName={userProfile?.full_name || user.email || "用户"}
                 userRole={userRole}
                 onSettingsClick={() => handleNavigation("settings")}
               />
-              <BeijingClock />
               <AnnouncementDisplay />
               <EmergencyBanner onEmergencyClick={handleEmergencyClick} />
               <FunctionCards onNavigate={(page) => handleNavigation(page, "home")} />

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, BookOpen, Stethoscope } from 'lucide-react';
+import { Home, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -70,22 +70,6 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
                 <Stethoscope className="h-6 w-6 text-indigo-600" />
               </div>
               <span className="leading-relaxed">医疗记录管理</span>
-            </div>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardContent className="p-6">
-          <Button 
-            onClick={() => onNavigate('education', 'home')} 
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
-          >
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
-                <BookOpen className="h-6 w-6 text-emerald-600" />
-              </div>
-              <span className="leading-relaxed">科普与心理支持</span>
             </div>
           </Button>
         </CardContent>
