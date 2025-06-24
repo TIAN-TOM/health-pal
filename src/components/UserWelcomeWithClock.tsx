@@ -7,11 +7,10 @@ import { getBeijingTime, getCurrentBeijingTime } from '@/utils/beijingTime';
 
 interface UserWelcomeWithClockProps {
   userDisplayName: string;
-  userRole?: string;
   onSettingsClick: () => void;
 }
 
-const UserWelcomeWithClock = ({ userDisplayName, userRole, onSettingsClick }: UserWelcomeWithClockProps) => {
+const UserWelcomeWithClock = ({ userDisplayName, onSettingsClick }: UserWelcomeWithClockProps) => {
   const [currentTime, setCurrentTime] = useState(getBeijingTime());
 
   useEffect(() => {
@@ -57,11 +56,6 @@ const UserWelcomeWithClock = ({ userDisplayName, userRole, onSettingsClick }: Us
             <h2 className="text-xl font-semibold text-gray-800">
               欢迎, {userDisplayName}
             </h2>
-            {userRole && (
-              <p className="text-sm text-gray-600 mt-1">
-                {userRole === 'admin' ? '管理员' : '用户'}
-              </p>
-            )}
           </div>
           
           <Button

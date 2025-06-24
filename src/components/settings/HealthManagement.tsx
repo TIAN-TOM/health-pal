@@ -1,15 +1,16 @@
 
 import React from 'react';
-import { Pill, FileText, Settings as SettingsIcon } from 'lucide-react';
+import { Pill, FileText, Phone, Settings as SettingsIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface HealthManagementProps {
   onMedicationManagement: () => void;
   onMedicalRecords: () => void;
+  onEmergencyContacts: () => void;
 }
 
-const HealthManagement = ({ onMedicationManagement, onMedicalRecords }: HealthManagementProps) => {
+const HealthManagement = ({ onMedicationManagement, onMedicalRecords, onEmergencyContacts }: HealthManagementProps) => {
   return (
     <Card>
       <CardHeader>
@@ -35,6 +36,15 @@ const HealthManagement = ({ onMedicationManagement, onMedicalRecords }: HealthMa
         >
           <FileText className="h-4 w-4 mr-2" />
           就医记录管理
+        </Button>
+        
+        <Button
+          onClick={onEmergencyContacts}
+          variant="outline"
+          className="w-full justify-start"
+        >
+          <Phone className="h-4 w-4 mr-2" />
+          紧急联系人
         </Button>
       </CardContent>
     </Card>

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Stethoscope } from 'lucide-react';
+import { Home, Stethoscope, Pill } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -51,7 +51,7 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
           >
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-3">
-                <div className="w-6 h-6 bg-purple-500 rounded-full"></div>
+                <Pill className="h-6 w-6 text-purple-600" />
               </div>
               <span className="leading-relaxed">记录用药情况</span>
             </div>

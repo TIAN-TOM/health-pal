@@ -1,124 +1,140 @@
 
 import type { MeniereRecord } from '@/services/meniereRecordService';
-import { 
-  formatSeverity, 
-  formatDuration, 
-  formatStress, 
-  formatSleepQuality, 
-  formatSaltPreference, 
-  formatGender, 
-  formatTimestamp 
-} from './FormatUtils';
+import { formatTimestamp } from './FormatUtils';
 
 export const generateJSONFormat = (records: MeniereRecord[], startDate: string, endDate: string) => {
+  // 过滤掉不相关的记录类型，只保留对分析病情有帮助的信息
+  const relevantRecords = records.filter(record => {
+    // 排除包含个人无关信息的记录
+    if (record.data?.emergency_contacts || 
+        record.data?.contact_name || 
+        record.data?.contact_phone ||
+        record.data?.relationship) {
+      return false;
+    }
+    return true;
+  });
+
+  // 按类型分组记录
+  const groupedRecords = {
+    // 症状记录 - 核心分析数据
+    symptoms: relevantRecords.filter(r => r.type === 'dizziness').map(record => ({
+      timestamp: formatTimestamp(record.timestamp || ''),
+      severity: record.severity,
+      duration: record.duration,
+      symptoms: record.symptoms || [],
+      triggers: record.data?.triggers || [],
+      note: record.note,
+      weather: record.data?.weather,
+      temperature: record.data?.temperature,
+      humidity: record.data?.humidity,
+      barometric_pressure: record.data?.barometric_pressure
+    })),
+
+    // 生活方式记录 - 分析病情相关因素
+    lifestyle: relevantRecords.filter(r => r.type === 'lifestyle').map(record => ({
+      timestamp: formatTimestamp(record.timestamp || ''),
+      sleep_hours: record.sleep,
+      sleep_quality: record.data?.sleep_quality,
+      bed_time: record.data?.bed_time,
+      wake_time: record.data?.wake_time,
+      water_intake: record.data?.water_intake,
+      exercise_type: record.data?.exercise_type,
+      exercise_duration: record.data?.exercise_duration,
+      exercise_intensity: record.data?.exercise_intensity,
+      salt_preference: record.data?.salt_preference,
+      diet: record.diet || [],
+      stress_level: record.stress,
+      mood_score: record.data?.mood_score,
+      note: record.note
+    })),
+
+    // 用药记录 - 治疗效果分析
+    medications: relevantRecords.filter(r => r.type === 'medication').map(record => ({
+      timestamp: formatTimestamp(record.timestamp || ''),
+      medication_name: record.data?.medication_name || (record.medications && record.medications[0]),
+      dosage: record.dosage,
+      frequency: record.data?.frequency,
+      medication_time: record.data?.medication_time,
+      effectiveness: record.data?.effectiveness,
+      side_effects: record.data?.side_effects,
+      adherence: record.data?.adherence,
+      note: record.note
+    })),
+
+    // 每日打卡 - 整体健康状态
+    daily_checkins: relevantRecords.filter(r => r.type === 'checkin' && !r.data?.age && !r.data?.gender).map(record => ({
+      timestamp: formatTimestamp(record.timestamp || ''),
+      mood_score: record.data?.mood_score,
+      daily_goals: record.data?.daily_goals,
+      accomplishments: record.data?.accomplishments,
+      note: record.note
+    })),
+
+    // 医疗记录 - 专业诊断和治疗
+    medical_records: relevantRecords.filter(r => r.type === 'medical').map(record => ({
+      timestamp: formatTimestamp(record.timestamp || ''),
+      hospital: record.data?.hospital,
+      doctor: record.data?.doctor,
+      department: record.data?.department,
+      diagnosis: record.data?.diagnosis,
+      prescribed_medications: record.data?.prescribed_medications || [],
+      next_appointment: record.data?.next_appointment,
+      symptoms_description: record.data?.symptoms,
+      test_results: record.data?.test_results,
+      treatment_plan: record.data?.treatment_plan,
+      note: record.note
+    })),
+
+    // 语音记录 - 症状描述补充
+    voice_records: relevantRecords.filter(r => r.type === 'voice').map(record => ({
+      timestamp: formatTimestamp(record.timestamp || ''),
+      transcription: record.data?.transcription,
+      audio_length: record.data?.audio_length,
+      note: record.note
+    }))
+  };
+
+  // 提取患者基本信息（用于分析参考）
+  const personalInfo = records.find(r => 
+    r.data?.record_type === 'user_profile' || 
+    (r.data?.age || r.data?.gender || r.data?.height || r.data?.weight)
+  );
+
+  const patientProfile = personalInfo?.data ? {
+    age: personalInfo.data.age,
+    gender: personalInfo.data.gender,
+    height: personalInfo.data.height,
+    weight: personalInfo.data.weight,
+    medical_history: personalInfo.data.medical_history || [],
+    allergies: personalInfo.data.allergies || []
+  } : null;
+
+  // 生成分析友好的数据结构
   return {
-    exportInfo: {
-      exportDate: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
-      dateRange: `${startDate} 至 ${endDate}`,
-      totalRecords: records.length,
-      recordTypes: {
-        dizziness: records.filter(r => r.type === 'dizziness').length,
-        lifestyle: records.filter(r => r.type === 'lifestyle').length,
-        medication: records.filter(r => r.type === 'medication').length,
-        voice: records.filter(r => r.type === 'voice').length,
-        checkin: records.filter(r => r.type === 'checkin').length,
-        medical: records.filter(r => r.type === 'medical').length
+    export_info: {
+      export_time: new Date().toISOString(),
+      date_range: {
+        start: startDate,
+        end: endDate
+      },
+      total_records: relevantRecords.length,
+      record_counts: {
+        symptoms: groupedRecords.symptoms.length,
+        lifestyle: groupedRecords.lifestyle.length,
+        medications: groupedRecords.medications.length,
+        daily_checkins: groupedRecords.daily_checkins.length,
+        medical_records: groupedRecords.medical_records.length,
+        voice_records: groupedRecords.voice_records.length
       }
     },
-    records: records.map(record => ({
-      id: record.id,
-      type: record.type,
-      timestamp: record.timestamp,
-      beijingTime: formatTimestamp(record.timestamp || ''),
-      severity: record.severity ? formatSeverity(record.severity) : undefined,
-      duration: record.duration ? formatDuration(record.duration) : undefined,
-      symptoms: record.symptoms,
-      diet: record.diet,
-      sleep: record.sleep,
-      stress: record.stress ? formatStress(record.stress) : undefined,
-      medications: record.medications,
-      dosage: record.dosage,
-      note: record.note,
-      additionalData: record.data ? {
-        // 睡眠相关数据
-        sleepQuality: record.data.sleep_quality ? formatSleepQuality(record.data.sleep_quality) : undefined,
-        bedTime: record.data.bed_time,
-        wakeTime: record.data.wake_time,
-        sleepDuration: record.data.sleep_duration,
-        
-        // 饮食相关数据  
-        waterIntake: record.data.water_intake,
-        saltPreference: record.data.salt_preference ? formatSaltPreference(record.data.salt_preference) : undefined,
-        mealTimes: record.data.meal_times,
-        dietNotes: record.data.diet_notes,
-        
-        // 运动相关数据
-        exerciseType: record.data.exercise_type,
-        exerciseDuration: record.data.exercise_duration,
-        exerciseIntensity: record.data.exercise_intensity,
-        
-        // 心情和情绪数据
-        moodScore: record.data.mood_score,
-        stressLevel: record.data.stress_level,
-        anxietyLevel: record.data.anxiety_level,
-        
-        // 打卡记录数据
-        checkinDate: record.data.checkin_date,
-        photoUrl: record.data.photo_url,
-        dailyGoals: record.data.daily_goals,
-        accomplishments: record.data.accomplishments,
-        
-        // 医疗记录数据
-        recordType: record.data.record_type,
-        date: record.data.date,
-        hospital: record.data.hospital,
-        doctor: record.data.doctor,
-        department: record.data.department,
-        diagnosis: record.data.diagnosis,
-        prescribedMedications: record.data.prescribed_medications,
-        nextAppointment: record.data.next_appointment,
-        testResults: record.data.test_results,
-        treatmentPlan: record.data.treatment_plan,
-        
-        // 用药记录的详细数据
-        medicationTime: record.data.medication_time,
-        effectiveness: record.data.effectiveness,
-        sideEffects: record.data.side_effects,
-        adherence: record.data.adherence,
-        medicationNotes: record.data.medication_notes,
-        medicationName: record.data.medication_name,
-        frequency: record.data.frequency,
-        medicationType: record.data.medication_type,
-        
-        // 环境因素数据
-        weather: record.data.weather,
-        temperature: record.data.temperature,
-        humidity: record.data.humidity,
-        barometricPressure: record.data.barometric_pressure,
-        
-        // 个人信息相关数据
-        age: record.data.age,
-        gender: record.data.gender ? formatGender(record.data.gender) : undefined,
-        height: record.data.height,
-        weight: record.data.weight,
-        medicalHistory: record.data.medical_history,
-        allergies: record.data.allergies,
-        emergencyContactName: record.data.emergency_contact_name,
-        emergencyContactPhone: record.data.emergency_contact_phone,
-        
-        // 联系人信息
-        contactName: record.data.contact_name,
-        contactPhone: record.data.contact_phone,
-        contactAvatar: record.data.contact_avatar,
-        
-        // 语音记录数据
-        audioUrl: record.data.audio_url,
-        transcription: record.data.transcription,
-        audioLength: record.data.audio_length,
-        
-        // 其他任何数据
-        ...record.data
-      } : undefined
-    }))
+    patient_profile: patientProfile,
+    health_data: groupedRecords,
+    analysis_notes: [
+      "此数据专为AI分析优化，包含梅尼埃症状、生活方式、用药和医疗记录",
+      "数据已排除个人联系信息等无关分析的内容",
+      "时间戳均为北京时间格式",
+      "建议重点关注症状严重程度与生活方式、用药的关联性"
+    ]
   };
 };

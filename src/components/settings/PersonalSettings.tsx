@@ -1,14 +1,15 @@
 
 import React from 'react';
-import { User } from 'lucide-react';
+import { User, Settings as SettingsIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface PersonalSettingsProps {
   onProfileEdit: () => void;
+  onUserPreferences: () => void;
 }
 
-const PersonalSettings = ({ onProfileEdit }: PersonalSettingsProps) => {
+const PersonalSettings = ({ onProfileEdit, onUserPreferences }: PersonalSettingsProps) => {
   return (
     <Card>
       <CardHeader>
@@ -25,6 +26,15 @@ const PersonalSettings = ({ onProfileEdit }: PersonalSettingsProps) => {
         >
           <User className="h-4 w-4 mr-2" />
           编辑个人资料
+        </Button>
+        
+        <Button
+          onClick={onUserPreferences}
+          variant="outline"
+          className="w-full justify-start"
+        >
+          <SettingsIcon className="h-4 w-4 mr-2" />
+          偏好设置
         </Button>
       </CardContent>
     </Card>

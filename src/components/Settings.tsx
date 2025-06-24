@@ -4,14 +4,9 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import PersonalSettings from './settings/PersonalSettings';
-import UserPreferencesSection from './settings/UserPreferencesSection';
 import HealthManagement from './settings/HealthManagement';
-import SecurityAndContacts from './settings/SecurityAndContacts';
-import LearningResources from './settings/LearningResources';
-import UserManualSection from './settings/UserManualSection';
-import AdminSection from './settings/AdminSection';
+import SystemSettings from './settings/SystemSettings';
 import AccountManagement from './settings/AccountManagement';
-import DeveloperContact from './settings/DeveloperContact';
 import UserInfo from './settings/UserInfo';
 
 interface SettingsProps {
@@ -56,28 +51,21 @@ const Settings = ({
         </div>
 
         <div className="space-y-4">
-          {userRole === 'admin' && onAdminPanel && (
-            <AdminSection onAdminPanel={onAdminPanel} />
-          )}
-          
-          <PersonalSettings onProfileEdit={onProfileEdit} />
-          
-          <UserPreferencesSection onUserPreferences={onUserPreferences} />
+          <PersonalSettings onProfileEdit={onProfileEdit} onUserPreferences={onUserPreferences} />
           
           <HealthManagement 
             onMedicationManagement={onMedicationManagement}
             onMedicalRecords={onMedicalRecords}
+            onEmergencyContacts={onEmergencyContacts}
           />
           
-          <SecurityAndContacts onEmergencyContacts={onEmergencyContacts} />
-          
-          <LearningResources onEducation={onEducation} />
-
-          <UserManualSection onUserManual={onUserManual} />
+          <SystemSettings 
+            onEducation={onEducation}
+            onUserManual={onUserManual}
+            onAdminPanel={userRole === 'admin' ? onAdminPanel : undefined}
+          />
 
           <AccountManagement />
-
-          <DeveloperContact />
 
           <UserInfo userEmail={user?.email} userRole={userRole} />
         </div>

@@ -181,7 +181,6 @@ export default function Index() {
             <div className="container mx-auto px-4 py-6 max-w-md">
               <UserWelcomeWithClock 
                 userDisplayName={userProfile?.full_name || user.email || "用户"}
-                userRole={userRole}
                 onSettingsClick={() => handleNavigation("settings")}
               />
               <AnnouncementDisplay />
