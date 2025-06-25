@@ -3,7 +3,7 @@ import { ExportData } from './EnhancedDataFetcher';
 import { formatDate, formatDateTime, formatMoodScore } from './FormatUtils';
 import { extractPersonalInfo } from './PersonalInfoHandler';
 
-export const generateTextFormat = (data: ExportData, userInfo: any): string => {
+export const generateTextFormat = (data: ExportData): string => {
   const sections: string[] = [];
   
   // 添加个人信息

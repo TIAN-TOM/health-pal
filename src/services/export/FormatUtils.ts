@@ -62,6 +62,34 @@ export const formatGender = (gender: string): string => {
   return genderMap[gender] || gender;
 };
 
+export const formatDate = (date: string): string => {
+  return new Date(date).toLocaleDateString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+};
+
+export const formatDateTime = (timestamp: string): string => {
+  return new Date(timestamp).toLocaleString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+export const formatMoodScore = (score: number): string => {
+  if (score >= 5) return `${score}/5 (非常好)`;
+  if (score >= 4) return `${score}/5 (良好)`;
+  if (score >= 3) return `${score}/5 (一般)`;
+  if (score >= 2) return `${score}/5 (较差)`;
+  return `${score}/5 (很差)`;
+};
+
 export const formatTimestamp = (timestamp: string): string => {
   return new Date(timestamp).toLocaleString('zh-CN', {
     timeZone: 'Asia/Shanghai',

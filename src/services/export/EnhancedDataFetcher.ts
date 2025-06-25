@@ -13,9 +13,12 @@ export interface ExportData {
   userMedications: any[];
 }
 
-export const getRecordsByDateRange = async (startDate: string, endDate: string): Promise<ExportData> => {
+export const getRecordsByDateRange = async (startDate: Date, endDate: Date): Promise<ExportData> => {
   try {
-    console.log('获取数据范围:', startDate, '到', endDate);
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+    
+    console.log('获取数据范围:', startDateStr, '到', endDateStr);
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -31,11 +34,11 @@ export const getRecordsByDateRange = async (startDate: string, endDate: string):
       medicalRecords,
       userMedications
     ] = await Promise.all([
-      getMeniereRecords(startDate, endDate),
-      getDailyCheckins(startDate, endDate),
-      getDiabetesRecords(startDate, endDate),
+      getMeniereRecords(startDateStr, endDateStr),
+      getDailyCheckins(startDateStr, endDateStr),
+      getDiabetesRecords(startDateStr, endDateStr),
       getEmergencyContacts(),
-      getMedicalRecords(startDate, endDate),
+      getMedicalRecords(startDateStr, endDateStr),
       getUserMedications()
     ]);
 

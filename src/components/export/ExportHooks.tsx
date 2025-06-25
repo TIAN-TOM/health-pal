@@ -81,11 +81,21 @@ export const useDataExport = () => {
       console.log('快速导出时间范围:', startDateStr, '-', endDateStr);
       console.log('使用的北京时间:', now.toISOString());
       
-      const records = await getRecordsByDateRange(timeLimit, now);
+      const data = await getRecordsByDateRange(timeLimit, now);
 
-      console.log('导出的记录数量:', records?.length || 0);
+      console.log('导出的记录数量:', {
+        meniere: data.meniereRecords?.length || 0,
+        checkins: data.dailyCheckins?.length || 0,
+        diabetes: data.diabetesRecords?.length || 0,
+        medical: data.medicalRecords?.length || 0
+      });
 
-      if (!records || records.length === 0) {
+      const totalRecords = (data.meniereRecords?.length || 0) + 
+                          (data.dailyCheckins?.length || 0) + 
+                          (data.diabetesRecords?.length || 0) + 
+                          (data.medicalRecords?.length || 0);
+
+      if (totalRecords === 0) {
         toast({
           title: '提示',
           description: '选定时间范围内没有记录数据',
@@ -94,10 +104,10 @@ export const useDataExport = () => {
       }
 
       if (format === 'json') {
-        const jsonData = generateJSONFormat(records, startDateStr, endDateStr);
-        await copyToClipboard(JSON.stringify(jsonData, null, 2), 'json');
+        const jsonData = generateJSONFormat(data);
+        await copyToClipboard(jsonData, 'json');
       } else {
-        const textData = generateTextFormat(records, startDateStr, endDateStr);
+        const textData = generateTextFormat(data);
         await copyToClipboard(textData, 'text');
       }
 
@@ -139,11 +149,21 @@ export const useDataExport = () => {
     try {
       console.log('自定义导出时间范围:', startDate, '-', endDate);
       
-      const records = await getRecordsByDateRange(start, end);
+      const data = await getRecordsByDateRange(start, end);
 
-      console.log('导出的记录数量:', records?.length || 0);
+      console.log('导出的记录数量:', {
+        meniere: data.meniereRecords?.length || 0,
+        checkins: data.dailyCheckins?.length || 0,
+        diabetes: data.diabetesRecords?.length || 0,
+        medical: data.medicalRecords?.length || 0
+      });
 
-      if (!records || records.length === 0) {
+      const totalRecords = (data.meniereRecords?.length || 0) + 
+                          (data.dailyCheckins?.length || 0) + 
+                          (data.diabetesRecords?.length || 0) + 
+                          (data.medicalRecords?.length || 0);
+
+      if (totalRecords === 0) {
         toast({
           title: '提示',
           description: '选定时间范围内没有记录数据',
@@ -152,10 +172,10 @@ export const useDataExport = () => {
       }
 
       if (format === 'json') {
-        const jsonData = generateJSONFormat(records, startDate, endDate);
-        await copyToClipboard(JSON.stringify(jsonData, null, 2), 'json');
+        const jsonData = generateJSONFormat(data);
+        await copyToClipboard(jsonData, 'json');
       } else {
-        const textData = generateTextFormat(records, startDate, endDate);
+        const textData = generateTextFormat(data);
         await copyToClipboard(textData, 'text');
       }
 

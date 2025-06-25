@@ -1,20 +1,16 @@
 
 import { ExportData } from './EnhancedDataFetcher';
 
-export const generateJSONFormat = (data: ExportData, userInfo: any): string => {
+export const generateJSONFormat = (data: ExportData): string => {
   // 构建导出的数据结构，只包含医疗相关信息
   const exportData = {
     患者基本信息: {
-      年龄: userInfo?.age || '未填写',
-      性别: userInfo?.gender || '未填写',
-      身高: userInfo?.height ? `${userInfo.height}cm` : '未填写',
-      体重: userInfo?.weight ? `${userInfo.weight}kg` : '未填写',
-      过敏史: userInfo?.allergies && userInfo.allergies.length > 0 
-        ? userInfo.allergies 
-        : '无记录',
-      既往病史: userInfo?.medical_history && userInfo.medical_history.length > 0 
-        ? userInfo.medical_history 
-        : '无记录'
+      年龄: '从记录中读取',
+      性别: '从记录中读取',
+      身高: '从记录中读取',
+      体重: '从记录中读取',
+      过敏史: '从记录中读取',
+      既往病史: '从记录中读取'
     },
     
     糖尿病管理记录: data.diabetesRecords?.map(record => ({
