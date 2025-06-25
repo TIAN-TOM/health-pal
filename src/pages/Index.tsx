@@ -1,7 +1,9 @@
+
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import DailyCheckin from "@/components/DailyCheckin";
 import DizzinessRecord from "@/components/DizzinessRecord";
+import DiabetesRecord from "@/components/DiabetesRecord";
 import LifestyleRecord from "@/components/LifestyleRecord";
 import MedicationRecord from "@/components/MedicationRecord";
 import VoiceRecord from "@/components/VoiceRecord";

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Stethoscope, Pill } from 'lucide-react';
+import { Home, Stethoscope, Pill, Activity, Smile } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -14,6 +14,22 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       <Card className="hover:shadow-lg transition-shadow duration-200">
         <CardContent className="p-6">
           <Button 
+            onClick={() => onNavigate('checkin', 'home')} 
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+                <Smile className="h-6 w-6 text-purple-600" />
+              </div>
+              <span className="leading-relaxed">每日打卡</span>
+            </div>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="hover:shadow-lg transition-shadow duration-200">
+        <CardContent className="p-6">
+          <Button 
             onClick={() => onNavigate('dizziness', 'home')} 
             className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
@@ -22,6 +38,22 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
                 <div className="w-6 h-6 bg-blue-500 rounded-full animate-pulse"></div>
               </div>
               <span className="leading-relaxed">记录眩晕症状</span>
+            </div>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="hover:shadow-lg transition-shadow duration-200">
+        <CardContent className="p-6">
+          <Button 
+            onClick={() => onNavigate('diabetes', 'home')} 
+            className="w-full bg-red-500 hover:bg-red-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-3">
+                <Activity className="h-6 w-6 text-red-600" />
+              </div>
+              <span className="leading-relaxed">糖尿病管理记录</span>
             </div>
           </Button>
         </CardContent>
@@ -47,11 +79,11 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
         <CardContent className="p-6">
           <Button 
             onClick={() => onNavigate('medication', 'home')} 
-            className="w-full bg-purple-500 hover:bg-purple-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
             <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-3">
-                <Pill className="h-6 w-6 text-purple-600" />
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-3">
+                <Pill className="h-6 w-6 text-orange-600" />
               </div>
               <span className="leading-relaxed">记录用药情况</span>
             </div>

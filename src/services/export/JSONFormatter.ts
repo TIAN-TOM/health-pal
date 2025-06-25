@@ -1,140 +1,100 @@
 
-import type { MeniereRecord } from '@/services/meniereRecordService';
-import { formatTimestamp } from './FormatUtils';
+import { ExportData } from './EnhancedDataFetcher';
 
-export const generateJSONFormat = (records: MeniereRecord[], startDate: string, endDate: string) => {
-  // 过滤掉不相关的记录类型，只保留对分析病情有帮助的信息
-  const relevantRecords = records.filter(record => {
-    // 排除包含个人无关信息的记录
-    if (record.data?.emergency_contacts || 
-        record.data?.contact_name || 
-        record.data?.contact_phone ||
-        record.data?.relationship) {
-      return false;
-    }
-    return true;
-  });
-
-  // 按类型分组记录
-  const groupedRecords = {
-    // 症状记录 - 核心分析数据
-    symptoms: relevantRecords.filter(r => r.type === 'dizziness').map(record => ({
-      timestamp: formatTimestamp(record.timestamp || ''),
-      severity: record.severity,
-      duration: record.duration,
-      symptoms: record.symptoms || [],
-      triggers: record.data?.triggers || [],
-      note: record.note,
-      weather: record.data?.weather,
-      temperature: record.data?.temperature,
-      humidity: record.data?.humidity,
-      barometric_pressure: record.data?.barometric_pressure
-    })),
-
-    // 生活方式记录 - 分析病情相关因素
-    lifestyle: relevantRecords.filter(r => r.type === 'lifestyle').map(record => ({
-      timestamp: formatTimestamp(record.timestamp || ''),
-      sleep_hours: record.sleep,
-      sleep_quality: record.data?.sleep_quality,
-      bed_time: record.data?.bed_time,
-      wake_time: record.data?.wake_time,
-      water_intake: record.data?.water_intake,
-      exercise_type: record.data?.exercise_type,
-      exercise_duration: record.data?.exercise_duration,
-      exercise_intensity: record.data?.exercise_intensity,
-      salt_preference: record.data?.salt_preference,
-      diet: record.diet || [],
-      stress_level: record.stress,
-      mood_score: record.data?.mood_score,
-      note: record.note
-    })),
-
-    // 用药记录 - 治疗效果分析
-    medications: relevantRecords.filter(r => r.type === 'medication').map(record => ({
-      timestamp: formatTimestamp(record.timestamp || ''),
-      medication_name: record.data?.medication_name || (record.medications && record.medications[0]),
-      dosage: record.dosage,
-      frequency: record.data?.frequency,
-      medication_time: record.data?.medication_time,
-      effectiveness: record.data?.effectiveness,
-      side_effects: record.data?.side_effects,
-      adherence: record.data?.adherence,
-      note: record.note
-    })),
-
-    // 每日打卡 - 整体健康状态
-    daily_checkins: relevantRecords.filter(r => r.type === 'checkin' && !r.data?.age && !r.data?.gender).map(record => ({
-      timestamp: formatTimestamp(record.timestamp || ''),
-      mood_score: record.data?.mood_score,
-      daily_goals: record.data?.daily_goals,
-      accomplishments: record.data?.accomplishments,
-      note: record.note
-    })),
-
-    // 医疗记录 - 专业诊断和治疗
-    medical_records: relevantRecords.filter(r => r.type === 'medical').map(record => ({
-      timestamp: formatTimestamp(record.timestamp || ''),
-      hospital: record.data?.hospital,
-      doctor: record.data?.doctor,
-      department: record.data?.department,
-      diagnosis: record.data?.diagnosis,
-      prescribed_medications: record.data?.prescribed_medications || [],
-      next_appointment: record.data?.next_appointment,
-      symptoms_description: record.data?.symptoms,
-      test_results: record.data?.test_results,
-      treatment_plan: record.data?.treatment_plan,
-      note: record.note
-    })),
-
-    // 语音记录 - 症状描述补充
-    voice_records: relevantRecords.filter(r => r.type === 'voice').map(record => ({
-      timestamp: formatTimestamp(record.timestamp || ''),
-      transcription: record.data?.transcription,
-      audio_length: record.data?.audio_length,
-      note: record.note
-    }))
-  };
-
-  // 提取患者基本信息（用于分析参考）
-  const personalInfo = records.find(r => 
-    r.data?.record_type === 'user_profile' || 
-    (r.data?.age || r.data?.gender || r.data?.height || r.data?.weight)
-  );
-
-  const patientProfile = personalInfo?.data ? {
-    age: personalInfo.data.age,
-    gender: personalInfo.data.gender,
-    height: personalInfo.data.height,
-    weight: personalInfo.data.weight,
-    medical_history: personalInfo.data.medical_history || [],
-    allergies: personalInfo.data.allergies || []
-  } : null;
-
-  // 生成分析友好的数据结构
-  return {
-    export_info: {
-      export_time: new Date().toISOString(),
-      date_range: {
-        start: startDate,
-        end: endDate
-      },
-      total_records: relevantRecords.length,
-      record_counts: {
-        symptoms: groupedRecords.symptoms.length,
-        lifestyle: groupedRecords.lifestyle.length,
-        medications: groupedRecords.medications.length,
-        daily_checkins: groupedRecords.daily_checkins.length,
-        medical_records: groupedRecords.medical_records.length,
-        voice_records: groupedRecords.voice_records.length
-      }
+export const generateJSONFormat = (data: ExportData, userInfo: any): string => {
+  // 构建导出的数据结构，只包含医疗相关信息
+  const exportData = {
+    患者基本信息: {
+      年龄: userInfo?.age || '未填写',
+      性别: userInfo?.gender || '未填写',
+      身高: userInfo?.height ? `${userInfo.height}cm` : '未填写',
+      体重: userInfo?.weight ? `${userInfo.weight}kg` : '未填写',
+      过敏史: userInfo?.allergies && userInfo.allergies.length > 0 
+        ? userInfo.allergies 
+        : '无记录',
+      既往病史: userInfo?.medical_history && userInfo.medical_history.length > 0 
+        ? userInfo.medical_history 
+        : '无记录'
     },
-    patient_profile: patientProfile,
-    health_data: groupedRecords,
-    analysis_notes: [
-      "此数据专为AI分析优化，包含梅尼埃症状、生活方式、用药和医疗记录",
-      "数据已排除个人联系信息等无关分析的内容",
-      "时间戳均为北京时间格式",
-      "建议重点关注症状严重程度与生活方式、用药的关联性"
-    ]
+    
+    糖尿病管理记录: data.diabetesRecords?.map(record => ({
+      记录时间: record.timestamp,
+      血糖值: `${record.blood_sugar} mmol/L`,
+      测量时机: getMeasurementTimeText(record.measurement_time),
+      胰岛素剂量: record.insulin_dose || '未使用',
+      药物: record.medication || '无',
+      饮食记录: record.diet || '无记录',
+      运动记录: record.exercise || '无记录',
+      备注: record.note || '无'
+    })) || [],
+
+    眩晕症状记录: data.meniereRecords?.filter(r => r.type === 'dizziness').map(record => ({
+      记录时间: record.timestamp,
+      持续时间: record.duration,
+      严重程度: record.severity,
+      症状表现: record.symptoms || [],
+      备注: record.note || '无'
+    })) || [],
+
+    饮食作息记录: data.meniereRecords?.filter(r => r.type === 'lifestyle').map(record => ({
+      记录时间: record.timestamp,
+      饮食情况: record.diet || [],
+      睡眠质量: record.sleep,
+      压力水平: record.stress,
+      备注: record.note || '无'
+    })) || [],
+
+    用药记录: data.meniereRecords?.filter(r => r.type === 'medication').map(record => ({
+      记录时间: record.timestamp,
+      药物名称: record.medications || [],
+      用药剂量: record.dosage,
+      备注: record.note || '无'
+    })) || [],
+
+    每日心情记录: data.dailyCheckins?.map(checkin => ({
+      日期: checkin.checkin_date,
+      心情评分: `${checkin.mood_score}/5`,
+      当日感想: checkin.note || '无记录'
+    })) || [],
+
+    医疗就诊记录: data.medicalRecords?.map(record => ({
+      就诊日期: record.date,
+      记录类型: getRecordTypeText(record.record_type),
+      医院: record.hospital || '未记录',
+      医生: record.doctor || '未记录',
+      科室: record.department || '未记录',
+      诊断结果: record.diagnosis || '未记录',
+      症状描述: record.symptoms || '未记录',
+      处方药物: record.prescribed_medications || [],
+      医生建议: record.notes || '无',
+      下次复诊: record.next_appointment || '无安排'
+    })) || [],
+
+    常用药物清单: data.userMedications?.map(med => ({
+      药物名称: med.name,
+      服用频率: med.frequency || '未设置'
+    })) || []
   };
+
+  return JSON.stringify(exportData, null, 2);
+};
+
+const getMeasurementTimeText = (time: string): string => {
+  const timeMap: Record<string, string> = {
+    'before_meal': '餐前',
+    'after_meal': '餐后',
+    'fasting': '空腹',
+    'bedtime': '睡前',
+    'other': '其他'
+  };
+  return timeMap[time] || time;
+};
+
+const getRecordTypeText = (type: string): string => {
+  const typeMap: Record<string, string> = {
+    'visit': '就诊',
+    'diagnosis': '诊断',
+    'prescription': '处方'
+  };
+  return typeMap[type] || type;
 };
