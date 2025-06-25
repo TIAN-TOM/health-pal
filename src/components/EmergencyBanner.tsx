@@ -15,7 +15,7 @@ const EmergencyBanner = ({ onEmergencyClick }: EmergencyBannerProps) => {
         className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xl font-bold py-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200"
       >
         <AlertCircle className="mr-3 h-6 w-6" />
-        头晕不舒服，点这里
+        身体不适需要帮助
       </Button>
     </div>
   );

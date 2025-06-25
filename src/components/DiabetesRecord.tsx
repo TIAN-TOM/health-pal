@@ -51,7 +51,7 @@ const DiabetesRecord = ({ onBack }: DiabetesRecordProps) => {
 
       toast({
         title: "记录保存成功",
-        description: "糖尿病管理记录已保存",
+        description: "血糖记录已保存",
       });
 
       // 重置表单
@@ -86,13 +86,13 @@ const DiabetesRecord = ({ onBack }: DiabetesRecordProps) => {
             <ArrowLeft className="h-4 w-4 mr-1" />
             返回
           </Button>
-          <h1 className="text-xl font-bold text-gray-800">糖尿病管理记录</h1>
+          <h1 className="text-xl font-bold text-gray-800">血糖记录</h1>
         </div>
 
         <Card className="mb-4">
           <CardHeader>
             <CardTitle className="flex items-center text-lg">
-              <Activity className="h-5 w-5 mr-2 text-red-600" />
+              <Activity className="h-5 w-5 mr-2 text-teal-600" />
               血糖监测
             </CardTitle>
             <div className="flex items-center text-sm text-gray-600">
@@ -184,7 +184,7 @@ const DiabetesRecord = ({ onBack }: DiabetesRecordProps) => {
             <Button 
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full bg-red-600 hover:bg-red-700"
+              className="w-full bg-teal-600 hover:bg-teal-700"
             >
               <Save className="h-4 w-4 mr-2" />
               {loading ? '保存中...' : '保存记录'}

@@ -47,13 +47,13 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
         <CardContent className="p-6">
           <Button 
             onClick={() => onNavigate('diabetes', 'home')} 
-            className="w-full bg-red-500 hover:bg-red-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
+            className="w-full bg-teal-500 hover:bg-teal-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
             <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-3">
-                <Activity className="h-6 w-6 text-red-600" />
+              <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mb-3">
+                <Activity className="h-6 w-6 text-teal-600" />
               </div>
-              <span className="leading-relaxed">糖尿病管理记录</span>
+              <span className="leading-relaxed">记录血糖情况</span>
             </div>
           </Button>
         </CardContent>

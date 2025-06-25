@@ -13,7 +13,7 @@ export const generateJSONFormat = (data: ExportData): string => {
       既往病史: '从记录中读取'
     },
     
-    糖尿病管理记录: data.diabetesRecords?.map(record => ({
+    血糖管理记录: data.diabetesRecords?.map(record => ({
       记录时间: record.timestamp,
       血糖值: `${record.blood_sugar} mmol/L`,
       测量时机: getMeasurementTimeText(record.measurement_time),
@@ -69,6 +69,12 @@ export const generateJSONFormat = (data: ExportData): string => {
     常用药物清单: data.userMedications?.map(med => ({
       药物名称: med.name,
       服用频率: med.frequency || '未设置'
+    })) || [],
+
+    紧急联系人: data.emergencyContacts?.map(contact => ({
+      姓名: contact.name,
+      电话: contact.phone,
+      头像: contact.avatar || '👤'
     })) || []
   };
 

@@ -12,9 +12,9 @@ export const generateTextFormat = (data: ExportData): string => {
     sections.push(personalInfoSection);
   }
 
-  // 糖尿病管理记录
+  // 血糖管理记录
   if (data.diabetesRecords && data.diabetesRecords.length > 0) {
-    sections.push("=== 糖尿病管理记录 ===");
+    sections.push("=== 血糖管理记录 ===");
     data.diabetesRecords.forEach((record, index) => {
       sections.push(`${index + 1}. ${formatDateTime(record.timestamp)}`);
       sections.push(`   血糖值: ${record.blood_sugar} mmol/L (${getMeasurementTimeText(record.measurement_time)})`);
@@ -134,6 +134,16 @@ export const generateTextFormat = (data: ExportData): string => {
       if (record.next_appointment) {
         sections.push(`   下次预约: ${formatDate(record.next_appointment)}`);
       }
+      sections.push("");
+    });
+  }
+
+  // 紧急联系人
+  if (data.emergencyContacts && data.emergencyContacts.length > 0) {
+    sections.push("=== 紧急联系人 ===");
+    data.emergencyContacts.forEach((contact, index) => {
+      sections.push(`${index + 1}. ${contact.name}`);
+      sections.push(`   电话: ${contact.phone}`);
       sections.push("");
     });
   }
