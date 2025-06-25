@@ -129,6 +129,51 @@ export type Database = {
         }
         Relationships: []
       }
+      diabetes_records: {
+        Row: {
+          blood_sugar: number
+          created_at: string
+          diet: string | null
+          exercise: string | null
+          id: string
+          insulin_dose: string | null
+          measurement_time: string
+          medication: string | null
+          note: string | null
+          timestamp: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blood_sugar: number
+          created_at?: string
+          diet?: string | null
+          exercise?: string | null
+          id?: string
+          insulin_dose?: string | null
+          measurement_time?: string
+          medication?: string | null
+          note?: string | null
+          timestamp?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blood_sugar?: number
+          created_at?: string
+          diet?: string | null
+          exercise?: string | null
+          id?: string
+          insulin_dose?: string | null
+          measurement_time?: string
+          medication?: string | null
+          note?: string | null
+          timestamp?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       education_articles: {
         Row: {
           category: string
