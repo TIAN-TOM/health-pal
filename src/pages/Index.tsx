@@ -121,6 +121,8 @@ export default function Index() {
         return <DailyCheckin onBack={() => handleBack("home")} />;
       case "dizziness":
         return <DizzinessRecord onBack={() => handleBack("home")} />;
+      case "diabetes":
+        return <DiabetesRecord onBack={() => handleBack("home")} />;
       case "lifestyle":
         return <LifestyleRecord onBack={() => handleBack("home")} />;
       case "medication":
