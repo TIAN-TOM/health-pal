@@ -1,13 +1,13 @@
 
 import { ExportData } from './EnhancedDataFetcher';
 import { formatDate, formatDateTime, formatMoodScore } from './FormatUtils';
-import { handlePersonalInfo } from './PersonalInfoHandler';
+import { extractPersonalInfo } from './PersonalInfoHandler';
 
 export const generateTextFormat = (data: ExportData, userInfo: any): string => {
   const sections: string[] = [];
   
   // 添加个人信息
-  const personalInfoSection = handlePersonalInfo(userInfo);
+  const personalInfoSection = extractPersonalInfo(data.meniereRecords || []);
   if (personalInfoSection) {
     sections.push(personalInfoSection);
   }
