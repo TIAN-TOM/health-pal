@@ -32,7 +32,9 @@ export default function Index() {
     setTimeout(() => {
       const savedPosition = scrollPositions.current[page] || 0;
       if (page === "home" && homeRef.current) {
-        homeRef.current.scrollTo(0, savedPosition);
+        // 如果没有保存的位置，滚动到功能卡片区域（大约300px）
+        const targetPosition = savedPosition > 0 ? savedPosition : 300;
+        homeRef.current.scrollTo(0, targetPosition);
       } else {
         window.scrollTo(0, savedPosition);
       }
@@ -53,7 +55,11 @@ export default function Index() {
   const handleBack = (targetPage: string = "home") => {
     saveScrollPosition(currentPage);
     setCurrentPage(targetPage);
-    restoreScrollPosition(targetPage);
+    if (targetPage === "home") {
+      restoreScrollPosition(targetPage);
+    } else {
+      restoreScrollPosition(targetPage);
+    }
   };
 
   const handleRecordClick = (record: MeniereRecord) => {

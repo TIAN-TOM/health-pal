@@ -1,4 +1,3 @@
-
 import React from 'react';
 import DailyCheckin from '@/components/DailyCheckin';
 import DizzinessRecord from '@/components/DizzinessRecord';
@@ -21,6 +20,7 @@ import MedicationManagement from '@/components/MedicationManagement';
 import EmergencyMode from '@/components/EmergencyMode';
 import DailyDataHub from '@/components/DailyDataHub';
 import RecordDetail from '@/components/RecordDetail';
+import Games from '@/components/Games';
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
@@ -62,6 +62,8 @@ const PageRenderer = ({
       );
     case "voice":
       return <VoiceRecord onBack={() => onBack("home")} />;
+    case "games":
+      return <Games onBack={() => onBack("home")} />;
     case "history":
       return <HistoryView onRecordClick={onRecordClick} showEnhancedFeatures={true} />;
     case "calendar":
