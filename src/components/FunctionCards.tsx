@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Stethoscope, Pill, Activity, Smile, Gamepad2 } from 'lucide-react';
+import { Smile, FileText, Stethoscope, Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useClickSound } from '@/hooks/useClickSound';
@@ -38,62 +38,14 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       <Card className="hover:shadow-lg transition-shadow duration-200">
         <CardContent className="p-6">
           <Button 
-            onClick={() => handleNavigateWithSound('dizziness', 'home')} 
+            onClick={() => handleNavigateWithSound('record-hub', 'home')} 
             className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                <div className="w-6 h-6 bg-blue-500 rounded-full animate-pulse"></div>
+                <FileText className="h-6 w-6 text-blue-600" />
               </div>
-              <span className="leading-relaxed">记录眩晕症状</span>
-            </div>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardContent className="p-6">
-          <Button 
-            onClick={() => handleNavigateWithSound('diabetes', 'home')} 
-            className="w-full bg-teal-500 hover:bg-teal-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
-          >
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mb-3">
-                <Activity className="h-6 w-6 text-teal-600" />
-              </div>
-              <span className="leading-relaxed">记录血糖情况</span>
-            </div>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardContent className="p-6">
-          <Button 
-            onClick={() => handleNavigateWithSound('lifestyle', 'home')} 
-            className="w-full bg-green-500 hover:bg-green-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
-          >
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
-                <Home className="h-6 w-6 text-green-600" />
-              </div>
-              <span className="leading-relaxed">记录饮食与作息</span>
-            </div>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardContent className="p-6">
-          <Button 
-            onClick={() => handleNavigateWithSound('medication', 'home')} 
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
-          >
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-3">
-                <Pill className="h-6 w-6 text-orange-600" />
-              </div>
-              <span className="leading-relaxed">记录用药情况</span>
+              <span className="leading-relaxed">健康记录</span>
             </div>
           </Button>
         </CardContent>

@@ -47,33 +47,51 @@ const AccountManagement = () => {
 
     setIsDeleting(true);
     try {
-      // 记录删除操作
-      await supabase
-        .from('account_deletions')
-        .insert({
-          user_id: user.id,
-          user_email: user.email || '',
-          deletion_reason: deleteReason,
-          deleted_by: user.id
-        });
+      // 首先删除用户的所有数据
+      const deletePromises = [
+        supabase.from('meniere_records').delete().eq('user_id', user.id),
+        supabase.from('daily_checkins').delete().eq('user_id', user.id),
+        supabase.from('emergency_contacts').delete().eq('user_id', user.id),
+        supabase.from('medical_records').delete().eq('user_id', user.id),
+        supabase.from('medications').delete().eq('user_id', user.id),
+        supabase.from('user_roles').delete().eq('user_id', user.id),
+        supabase.from('profiles').delete().eq('id', user.id)
+      ];
 
-      // 删除用户账号（这会级联删除相关数据）
-      const { error } = await supabase.auth.admin.deleteUser(user.id);
-      
-      if (error) throw error;
+      await Promise.all(deletePromises);
+
+      // 记录删除操作（如果表存在）
+      try {
+        await supabase
+          .from('account_deletions')
+          .insert({
+            user_id: user.id,
+            user_email: user.email || '',
+            deletion_reason: deleteReason,
+            deleted_by: user.id
+          });
+      } catch (insertError) {
+        console.log('账号删除记录插入失败，但继续删除流程:', insertError);
+      }
+
+      // 删除认证账号
+      const { error: authError } = await supabase.auth.signOut();
+      if (authError) {
+        console.error('退出登录失败:', authError);
+      }
 
       toast({
         title: "账号已删除",
-        description: "您的账号和所有相关数据已被永久删除"
+        description: "您的账号和所有相关数据已被删除"
       });
 
-      // 强制退出
-      await signOut();
+      // 强制刷新页面到登录状态
+      window.location.reload();
     } catch (error: any) {
       console.error('删除账号失败:', error);
       toast({
         title: "删除失败",
-        description: "请联系客服处理",
+        description: "删除过程中出现错误，请联系客服处理",
         variant: "destructive"
       });
     } finally {

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -132,7 +131,7 @@ const Gomoku = ({ onBack }: GomokuProps) => {
     return bestMove;
   }, [checkWin, evaluatePosition]);
 
-  const handleCellClick = (row: number, col: number) => {
+  const handleIntersectionClick = (row: number, col: number) => {
     if (board[row][col] !== EMPTY || gameStatus !== 'playing' || currentPlayer !== PLAYER) {
       return;
     }
@@ -158,7 +157,20 @@ const Gomoku = ({ onBack }: GomokuProps) => {
 
     // AI 回合
     setTimeout(() => {
-      const [aiRow, aiCol] = findBestMove(newBoard);
+      // 简化AI逻辑，降低难度
+      const emptyCells: [number, number][] = [];
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+          if (newBoard[r][c] === EMPTY) {
+            emptyCells.push([r, c]);
+          }
+        }
+      }
+      
+      // 随机选择一个空位，降低AI难度
+      const randomIndex = Math.floor(Math.random() * emptyCells.length);
+      const [aiRow, aiCol] = emptyCells[randomIndex];
+      
       newBoard[aiRow][aiCol] = AI;
       setBoard([...newBoard]);
 
@@ -200,57 +212,102 @@ const Gomoku = ({ onBack }: GomokuProps) => {
   return (
     <div className="max-w-4xl mx-auto">
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="text-center mb-4">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                <span className="font-semibold">您: {scores.player}</span>
+                <User className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="font-semibold text-sm sm:text-base">您: {scores.player}</span>
               </div>
-              <div className="text-lg font-bold">{getStatusText()}</div>
+              <div className="text-sm sm:text-lg font-bold">{getStatusText()}</div>
               <div className="flex items-center gap-2">
-                <Bot className="h-5 w-5" />
-                <span className="font-semibold">电脑: {scores.ai}</span>
+                <Bot className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="font-semibold text-sm sm:text-base">电脑: {scores.ai}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-center mb-4">
-            <div 
-              className="grid grid-cols-15 gap-0 border-2 border-gray-800 bg-yellow-100 p-2 rounded"
-              style={{ 
-                gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
-                maxWidth: '600px',
-                aspectRatio: '1'
-              }}
-            >
-              {board.map((row, rowIndex) =>
-                row.map((cell, colIndex) => (
-                  <button
-                    key={`${rowIndex}-${colIndex}`}
-                    className="w-8 h-8 border border-gray-400 flex items-center justify-center text-lg font-bold hover:bg-yellow-200 transition-colors"
-                    onClick={() => handleCellClick(rowIndex, colIndex)}
-                    disabled={gameStatus !== 'playing' || currentPlayer !== PLAYER}
-                  >
-                    {getCellContent(cell)}
-                  </button>
-                ))
-              )}
+          <div className="flex justify-center mb-4 overflow-x-auto">
+            <div className="relative bg-yellow-100 p-2 rounded border-2 border-gray-800 min-w-fit">
+              <svg
+                width="360"
+                height="360"
+                viewBox="0 0 360 360"
+                className="w-full max-w-[360px] h-auto"
+                style={{ aspectRatio: '1' }}
+              >
+                {/* 绘制棋盘线条 */}
+                {Array.from({ length: BOARD_SIZE }, (_, i) => (
+                  <g key={`lines-${i}`}>
+                    {/* 横线 */}
+                    <line
+                      x1={12}
+                      y1={12 + i * 24}
+                      x2={348}
+                      y2={12 + i * 24}
+                      stroke="#654321"
+                      strokeWidth="1"
+                    />
+                    {/* 竖线 */}
+                    <line
+                      x1={12 + i * 24}
+                      y1={12}
+                      x2={12 + i * 24}
+                      y2={348}
+                      stroke="#654321"
+                      strokeWidth="1"
+                    />
+                  </g>
+                ))}
+                
+                {/* 绘制棋盘上的棋子和交叉点 */}
+                {board.map((row, rowIndex) =>
+                  row.map((cell, colIndex) => (
+                    <g key={`${rowIndex}-${colIndex}`}>
+                      {/* 可点击的交叉点区域 */}
+                      <circle
+                        cx={12 + colIndex * 24}
+                        cy={12 + rowIndex * 24}
+                        r="10"
+                        fill="transparent"
+                        stroke="transparent"
+                        className="cursor-pointer hover:fill-gray-200"
+                        onClick={() => handleIntersectionClick(rowIndex, colIndex)}
+                        style={{ 
+                          pointerEvents: cell === EMPTY && gameStatus === 'playing' && currentPlayer === PLAYER ? 'auto' : 'none' 
+                        }}
+                      />
+                      
+                      {/* 棋子 */}
+                      {cell !== EMPTY && (
+                        <circle
+                          cx={12 + colIndex * 24}
+                          cy={12 + rowIndex * 24}
+                          r="8"
+                          fill={cell === PLAYER ? "#000" : "#fff"}
+                          stroke={cell === PLAYER ? "#000" : "#333"}
+                          strokeWidth="1"
+                        />
+                      )}
+                    </g>
+                  ))
+                )}
+              </svg>
             </div>
           </div>
 
-          <div className="flex justify-center gap-4">
-            <Button onClick={resetGame} variant="outline">
+          <div className="flex justify-center gap-2 sm:gap-4">
+            <Button onClick={resetGame} variant="outline" size="sm">
               <RotateCcw className="h-4 w-4 mr-2" />
               重新开始
             </Button>
-            <Button onClick={resetScores} variant="outline">
+            <Button onClick={resetScores} variant="outline" size="sm">
               重置分数
             </Button>
           </div>
 
-          <div className="mt-4 text-center text-sm text-gray-600">
-            <p>连成5个同色棋子即可获胜</p>
+          <div className="mt-4 text-center text-xs sm:text-sm text-gray-600">
+            <p>点击线条交叉点下棋，连成5个同色棋子即可获胜</p>
             <p>⚫ 代表您的棋子，⚪ 代表电脑的棋子</p>
           </div>
         </CardContent>

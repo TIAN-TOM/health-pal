@@ -1,3 +1,4 @@
+
 import React from 'react';
 import DailyCheckin from '@/components/DailyCheckin';
 import DizzinessRecord from '@/components/DizzinessRecord';
@@ -21,6 +22,7 @@ import EmergencyMode from '@/components/EmergencyMode';
 import DailyDataHub from '@/components/DailyDataHub';
 import RecordDetail from '@/components/RecordDetail';
 import Games from '@/components/Games';
+import RecordHub from '@/components/RecordHub';
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
@@ -47,16 +49,18 @@ const PageRenderer = ({
       return <EmergencyMode onBack={() => onBack("home")} />;
     case "checkin":
       return <DailyCheckin onBack={() => onBack("home")} />;
+    case "record-hub":
+      return <RecordHub onBack={() => onBack("home")} onNavigate={onNavigation} />;
     case "dizziness":
-      return <DizzinessRecord onBack={() => onBack("home")} />;
+      return <DizzinessRecord onBack={() => onBack("record-hub")} />;
     case "diabetes":
-      return <DiabetesRecord onBack={() => onBack("home")} />;
+      return <DiabetesRecord onBack={() => onBack("record-hub")} />;
     case "lifestyle":
-      return <LifestyleRecord onBack={() => onBack("home")} />;
+      return <LifestyleRecord onBack={() => onBack("record-hub")} />;
     case "medication":
       return (
         <MedicationRecord 
-          onBack={() => onBack("home")} 
+          onBack={() => onBack("record-hub")} 
           onNavigateToMedicationManagement={() => onNavigation("medication-management", "medication")}
         />
       );

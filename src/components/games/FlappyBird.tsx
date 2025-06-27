@@ -19,11 +19,11 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
   const gameRef = useRef({
     bird: { x: 50, y: 200, velocity: 0 },
     pipes: [] as Array<{ x: number; topHeight: number; passed: boolean }>,
-    gameSpeed: 2,
-    gravity: 0.5,
-    jumpForce: -8,
+    gameSpeed: 1.5, // 降低游戏速度
+    gravity: 0.3, // 降低重力
+    jumpForce: -6, // 降低跳跃力度
     pipeWidth: 60,
-    pipeGap: 150,
+    pipeGap: 180, // 增加管道间隙
     animationId: 0
   });
 
@@ -73,9 +73,9 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
     ctx.arc(game.bird.x, game.bird.y, 15, 0, Math.PI * 2);
     ctx.fill();
 
-    // 生成管道
-    if (game.pipes.length === 0 || game.pipes[game.pipes.length - 1].x < canvas.width - 200) {
-      const topHeight = Math.random() * (canvas.height - game.pipeGap - 100) + 50;
+    // 生成管道 - 增加间距
+    if (game.pipes.length === 0 || game.pipes[game.pipes.length - 1].x < canvas.width - 250) {
+      const topHeight = Math.random() * (canvas.height - game.pipeGap - 120) + 60;
       game.pipes.push({
         x: canvas.width,
         topHeight,
@@ -100,11 +100,11 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
         setScore(prev => prev + 1);
       }
 
-      // 碰撞检测
+      // 碰撞检测 - 稍微放宽碰撞范围
       if (
-        game.bird.x + 15 > pipe.x &&
-        game.bird.x - 15 < pipe.x + game.pipeWidth &&
-        (game.bird.y - 15 < pipe.topHeight || game.bird.y + 15 > pipe.topHeight + game.pipeGap)
+        game.bird.x + 12 > pipe.x &&
+        game.bird.x - 12 < pipe.x + game.pipeWidth &&
+        (game.bird.y - 12 < pipe.topHeight || game.bird.y + 12 > pipe.topHeight + game.pipeGap)
       ) {
         setGameState('gameOver');
       }
@@ -155,11 +155,11 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
   return (
     <div className="max-w-2xl mx-auto">
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="text-center mb-4">
             <div className="flex justify-between items-center mb-4">
-              <div className="text-lg font-semibold">得分: {score}</div>
-              <div className="text-lg font-semibold">最高分: {highScore}</div>
+              <div className="text-sm sm:text-lg font-semibold">得分: {score}</div>
+              <div className="text-sm sm:text-lg font-semibold">最高分: {highScore}</div>
             </div>
           </div>
 
@@ -168,16 +168,16 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
               ref={canvasRef}
               width={400}
               height={300}
-              className="border border-gray-300 rounded-lg mx-auto block cursor-pointer"
+              className="border border-gray-300 rounded-lg mx-auto block cursor-pointer w-full max-w-[400px] h-auto"
               onClick={jump}
-              style={{ maxWidth: '100%' }}
+              style={{ aspectRatio: '400/300' }}
             />
 
             {gameState === 'idle' && (
               <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
                 <div className="text-center text-white">
-                  <h3 className="text-xl font-bold mb-2">飞鸟游戏</h3>
-                  <p className="mb-4">点击屏幕或按空格键让小鸟飞翔</p>
+                  <h3 className="text-lg sm:text-xl font-bold mb-2">飞鸟游戏</h3>
+                  <p className="mb-4 text-sm sm:text-base">点击屏幕或按空格键让小鸟飞翔</p>
                   <Button onClick={startGame} className="bg-blue-500 hover:bg-blue-600">
                     <Play className="h-4 w-4 mr-2" />
                     开始游戏
@@ -189,17 +189,17 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
             {gameState === 'gameOver' && (
               <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
                 <div className="text-center text-white">
-                  <h3 className="text-xl font-bold mb-2">游戏结束</h3>
-                  <p className="mb-2">得分: {score}</p>
+                  <h3 className="text-lg sm:text-xl font-bold mb-2">游戏结束</h3>
+                  <p className="mb-2 text-sm sm:text-base">得分: {score}</p>
                   {score === highScore && score > 0 && (
-                    <p className="mb-4 text-yellow-300">🎉 新纪录！</p>
+                    <p className="mb-4 text-yellow-300 text-sm sm:text-base">🎉 新纪录！</p>
                   )}
                   <div className="flex gap-2 justify-center">
-                    <Button onClick={startGame} className="bg-blue-500 hover:bg-blue-600">
+                    <Button onClick={startGame} className="bg-blue-500 hover:bg-blue-600 text-sm">
                       <Play className="h-4 w-4 mr-2" />
                       重新开始
                     </Button>
-                    <Button onClick={resetGame} variant="outline" className="bg-white text-gray-800 hover:bg-gray-100">
+                    <Button onClick={resetGame} variant="outline" className="bg-white text-gray-800 hover:bg-gray-100 text-sm">
                       <RotateCcw className="h-4 w-4 mr-2" />
                       返回主页
                     </Button>
@@ -209,7 +209,7 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
             )}
           </div>
 
-          <div className="mt-4 text-center text-sm text-gray-600">
+          <div className="mt-4 text-center text-xs sm:text-sm text-gray-600">
             <p>点击屏幕或按空格键控制小鸟飞翔</p>
             <p>避开绿色管道，尽可能获得高分！</p>
           </div>

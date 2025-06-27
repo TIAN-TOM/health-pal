@@ -30,15 +30,16 @@ export default function Index() {
   // 恢复页面的滚动位置
   const restoreScrollPosition = (page: string) => {
     setTimeout(() => {
-      const savedPosition = scrollPositions.current[page] || 0;
       if (page === "home" && homeRef.current) {
-        // 如果没有保存的位置，滚动到功能卡片区域（大约300px）
-        const targetPosition = savedPosition > 0 ? savedPosition : 300;
-        homeRef.current.scrollTo(0, targetPosition);
+        // 保存的位置存在时使用保存的位置，否则滚动到功能卡片区域（大约380px）
+        const savedPosition = scrollPositions.current[page];
+        const targetPosition = savedPosition !== undefined ? savedPosition : 380;
+        homeRef.current.scrollTo({ top: targetPosition, behavior: 'smooth' });
       } else {
-        window.scrollTo(0, savedPosition);
+        const savedPosition = scrollPositions.current[page] || 0;
+        window.scrollTo({ top: savedPosition, behavior: 'smooth' });
       }
-    }, 50);
+    }, 100);
   };
 
   const handleNavigation = (page: string, source: string = "home") => {
