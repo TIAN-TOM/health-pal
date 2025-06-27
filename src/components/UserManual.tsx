@@ -4,7 +4,6 @@ import { ArrowLeft, BookOpen, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { supabase } from '@/integrations/supabase/client';
 import { manualSections, type ManualSection } from '@/data/manualContent';
 import * as Icons from 'lucide-react';
 
@@ -14,36 +13,14 @@ interface UserManualProps {
 
 const UserManual = ({ onBack }: UserManualProps) => {
   const [manualItems, setManualItems] = useState<ManualSection[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['入门指南']));
 
   useEffect(() => {
-    loadManualItems();
+    // 直接使用本地数据，确保显示更新后的内容
+    setManualItems(manualSections);
+    setLoading(false);
   }, []);
-
-  const loadManualItems = async () => {
-    try {
-      // 尝试从数据库加载
-      const { data, error } = await supabase
-        .from('user_manual')
-        .select('*')
-        .order('order_index');
-
-      if (error || !data || data.length === 0) {
-        // 如果数据库中没有数据，使用本地数据
-        console.log('使用本地手册数据');
-        setManualItems(manualSections);
-      } else {
-        setManualItems(data);
-      }
-    } catch (error) {
-      console.error('加载用户手册失败:', error);
-      // 出错时使用本地数据
-      setManualItems(manualSections);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const groupedItems = manualItems.reduce((acc, item) => {
     if (!acc[item.section]) {

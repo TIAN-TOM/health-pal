@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import FlappyBird from '@/components/games/FlappyBird';
 import Gomoku from '@/components/games/Gomoku';
+import SnakeGame from '@/components/games/SnakeGame';
+import BreakoutGame from '@/components/games/BreakoutGame';
 
 interface GamesProps {
   onBack: () => void;
@@ -17,16 +19,30 @@ const Games = ({ onBack }: GamesProps) => {
     {
       id: 'flappy-bird',
       name: '飞鸟游戏',
-      description: '经典的飞鸟游戏，点击屏幕让小鸟飞跃障碍物',
+      description: '经典的飞鸟游戏，收集道具，体验慢动作效果',
       icon: '🐦',
       component: FlappyBird
     },
     {
       id: 'gomoku',
       name: '五子棋',
-      description: '与电脑对战五子棋，考验你的策略思维',
+      description: '与智能电脑对战五子棋，可调节难度等级',
       icon: '⚫',
       component: Gomoku
+    },
+    {
+      id: 'snake',
+      name: '贪吃蛇',
+      description: '经典贪吃蛇游戏，操控蛇吃食物并避免碰撞',
+      icon: '🐍',
+      component: SnakeGame
+    },
+    {
+      id: 'breakout',
+      name: '打砖块',
+      description: '控制挡板弹球击碎彩色砖块，关卡不断升级',
+      icon: '🧱',
+      component: BreakoutGame
     }
   ];
 

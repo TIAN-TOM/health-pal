@@ -1,7 +1,9 @@
+
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { RotateCcw, User, Bot } from 'lucide-react';
+import { RotateCcw, User, Bot, Settings } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface GomokuProps {
   onBack: () => void;
@@ -19,6 +21,7 @@ const Gomoku = ({ onBack }: GomokuProps) => {
   const [currentPlayer, setCurrentPlayer] = useState(PLAYER);
   const [gameStatus, setGameStatus] = useState<'playing' | 'player-win' | 'ai-win' | 'draw'>('playing');
   const [scores, setScores] = useState({ player: 0, ai: 0 });
+  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
   const checkWin = useCallback((board: number[][], row: number, col: number, player: number): boolean => {
     const directions = [
@@ -56,28 +59,64 @@ const Gomoku = ({ onBack }: GomokuProps) => {
     return false;
   }, []);
 
-  const evaluatePosition = useCallback((board: number[][], row: number, col: number): number => {
+  const evaluatePosition = useCallback((board: number[][], row: number, col: number, player: number): number => {
     let score = 0;
     const directions = [
       [0, 1], [1, 0], [1, 1], [1, -1]
     ];
 
     for (const [dx, dy] of directions) {
-      // 检查AI的连子
-      let aiCount = 0;
-      let playerCount = 0;
+      let consecutive = 1;
+      let blocked = 0;
       
-      for (let i = -4; i <= 4; i++) {
+      // 检查正方向
+      for (let i = 1; i < 5; i++) {
         const newRow = row + dx * i;
         const newCol = col + dy * i;
         if (newRow >= 0 && newRow < BOARD_SIZE && newCol >= 0 && newCol < BOARD_SIZE) {
-          if (board[newRow][newCol] === AI) aiCount++;
-          else if (board[newRow][newCol] === PLAYER) playerCount++;
+          if (board[newRow][newCol] === player) {
+            consecutive++;
+          } else if (board[newRow][newCol] !== EMPTY) {
+            blocked++;
+            break;
+          } else {
+            break;
+          }
+        } else {
+          blocked++;
+          break;
         }
       }
       
-      if (playerCount === 0) score += aiCount * aiCount;
-      if (aiCount === 0) score -= playerCount * playerCount;
+      // 检查反方向
+      for (let i = 1; i < 5; i++) {
+        const newRow = row - dx * i;
+        const newCol = col - dy * i;
+        if (newRow >= 0 && newRow < BOARD_SIZE && newCol >= 0 && newCol < BOARD_SIZE) {
+          if (board[newRow][newCol] === player) {
+            consecutive++;
+          } else if (board[newRow][newCol] !== EMPTY) {
+            blocked++;
+            break;
+          } else {
+            break;
+          }
+        } else {
+          blocked++;
+          break;
+        }
+      }
+      
+      // 根据连子数和阻挡情况计算分数
+      if (consecutive >= 5) {
+        score += 100000;
+      } else if (consecutive === 4) {
+        score += blocked === 0 ? 10000 : (blocked === 1 ? 1000 : 0);
+      } else if (consecutive === 3) {
+        score += blocked === 0 ? 1000 : (blocked === 1 ? 100 : 0);
+      } else if (consecutive === 2) {
+        score += blocked === 0 ? 100 : (blocked === 1 ? 10 : 0);
+      }
     }
     
     return score;
@@ -85,18 +124,17 @@ const Gomoku = ({ onBack }: GomokuProps) => {
 
   const findBestMove = useCallback((board: number[][]): [number, number] => {
     let bestScore = -Infinity;
-    let bestMove: [number, number] = [0, 0];
+    let bestMove: [number, number] = [7, 7];
 
-    // 首先检查是否有获胜机会
+    // 首先检查AI是否有获胜机会
     for (let row = 0; row < BOARD_SIZE; row++) {
       for (let col = 0; col < BOARD_SIZE; col++) {
         if (board[row][col] === EMPTY) {
-          board[row][col] = AI;
-          if (checkWin(board, row, col, AI)) {
-            board[row][col] = EMPTY;
+          const testBoard = board.map(r => [...r]);
+          testBoard[row][col] = AI;
+          if (checkWin(testBoard, row, col, AI)) {
             return [row, col];
           }
-          board[row][col] = EMPTY;
         }
       }
     }
@@ -105,31 +143,84 @@ const Gomoku = ({ onBack }: GomokuProps) => {
     for (let row = 0; row < BOARD_SIZE; row++) {
       for (let col = 0; col < BOARD_SIZE; col++) {
         if (board[row][col] === EMPTY) {
-          board[row][col] = PLAYER;
-          if (checkWin(board, row, col, PLAYER)) {
-            board[row][col] = EMPTY;
+          const testBoard = board.map(r => [...r]);
+          testBoard[row][col] = PLAYER;
+          if (checkWin(testBoard, row, col, PLAYER)) {
             return [row, col];
           }
-          board[row][col] = EMPTY;
         }
       }
     }
 
-    // 否则选择评分最高的位置
+    // 根据难度选择策略
+    const candidates: Array<{ row: number; col: number; score: number }> = [];
+    
     for (let row = 0; row < BOARD_SIZE; row++) {
       for (let col = 0; col < BOARD_SIZE; col++) {
         if (board[row][col] === EMPTY) {
-          const score = evaluatePosition(board, row, col);
-          if (score > bestScore) {
-            bestScore = score;
-            bestMove = [row, col];
+          // 只考虑有邻居的位置
+          let hasNeighbor = false;
+          for (let dr = -2; dr <= 2; dr++) {
+            for (let dc = -2; dc <= 2; dc++) {
+              const nr = row + dr;
+              const nc = col + dc;
+              if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && board[nr][nc] !== EMPTY) {
+                hasNeighbor = true;
+                break;
+              }
+            }
+            if (hasNeighbor) break;
+          }
+          
+          if (hasNeighbor || (row === 7 && col === 7)) {
+            const aiScore = evaluatePosition(board, row, col, AI);
+            const playerScore = evaluatePosition(board, row, col, PLAYER);
+            const totalScore = aiScore + playerScore * 1.2; // 稍微偏重防守
+            
+            candidates.push({ row, col, score: totalScore });
           }
         }
       }
     }
 
-    return bestMove;
-  }, [checkWin, evaluatePosition]);
+    if (candidates.length === 0) return [7, 7];
+
+    // 根据难度调整选择策略
+    candidates.sort((a, b) => b.score - a.score);
+    
+    let selectedMove;
+    switch (difficulty) {
+      case 'easy':
+        // 简单难度：30%选择最佳，70%随机选择前50%的候选
+        if (Math.random() < 0.3) {
+          selectedMove = candidates[0];
+        } else {
+          const topHalf = candidates.slice(0, Math.max(1, Math.floor(candidates.length / 2)));
+          selectedMove = topHalf[Math.floor(Math.random() * topHalf.length)];
+        }
+        break;
+      case 'medium':
+        // 中等难度：70%选择最佳，30%选择前20%的候选
+        if (Math.random() < 0.7) {
+          selectedMove = candidates[0];
+        } else {
+          const topQuarter = candidates.slice(0, Math.max(1, Math.floor(candidates.length / 5)));
+          selectedMove = topQuarter[Math.floor(Math.random() * topQuarter.length)];
+        }
+        break;
+      case 'hard':
+        // 困难难度：90%选择最佳，10%选择前10%的候选
+        if (Math.random() < 0.9) {
+          selectedMove = candidates[0];
+        } else {
+          const topTen = candidates.slice(0, Math.max(1, Math.floor(candidates.length / 10)));
+          selectedMove = topTen[Math.floor(Math.random() * topTen.length)];
+        }
+        break;
+    }
+
+    return [selectedMove.row, selectedMove.col];
+  }, [checkWin, evaluatePosition, difficulty]);
 
   const handleIntersectionClick = (row: number, col: number) => {
     if (board[row][col] !== EMPTY || gameStatus !== 'playing' || currentPlayer !== PLAYER) {
@@ -157,19 +248,7 @@ const Gomoku = ({ onBack }: GomokuProps) => {
 
     // AI 回合
     setTimeout(() => {
-      // 简化AI逻辑，降低难度
-      const emptyCells: [number, number][] = [];
-      for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-          if (newBoard[r][c] === EMPTY) {
-            emptyCells.push([r, c]);
-          }
-        }
-      }
-      
-      // 随机选择一个空位，降低AI难度
-      const randomIndex = Math.floor(Math.random() * emptyCells.length);
-      const [aiRow, aiCol] = emptyCells[randomIndex];
+      const [aiRow, aiCol] = findBestMove(newBoard);
       
       newBoard[aiRow][aiCol] = AI;
       setBoard([...newBoard]);
@@ -192,12 +271,6 @@ const Gomoku = ({ onBack }: GomokuProps) => {
   const resetScores = () => {
     setScores({ player: 0, ai: 0 });
     resetGame();
-  };
-
-  const getCellContent = (cell: number) => {
-    if (cell === PLAYER) return '⚫';
-    if (cell === AI) return '⚪';
-    return '';
   };
 
   const getStatusText = () => {
@@ -225,15 +298,30 @@ const Gomoku = ({ onBack }: GomokuProps) => {
                 <span className="font-semibold text-sm sm:text-base">电脑: {scores.ai}</span>
               </div>
             </div>
+            
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Settings className="h-4 w-4" />
+              <span className="text-sm">难度:</span>
+              <Select value={difficulty} onValueChange={(value: 'easy' | 'medium' | 'hard') => setDifficulty(value)}>
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="easy">简单</SelectItem>
+                  <SelectItem value="medium">中等</SelectItem>
+                  <SelectItem value="hard">困难</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="flex justify-center mb-4 overflow-x-auto">
             <div className="relative bg-yellow-100 p-2 rounded border-2 border-gray-800 min-w-fit">
               <svg
-                width="360"
-                height="360"
-                viewBox="0 0 360 360"
-                className="w-full max-w-[360px] h-auto"
+                width="300"
+                height="300"
+                viewBox="0 0 300 300"
+                className="w-full max-w-[300px] h-auto"
                 style={{ aspectRatio: '1' }}
               >
                 {/* 绘制棋盘线条 */}
@@ -241,19 +329,19 @@ const Gomoku = ({ onBack }: GomokuProps) => {
                   <g key={`lines-${i}`}>
                     {/* 横线 */}
                     <line
-                      x1={12}
-                      y1={12 + i * 24}
-                      x2={348}
-                      y2={12 + i * 24}
+                      x1={10}
+                      y1={10 + i * 20}
+                      x2={290}
+                      y2={10 + i * 20}
                       stroke="#654321"
                       strokeWidth="1"
                     />
                     {/* 竖线 */}
                     <line
-                      x1={12 + i * 24}
-                      y1={12}
-                      x2={12 + i * 24}
-                      y2={348}
+                      x1={10 + i * 20}
+                      y1={10}
+                      x2={10 + i * 20}
+                      y2={290}
                       stroke="#654321"
                       strokeWidth="1"
                     />
@@ -266,9 +354,9 @@ const Gomoku = ({ onBack }: GomokuProps) => {
                     <g key={`${rowIndex}-${colIndex}`}>
                       {/* 可点击的交叉点区域 */}
                       <circle
-                        cx={12 + colIndex * 24}
-                        cy={12 + rowIndex * 24}
-                        r="10"
+                        cx={10 + colIndex * 20}
+                        cy={10 + rowIndex * 20}
+                        r="8"
                         fill="transparent"
                         stroke="transparent"
                         className="cursor-pointer hover:fill-gray-200"
@@ -281,9 +369,9 @@ const Gomoku = ({ onBack }: GomokuProps) => {
                       {/* 棋子 */}
                       {cell !== EMPTY && (
                         <circle
-                          cx={12 + colIndex * 24}
-                          cy={12 + rowIndex * 24}
-                          r="8"
+                          cx={10 + colIndex * 20}
+                          cy={10 + rowIndex * 20}
+                          r="7"
                           fill={cell === PLAYER ? "#000" : "#fff"}
                           stroke={cell === PLAYER ? "#000" : "#333"}
                           strokeWidth="1"
