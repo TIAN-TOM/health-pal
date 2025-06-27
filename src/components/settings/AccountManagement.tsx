@@ -53,7 +53,7 @@ const AccountManagement = () => {
         supabase.from('daily_checkins').delete().eq('user_id', user.id),
         supabase.from('emergency_contacts').delete().eq('user_id', user.id),
         supabase.from('medical_records').delete().eq('user_id', user.id),
-        supabase.from('medications').delete().eq('user_id', user.id),
+        supabase.from('user_medications').delete().eq('user_id', user.id),
         supabase.from('user_roles').delete().eq('user_id', user.id),
         supabase.from('profiles').delete().eq('id', user.id)
       ];
