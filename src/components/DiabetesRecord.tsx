@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft, Activity, Clock, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -54,14 +53,8 @@ const DiabetesRecord = ({ onBack }: DiabetesRecordProps) => {
         description: "血糖记录已保存",
       });
 
-      // 重置表单
-      setBloodSugar('');
-      setMeasurementTime('before_meal');
-      setInsulinDose('');
-      setMedication('');
-      setDiet('');
-      setExercise('');
-      setNote('');
+      // 保存成功后跳转回上一页
+      onBack();
     } catch (error: any) {
       toast({
         title: "保存失败",

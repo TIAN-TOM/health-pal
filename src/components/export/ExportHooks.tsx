@@ -1,8 +1,8 @@
 
 import { useState } from 'react';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { getRecordsByDateRange, generateTextFormat } from '@/services/dataExportService';
-import { getBeijingTime, getBeijingDateString } from '@/utils/beijingTime';
+import { getBeijingTime } from '@/utils/beijingTime';
 
 export const useDataExport = () => {
   const [loading, setLoading] = useState(false);
@@ -47,19 +47,39 @@ export const useDataExport = () => {
         formattedData = generateTextFormat(records);
       }
 
-      // 复制到剪贴板
-      await navigator.clipboard.writeText(formattedData);
-      
-      setCopiedFormat(`${period}-${format}`);
-      setTimeout(() => setCopiedFormat(null), 3000);
-      
-      toast({
-        title: "导出成功",
-        description: "数据已复制到剪贴板",
-      });
+      if (!formattedData || formattedData.trim() === '') {
+        toast({
+          title: "没有找到数据",
+          description: "选择的时间范围内没有记录",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      // 保存数据以供模态框显示
-      setExportedData(formattedData);
+      // 复制到剪贴板
+      try {
+        await navigator.clipboard.writeText(formattedData);
+        setCopiedFormat(`${period}-${format}`);
+        setTimeout(() => setCopiedFormat(null), 3000);
+        
+        toast({
+          title: "导出成功",
+          description: "数据已复制到剪贴板",
+        });
+
+        // 保存数据以供模态框显示
+        setExportedData(formattedData);
+      } catch (clipboardError) {
+        console.error('复制到剪贴板失败:', clipboardError);
+        toast({
+          title: "复制失败",
+          description: "请手动复制数据",
+          variant: "destructive",
+        });
+        // 显示数据模态框供用户手动复制
+        setExportedData(formattedData);
+        setShowDataModal(true);
+      }
       
     } catch (error) {
       console.error('导出失败:', error);
@@ -98,19 +118,39 @@ export const useDataExport = () => {
         formattedData = generateTextFormat(records);
       }
 
-      // 复制到剪贴板
-      await navigator.clipboard.writeText(formattedData);
-      
-      setCopiedFormat(`custom-${format}`);
-      setTimeout(() => setCopiedFormat(null), 3000);
-      
-      toast({
-        title: "导出成功",
-        description: "数据已复制到剪贴板",
-      });
+      if (!formattedData || formattedData.trim() === '') {
+        toast({
+          title: "没有找到数据",
+          description: "选择的时间范围内没有记录",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      // 保存数据以供模态框显示
-      setExportedData(formattedData);
+      // 复制到剪贴板
+      try {
+        await navigator.clipboard.writeText(formattedData);
+        setCopiedFormat(`custom-${format}`);
+        setTimeout(() => setCopiedFormat(null), 3000);
+        
+        toast({
+          title: "导出成功",
+          description: "数据已复制到剪贴板",
+        });
+
+        // 保存数据以供模态框显示
+        setExportedData(formattedData);
+      } catch (clipboardError) {
+        console.error('复制到剪贴板失败:', clipboardError);
+        toast({
+          title: "复制失败",
+          description: "请手动复制数据",
+          variant: "destructive",
+        });
+        // 显示数据模态框供用户手动复制
+        setExportedData(formattedData);
+        setShowDataModal(true);
+      }
       
     } catch (error) {
       console.error('导出失败:', error);

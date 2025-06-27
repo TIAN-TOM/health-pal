@@ -1,4 +1,3 @@
-
 import React from 'react';
 import DailyCheckin from '@/components/DailyCheckin';
 import DizzinessRecord from '@/components/DizzinessRecord';
@@ -47,7 +46,12 @@ const PageRenderer = ({
 }: PageRendererProps) => {
   switch (currentPage) {
     case "emergency":
-      return <EmergencyMode onBack={() => onBack("home")} />;
+      return (
+        <EmergencyMode 
+          onBack={() => onBack("home")} 
+          onNavigateToContacts={() => onNavigation("emergency-contacts", "emergency")}
+        />
+      );
     case "checkin":
       return <DailyCheckin onBack={() => onBack("home")} />;
     case "record-hub":

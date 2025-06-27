@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { toast } from '@/hooks/use-toast';
 import { saveMeniereRecord } from '@/services/meniereRecordService';
 import SleepSection from './lifestyle/SleepSection';
 import DietSection from './lifestyle/DietSection';
@@ -21,6 +22,7 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
   const [dietOpen, setDietOpen] = useState(false);
   const [exerciseOpen, setExerciseOpen] = useState(false);
   const [moodOpen, setMoodOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
 
   // 表单状态
   const [sleepHours, setSleepHours] = useState('');
@@ -36,7 +38,6 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
   const [saltPreference, setSaltPreference] = useState('');
   const [note, setNote] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     // 设置默认时间
@@ -48,6 +49,10 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
     return sleepHours || sleepQuality || bedTime !== '22:00' || wakeTime !== '07:00' ||
            waterIntake || exerciseType || exerciseDuration || stressLevel ||
            diet.length > 0 || saltPreference || note.trim();
+  };
+
+  const hasNoteData = () => {
+    return note.trim() !== '';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,19 +166,34 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
             setStressLevel={setStressLevel}
           />
 
-          {/* 备注 */}
+          {/* 备注 - 可折叠 */}
           <Card>
-            <CardHeader>
-              <CardTitle>备注（可选）</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="记录其他相关信息，如：今天心情如何、有什么特殊情况等..."
-                rows={3}
-              />
-            </CardContent>
+            <Collapsible open={noteOpen} onOpenChange={setNoteOpen}>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-gray-50">
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <FileText className="h-5 w-5 mr-2 text-gray-600" />
+                      备注（可选）
+                      {hasNoteData() && (
+                        <span className="ml-2 w-2 h-2 bg-green-500 rounded-full"></span>
+                      )}
+                    </div>
+                    {noteOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent>
+                  <Textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="记录其他相关信息，如：今天心情如何、有什么特殊情况等..."
+                    rows={3}
+                  />
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
           </Card>
 
           <Button

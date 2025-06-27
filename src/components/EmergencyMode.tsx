@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Phone, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { Contact, getContacts } from '@/services/contactsService';
 import { useAuth } from '@/hooks/useAuth';
 import EmergencySMS from '@/components/EmergencySMS';
@@ -17,7 +17,6 @@ const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => 
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { userProfile, user } = useAuth();
-  const { toast } = useToast();
 
   useEffect(() => {
     loadContacts();
@@ -29,37 +28,6 @@ const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => 
       setContacts(contactsData);
     } catch (error) {
       console.error('加载联系人失败:', error);
-      // 如果加载失败，使用默认联系人
-      const fallbackContacts: Contact[] = [
-        {
-          id: 'fallback-1',
-          name: '老伴',
-          phone: '138****8888',
-          avatar: '👵',
-          user_id: 'fallback-user',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: 'fallback-2',
-          name: '儿子',
-          phone: '139****9999',
-          avatar: '👨',
-          user_id: 'fallback-user',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: 'fallback-3',
-          name: '女儿',
-          phone: '136****6666',
-          avatar: '👩',
-          user_id: 'fallback-user',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
-      setContacts(fallbackContacts);
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +39,7 @@ const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => 
     // 尝试直接拨打电话
     if (typeof window !== 'undefined') {
       try {
-        window.location.href = `tel:${phone.replace(/\*/g, '')}`;
+        window.location.href = `tel:${phone}`;
       } catch (error) {
         // 如果无法拨打电话，显示提示
         toast({
@@ -79,6 +47,15 @@ const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => 
           description: `请手动拨打 ${name} 的电话: ${phone}`,
         });
       }
+    }
+  };
+
+  const handleNavigateToContacts = () => {
+    if (onNavigateToContacts) {
+      onNavigateToContacts();
+    } else {
+      // 如果没有提供导航函数，则返回主页
+      onBack();
     }
   };
 
@@ -168,7 +145,7 @@ const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => 
             <div className="text-center py-8">
               <div className="text-lg text-gray-600 mb-4">还没有设置紧急联系人</div>
               <Button
-                onClick={onNavigateToContacts || onBack}
+                onClick={handleNavigateToContacts}
                 className="bg-blue-500 hover:bg-blue-600 text-white"
               >
                 去设置联系人

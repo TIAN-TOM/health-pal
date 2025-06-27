@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { getContacts, saveContact, deleteContact, updateContact, type Contact } from '@/services/contactsService';
 
 interface EmergencyContactsProps {
@@ -21,7 +21,6 @@ const EmergencyContacts = ({ onBack }: EmergencyContactsProps) => {
     phone: '',
     avatar: '👤'
   });
-  const { toast } = useToast();
 
   useEffect(() => {
     loadContacts();
@@ -66,6 +65,7 @@ const EmergencyContacts = ({ onBack }: EmergencyContactsProps) => {
       setFormData({ name: '', phone: '', avatar: '👤' });
       loadContacts();
     } catch (error) {
+      console.error('保存联系人失败:', error);
       toast({
         title: "操作失败",
         description: "请稍后重试",
@@ -84,6 +84,7 @@ const EmergencyContacts = ({ onBack }: EmergencyContactsProps) => {
         });
         loadContacts();
       } catch (error) {
+        console.error('删除联系人失败:', error);
         toast({
           title: "删除失败",
           description: "请稍后重试",
@@ -189,8 +190,8 @@ const EmergencyContacts = ({ onBack }: EmergencyContactsProps) => {
               </CardContent>
             </Card>
           ) : (
-            contacts.map((contact) => (
-              <Card key={contact.id}>
+            contacts.map((contact, index) => (
+              <Card key={contact.id || index}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">

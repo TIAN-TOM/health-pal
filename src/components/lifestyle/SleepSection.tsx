@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Bed, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,33 @@ const SleepSection = ({
   setWakeTime
 }: SleepSectionProps) => {
   const hasSleepData = sleepHours || sleepQuality || bedTime !== '22:00' || wakeTime !== '07:00';
+
+  // 根据入睡时间和起床时间自动计算睡眠时长
+  useEffect(() => {
+    if (bedTime && wakeTime) {
+      const [bedHour, bedMinute] = bedTime.split(':').map(Number);
+      const [wakeHour, wakeMinute] = wakeTime.split(':').map(Number);
+      
+      let bedTimeMinutes = bedHour * 60 + bedMinute;
+      let wakeTimeMinutes = wakeHour * 60 + wakeMinute;
+      
+      // 如果起床时间早于睡觉时间，说明跨了一天
+      if (wakeTimeMinutes <= bedTimeMinutes) {
+        wakeTimeMinutes += 24 * 60; // 加上24小时
+      }
+      
+      const sleepMinutes = wakeTimeMinutes - bedTimeMinutes;
+      const sleepHoursCalc = sleepMinutes / 60;
+      
+      // 保留一位小数
+      const sleepHoursStr = sleepHoursCalc.toFixed(1);
+      
+      // 只有在计算结果合理时才更新（0.5-24小时之间）
+      if (sleepHoursCalc >= 0.5 && sleepHoursCalc <= 24) {
+        setSleepHours(sleepHoursStr);
+      }
+    }
+  }, [bedTime, wakeTime, setSleepHours]);
 
   return (
     <Card>
@@ -81,11 +108,14 @@ const SleepSection = ({
                 type="number"
                 min="0"
                 max="24"
-                step="0.5"
+                step="0.1"
                 value={sleepHours}
                 onChange={(e) => setSleepHours(e.target.value)}
-                placeholder="例如：7.5"
+                placeholder="自动计算"
+                className="bg-gray-50"
+                readOnly
               />
+              <p className="text-xs text-gray-500 mt-1">根据入睡和起床时间自动计算</p>
             </div>
 
             <div>
