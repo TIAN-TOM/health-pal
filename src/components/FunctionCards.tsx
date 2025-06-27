@@ -1,87 +1,76 @@
 
 import React from 'react';
-import { Smile, FileText, Stethoscope, Gamepad2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ClipboardList, Activity, Heart, Mic, Gamepad2, Wind } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { useClickSound } from '@/hooks/useClickSound';
 
 interface FunctionCardsProps {
-  onNavigate: (view: string, source?: string) => void;
+  onNavigate: (page: string, source?: string) => void;
 }
 
 const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
-  const { playClickSound } = useClickSound();
-
-  const handleNavigateWithSound = (view: string, source?: string) => {
-    playClickSound();
-    onNavigate(view, source);
-  };
+  const functions = [
+    {
+      id: 'checkin',
+      title: '每日签到',
+      description: '记录今日状态',
+      icon: ClipboardList,
+      color: 'from-blue-500 to-blue-600',
+      textColor: 'text-blue-600'
+    },
+    {
+      id: 'record-hub',
+      title: '健康记录',
+      description: '症状与数据记录',
+      icon: Activity,
+      color: 'from-green-500 to-green-600',
+      textColor: 'text-green-600'
+    },
+    {
+      id: 'breathing',
+      title: '呼吸训练',
+      description: '深呼吸放松练习',
+      icon: Wind,
+      color: 'from-purple-500 to-purple-600',
+      textColor: 'text-purple-600'
+    },
+    {
+      id: 'voice',
+      title: '语音记录',
+      description: '快速语音输入',
+      icon: Mic,
+      color: 'from-orange-500 to-orange-600',
+      textColor: 'text-orange-600'
+    },
+    {
+      id: 'games',
+      title: '解压小游戏',
+      description: '放松心情',
+      icon: Gamepad2,
+      color: 'from-pink-500 to-pink-600',
+      textColor: 'text-pink-600'
+    }
+  ];
 
   return (
-    <div className="grid gap-4 mb-8">
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardContent className="p-6">
-          <Button 
-            onClick={() => handleNavigateWithSound('checkin', 'home')} 
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
+    <div className="mb-6">
+      <h2 className="text-lg font-semibold mb-4 text-gray-800">主要功能</h2>
+      <div className="grid grid-cols-2 gap-4">
+        {functions.map((func) => (
+          <Card 
+            key={func.id}
+            className="hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:scale-105"
+            onClick={() => onNavigate(func.id, 'home')}
           >
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-3">
-                <Smile className="h-6 w-6 text-purple-600" />
+            <CardContent className="p-4 text-center">
+              <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${func.color} flex items-center justify-center mx-auto mb-3`}>
+                <func.icon className="h-6 w-6 text-white" />
               </div>
-              <span className="leading-relaxed">每日打卡</span>
-            </div>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardContent className="p-6">
-          <Button 
-            onClick={() => handleNavigateWithSound('record-hub', 'home')} 
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
-          >
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                <FileText className="h-6 w-6 text-blue-600" />
-              </div>
-              <span className="leading-relaxed">健康记录</span>
-            </div>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardContent className="p-6">
-          <Button 
-            onClick={() => handleNavigateWithSound('medical-records', 'home')} 
-            className="w-full bg-indigo-500 hover:bg-indigo-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
-          >
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-3">
-                <Stethoscope className="h-6 w-6 text-indigo-600" />
-              </div>
-              <span className="leading-relaxed">医疗记录管理</span>
-            </div>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardContent className="p-6">
-          <Button 
-            onClick={() => handleNavigateWithSound('games', 'home')} 
-            className="w-full bg-pink-500 hover:bg-pink-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
-          >
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mb-3">
-                <Gamepad2 className="h-6 w-6 text-pink-600" />
-              </div>
-              <span className="leading-relaxed">解压小游戏</span>
-            </div>
-          </Button>
-        </CardContent>
-      </Card>
+              <h3 className={`font-medium ${func.textColor} mb-1`}>{func.title}</h3>
+              <p className="text-xs text-gray-600">{func.description}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

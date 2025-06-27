@@ -23,6 +23,7 @@ import DailyDataHub from '@/components/DailyDataHub';
 import RecordDetail from '@/components/RecordDetail';
 import Games from '@/components/Games';
 import RecordHub from '@/components/RecordHub';
+import BreathingExercise from '@/components/BreathingExercise';
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
@@ -66,6 +67,8 @@ const PageRenderer = ({
       );
     case "voice":
       return <VoiceRecord onBack={() => onBack("home")} />;
+    case "breathing":
+      return <BreathingExercise onBack={() => onBack("home")} />;
     case "games":
       return <Games onBack={() => onBack("home")} />;
     case "history":

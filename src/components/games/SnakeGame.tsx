@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Play, RotateCcw, Pause } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SnakeGameProps {
   onBack: () => void;
@@ -15,6 +16,7 @@ const INITIAL_DIRECTION = { x: 0, y: -1 };
 
 const SnakeGame = ({ onBack }: SnakeGameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isMobile = useIsMobile();
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'paused' | 'gameOver'>('idle');
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
@@ -25,7 +27,7 @@ const SnakeGame = ({ onBack }: SnakeGameProps) => {
     snake: INITIAL_SNAKE,
     direction: INITIAL_DIRECTION,
     food: { x: 15, y: 15 },
-    gameSpeed: 150,
+    gameSpeed: 200,
     lastMoveTime: 0
   });
 
@@ -46,6 +48,7 @@ const SnakeGame = ({ onBack }: SnakeGameProps) => {
     gameRef.current.snake = [...INITIAL_SNAKE];
     gameRef.current.direction = { ...INITIAL_DIRECTION };
     gameRef.current.food = generateFood();
+    gameRef.current.gameSpeed = 200;
     gameRef.current.lastMoveTime = Date.now();
   };
 
@@ -58,25 +61,63 @@ const SnakeGame = ({ onBack }: SnakeGameProps) => {
     setScore(0);
   };
 
-  const handleKeyPress = useCallback((e: KeyboardEvent) => {
+  const changeDirection = useCallback((newDirection: { x: number; y: number }) => {
     if (gameState !== 'playing') return;
-
     const { direction } = gameRef.current;
+    
+    // 防止反向移动
+    if (direction.x !== 0 && newDirection.x !== 0) return;
+    if (direction.y !== 0 && newDirection.y !== 0) return;
+    
+    gameRef.current.direction = newDirection;
+  }, [gameState]);
+
+  const handleKeyPress = useCallback((e: KeyboardEvent) => {
     switch (e.key) {
       case 'ArrowUp':
-        if (direction.y === 0) gameRef.current.direction = { x: 0, y: -1 };
+        changeDirection({ x: 0, y: -1 });
         break;
       case 'ArrowDown':
-        if (direction.y === 0) gameRef.current.direction = { x: 0, y: 1 };
+        changeDirection({ x: 0, y: 1 });
         break;
       case 'ArrowLeft':
-        if (direction.x === 0) gameRef.current.direction = { x: -1, y: 0 };
+        changeDirection({ x: -1, y: 0 });
         break;
       case 'ArrowRight':
-        if (direction.x === 0) gameRef.current.direction = { x: 1, y: 0 };
+        changeDirection({ x: 1, y: 0 });
         break;
     }
-  }, [gameState]);
+  }, [changeDirection]);
+
+  // 触摸控制
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }, []);
+
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
+    if (!touchStartRef.current) return;
+    
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+    
+    const minSwipeDistance = 30;
+    
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (Math.abs(deltaX) > minSwipeDistance) {
+        changeDirection({ x: deltaX > 0 ? 1 : -1, y: 0 });
+      }
+    } else {
+      if (Math.abs(deltaY) > minSwipeDistance) {
+        changeDirection({ x: 0, y: deltaY > 0 ? 1 : -1 });
+      }
+    }
+    
+    touchStartRef.current = null;
+  }, [changeDirection]);
 
   const gameLoop = useCallback(() => {
     if (gameState !== 'playing') return;
@@ -118,8 +159,8 @@ const SnakeGame = ({ onBack }: SnakeGameProps) => {
     if (head.x === food.x && head.y === food.y) {
       setScore(prev => prev + 10);
       gameRef.current.food = generateFood();
-      // 加速
-      gameRef.current.gameSpeed = Math.max(80, gameRef.current.gameSpeed - 2);
+      // 逐渐加速，但不要太快
+      gameRef.current.gameSpeed = Math.max(120, gameRef.current.gameSpeed - 1);
     } else {
       newSnake.pop();
     }
@@ -131,7 +172,6 @@ const SnakeGame = ({ onBack }: SnakeGameProps) => {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // 绘制蛇
-    ctx.fillStyle = '#22c55e';
     newSnake.forEach((segment, index) => {
       ctx.fillStyle = index === 0 ? '#16a34a' : '#22c55e';
       ctx.fillRect(
@@ -169,8 +209,20 @@ const SnakeGame = ({ onBack }: SnakeGameProps) => {
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [handleKeyPress]);
+    
+    if (isMobile) {
+      document.addEventListener('touchstart', handleTouchStart);
+      document.addEventListener('touchend', handleTouchEnd);
+    }
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+      if (isMobile) {
+        document.removeEventListener('touchstart', handleTouchStart);
+        document.removeEventListener('touchend', handleTouchEnd);
+      }
+    };
+  }, [handleKeyPress, handleTouchStart, handleTouchEnd, isMobile]);
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -188,14 +240,17 @@ const SnakeGame = ({ onBack }: SnakeGameProps) => {
               ref={canvasRef}
               width={BOARD_SIZE * CELL_SIZE}
               height={BOARD_SIZE * CELL_SIZE}
-              className="border border-gray-300 rounded-lg bg-blue-800"
+              className="border border-gray-300 rounded-lg bg-blue-800 max-w-full"
+              style={{ touchAction: 'none' }}
             />
           </div>
 
           {gameState === 'idle' && (
             <div className="text-center mb-4">
               <h3 className="text-lg font-bold mb-2">贪吃蛇游戏</h3>
-              <p className="mb-4 text-sm">使用方向键控制蛇的移动，吃红色食物得分</p>
+              <p className="mb-4 text-sm">
+                {isMobile ? '滑动屏幕控制蛇的移动' : '使用方向键控制蛇的移动'}，吃红色食物得分
+              </p>
               <Button onClick={startGame} className="bg-blue-500 hover:bg-blue-600">
                 <Play className="h-4 w-4 mr-2" />
                 开始游戏
@@ -242,9 +297,56 @@ const SnakeGame = ({ onBack }: SnakeGameProps) => {
             </div>
           )}
 
-          <div className="text-center text-xs sm:text-sm text-gray-600">
-            <p>使用方向键控制蛇的移动方向</p>
-            <p>吃到红色食物可以得分，蛇会越来越快！</p>
+          {/* 移动端控制按钮 */}
+          {isMobile && gameState === 'playing' && (
+            <div className="grid grid-cols-3 gap-2 mt-4 max-w-48 mx-auto">
+              <div></div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onTouchStart={() => changeDirection({ x: 0, y: -1 })}
+                className="aspect-square"
+              >
+                ↑
+              </Button>
+              <div></div>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onTouchStart={() => changeDirection({ x: -1, y: 0 })}
+                className="aspect-square"
+              >
+                ←
+              </Button>
+              <div></div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onTouchStart={() => changeDirection({ x: 1, y: 0 })}
+                className="aspect-square"
+              >
+                →
+              </Button>
+              
+              <div></div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onTouchStart={() => changeDirection({ x: 0, y: 1 })}
+                className="aspect-square"
+              >
+                ↓
+              </Button>
+              <div></div>
+            </div>
+          )}
+
+          <div className="text-center text-xs sm:text-sm text-gray-600 mt-4">
+            <p>
+              {isMobile ? '滑动屏幕或使用按钮控制蛇的移动方向' : '使用方向键控制蛇的移动方向'}
+            </p>
+            <p>吃到红色食物可以得分，蛇会逐渐加速！</p>
           </div>
         </CardContent>
       </Card>
