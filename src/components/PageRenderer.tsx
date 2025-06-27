@@ -72,7 +72,7 @@ const PageRenderer = ({
     case "games":
       return <Games onBack={() => onBack("home")} />;
     case "history":
-      return <HistoryView onRecordClick={onRecordClick} showEnhancedFeatures={true} />;
+      return <HistoryView onRecordClick={onRecordClick} showEnhancedFeatures={true} onBack={() => onBack("daily-data")} />;
     case "calendar":
       return <CalendarView />;
     case "export":

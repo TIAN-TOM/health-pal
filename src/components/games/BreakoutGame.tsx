@@ -7,20 +7,22 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 interface BreakoutGameProps {
   onBack: () => void;
+  soundEnabled?: boolean;
 }
 
-const CANVAS_WIDTH = 400;
-const CANVAS_HEIGHT = 300;
-const PADDLE_WIDTH = 80;
-const PADDLE_HEIGHT = 12;
-const BALL_SIZE = 8;
-const BRICK_ROWS = 5;
-const BRICK_COLS = 8;
-const BRICK_WIDTH = 45;
-const BRICK_HEIGHT = 15;
+const CANVAS_WIDTH = 360;  // 减少宽度确保完全显示
+const CANVAS_HEIGHT = 280; // 减少高度
+const PADDLE_WIDTH = 70;   // 减小挡板宽度
+const PADDLE_HEIGHT = 10;
+const BALL_SIZE = 6;
+const BRICK_ROWS = 4;      // 减少砖块行数
+const BRICK_COLS = 6;      // 减少砖块列数
+const BRICK_WIDTH = 50;    // 调整砖块宽度
+const BRICK_HEIGHT = 12;   // 调整砖块高度
 
-const BreakoutGame = ({ onBack }: BreakoutGameProps) => {
+const BreakoutGame = ({ onBack, soundEnabled = true }: BreakoutGameProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
   const isMobile = useIsMobile();
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'paused' | 'gameOver' | 'victory'>('idle');
   const [score, setScore] = useState(0);
@@ -31,12 +33,12 @@ const BreakoutGame = ({ onBack }: BreakoutGameProps) => {
   });
 
   const gameRef = useRef({
-    paddle: { x: CANVAS_WIDTH / 2 - PADDLE_WIDTH / 2, y: CANVAS_HEIGHT - 30 },
+    paddle: { x: CANVAS_WIDTH / 2 - PADDLE_WIDTH / 2, y: CANVAS_HEIGHT - 25 },
     ball: { 
       x: CANVAS_WIDTH / 2, 
-      y: CANVAS_HEIGHT - 50, 
-      dx: 3, 
-      dy: -3 
+      y: CANVAS_HEIGHT - 45, 
+      dx: 2.5, 
+      dy: -2.5 
     },
     bricks: [] as Array<{ x: number; y: number; visible: boolean; color: string }>,
     keys: { left: false, right: false },
@@ -45,15 +47,44 @@ const BreakoutGame = ({ onBack }: BreakoutGameProps) => {
     isTouching: false
   });
 
+  // 音效生成函数
+  const playSound = useCallback((frequency: number, duration: number, type: 'sine' | 'square' | 'triangle' = 'sine') => {
+    if (!soundEnabled) return;
+    
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      
+      const oscillator = audioContextRef.current.createOscillator();
+      const gainNode = audioContextRef.current.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContextRef.current.destination);
+      
+      oscillator.frequency.setValueAtTime(frequency, audioContextRef.current.currentTime);
+      oscillator.type = type;
+      
+      gainNode.gain.setValueAtTime(0.1, audioContextRef.current.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContextRef.current.currentTime + duration);
+      
+      oscillator.start();
+      oscillator.stop(audioContextRef.current.currentTime + duration);
+    } catch (error) {
+      console.log('Audio context not available');
+    }
+  }, [soundEnabled]);
+
   const initBricks = useCallback(() => {
     const bricks = [];
-    const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'];
+    const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e'];
+    const startX = (CANVAS_WIDTH - (BRICK_COLS * (BRICK_WIDTH + 3) - 3)) / 2;
     
     for (let row = 0; row < BRICK_ROWS; row++) {
       for (let col = 0; col < BRICK_COLS; col++) {
         bricks.push({
-          x: col * (BRICK_WIDTH + 5) + 30,
-          y: row * (BRICK_HEIGHT + 5) + 50,
+          x: startX + col * (BRICK_WIDTH + 3),
+          y: 40 + row * (BRICK_HEIGHT + 3),
           visible: true,
           color: colors[row]
         });
@@ -71,15 +102,17 @@ const BreakoutGame = ({ onBack }: BreakoutGameProps) => {
     gameRef.current.paddle.x = CANVAS_WIDTH / 2 - PADDLE_WIDTH / 2;
     gameRef.current.ball = { 
       x: CANVAS_WIDTH / 2, 
-      y: CANVAS_HEIGHT - 50, 
-      dx: 3, 
-      dy: -3 
+      y: CANVAS_HEIGHT - 45, 
+      dx: 2.5, 
+      dy: -2.5 
     };
     initBricks();
+    playSound(440, 0.2);
   };
 
   const pauseGame = () => {
     setGameState(gameState === 'playing' ? 'paused' : 'playing');
+    playSound(330, 0.1);
   };
 
   const resetGame = () => {
@@ -150,10 +183,10 @@ const BreakoutGame = ({ onBack }: BreakoutGameProps) => {
 
     // 移动挡板 - 键盘控制
     if (keys.left && paddle.x > 0) {
-      paddle.x -= 6;
+      paddle.x -= 5;
     }
     if (keys.right && paddle.x < CANVAS_WIDTH - PADDLE_WIDTH) {
-      paddle.x += 6;
+      paddle.x += 5;
     }
 
     // 移动挡板 - 触摸控制
@@ -169,9 +202,11 @@ const BreakoutGame = ({ onBack }: BreakoutGameProps) => {
     // 球碰壁反弹
     if (ball.x <= BALL_SIZE || ball.x >= CANVAS_WIDTH - BALL_SIZE) {
       ball.dx = -ball.dx;
+      playSound(220, 0.1);
     }
     if (ball.y <= BALL_SIZE) {
       ball.dy = -ball.dy;
+      playSound(220, 0.1);
     }
 
     // 球碰挡板
@@ -184,11 +219,13 @@ const BreakoutGame = ({ onBack }: BreakoutGameProps) => {
       ball.dy = -ball.dy;
       // 根据击中位置调整角度
       const hitPos = (ball.x - paddle.x) / PADDLE_WIDTH;
-      ball.dx = (hitPos - 0.5) * 6;
+      ball.dx = (hitPos - 0.5) * 4;
+      playSound(330, 0.1);
     }
 
     // 球落下
     if (ball.y > CANVAS_HEIGHT) {
+      playSound(150, 0.3, 'square');
       setLives(prev => {
         const newLives = prev - 1;
         if (newLives <= 0) {
@@ -196,9 +233,9 @@ const BreakoutGame = ({ onBack }: BreakoutGameProps) => {
         } else {
           // 重置球的位置
           ball.x = CANVAS_WIDTH / 2;
-          ball.y = CANVAS_HEIGHT - 50;
-          ball.dx = 3;
-          ball.dy = -3;
+          ball.y = CANVAS_HEIGHT - 45;
+          ball.dx = 2.5;
+          ball.dy = -2.5;
           paddle.x = CANVAS_WIDTH / 2 - PADDLE_WIDTH / 2;
         }
         return newLives;
@@ -219,6 +256,7 @@ const BreakoutGame = ({ onBack }: BreakoutGameProps) => {
         brick.visible = false;
         ball.dy = -ball.dy;
         setScore(prev => prev + 10);
+        playSound(440, 0.1, 'triangle');
       }
     });
 
@@ -226,6 +264,7 @@ const BreakoutGame = ({ onBack }: BreakoutGameProps) => {
     if (bricks.every(brick => !brick.visible)) {
       setLevel(prev => prev + 1);
       setScore(prev => prev + 100);
+      playSound(523, 0.5, 'triangle');
       // 重新初始化砖块并稍微加快球速
       initBricks();
       ball.dx *= 1.05;
@@ -242,6 +281,7 @@ const BreakoutGame = ({ onBack }: BreakoutGameProps) => {
         ctx.fillStyle = brick.color;
         ctx.fillRect(brick.x, brick.y, BRICK_WIDTH, BRICK_HEIGHT);
         ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
         ctx.strokeRect(brick.x, brick.y, BRICK_WIDTH, BRICK_HEIGHT);
       }
     });
@@ -257,7 +297,7 @@ const BreakoutGame = ({ onBack }: BreakoutGameProps) => {
     ctx.fill();
 
     gameRef.current.animationId = requestAnimationFrame(gameLoop);
-  }, [gameState, initBricks, lives, isMobile]);
+  }, [gameState, initBricks, lives, isMobile, playSound]);
 
   useEffect(() => {
     if (gameState === 'playing') {
@@ -285,18 +325,19 @@ const BreakoutGame = ({ onBack }: BreakoutGameProps) => {
       canvas.addEventListener('touchstart', handleTouchStart);
       canvas.addEventListener('touchmove', handleTouchMove);
       canvas.addEventListener('touchend', handleTouchEnd);
+      
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+        canvas.removeEventListener('touchstart', handleTouchStart);
+        canvas.removeEventListener('touchmove', handleTouchMove);
+        canvas.removeEventListener('touchend', handleTouchEnd);
+      };
     }
     
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      
-      if (isMobile && canvasRef.current) {
-        const canvas = canvasRef.current;
-        canvas.removeEventListener('touchstart', handleTouchStart);
-        canvas.removeEventListener('touchmove', handleTouchMove);
-        canvas.removeEventListener('touchend', handleTouchEnd);
-      }
     };
   }, [handleKeyDown, handleKeyUp, handleTouchStart, handleTouchMove, handleTouchEnd, isMobile]);
 
@@ -313,12 +354,12 @@ const BreakoutGame = ({ onBack }: BreakoutGameProps) => {
             </div>
           </div>
 
-          <div className="flex justify-center mb-4 overflow-hidden">
+          <div className="flex justify-center mb-4">
             <canvas
               ref={canvasRef}
               width={CANVAS_WIDTH}
               height={CANVAS_HEIGHT}
-              className="border border-gray-300 rounded-lg bg-blue-800 max-w-full h-auto"
+              className="border border-gray-300 rounded-lg bg-blue-800 w-full max-w-[360px]"
               style={{ 
                 touchAction: 'none',
                 aspectRatio: `${CANVAS_WIDTH}/${CANVAS_HEIGHT}`

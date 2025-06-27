@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, Thermometer, Droplets, Pill, RefreshCw, Search, Filter, Clock } from 'lucide-react';
@@ -14,9 +15,10 @@ type MeniereRecord = Tables<'meniere_records'>;
 interface HistoryViewProps {
   onRecordClick: (record: MeniereRecord) => void;
   showEnhancedFeatures?: boolean;
+  onBack?: () => void;
 }
 
-const HistoryView = ({ onRecordClick, showEnhancedFeatures = false }: HistoryViewProps) => {
+const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: HistoryViewProps) => {
   const [records, setRecords] = useState<MeniereRecord[]>([]);
   const [filteredRecords, setFilteredRecords] = useState<MeniereRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,8 +40,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false }: HistoryVie
       let recordsData;
       
       if (dateFilter === 'all') {
-        // 获取所有记录
-        recordsData = await getRecordsForPeriod(365); // 获取一年内的记录
+        recordsData = await getRecordsForPeriod(365);
       } else if (dateFilter === 'recent') {
         recordsData = await getRecentRecords(5);
       } else {
@@ -58,17 +59,14 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false }: HistoryVie
   const filterRecords = () => {
     let filtered = records;
 
-    // 类型筛选
     if (typeFilter !== 'all') {
       filtered = filtered.filter(record => record.type === typeFilter);
     }
 
-    // 时间范围筛选
     if (dateFilter === 'recent') {
       filtered = filtered.slice(0, 5);
     }
 
-    // 搜索筛选
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(record => 
@@ -132,6 +130,122 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false }: HistoryVie
     );
   }
 
+  // 如果是独立页面模式，渲染完整页面
+  if (onBack) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+        <div className="container mx-auto px-4 py-6 max-w-4xl">
+          <div className="flex items-center justify-between mb-6">
+            <Button variant="ghost" size="sm" onClick={onBack}>
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              返回
+            </Button>
+            <h1 className="text-xl font-bold">最近记录</h1>
+            <Button
+              onClick={loadHistory}
+              variant="ghost"
+              size="sm"
+              className="text-blue-600 hover:text-blue-800"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <div className="space-y-4">
+                {/* 搜索框 */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="搜索记录内容..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                
+                {/* 筛选器 */}
+                <div className="flex space-x-3">
+                  <Select value={typeFilter} onValueChange={setTypeFilter}>
+                    <SelectTrigger className="w-32">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">全部类型</SelectItem>
+                      <SelectItem value="dizziness">眩晕记录</SelectItem>
+                      <SelectItem value="lifestyle">生活记录</SelectItem>
+                      <SelectItem value="medication">用药记录</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger className="w-32">
+                      <Clock className="h-4 w-4 mr-2" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recent">最近5条</SelectItem>
+                      <SelectItem value="3">近3天</SelectItem>
+                      <SelectItem value="7">近7天</SelectItem>
+                      <SelectItem value="30">近30天</SelectItem>
+                      <SelectItem value="all">全部时间</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* 统计信息 */}
+                <div className="flex items-center justify-between text-sm text-gray-500">
+                  <span>共 {filteredRecords.length} 条记录</span>
+                  {searchQuery && (
+                    <span>搜索到 {filteredRecords.length} 条结果</span>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="space-y-3">
+              {filteredRecords.map((record) => (
+                <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">
+                  <div 
+                    className="flex items-center space-x-3 flex-1 cursor-pointer"
+                    onClick={() => onRecordClick(record)}
+                  >
+                    {getRecordIcon(record.type)}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium">{getRecordTitle(record)}</div>
+                      <div className="text-sm text-gray-500 truncate">
+                        {getRecordSubtitle(record)}
+                      </div>
+                      {record.note && (
+                        <div className="text-xs text-gray-400 truncate mt-1">
+                          {record.note}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <RecordDelete
+                    recordId={record.id}
+                    recordType="meniere_records"
+                    onDeleted={handleRecordDeleted}
+                  />
+                </div>
+              ))}
+
+              {filteredRecords.length === 0 && !loading && (
+                <div className="text-center py-8 text-gray-500">
+                  {searchQuery ? '没有找到匹配的记录' : '还没有记录，开始记录您的症状吧'}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // 原有的卡片模式
   return (
     <Card className="mb-6">
       <CardHeader>
@@ -149,7 +263,6 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false }: HistoryVie
         
         {showEnhancedFeatures && (
           <div className="space-y-4 mt-4">
-            {/* 搜索框 */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -160,7 +273,6 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false }: HistoryVie
               />
             </div>
             
-            {/* 筛选器 */}
             <div className="flex space-x-3">
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="w-32">
@@ -190,7 +302,6 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false }: HistoryVie
               </Select>
             </div>
             
-            {/* 统计信息 */}
             <div className="flex items-center justify-between text-sm text-gray-500">
               <span>共 {filteredRecords.length} 条记录</span>
               {searchQuery && (

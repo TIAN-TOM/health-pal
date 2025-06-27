@@ -6,10 +6,12 @@ import { Play, RotateCcw } from 'lucide-react';
 
 interface FlappyBirdProps {
   onBack: () => void;
+  soundEnabled?: boolean;
 }
 
-const FlappyBird = ({ onBack }: FlappyBirdProps) => {
+const FlappyBird = ({ onBack, soundEnabled = true }: FlappyBirdProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'gameOver'>('idle');
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
@@ -30,6 +32,34 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
     clouds: [] as Array<{ x: number; y: number; speed: number; size: number }>
   });
 
+  // 音效生成函数
+  const playSound = useCallback((frequency: number, duration: number, type: 'sine' | 'square' | 'triangle' = 'sine') => {
+    if (!soundEnabled) return;
+    
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      
+      const oscillator = audioContextRef.current.createOscillator();
+      const gainNode = audioContextRef.current.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContextRef.current.destination);
+      
+      oscillator.frequency.setValueAtTime(frequency, audioContextRef.current.currentTime);
+      oscillator.type = type;
+      
+      gainNode.gain.setValueAtTime(0.1, audioContextRef.current.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContextRef.current.currentTime + duration);
+      
+      oscillator.start();
+      oscillator.stop(audioContextRef.current.currentTime + duration);
+    } catch (error) {
+      console.log('Audio context not available');
+    }
+  }, [soundEnabled]);
+
   // 初始化云朵
   const initClouds = useCallback(() => {
     const clouds = [];
@@ -47,8 +77,9 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
   const jump = useCallback(() => {
     if (gameState === 'playing') {
       gameRef.current.bird.velocity = gameRef.current.jumpForce;
+      playSound(523, 0.1);
     }
-  }, [gameState]);
+  }, [gameState, playSound]);
 
   const startGame = () => {
     setGameState('playing');
@@ -58,6 +89,7 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
     gameRef.current.powerUps = [];
     gameRef.current.slowMotion = 0;
     initClouds();
+    playSound(440, 0.2);
   };
 
   const resetGame = () => {
@@ -183,6 +215,7 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
       if (!pipe.passed && pipe.x + game.pipeWidth < game.bird.x) {
         pipe.passed = true;
         setScore(prev => prev + 1);
+        playSound(659, 0.1, 'triangle');
       }
 
       // 碰撞检测
@@ -192,6 +225,7 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
         (game.bird.y - 12 < pipe.topHeight || game.bird.y + 12 > pipe.topHeight + game.pipeGap)
       ) {
         setGameState('gameOver');
+        playSound(150, 0.5, 'square');
       }
     });
 
@@ -239,8 +273,10 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
       if (Math.sqrt(dx * dx + dy * dy) < 20) {
         if (powerUp.type === 'score') {
           setScore(prev => prev + 5);
+          playSound(784, 0.1, 'triangle');
         } else {
-          game.slowMotion = 300; // 慢动作效果持续300帧
+          game.slowMotion = 300;
+          playSound(392, 0.2, 'sine');
         }
         game.powerUps.splice(index, 1);
       }
@@ -253,6 +289,7 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
     // 检查边界碰撞
     if (game.bird.y + 15 > canvas.height || game.bird.y - 15 < 0) {
       setGameState('gameOver');
+      playSound(150, 0.5, 'square');
     }
 
     // 显示慢动作效果
@@ -267,7 +304,7 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
     }
 
     game.animationId = requestAnimationFrame(gameLoop);
-  }, [gameState, initClouds]);
+  }, [gameState, initClouds, playSound]);
 
   useEffect(() => {
     if (gameState === 'playing') {
@@ -324,7 +361,7 @@ const FlappyBird = ({ onBack }: FlappyBirdProps) => {
             {gameState === 'idle' && (
               <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
                 <div className="text-center text-white">
-                  <h3 className="text-lg sm:text-xl font-bold mb-2">飞鸟游戏</h3>
+                  <h3 className="text-lg sm:text-xl font-bold mb-2">小鸟会飞</h3>
                   <p className="mb-4 text-sm sm:text-base">点击屏幕或按空格键让小鸟飞翔</p>
                   <p className="mb-4 text-xs sm:text-sm">收集金币加分，蓝色道具可获得慢动作效果</p>
                   <Button onClick={startGame} className="bg-blue-500 hover:bg-blue-600">

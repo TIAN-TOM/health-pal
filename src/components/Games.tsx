@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Gamepad2, Play } from 'lucide-react';
+import { ArrowLeft, Gamepad2, Play, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import FlappyBird from '@/components/games/FlappyBird';
 import Gomoku from '@/components/games/Gomoku';
-import SnakeGame from '@/components/games/SnakeGame';
 import BreakoutGame from '@/components/games/BreakoutGame';
 
 interface GamesProps {
@@ -14,11 +14,15 @@ interface GamesProps {
 
 const Games = ({ onBack }: GamesProps) => {
   const [currentGame, setCurrentGame] = useState<string | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    const saved = localStorage.getItem('games-sound-enabled');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
 
   const games = [
     {
       id: 'flappy-bird',
-      name: '飞鸟游戏',
+      name: '小鸟会飞',
       description: '经典的飞鸟游戏，收集道具，体验慢动作效果',
       icon: '🐦',
       component: FlappyBird
@@ -31,13 +35,6 @@ const Games = ({ onBack }: GamesProps) => {
       component: Gomoku
     },
     {
-      id: 'snake',
-      name: '贪吃蛇',
-      description: '经典贪吃蛇游戏，操控蛇吃食物并避免碰撞',
-      icon: '🐍',
-      component: SnakeGame
-    },
-    {
       id: 'breakout',
       name: '打砖块',
       description: '控制挡板弹球击碎彩色砖块，关卡不断升级',
@@ -48,6 +45,11 @@ const Games = ({ onBack }: GamesProps) => {
 
   const handleBackToGames = () => {
     setCurrentGame(null);
+  };
+
+  const handleSoundToggle = (enabled: boolean) => {
+    setSoundEnabled(enabled);
+    localStorage.setItem('games-sound-enabled', JSON.stringify(enabled));
   };
 
   if (currentGame) {
@@ -63,9 +65,15 @@ const Games = ({ onBack }: GamesProps) => {
                 返回游戏列表
               </Button>
               <h1 className="text-xl font-bold">{game.name}</h1>
-              <div className="w-24"></div>
+              <div className="flex items-center gap-2">
+                {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                <Switch
+                  checked={soundEnabled}
+                  onCheckedChange={handleSoundToggle}
+                />
+              </div>
             </div>
-            <GameComponent onBack={handleBackToGames} />
+            <GameComponent onBack={handleBackToGames} soundEnabled={soundEnabled} />
           </div>
         </div>
       );
@@ -81,7 +89,13 @@ const Games = ({ onBack }: GamesProps) => {
             返回
           </Button>
           <h1 className="text-xl font-bold">解压小游戏</h1>
-          <div className="w-16"></div>
+          <div className="flex items-center gap-2">
+            {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            <Switch
+              checked={soundEnabled}
+              onCheckedChange={handleSoundToggle}
+            />
+          </div>
         </div>
 
         <div className="mb-6 text-center">

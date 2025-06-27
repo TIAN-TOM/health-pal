@@ -1,29 +1,57 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { RotateCcw, User, Bot, Settings } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RotateCcw, User, Bot, Settings } from 'lucide-react';
 
 interface GomokuProps {
   onBack: () => void;
+  soundEnabled?: boolean;
 }
 
+type Player = 'human' | 'ai' | null;
+type Difficulty = 'easy' | 'medium' | 'hard';
+
 const BOARD_SIZE = 15;
-const EMPTY = 0;
-const PLAYER = 1;
-const AI = 2;
 
-const Gomoku = ({ onBack }: GomokuProps) => {
-  const [board, setBoard] = useState<number[][]>(() => 
-    Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(EMPTY))
+const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
+  const [board, setBoard] = useState<Player[][]>(() => 
+    Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null))
   );
-  const [currentPlayer, setCurrentPlayer] = useState(PLAYER);
-  const [gameStatus, setGameStatus] = useState<'playing' | 'player-win' | 'ai-win' | 'draw'>('playing');
-  const [scores, setScores] = useState({ player: 0, ai: 0 });
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  const [currentPlayer, setCurrentPlayer] = useState<Player>('human');
+  const [winner, setWinner] = useState<Player>(null);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [difficulty, setDifficulty] = useState<Difficulty>('medium');
+  const [showSettings, setShowSettings] = useState(false);
 
-  const checkWin = useCallback((board: number[][], row: number, col: number, player: number): boolean => {
+  // 音效函数
+  const playSound = useCallback((frequency: number, duration: number) => {
+    if (!soundEnabled) return;
+    
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+      
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + duration);
+    } catch (error) {
+      console.log('Audio context not available');
+    }
+  }, [soundEnabled]);
+
+  // 检查获胜条件
+  const checkWinner = useCallback((board: Player[][], row: number, col: number, player: Player): boolean => {
     const directions = [
       [0, 1], [1, 0], [1, 1], [1, -1]
     ];
@@ -31,279 +59,351 @@ const Gomoku = ({ onBack }: GomokuProps) => {
     for (const [dx, dy] of directions) {
       let count = 1;
       
-      // 检查正方向
+      // 向一个方向检查
       for (let i = 1; i < 5; i++) {
         const newRow = row + dx * i;
         const newCol = col + dy * i;
-        if (newRow >= 0 && newRow < BOARD_SIZE && newCol >= 0 && newCol < BOARD_SIZE && board[newRow][newCol] === player) {
+        if (newRow >= 0 && newRow < BOARD_SIZE && newCol >= 0 && newCol < BOARD_SIZE && 
+            board[newRow][newCol] === player) {
           count++;
         } else {
           break;
         }
       }
       
-      // 检查反方向
+      // 向相反方向检查
       for (let i = 1; i < 5; i++) {
         const newRow = row - dx * i;
         const newCol = col - dy * i;
-        if (newRow >= 0 && newRow < BOARD_SIZE && newCol >= 0 && newCol < BOARD_SIZE && board[newRow][newCol] === player) {
+        if (newRow >= 0 && newRow < BOARD_SIZE && newCol >= 0 && newCol < BOARD_SIZE && 
+            board[newRow][newCol] === player) {
           count++;
         } else {
           break;
         }
       }
       
-      if (count >= 5) return true;
+      if (count >= 5) {
+        return true;
+      }
     }
     
     return false;
   }, []);
 
-  const evaluatePosition = useCallback((board: number[][], row: number, col: number, player: number): number => {
+  // 评估位置价值
+  const evaluatePosition = useCallback((board: Player[][], row: number, col: number, player: Player): number => {
+    if (board[row][col] !== null) return -1000;
+    
     let score = 0;
-    const directions = [
-      [0, 1], [1, 0], [1, 1], [1, -1]
-    ];
-
+    const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+    
     for (const [dx, dy] of directions) {
-      let consecutive = 1;
-      let blocked = 0;
+      // 检查连续棋子数量和开放性
+      let consecutive = 0;
+      let openEnds = 0;
       
-      // 检查正方向
-      for (let i = 1; i < 5; i++) {
-        const newRow = row + dx * i;
-        const newCol = col + dy * i;
-        if (newRow >= 0 && newRow < BOARD_SIZE && newCol >= 0 && newCol < BOARD_SIZE) {
-          if (board[newRow][newCol] === player) {
-            consecutive++;
-          } else if (board[newRow][newCol] !== EMPTY) {
-            blocked++;
-            break;
-          } else {
-            break;
-          }
+      // 向一个方向检查
+      let pos = 1;
+      while (pos <= 4 && row + dx * pos >= 0 && row + dx * pos < BOARD_SIZE && 
+             col + dy * pos >= 0 && col + dy * pos < BOARD_SIZE) {
+        if (board[row + dx * pos][col + dy * pos] === player) {
+          consecutive++;
+          pos++;
+        } else if (board[row + dx * pos][col + dy * pos] === null) {
+          openEnds++;
+          break;
         } else {
-          blocked++;
           break;
         }
       }
       
-      // 检查反方向
-      for (let i = 1; i < 5; i++) {
-        const newRow = row - dx * i;
-        const newCol = col - dy * i;
-        if (newRow >= 0 && newRow < BOARD_SIZE && newCol >= 0 && newCol < BOARD_SIZE) {
-          if (board[newRow][newCol] === player) {
-            consecutive++;
-          } else if (board[newRow][newCol] !== EMPTY) {
-            blocked++;
-            break;
-          } else {
-            break;
-          }
+      // 向相反方向检查
+      pos = 1;
+      while (pos <= 4 && row - dx * pos >= 0 && row - dx * pos < BOARD_SIZE && 
+             col - dy * pos >= 0 && col - dy * pos < BOARD_SIZE) {
+        if (board[row - dx * pos][col - dy * pos] === player) {
+          consecutive++;
+          pos++;
+        } else if (board[row - dx * pos][col - dy * pos] === null) {
+          openEnds++;
+          break;
         } else {
-          blocked++;
           break;
         }
       }
       
-      // 根据连子数和阻挡情况计算分数
-      if (consecutive >= 5) {
-        score += 100000;
-      } else if (consecutive === 4) {
-        score += blocked === 0 ? 10000 : (blocked === 1 ? 1000 : 0);
-      } else if (consecutive === 3) {
-        score += blocked === 0 ? 1000 : (blocked === 1 ? 100 : 0);
-      } else if (consecutive === 2) {
-        score += blocked === 0 ? 100 : (blocked === 1 ? 10 : 0);
-      }
+      // 根据连续数和开放性计算分数
+      if (consecutive >= 4) score += 10000; // 即将获胜
+      else if (consecutive === 3 && openEnds === 2) score += 1000; // 活三
+      else if (consecutive === 3 && openEnds === 1) score += 100; // 眠三
+      else if (consecutive === 2 && openEnds === 2) score += 50; // 活二
+      else if (consecutive === 2 && openEnds === 1) score += 10; // 眠二
+      else if (consecutive === 1 && openEnds === 2) score += 5; // 活一
     }
+    
+    // 中心位置加分
+    const centerDistance = Math.abs(row - 7) + Math.abs(col - 7);
+    score += Math.max(0, 14 - centerDistance) * 2;
     
     return score;
   }, []);
 
-  const findBestMove = useCallback((board: number[][]): [number, number] => {
-    let bestScore = -Infinity;
-    let bestMove: [number, number] = [7, 7];
-
-    // 首先检查AI是否有获胜机会
-    for (let row = 0; row < BOARD_SIZE; row++) {
-      for (let col = 0; col < BOARD_SIZE; col++) {
-        if (board[row][col] === EMPTY) {
-          const testBoard = board.map(r => [...r]);
-          testBoard[row][col] = AI;
-          if (checkWin(testBoard, row, col, AI)) {
-            return [row, col];
-          }
-        }
-      }
-    }
-
-    // 然后检查是否需要阻止玩家获胜
-    for (let row = 0; row < BOARD_SIZE; row++) {
-      for (let col = 0; col < BOARD_SIZE; col++) {
-        if (board[row][col] === EMPTY) {
-          const testBoard = board.map(r => [...r]);
-          testBoard[row][col] = PLAYER;
-          if (checkWin(testBoard, row, col, PLAYER)) {
-            return [row, col];
-          }
-        }
-      }
-    }
-
-    // 根据难度选择策略
-    const candidates: Array<{ row: number; col: number; score: number }> = [];
+  // AI移动算法
+  const getAIMove = useCallback((board: Player[][]): [number, number] => {
+    const moves: Array<{row: number, col: number, score: number}> = [];
     
+    // 遍历所有可能的位置
     for (let row = 0; row < BOARD_SIZE; row++) {
       for (let col = 0; col < BOARD_SIZE; col++) {
-        if (board[row][col] === EMPTY) {
-          // 只考虑有邻居的位置
-          let hasNeighbor = false;
-          for (let dr = -2; dr <= 2; dr++) {
-            for (let dc = -2; dc <= 2; dc++) {
-              const nr = row + dr;
-              const nc = col + dc;
-              if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && board[nr][nc] !== EMPTY) {
-                hasNeighbor = true;
-                break;
-              }
-            }
-            if (hasNeighbor) break;
+        if (board[row][col] === null) {
+          let score = 0;
+          
+          // 检查AI获胜机会（最高优先级）
+          const tempBoard = board.map(r => [...r]);
+          tempBoard[row][col] = 'ai';
+          if (checkWinner(tempBoard, row, col, 'ai')) {
+            return [row, col];
           }
           
-          if (hasNeighbor || (row === 7 && col === 7)) {
-            const aiScore = evaluatePosition(board, row, col, AI);
-            const playerScore = evaluatePosition(board, row, col, PLAYER);
-            const totalScore = aiScore + playerScore * 1.2; // 稍微偏重防守
-            
-            candidates.push({ row, col, score: totalScore });
+          // 检查阻止人类获胜（次高优先级）
+          tempBoard[row][col] = 'human';
+          if (checkWinner(tempBoard, row, col, 'human')) {
+            score += 5000;
           }
+          
+          // 根据难度调整策略
+          const aiScore = evaluatePosition(board, row, col, 'ai');
+          const humanScore = evaluatePosition(board, row, col, 'human');
+          
+          switch (difficulty) {
+            case 'easy':
+              score += aiScore * 0.5 + humanScore * 0.3 + Math.random() * 100;
+              break;
+            case 'medium':
+              score += aiScore * 0.8 + humanScore * 0.6 + Math.random() * 50;
+              break;
+            case 'hard':
+              score += aiScore * 1.0 + humanScore * 0.8 + Math.random() * 10;
+              break;
+          }
+          
+          moves.push({ row, col, score });
         }
       }
     }
-
-    if (candidates.length === 0) return [7, 7];
-
-    // 根据难度调整选择策略
-    candidates.sort((a, b) => b.score - a.score);
     
-    let selectedMove;
-    switch (difficulty) {
-      case 'easy':
-        // 简单难度：30%选择最佳，70%随机选择前50%的候选
-        if (Math.random() < 0.3) {
-          selectedMove = candidates[0];
-        } else {
-          const topHalf = candidates.slice(0, Math.max(1, Math.floor(candidates.length / 2)));
-          selectedMove = topHalf[Math.floor(Math.random() * topHalf.length)];
-        }
-        break;
-      case 'medium':
-        // 中等难度：70%选择最佳，30%选择前20%的候选
-        if (Math.random() < 0.7) {
-          selectedMove = candidates[0];
-        } else {
-          const topQuarter = candidates.slice(0, Math.max(1, Math.floor(candidates.length / 5)));
-          selectedMove = topQuarter[Math.floor(Math.random() * topQuarter.length)];
-        }
-        break;
-      case 'hard':
-        // 困难难度：90%选择最佳，10%选择前10%的候选
-        if (Math.random() < 0.9) {
-          selectedMove = candidates[0];
-        } else {
-          const topTen = candidates.slice(0, Math.max(1, Math.floor(candidates.length / 10)));
-          selectedMove = topTen[Math.floor(Math.random() * topTen.length)];
-        }
-        break;
+    // 排序并选择最佳移动
+    moves.sort((a, b) => b.score - a.score);
+    
+    // 在难度较低时，偶尔不选择最佳移动
+    let moveIndex = 0;
+    if (difficulty === 'easy' && Math.random() < 0.3) {
+      moveIndex = Math.min(moves.length - 1, Math.floor(Math.random() * 3));
+    } else if (difficulty === 'medium' && Math.random() < 0.15) {
+      moveIndex = Math.min(moves.length - 1, Math.floor(Math.random() * 2));
     }
+    
+    return moves.length > 0 ? [moves[moveIndex].row, moves[moveIndex].col] : [7, 7];
+  }, [checkWinner, evaluatePosition, difficulty]);
 
-    return [selectedMove.row, selectedMove.col];
-  }, [checkWin, evaluatePosition, difficulty]);
+  // 处理人类下棋
+  const handleCellClick = useCallback((row: number, col: number) => {
+    if (board[row][col] !== null || winner || currentPlayer !== 'human') return;
 
-  const handleIntersectionClick = (row: number, col: number) => {
-    if (board[row][col] !== EMPTY || gameStatus !== 'playing' || currentPlayer !== PLAYER) {
-      return;
-    }
-
-    const newBoard = board.map(row => [...row]);
-    newBoard[row][col] = PLAYER;
+    const newBoard = board.map(r => [...r]);
+    newBoard[row][col] = 'human';
     setBoard(newBoard);
+    
+    playSound(440, 0.1);
 
-    if (checkWin(newBoard, row, col, PLAYER)) {
-      setGameStatus('player-win');
-      setScores(prev => ({ ...prev, player: prev.player + 1 }));
+    if (checkWinner(newBoard, row, col, 'human')) {
+      setWinner('human');
+      playSound(523, 0.5);
       return;
     }
 
-    // 检查是否平局
-    const isFull = newBoard.every(row => row.every(cell => cell !== EMPTY));
-    if (isFull) {
-      setGameStatus('draw');
-      return;
+    setCurrentPlayer('ai');
+  }, [board, winner, currentPlayer, checkWinner, playSound]);
+
+  // AI自动下棋
+  useEffect(() => {
+    if (currentPlayer === 'ai' && !winner && gameStarted) {
+      const timer = setTimeout(() => {
+        const [row, col] = getAIMove(board);
+        const newBoard = board.map(r => [...r]);
+        newBoard[row][col] = 'ai';
+        setBoard(newBoard);
+        
+        playSound(330, 0.1);
+
+        if (checkWinner(newBoard, row, col, 'ai')) {
+          setWinner('ai');
+          playSound(196, 0.5);
+          return;
+        }
+
+        setCurrentPlayer('human');
+      }, 500);
+
+      return () => clearTimeout(timer);
     }
+  }, [currentPlayer, winner, gameStarted, board, getAIMove, checkWinner, playSound]);
 
-    setCurrentPlayer(AI);
-
-    // AI 回合
-    setTimeout(() => {
-      const [aiRow, aiCol] = findBestMove(newBoard);
-      
-      newBoard[aiRow][aiCol] = AI;
-      setBoard([...newBoard]);
-
-      if (checkWin(newBoard, aiRow, aiCol, AI)) {
-        setGameStatus('ai-win');
-        setScores(prev => ({ ...prev, ai: prev.ai + 1 }));
-      } else {
-        setCurrentPlayer(PLAYER);
-      }
-    }, 500);
+  const startGame = () => {
+    setGameStarted(true);
+    setShowSettings(false);
   };
 
   const resetGame = () => {
-    setBoard(Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(EMPTY)));
-    setCurrentPlayer(PLAYER);
-    setGameStatus('playing');
+    setBoard(Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null)));
+    setCurrentPlayer('human');
+    setWinner(null);
+    setGameStarted(false);
+    setShowSettings(false);
   };
 
-  const resetScores = () => {
-    setScores({ player: 0, ai: 0 });
-    resetGame();
+  const getCellContent = (cell: Player) => {
+    if (cell === 'human') return '●';
+    if (cell === 'ai') return '○';
+    return '';
   };
 
-  const getStatusText = () => {
-    switch (gameStatus) {
-      case 'player-win': return '🎉 您获胜了！';
-      case 'ai-win': return '🤖 电脑获胜！';
-      case 'draw': return '🤝 平局！';
-      default: return currentPlayer === PLAYER ? '轮到您下棋' : '电脑思考中...';
-    }
+  const getCellClassName = (cell: Player) => {
+    if (cell === 'human') return 'text-black text-xl font-bold';
+    if (cell === 'ai') return 'text-white text-xl font-bold';
+    return '';
   };
+
+  if (!gameStarted) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-center">五子棋设置</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold mb-4">选择难度等级</h3>
+              <Select value={difficulty} onValueChange={(value: Difficulty) => setDifficulty(value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="easy">简单 - 适合新手</SelectItem>
+                  <SelectItem value="medium">中等 - 有一定挑战</SelectItem>
+                  <SelectItem value="hard">困难 - 高级对手</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center space-x-4 text-sm">
+                <div className="flex items-center">
+                  <User className="h-4 w-4 mr-1" />
+                  <span>你：黑子 ●</span>
+                </div>
+                <div className="flex items-center">
+                  <Bot className="h-4 w-4 mr-1" />
+                  <span>电脑：白子 ○</span>
+                </div>
+              </div>
+              
+              <Button onClick={startGame} className="w-full bg-blue-500 hover:bg-blue-600">
+                开始游戏
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-2xl mx-auto">
       <Card>
-        <CardContent className="p-4 sm:p-6">
-          <div className="text-center mb-4">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="font-semibold text-sm sm:text-base">您: {scores.player}</span>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="text-sm space-y-1">
+              <div className="flex items-center">
+                <User className="h-4 w-4 mr-1" />
+                <span>你：黑子 ●</span>
               </div>
-              <div className="text-sm sm:text-lg font-bold">{getStatusText()}</div>
-              <div className="flex items-center gap-2">
-                <Bot className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="font-semibold text-sm sm:text-base">电脑: {scores.ai}</span>
+              <div className="flex items-center">
+                <Bot className="h-4 w-4 mr-1" />
+                <span>电脑：白子 ○</span>
               </div>
             </div>
             
-            <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="text-center">
+              <CardTitle>五子棋</CardTitle>
+              <p className="text-sm text-gray-600">难度：{
+                difficulty === 'easy' ? '简单' : 
+                difficulty === 'medium' ? '中等' : '困难'
+              }</p>
+            </div>
+            
+            <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
               <Settings className="h-4 w-4" />
-              <span className="text-sm">难度:</span>
-              <Select value={difficulty} onValueChange={(value: 'easy' | 'medium' | 'hard') => setDifficulty(value)}>
-                <SelectTrigger className="w-24">
+            </Button>
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          {winner && (
+            <div className="text-center mb-4 p-4 bg-blue-50 rounded-lg">
+              <h3 className="text-lg font-bold">
+                {winner === 'human' ? '🎉 恭喜！你获胜了！' : '🤖 电脑获胜了，再试一次！'}
+              </h3>
+            </div>
+          )}
+          
+          {!winner && (
+            <div className="text-center mb-4">
+              <p className="text-sm text-gray-600">
+                {currentPlayer === 'human' ? '轮到你了 (黑子 ●)' : '电脑思考中... (白子 ○)'}
+              </p>
+            </div>
+          )}
+
+          <div className="flex justify-center mb-4">
+            <div className="grid grid-cols-15 gap-0 bg-amber-100 p-2 rounded-lg border-2 border-amber-200"
+                 style={{
+                   gridTemplateColumns: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
+                   width: 'min(90vw, 450px)',
+                   height: 'min(90vw, 450px)'
+                 }}>
+              {board.map((row, rowIndex) =>
+                row.map((cell, colIndex) => (
+                  <button
+                    key={`${rowIndex}-${colIndex}`}
+                    className={`
+                      w-full aspect-square border border-amber-300 bg-amber-50 hover:bg-amber-100 
+                      flex items-center justify-center transition-colors duration-150
+                      ${getCellClassName(cell)}
+                    `}
+                    onClick={() => handleCellClick(rowIndex, colIndex)}
+                    disabled={winner !== null || currentPlayer !== 'human'}
+                  >
+                    {getCellContent(cell)}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-center">
+            <Button onClick={resetGame} variant="outline">
+              <RotateCcw className="h-4 w-4 mr-2" />
+              重新开始
+            </Button>
+          </div>
+
+          {showSettings && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-semibold mb-2">调整难度</h4>
+              <Select value={difficulty} onValueChange={(value: Difficulty) => setDifficulty(value)}>
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -312,91 +412,19 @@ const Gomoku = ({ onBack }: GomokuProps) => {
                   <SelectItem value="hard">困难</SelectItem>
                 </SelectContent>
               </Select>
+              <div className="flex gap-2 mt-3">
+                <Button size="sm" onClick={() => setShowSettings(false)} variant="outline">
+                  关闭
+                </Button>
+                <Button size="sm" onClick={resetGame}>
+                  应用并重新开始
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className="flex justify-center mb-4 overflow-x-auto">
-            <div className="relative bg-yellow-100 p-2 rounded border-2 border-gray-800 min-w-fit">
-              <svg
-                width="300"
-                height="300"
-                viewBox="0 0 300 300"
-                className="w-full max-w-[300px] h-auto"
-                style={{ aspectRatio: '1' }}
-              >
-                {/* 绘制棋盘线条 */}
-                {Array.from({ length: BOARD_SIZE }, (_, i) => (
-                  <g key={`lines-${i}`}>
-                    {/* 横线 */}
-                    <line
-                      x1={10}
-                      y1={10 + i * 20}
-                      x2={290}
-                      y2={10 + i * 20}
-                      stroke="#654321"
-                      strokeWidth="1"
-                    />
-                    {/* 竖线 */}
-                    <line
-                      x1={10 + i * 20}
-                      y1={10}
-                      x2={10 + i * 20}
-                      y2={290}
-                      stroke="#654321"
-                      strokeWidth="1"
-                    />
-                  </g>
-                ))}
-                
-                {/* 绘制棋盘上的棋子和交叉点 */}
-                {board.map((row, rowIndex) =>
-                  row.map((cell, colIndex) => (
-                    <g key={`${rowIndex}-${colIndex}`}>
-                      {/* 可点击的交叉点区域 */}
-                      <circle
-                        cx={10 + colIndex * 20}
-                        cy={10 + rowIndex * 20}
-                        r="8"
-                        fill="transparent"
-                        stroke="transparent"
-                        className="cursor-pointer hover:fill-gray-200"
-                        onClick={() => handleIntersectionClick(rowIndex, colIndex)}
-                        style={{ 
-                          pointerEvents: cell === EMPTY && gameStatus === 'playing' && currentPlayer === PLAYER ? 'auto' : 'none' 
-                        }}
-                      />
-                      
-                      {/* 棋子 */}
-                      {cell !== EMPTY && (
-                        <circle
-                          cx={10 + colIndex * 20}
-                          cy={10 + rowIndex * 20}
-                          r="7"
-                          fill={cell === PLAYER ? "#000" : "#fff"}
-                          stroke={cell === PLAYER ? "#000" : "#333"}
-                          strokeWidth="1"
-                        />
-                      )}
-                    </g>
-                  ))
-                )}
-              </svg>
-            </div>
-          </div>
-
-          <div className="flex justify-center gap-2 sm:gap-4">
-            <Button onClick={resetGame} variant="outline" size="sm">
-              <RotateCcw className="h-4 w-4 mr-2" />
-              重新开始
-            </Button>
-            <Button onClick={resetScores} variant="outline" size="sm">
-              重置分数
-            </Button>
-          </div>
-
-          <div className="mt-4 text-center text-xs sm:text-sm text-gray-600">
-            <p>点击线条交叉点下棋，连成5个同色棋子即可获胜</p>
-            <p>⚫ 代表您的棋子，⚪ 代表电脑的棋子</p>
+          <div className="text-center text-xs text-gray-600 mt-4">
+            <p>连续放置5个棋子即可获胜</p>
           </div>
         </CardContent>
       </Card>
