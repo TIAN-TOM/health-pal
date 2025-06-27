@@ -49,7 +49,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
     getCurrentBeijingTime();
   }, []);
 
-  const handleCustomExportWrapper = (format: 'json' | 'text') => {
+  const handleCustomExportWrapper = (format: 'text') => {
     handleCustomExport(customStartDate, customEndDate, format);
   };
 

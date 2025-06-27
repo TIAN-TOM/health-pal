@@ -36,18 +36,15 @@ export const useDataExport = () => {
           startDate = new Date(today);
           startDate.setMonth(today.getMonth() - 1);
       }
-
-      const startDateStr = getBeijingDateString(startDate);
-      const endDateStr = getBeijingDateString(today);
       
-      console.log('快速导出参数:', { period, format, startDateStr, endDateStr });
+      console.log('快速导出参数:', { period, format, startDate, endDate: today });
       
-      const records = await getRecordsByDateRange(startDateStr, endDateStr);
-      console.log('获取到的记录数量:', records?.length || 0);
+      const records = await getRecordsByDateRange(startDate, today);
+      console.log('获取到的记录:', records);
 
       let formattedData = '';
       if (format === 'text') {
-        formattedData = generateTextFormat(records, startDateStr, endDateStr);
+        formattedData = generateTextFormat(records);
       }
 
       // 复制到剪贴板
@@ -90,12 +87,15 @@ export const useDataExport = () => {
     try {
       console.log('自定义导出参数:', { startDate, endDate, format });
       
-      const records = await getRecordsByDateRange(startDate, endDate);
-      console.log('获取到的记录数量:', records?.length || 0);
+      const startDateObj = new Date(startDate);
+      const endDateObj = new Date(endDate);
+      
+      const records = await getRecordsByDateRange(startDateObj, endDateObj);
+      console.log('获取到的记录:', records);
 
       let formattedData = '';
       if (format === 'text') {
-        formattedData = generateTextFormat(records, startDate, endDate);
+        formattedData = generateTextFormat(records);
       }
 
       // 复制到剪贴板
