@@ -5,23 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
+import { manualSections, type ManualSection } from '@/data/manualContent';
 import * as Icons from 'lucide-react';
-
-interface ManualItem {
-  id: string;
-  title: string;
-  content: string;
-  section: string;
-  order_index: number;
-  icon?: string;
-}
 
 interface UserManualProps {
   onBack: () => void;
 }
 
 const UserManual = ({ onBack }: UserManualProps) => {
-  const [manualItems, setManualItems] = useState<ManualItem[]>([]);
+  const [manualItems, setManualItems] = useState<ManualSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['入门指南']));
 
@@ -31,15 +23,23 @@ const UserManual = ({ onBack }: UserManualProps) => {
 
   const loadManualItems = async () => {
     try {
+      // 尝试从数据库加载
       const { data, error } = await supabase
         .from('user_manual')
         .select('*')
         .order('order_index');
 
-      if (error) throw error;
-      setManualItems(data || []);
+      if (error || !data || data.length === 0) {
+        // 如果数据库中没有数据，使用本地数据
+        console.log('使用本地手册数据');
+        setManualItems(manualSections);
+      } else {
+        setManualItems(data);
+      }
     } catch (error) {
       console.error('加载用户手册失败:', error);
+      // 出错时使用本地数据
+      setManualItems(manualSections);
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ const UserManual = ({ onBack }: UserManualProps) => {
     }
     acc[item.section].push(item);
     return acc;
-  }, {} as Record<string, ManualItem[]>);
+  }, {} as Record<string, ManualSection[]>);
 
   const toggleSection = (section: string) => {
     const newOpenSections = new Set(openSections);
@@ -138,7 +138,7 @@ const UserManual = ({ onBack }: UserManualProps) => {
             <div>
               <h3 className="font-medium text-blue-800 mb-1">使用提示</h3>
               <p className="text-blue-700 text-sm">
-                如果您在使用过程中遇到任何问题，请随时联系我们的客服团队。建议您按照手册的顺序逐步了解各功能，这样能更好地发挥应用的作用。
+                如果您在使用过程中遇到任何问题，请随时联系我们的客服团队。建议您按照手册的顺序逐步了解各功能，这样能更好地发挥应用的作用。应用会定期更新功能，请关注最新的使用指南。
               </p>
             </div>
           </div>

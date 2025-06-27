@@ -1,33 +1,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import DailyCheckin from "@/components/DailyCheckin";
-import DizzinessRecord from "@/components/DizzinessRecord";
-import DiabetesRecord from "@/components/DiabetesRecord";
-import LifestyleRecord from "@/components/LifestyleRecord";
-import MedicationRecord from "@/components/MedicationRecord";
-import VoiceRecord from "@/components/VoiceRecord";
-import HistoryView from "@/components/HistoryView";
-import CalendarView from "@/components/CalendarView";
-import DataExport from "@/components/DataExport";
-import Settings from "@/components/Settings";
-import UserPreferences from "@/components/UserPreferences";
-import UserManual from "@/components/UserManual";
-import ProfileEdit from "@/components/ProfileEdit";
-import AdminPanel from "@/components/AdminPanel";
-import EmergencyContacts from "@/components/EmergencyContacts";
-import MedicalRecords from "@/components/MedicalRecords";
-import EducationCenter from "@/components/EducationCenter";
-import MedicationManagement from "@/components/MedicationManagement";
-import UserWelcomeWithClock from "@/components/UserWelcomeWithClock";
-import NavigationActions from "@/components/NavigationActions";
-import EmergencyBanner from "@/components/EmergencyBanner";
-import EmergencyMode from "@/components/EmergencyMode";
-import FunctionCards from "@/components/FunctionCards";
-import DailyDataHub from "@/components/DailyDataHub";
-import DailyQuote from "@/components/DailyQuote";
-import AnnouncementDisplay from "@/components/AnnouncementDisplay";
-import RecordDetail from "@/components/RecordDetail";
+import PageRenderer from "@/components/PageRenderer";
+import HomePage from "@/components/HomePage";
 import AuthPage from "./AuthPage";
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -113,93 +88,28 @@ export default function Index() {
     return <AuthPage />;
   }
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case "emergency":
-        return <EmergencyMode onBack={() => handleBack("home")} />;
-      case "checkin":
-        return <DailyCheckin onBack={() => handleBack("home")} />;
-      case "dizziness":
-        return <DizzinessRecord onBack={() => handleBack("home")} />;
-      case "diabetes":
-        return <DiabetesRecord onBack={() => handleBack("home")} />;
-      case "lifestyle":
-        return <LifestyleRecord onBack={() => handleBack("home")} />;
-      case "medication":
-        return (
-          <MedicationRecord 
-            onBack={() => handleBack("home")} 
-            onNavigateToMedicationManagement={() => handleNavigation("medication-management", "medication")}
-          />
-        );
-      case "voice":
-        return <VoiceRecord onBack={() => handleBack("home")} />;
-      case "history":
-        return <HistoryView onRecordClick={handleRecordClick} showEnhancedFeatures={true} />;
-      case "calendar":
-        return <CalendarView />;
-      case "export":
-        return <DataExport onBack={() => handleBack("home")} />;
-      case "daily-data":
-        return <DailyDataHub onBack={() => handleBack("home")} onRecordClick={handleRecordClick} />;
-      case "record-detail":
-        return selectedRecord ? (
-          <RecordDetail 
-            record={selectedRecord} 
-            onBack={() => handleBack("history")} 
-          />
-        ) : null;
-      case "settings":
-        return (
-          <Settings
-            onBack={() => handleBack("home")}
-            onAdminPanel={() => handleNavigation("admin", "settings")}
-            onEmergencyContacts={() => handleNavigation("emergency-contacts", "settings")}
-            onMedicalRecords={() => handleNavigation("medical-records", "settings")}
-            onEducation={() => handleNavigation("education", "settings")}
-            onMedicationManagement={() => handleNavigation("medication-management", "settings")}
-            onProfileEdit={() => handleNavigation("profile-edit", "settings")}
-            onUserPreferences={() => handleNavigation("user-preferences", "settings")}
-            onUserManual={() => handleNavigation("user-manual", "settings")}
-          />
-        );
-      case "user-preferences":
-        return <UserPreferences onBack={() => handleBack(navigationSource)} />;
-      case "user-manual":
-        return <UserManual onBack={() => handleBack(navigationSource)} />;
-      case "profile-edit":
-        return <ProfileEdit onBack={() => handleBack(navigationSource)} />;
-      case "admin":
-        return <AdminPanel onBack={() => handleBack(navigationSource)} />;
-      case "emergency-contacts":
-        return <EmergencyContacts onBack={() => handleBack(navigationSource)} />;
-      case "medical-records":
-        return <MedicalRecords onBack={() => handleBack(navigationSource === "home" ? "home" : navigationSource)} />;
-      case "education":
-        return <EducationCenter onBack={() => handleBack(navigationSource === "home" ? "home" : navigationSource)} />;
-      case "medication-management":
-        return <MedicationManagement onBack={() => handleBack(navigationSource)} />;
-      default:
-        return (
-          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50" ref={homeRef}>
-            <div className="container mx-auto px-4 py-6 max-w-md">
-              <UserWelcomeWithClock 
-                userDisplayName={userProfile?.full_name || user.email || "用户"}
-                onSettingsClick={() => handleNavigation("settings")}
-              />
-              <AnnouncementDisplay />
-              <EmergencyBanner onEmergencyClick={handleEmergencyClick} />
-              <FunctionCards onNavigate={(page) => handleNavigation(page, "home")} />
-              <DailyQuote />
-              <NavigationActions 
-                onDataExport={() => handleNavigation("export")}
-                onDailyData={() => handleNavigation("daily-data")}
-              />
-            </div>
-          </div>
-        );
-    }
-  };
+  if (currentPage === "home") {
+    return (
+      <HomePage
+        userDisplayName={userProfile?.full_name || user.email || "用户"}
+        onSettingsClick={() => handleNavigation("settings")}
+        onEmergencyClick={handleEmergencyClick}
+        onNavigate={handleNavigation}
+        homeRef={homeRef}
+      />
+    );
+  }
 
-  return renderPage();
+  const pageContent = (
+    <PageRenderer
+      currentPage={currentPage}
+      selectedRecord={selectedRecord}
+      navigationSource={navigationSource}
+      onBack={handleBack}
+      onNavigation={handleNavigation}
+      onRecordClick={handleRecordClick}
+    />
+  );
+
+  return pageContent;
 }

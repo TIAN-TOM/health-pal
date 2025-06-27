@@ -3,18 +3,26 @@ import React from 'react';
 import { Home, Stethoscope, Pill, Activity, Smile } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useClickSound } from '@/hooks/useClickSound';
 
 interface FunctionCardsProps {
   onNavigate: (view: string, source?: string) => void;
 }
 
 const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
+  const { playClickSound } = useClickSound();
+
+  const handleNavigateWithSound = (view: string, source?: string) => {
+    playClickSound();
+    onNavigate(view, source);
+  };
+
   return (
     <div className="grid gap-4 mb-8">
       <Card className="hover:shadow-lg transition-shadow duration-200">
         <CardContent className="p-6">
           <Button 
-            onClick={() => onNavigate('checkin', 'home')} 
+            onClick={() => handleNavigateWithSound('checkin', 'home')} 
             className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
             <div className="flex flex-col items-center">
@@ -30,7 +38,7 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       <Card className="hover:shadow-lg transition-shadow duration-200">
         <CardContent className="p-6">
           <Button 
-            onClick={() => onNavigate('dizziness', 'home')} 
+            onClick={() => handleNavigateWithSound('dizziness', 'home')} 
             className="w-full bg-blue-500 hover:bg-blue-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
             <div className="flex flex-col items-center">
@@ -46,7 +54,7 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       <Card className="hover:shadow-lg transition-shadow duration-200">
         <CardContent className="p-6">
           <Button 
-            onClick={() => onNavigate('diabetes', 'home')} 
+            onClick={() => handleNavigateWithSound('diabetes', 'home')} 
             className="w-full bg-teal-500 hover:bg-teal-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
             <div className="flex flex-col items-center">
@@ -62,7 +70,7 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       <Card className="hover:shadow-lg transition-shadow duration-200">
         <CardContent className="p-6">
           <Button 
-            onClick={() => onNavigate('lifestyle', 'home')} 
+            onClick={() => handleNavigateWithSound('lifestyle', 'home')} 
             className="w-full bg-green-500 hover:bg-green-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
             <div className="flex flex-col items-center">
@@ -78,7 +86,7 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       <Card className="hover:shadow-lg transition-shadow duration-200">
         <CardContent className="p-6">
           <Button 
-            onClick={() => onNavigate('medication', 'home')} 
+            onClick={() => handleNavigateWithSound('medication', 'home')} 
             className="w-full bg-orange-500 hover:bg-orange-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
             <div className="flex flex-col items-center">
@@ -94,7 +102,7 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       <Card className="hover:shadow-lg transition-shadow duration-200">
         <CardContent className="p-6">
           <Button 
-            onClick={() => onNavigate('medical-records', 'home')} 
+            onClick={() => handleNavigateWithSound('medical-records', 'home')} 
             className="w-full bg-indigo-500 hover:bg-indigo-600 text-white text-lg font-medium py-8 rounded-lg min-h-[120px]"
           >
             <div className="flex flex-col items-center">
