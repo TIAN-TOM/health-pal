@@ -52,7 +52,7 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <>
       {functions.map(func => (
         <Card 
           key={func.id} 
@@ -68,7 +68,7 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
           </CardContent>
         </Card>
       ))}
-    </div>
+    </>
   );
 };
 

@@ -22,6 +22,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
+  const progressRef = useRef<number>(0);
 
   const patterns = {
     '4-4-4-4': { 
@@ -38,16 +39,6 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
       inhale: 6, hold1: 0, exhale: 6, hold2: 0, 
       name: '深度呼吸法',
       description: '简单的深呼吸练习，增加肺活量，改善血氧含量，适合初学者'
-    },
-    '5-5-5-5': { 
-      inhale: 5, hold1: 5, exhale: 5, hold2: 5, 
-      name: '五拍平衡法',
-      description: '稍长的平衡呼吸，能够更深层次地激活副交感神经，增强冥想效果'
-    },
-    '3-3-3-3': { 
-      inhale: 3, hold1: 3, exhale: 3, hold2: 3, 
-      name: '快节奏呼吸',
-      description: '适合时间紧张时的快速放松，短时间内有效缓解紧张情绪'
     }
   };
 
@@ -59,6 +50,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
     setCountdown(currentPattern.inhale);
     setSessionTime(0);
     setCompletedCycles(0);
+    progressRef.current = 0;
   };
 
   const pauseSession = () => {
@@ -71,9 +63,10 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
     setCountdown(currentPattern.inhale);
     setSessionTime(0);
     setCompletedCycles(0);
+    progressRef.current = 0;
   };
 
-  // 绘制流畅的呼吸动画
+  // 绘制更流畅的呼吸动画
   const drawBreathingAnimation = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -86,83 +79,90 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
     const maxRadius = Math.min(canvas.width, canvas.height) * 0.35;
     const minRadius = 40;
     
-    // 计算当前进度，使用更平滑的插值
-    let progress = 0;
+    // 计算当前进度，使用更精细的时间步进
     const totalTime = currentPattern[phase];
+    let targetProgress = 0;
     if (totalTime > 0) {
-      progress = (totalTime - countdown) / totalTime;
-      // 使用缓动函数让动画更自然
-      progress = phase === 'inhale' || phase === 'exhale' 
-        ? 0.5 - 0.5 * Math.cos(progress * Math.PI) // 正弦缓动
-        : progress; // 屏气阶段保持线性
+      targetProgress = (totalTime - countdown) / totalTime;
     }
+    
+    // 使用缓动函数让动画更自然
+    const easedProgress = phase === 'inhale' || phase === 'exhale' 
+      ? 0.5 - 0.5 * Math.cos(targetProgress * Math.PI) // 正弦缓动
+      : targetProgress; // 屏气阶段保持线性
+
+    // 平滑过渡到目标进度
+    const transitionSpeed = 0.1;
+    progressRef.current += (easedProgress - progressRef.current) * transitionSpeed;
 
     let radius;
-    let targetRadius;
     
     switch (phase) {
       case 'inhale':
-        targetRadius = minRadius + (maxRadius - minRadius) * progress;
+        radius = minRadius + (maxRadius - minRadius) * progressRef.current;
         break;
       case 'hold1':
-        targetRadius = maxRadius;
+        radius = maxRadius;
         break;
       case 'exhale':
-        targetRadius = maxRadius - (maxRadius - minRadius) * progress;
+        radius = maxRadius - (maxRadius - minRadius) * progressRef.current;
         break;
       case 'hold2':
-        targetRadius = minRadius;
+        radius = minRadius;
         break;
       default:
-        targetRadius = minRadius;
+        radius = minRadius;
     }
-
-    radius = targetRadius;
 
     // 清空画布
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // 绘制外圈指示器
     ctx.beginPath();
-    ctx.arc(centerX, centerY, maxRadius + 15, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, maxRadius + 20, 0, Math.PI * 2);
     ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     ctx.stroke();
 
     // 绘制进度弧
     if (totalTime > 0) {
-      const angle = (progress * 2 * Math.PI) - Math.PI / 2;
+      const angle = (targetProgress * 2 * Math.PI) - Math.PI / 2;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, maxRadius + 15, -Math.PI / 2, angle);
+      ctx.arc(centerX, centerY, maxRadius + 20, -Math.PI / 2, angle);
       ctx.strokeStyle = phase === 'inhale' ? '#3b82f6' : 
                         phase === 'hold1' ? '#10b981' : 
                         phase === 'exhale' ? '#8b5cf6' : '#f59e0b';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
       ctx.stroke();
     }
 
-    // 创建渐变
+    // 创建更丰富的渐变
     const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
     
     switch (phase) {
       case 'inhale':
-        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
-        gradient.addColorStop(0.7, 'rgba(59, 130, 246, 0.4)');
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.9)');
+        gradient.addColorStop(0.5, 'rgba(59, 130, 246, 0.6)');
+        gradient.addColorStop(0.8, 'rgba(59, 130, 246, 0.3)');
         gradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
         break;
       case 'hold1':
-        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.8)');
-        gradient.addColorStop(0.7, 'rgba(16, 185, 129, 0.4)');
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.9)');
+        gradient.addColorStop(0.5, 'rgba(16, 185, 129, 0.6)');
+        gradient.addColorStop(0.8, 'rgba(16, 185, 129, 0.3)');
         gradient.addColorStop(1, 'rgba(16, 185, 129, 0.1)');
         break;
       case 'exhale':
-        gradient.addColorStop(0, 'rgba(139, 92, 246, 0.8)');
-        gradient.addColorStop(0.7, 'rgba(139, 92, 246, 0.4)');
+        gradient.addColorStop(0, 'rgba(139, 92, 246, 0.9)');
+        gradient.addColorStop(0.5, 'rgba(139, 92, 246, 0.6)');
+        gradient.addColorStop(0.8, 'rgba(139, 92, 246, 0.3)');
         gradient.addColorStop(1, 'rgba(139, 92, 246, 0.1)');
         break;
       case 'hold2':
-        gradient.addColorStop(0, 'rgba(245, 158, 11, 0.8)');
-        gradient.addColorStop(0.7, 'rgba(245, 158, 11, 0.4)');
+        gradient.addColorStop(0, 'rgba(245, 158, 11, 0.9)');
+        gradient.addColorStop(0.5, 'rgba(245, 158, 11, 0.6)');
+        gradient.addColorStop(0.8, 'rgba(245, 158, 11, 0.3)');
         gradient.addColorStop(1, 'rgba(245, 158, 11, 0.1)');
         break;
     }
@@ -173,18 +173,25 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
     ctx.fillStyle = gradient;
     ctx.fill();
 
-    // 添加边框
+    // 添加光晕效果
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius + 5, 0, Math.PI * 2);
+    ctx.strokeStyle = phase === 'inhale' ? 'rgba(59, 130, 246, 0.3)' : 
+                      phase === 'hold1' ? 'rgba(16, 185, 129, 0.3)' : 
+                      phase === 'exhale' ? 'rgba(139, 92, 246, 0.3)' : 'rgba(245, 158, 11, 0.3)';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+
+    // 添加内部边框
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
     ctx.strokeStyle = phase === 'inhale' ? '#3b82f6' : 
                       phase === 'hold1' ? '#10b981' : 
                       phase === 'exhale' ? '#8b5cf6' : '#f59e0b';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.stroke();
 
-    if (isActive) {
-      animationRef.current = requestAnimationFrame(drawBreathingAnimation);
-    }
+    animationRef.current = requestAnimationFrame(drawBreathingAnimation);
   };
 
   useEffect(() => {
@@ -276,8 +283,8 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
             <div className="text-center mb-4">
               <canvas
                 ref={canvasRef}
-                width={300}
-                height={300}
+                width={320}
+                height={320}
                 className="mx-auto rounded-full"
               />
             </div>
@@ -352,11 +359,8 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">1 分钟</SelectItem>
-                  <SelectItem value="2">2 分钟</SelectItem>
                   <SelectItem value="3">3 分钟</SelectItem>
-                  <SelectItem value="4">4 分钟</SelectItem>
                   <SelectItem value="5">5 分钟</SelectItem>
-                  <SelectItem value="6">6 分钟</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -255,18 +255,6 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
     setGameStarted(false);
   };
 
-  const getCellContent = (cell: Player) => {
-    if (cell === 'human') return '●';
-    if (cell === 'ai') return '●';
-    return '';
-  };
-
-  const getCellClassName = (cell: Player) => {
-    if (cell === 'human') return 'text-black text-lg font-bold';
-    if (cell === 'ai') return 'text-red-600 text-lg font-bold';
-    return '';
-  };
-
   if (!gameStarted) {
     return (
       <div className="max-w-2xl mx-auto">
@@ -293,11 +281,13 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
               <div className="flex items-center justify-center space-x-4 text-sm">
                 <div className="flex items-center">
                   <User className="h-4 w-4 mr-1" />
-                  <span>你：黑子 ●</span>
+                  <span>你：黑子</span>
+                  <div className="w-4 h-4 bg-black rounded-full ml-2 border"></div>
                 </div>
                 <div className="flex items-center">
                   <Bot className="h-4 w-4 mr-1" />
-                  <span>电脑：红子 ●</span>
+                  <span>电脑：白子</span>
+                  <div className="w-4 h-4 bg-white rounded-full ml-2 border-2 border-gray-400"></div>
                 </div>
               </div>
               
@@ -319,11 +309,13 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
             <div className="text-sm space-y-1">
               <div className="flex items-center">
                 <User className="h-4 w-4 mr-1" />
-                <span>你：黑子 ●</span>
+                <span>你：黑子</span>
+                <div className="w-4 h-4 bg-black rounded-full ml-2 border"></div>
               </div>
               <div className="flex items-center">
                 <Bot className="h-4 w-4 mr-1" />
-                <span>电脑：红子 ●</span>
+                <span>电脑：白子</span>
+                <div className="w-4 h-4 bg-white rounded-full ml-2 border-2 border-gray-400"></div>
               </div>
             </div>
             
@@ -351,69 +343,87 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
           {!winner && (
             <div className="text-center mb-4">
               <p className="text-sm text-gray-600">
-                {currentPlayer === 'human' ? '轮到你了 (黑子 ●)' : '电脑思考中... (红子 ●)'}
+                {currentPlayer === 'human' ? '轮到你了 (黑子)' : '电脑思考中... (白子)'}
               </p>
             </div>
           )}
 
           <div className="flex justify-center mb-4">
-            <div 
-              className="relative bg-amber-100 p-2 rounded-lg border-2 border-amber-200"
-              style={{
-                width: 'min(90vw, 420px)',
-                height: 'min(90vw, 420px)'
-              }}
-            >
-              {/* 绘制棋盘线条 */}
+            <div className="relative bg-amber-100 p-4 rounded-lg border-2 border-amber-200">
               <svg 
-                className="absolute inset-2 w-full h-full"
-                viewBox="0 0 280 280"
-                style={{ width: 'calc(100% - 16px)', height: 'calc(100% - 16px)' }}
+                width="360" 
+                height="360" 
+                className="border border-amber-300 bg-amber-50"
               >
-                {/* 横线 */}
+                {/* 绘制棋盘网格线 */}
                 {Array.from({ length: BOARD_SIZE }, (_, i) => (
-                  <line
-                    key={`h-${i}`}
-                    x1="10"
-                    y1={10 + i * 18.57}
-                    x2="270"
-                    y2={10 + i * 18.57}
-                    stroke="#8B4513"
-                    strokeWidth="1"
-                  />
+                  <g key={`line-${i}`}>
+                    {/* 横线 */}
+                    <line
+                      x1="12"
+                      y1={12 + i * 24}
+                      x2="348"
+                      y2={12 + i * 24}
+                      stroke="#8B4513"
+                      strokeWidth="1"
+                    />
+                    {/* 竖线 */}
+                    <line
+                      x1={12 + i * 24}
+                      y1="12"
+                      x2={12 + i * 24}
+                      y2="348"
+                      stroke="#8B4513"
+                      strokeWidth="1"
+                    />
+                  </g>
                 ))}
-                {/* 竖线 */}
-                {Array.from({ length: BOARD_SIZE }, (_, i) => (
-                  <line
-                    key={`v-${i}`}
-                    x1={10 + i * 18.57}
-                    y1="10"
-                    x2={10 + i * 18.57}
-                    y2="270"
-                    stroke="#8B4513"
-                    strokeWidth="1"
-                  />
-                ))}
-              </svg>
-              
-              {/* 棋子 */}
-              <div className="absolute inset-2 grid grid-cols-15 gap-0"
-                   style={{ gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)` }}>
+                
+                {/* 绘制棋子 */}
                 {board.map((row, rowIndex) =>
-                  row.map((cell, colIndex) => (
-                    <button
-                      key={`${rowIndex}-${colIndex}`}
-                      className="w-full aspect-square flex items-center justify-center hover:bg-amber-200/50 rounded-full transition-colors"
-                      onClick={() => handleCellClick(rowIndex, colIndex)}
-                      disabled={winner !== null || currentPlayer !== 'human'}
-                    >
-                      <span className={getCellClassName(cell)}>
-                        {getCellContent(cell)}
-                      </span>
-                    </button>
-                  ))
+                  row.map((cell, colIndex) => {
+                    if (cell === null) return null;
+                    
+                    const x = 12 + colIndex * 24;
+                    const y = 12 + rowIndex * 24;
+                    
+                    return (
+                      <circle
+                        key={`piece-${rowIndex}-${colIndex}`}
+                        cx={x}
+                        cy={y}
+                        r="10"
+                        fill={cell === 'human' ? '#000000' : '#FFFFFF'}
+                        stroke={cell === 'human' ? '#333333' : '#666666'}
+                        strokeWidth="1"
+                      />
+                    );
+                  })
                 )}
-              </div>
+                
+                {/* 交互区域 */}
+                {board.map((row, rowIndex) =>
+                  row.map((cell, colIndex) => {
+                    const x = 12 + colIndex * 24;
+                    const y = 12 + rowIndex * 24;
+                    
+                    return (
+                      <circle
+                        key={`click-${rowIndex}-${colIndex}`}
+                        cx={x}
+                        cy={y}
+                        r="12"
+                        fill="transparent"
+                        className="cursor-pointer hover:fill-blue-100 hover:fill-opacity-30"
+                        onClick={() => handleCellClick(rowIndex, colIndex)}
+                        style={{
+                          pointerEvents: winner || currentPlayer !== 'human' ? 'none' : 'auto'
+                        }}
+                      />
+                    );
+                  })
+                )}
+              </svg>
             </div>
           </div>
 

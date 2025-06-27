@@ -7,7 +7,8 @@ import FunctionCards from '@/components/FunctionCards';
 import DailyQuote from '@/components/DailyQuote';
 import AnnouncementDisplay from '@/components/AnnouncementDisplay';
 import { Button } from '@/components/ui/button';
-import { BookOpen } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { BookOpen, Sparkles } from 'lucide-react';
 
 interface HomePageProps {
   userDisplayName: string;
@@ -26,7 +27,7 @@ const HomePage = ({
 }: HomePageProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50" ref={homeRef}>
-      <div className="container mx-auto px-4 py-4 max-w-md space-y-4">
+      <div className="container mx-auto px-4 py-3 max-w-md space-y-3">
         <UserWelcomeWithClock 
           userDisplayName={userDisplayName}
           onSettingsClick={onSettingsClick}
@@ -36,7 +37,20 @@ const HomePage = ({
         
         <EmergencyBanner onEmergencyClick={onEmergencyClick} />
         
-        <FunctionCards onNavigate={onNavigate} />
+        <div className="grid grid-cols-2 gap-3">
+          <FunctionCards onNavigate={onNavigate} />
+          
+          {/* 占位符模块 */}
+          <Card className="hover:shadow-lg transition-all duration-200 opacity-60">
+            <CardContent className="p-4 text-center">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 flex items-center justify-center mx-auto mb-3">
+                <Sparkles className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="font-medium text-gray-500 mb-1">更多功能</h3>
+              <p className="text-xs text-gray-400">开发中，敬请期待</p>
+            </CardContent>
+          </Card>
+        </div>
         
         {/* 使用手册快速入口 */}
         <Button

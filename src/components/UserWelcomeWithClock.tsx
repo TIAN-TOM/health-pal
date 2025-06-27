@@ -49,11 +49,11 @@ const UserWelcomeWithClock = ({ userDisplayName, onSettingsClick }: UserWelcomeW
   };
 
   return (
-    <Card className="mb-6">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
+    <Card className="mb-3">
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex-1">
-            <h2 className="text-xl font-semibold text-gray-800">
+            <h2 className="text-lg font-semibold text-gray-800">
               欢迎, {userDisplayName}
             </h2>
           </div>
@@ -68,14 +68,14 @@ const UserWelcomeWithClock = ({ userDisplayName, onSettingsClick }: UserWelcomeW
           </Button>
         </div>
 
-        <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+        <div className="bg-blue-50 rounded-lg p-2 border border-blue-100">
           <div className="flex items-center justify-center space-x-2">
             <Clock className="h-4 w-4 text-blue-600" />
             <div className="text-center">
-              <div className="text-lg font-mono font-bold text-gray-800">
+              <div className="text-base font-mono font-bold text-gray-800">
                 {formatTime(currentTime)}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-xs text-gray-600">
                 {formatDate(currentTime)} (北京时间)
               </div>
             </div>
