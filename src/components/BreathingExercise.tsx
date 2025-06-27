@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Play, Pause, RotateCcw, Heart, Wind } from 'lucide-react';
+import { ArrowLeft, Play, Pause, RotateCcw, Heart, Wind, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,18 +15,40 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
   const [countdown, setCountdown] = useState(4);
   const [sessionTime, setSessionTime] = useState(0);
   const [completedCycles, setCompletedCycles] = useState(0);
-  const [breathingPattern, setBreathingPattern] = useState('4-4-4-4'); // 吸气-屏气-呼气-屏气
-  const [sessionDuration, setSessionDuration] = useState(5); // 分钟
+  const [breathingPattern, setBreathingPattern] = useState('4-4-4-4');
+  const [sessionDuration, setSessionDuration] = useState(3); // 分钟
+  const [showPatternInfo, setShowPatternInfo] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
 
   const patterns = {
-    '4-4-4-4': { inhale: 4, hold1: 4, exhale: 4, hold2: 4, name: '平衡呼吸法' },
-    '4-7-8-0': { inhale: 4, hold1: 7, exhale: 8, hold2: 0, name: '4-7-8 放松法' },
-    '6-2-6-2': { inhale: 6, hold1: 2, exhale: 6, hold2: 2, name: '深度呼吸法' },
-    '4-0-6-0': { inhale: 4, hold1: 0, exhale: 6, hold2: 0, name: '简易呼吸法' }
+    '4-4-4-4': { 
+      inhale: 4, hold1: 4, exhale: 4, hold2: 4, 
+      name: '平衡呼吸法',
+      description: '四四拍呼吸法，有助于平衡自律神经系统，适合日常减压和放松'
+    },
+    '4-7-8-0': { 
+      inhale: 4, hold1: 7, exhale: 8, hold2: 0, 
+      name: '4-7-8 放松法',
+      description: '由安德鲁·韦尔博士推广的经典呼吸法，特别有效于快速入睡和深度放松'
+    },
+    '6-0-6-0': { 
+      inhale: 6, hold1: 0, exhale: 6, hold2: 0, 
+      name: '深度呼吸法',
+      description: '简单的深呼吸练习，增加肺活量，改善血氧含量，适合初学者'
+    },
+    '5-5-5-5': { 
+      inhale: 5, hold1: 5, exhale: 5, hold2: 5, 
+      name: '五拍平衡法',
+      description: '稍长的平衡呼吸，能够更深层次地激活副交感神经，增强冥想效果'
+    },
+    '3-3-3-3': { 
+      inhale: 3, hold1: 3, exhale: 3, hold2: 3, 
+      name: '快节奏呼吸',
+      description: '适合时间紧张时的快速放松，短时间内有效缓解紧张情绪'
+    }
   };
 
   const currentPattern = patterns[breathingPattern as keyof typeof patterns];
@@ -51,7 +73,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
     setCompletedCycles(0);
   };
 
-  // 绘制呼吸动画
+  // 绘制流畅的呼吸动画
   const drawBreathingAnimation = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -61,81 +83,108 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const maxRadius = Math.min(canvas.width, canvas.height) * 0.3;
+    const maxRadius = Math.min(canvas.width, canvas.height) * 0.35;
+    const minRadius = 40;
     
-    // 根据阶段和倒计时计算半径
+    // 计算当前进度，使用更平滑的插值
     let progress = 0;
     const totalTime = currentPattern[phase];
     if (totalTime > 0) {
       progress = (totalTime - countdown) / totalTime;
+      // 使用缓动函数让动画更自然
+      progress = phase === 'inhale' || phase === 'exhale' 
+        ? 0.5 - 0.5 * Math.cos(progress * Math.PI) // 正弦缓动
+        : progress; // 屏气阶段保持线性
     }
 
     let radius;
+    let targetRadius;
+    
     switch (phase) {
       case 'inhale':
-        radius = 30 + (maxRadius - 30) * progress;
+        targetRadius = minRadius + (maxRadius - minRadius) * progress;
         break;
       case 'hold1':
-        radius = maxRadius;
+        targetRadius = maxRadius;
         break;
       case 'exhale':
-        radius = maxRadius - (maxRadius - 30) * progress;
+        targetRadius = maxRadius - (maxRadius - minRadius) * progress;
         break;
       case 'hold2':
-        radius = 30;
+        targetRadius = minRadius;
         break;
       default:
-        radius = 30;
+        targetRadius = minRadius;
     }
+
+    radius = targetRadius;
 
     // 清空画布
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 绘制外圈
+    // 绘制外圈指示器
     ctx.beginPath();
-    ctx.arc(centerX, centerY, maxRadius + 10, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, maxRadius + 15, 0, Math.PI * 2);
     ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1;
     ctx.stroke();
-
-    // 绘制主圆
-    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-    
-    switch (phase) {
-      case 'inhale':
-        gradient.addColorStop(0, '#3b82f6');
-        gradient.addColorStop(1, '#1d4ed8');
-        break;
-      case 'hold1':
-        gradient.addColorStop(0, '#10b981');
-        gradient.addColorStop(1, '#059669');
-        break;
-      case 'exhale':
-        gradient.addColorStop(0, '#8b5cf6');
-        gradient.addColorStop(1, '#7c3aed');
-        break;
-      case 'hold2':
-        gradient.addColorStop(0, '#f59e0b');
-        gradient.addColorStop(1, '#d97706');
-        break;
-    }
-
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-    ctx.fillStyle = gradient;
-    ctx.fill();
 
     // 绘制进度弧
     if (totalTime > 0) {
       const angle = (progress * 2 * Math.PI) - Math.PI / 2;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, maxRadius + 5, -Math.PI / 2, angle);
-      ctx.strokeStyle = '#3b82f6';
-      ctx.lineWidth = 4;
+      ctx.arc(centerX, centerY, maxRadius + 15, -Math.PI / 2, angle);
+      ctx.strokeStyle = phase === 'inhale' ? '#3b82f6' : 
+                        phase === 'hold1' ? '#10b981' : 
+                        phase === 'exhale' ? '#8b5cf6' : '#f59e0b';
+      ctx.lineWidth = 3;
       ctx.stroke();
     }
 
-    animationRef.current = requestAnimationFrame(drawBreathingAnimation);
+    // 创建渐变
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    
+    switch (phase) {
+      case 'inhale':
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
+        gradient.addColorStop(0.7, 'rgba(59, 130, 246, 0.4)');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
+        break;
+      case 'hold1':
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.8)');
+        gradient.addColorStop(0.7, 'rgba(16, 185, 129, 0.4)');
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0.1)');
+        break;
+      case 'exhale':
+        gradient.addColorStop(0, 'rgba(139, 92, 246, 0.8)');
+        gradient.addColorStop(0.7, 'rgba(139, 92, 246, 0.4)');
+        gradient.addColorStop(1, 'rgba(139, 92, 246, 0.1)');
+        break;
+      case 'hold2':
+        gradient.addColorStop(0, 'rgba(245, 158, 11, 0.8)');
+        gradient.addColorStop(0.7, 'rgba(245, 158, 11, 0.4)');
+        gradient.addColorStop(1, 'rgba(245, 158, 11, 0.1)');
+        break;
+    }
+
+    // 绘制主圆
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // 添加边框
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = phase === 'inhale' ? '#3b82f6' : 
+                      phase === 'hold1' ? '#10b981' : 
+                      phase === 'exhale' ? '#8b5cf6' : '#f59e0b';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    if (isActive) {
+      animationRef.current = requestAnimationFrame(drawBreathingAnimation);
+    }
   };
 
   useEffect(() => {
@@ -145,11 +194,16 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
       intervalRef.current = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {
-            // 切换到下一阶段
             setPhase(currentPhase => {
               const phases: Array<'inhale' | 'hold1' | 'exhale' | 'hold2'> = ['inhale', 'hold1', 'exhale', 'hold2'];
               const currentIndex = phases.indexOf(currentPhase);
-              const nextIndex = (currentIndex + 1) % phases.length;
+              let nextIndex = (currentIndex + 1) % phases.length;
+              
+              // 跳过时长为0的阶段
+              while (currentPattern[phases[nextIndex]] === 0) {
+                nextIndex = (nextIndex + 1) % phases.length;
+              }
+              
               const nextPhase = phases[nextIndex];
               
               if (nextPhase === 'inhale') {
@@ -222,8 +276,8 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
             <div className="text-center mb-4">
               <canvas
                 ref={canvasRef}
-                width={280}
-                height={280}
+                width={300}
+                height={300}
                 className="mx-auto rounded-full"
               />
             </div>
@@ -252,7 +306,16 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">呼吸模式</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium">呼吸模式</label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPatternInfo(!showPatternInfo)}
+                >
+                  <Info className="h-4 w-4" />
+                </Button>
+              </div>
               <Select 
                 value={breathingPattern} 
                 onValueChange={setBreathingPattern}
@@ -264,11 +327,17 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
                 <SelectContent>
                   {Object.entries(patterns).map(([key, pattern]) => (
                     <SelectItem key={key} value={key}>
-                      {pattern.name} ({key})
+                      {pattern.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              
+              {showPatternInfo && (
+                <div className="mt-2 p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-800">{currentPattern.description}</p>
+                </div>
+              )}
             </div>
 
             <div>
@@ -282,11 +351,12 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="1">1 分钟</SelectItem>
+                  <SelectItem value="2">2 分钟</SelectItem>
                   <SelectItem value="3">3 分钟</SelectItem>
+                  <SelectItem value="4">4 分钟</SelectItem>
                   <SelectItem value="5">5 分钟</SelectItem>
-                  <SelectItem value="10">10 分钟</SelectItem>
-                  <SelectItem value="15">15 分钟</SelectItem>
-                  <SelectItem value="20">20 分钟</SelectItem>
+                  <SelectItem value="6">6 分钟</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -312,7 +382,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
         </Card>
 
         {/* 训练统计 */}
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center">
               <Heart className="h-5 w-5 mr-2" />
@@ -334,7 +404,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
         </Card>
 
         {/* 说明信息 */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+        <div className="p-4 bg-blue-50 rounded-lg">
           <div className="flex items-start">
             <Wind className="h-5 w-5 text-blue-600 mt-1 mr-2" />
             <div>
@@ -344,7 +414,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
                 <li>• 跟随圆圈的节奏进行呼吸</li>
                 <li>• 吸气时圆圈扩大，呼气时圆圈缩小</li>
                 <li>• 专注于呼吸，不要被其他思绪干扰</li>
-                <li>• 建议每天练习5-10分钟</li>
+                <li>• 建议每天练习3-5分钟</li>
               </ul>
             </div>
           </div>

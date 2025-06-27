@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RotateCcw, User, Bot, Settings } from 'lucide-react';
+import { RotateCcw, User, Bot } from 'lucide-react';
 
 interface GomokuProps {
   onBack: () => void;
@@ -23,7 +23,6 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
   const [winner, setWinner] = useState<Player>(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
-  const [showSettings, setShowSettings] = useState(false);
 
   // 音效函数
   const playSound = useCallback((frequency: number, duration: number) => {
@@ -99,7 +98,6 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
     const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
     
     for (const [dx, dy] of directions) {
-      // 检查连续棋子数量和开放性
       let consecutive = 0;
       let openEnds = 0;
       
@@ -134,12 +132,12 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
       }
       
       // 根据连续数和开放性计算分数
-      if (consecutive >= 4) score += 10000; // 即将获胜
-      else if (consecutive === 3 && openEnds === 2) score += 1000; // 活三
-      else if (consecutive === 3 && openEnds === 1) score += 100; // 眠三
-      else if (consecutive === 2 && openEnds === 2) score += 50; // 活二
-      else if (consecutive === 2 && openEnds === 1) score += 10; // 眠二
-      else if (consecutive === 1 && openEnds === 2) score += 5; // 活一
+      if (consecutive >= 4) score += 10000;
+      else if (consecutive === 3 && openEnds === 2) score += 1000;
+      else if (consecutive === 3 && openEnds === 1) score += 100;
+      else if (consecutive === 2 && openEnds === 2) score += 50;
+      else if (consecutive === 2 && openEnds === 1) score += 10;
+      else if (consecutive === 1 && openEnds === 2) score += 5;
     }
     
     // 中心位置加分
@@ -153,26 +151,24 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
   const getAIMove = useCallback((board: Player[][]): [number, number] => {
     const moves: Array<{row: number, col: number, score: number}> = [];
     
-    // 遍历所有可能的位置
     for (let row = 0; row < BOARD_SIZE; row++) {
       for (let col = 0; col < BOARD_SIZE; col++) {
         if (board[row][col] === null) {
           let score = 0;
           
-          // 检查AI获胜机会（最高优先级）
+          // 检查AI获胜机会
           const tempBoard = board.map(r => [...r]);
           tempBoard[row][col] = 'ai';
           if (checkWinner(tempBoard, row, col, 'ai')) {
             return [row, col];
           }
           
-          // 检查阻止人类获胜（次高优先级）
+          // 检查阻止人类获胜
           tempBoard[row][col] = 'human';
           if (checkWinner(tempBoard, row, col, 'human')) {
             score += 5000;
           }
           
-          // 根据难度调整策略
           const aiScore = evaluatePosition(board, row, col, 'ai');
           const humanScore = evaluatePosition(board, row, col, 'human');
           
@@ -193,10 +189,8 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
       }
     }
     
-    // 排序并选择最佳移动
     moves.sort((a, b) => b.score - a.score);
     
-    // 在难度较低时，偶尔不选择最佳移动
     let moveIndex = 0;
     if (difficulty === 'easy' && Math.random() < 0.3) {
       moveIndex = Math.min(moves.length - 1, Math.floor(Math.random() * 3));
@@ -252,7 +246,6 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
 
   const startGame = () => {
     setGameStarted(true);
-    setShowSettings(false);
   };
 
   const resetGame = () => {
@@ -260,18 +253,17 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
     setCurrentPlayer('human');
     setWinner(null);
     setGameStarted(false);
-    setShowSettings(false);
   };
 
   const getCellContent = (cell: Player) => {
     if (cell === 'human') return '●';
-    if (cell === 'ai') return '○';
+    if (cell === 'ai') return '●';
     return '';
   };
 
   const getCellClassName = (cell: Player) => {
-    if (cell === 'human') return 'text-black text-xl font-bold';
-    if (cell === 'ai') return 'text-white text-xl font-bold';
+    if (cell === 'human') return 'text-black text-lg font-bold';
+    if (cell === 'ai') return 'text-red-600 text-lg font-bold';
     return '';
   };
 
@@ -305,7 +297,7 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
                 </div>
                 <div className="flex items-center">
                   <Bot className="h-4 w-4 mr-1" />
-                  <span>电脑：白子 ○</span>
+                  <span>电脑：红子 ●</span>
                 </div>
               </div>
               
@@ -331,7 +323,7 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
               </div>
               <div className="flex items-center">
                 <Bot className="h-4 w-4 mr-1" />
-                <span>电脑：白子 ○</span>
+                <span>电脑：红子 ●</span>
               </div>
             </div>
             
@@ -343,9 +335,7 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
               }</p>
             </div>
             
-            <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
-              <Settings className="h-4 w-4" />
-            </Button>
+            <div className="w-20"></div>
           </div>
         </CardHeader>
         
@@ -361,34 +351,69 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
           {!winner && (
             <div className="text-center mb-4">
               <p className="text-sm text-gray-600">
-                {currentPlayer === 'human' ? '轮到你了 (黑子 ●)' : '电脑思考中... (白子 ○)'}
+                {currentPlayer === 'human' ? '轮到你了 (黑子 ●)' : '电脑思考中... (红子 ●)'}
               </p>
             </div>
           )}
 
           <div className="flex justify-center mb-4">
-            <div className="grid grid-cols-15 gap-0 bg-amber-100 p-2 rounded-lg border-2 border-amber-200"
-                 style={{
-                   gridTemplateColumns: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
-                   width: 'min(90vw, 450px)',
-                   height: 'min(90vw, 450px)'
-                 }}>
-              {board.map((row, rowIndex) =>
-                row.map((cell, colIndex) => (
-                  <button
-                    key={`${rowIndex}-${colIndex}`}
-                    className={`
-                      w-full aspect-square border border-amber-300 bg-amber-50 hover:bg-amber-100 
-                      flex items-center justify-center transition-colors duration-150
-                      ${getCellClassName(cell)}
-                    `}
-                    onClick={() => handleCellClick(rowIndex, colIndex)}
-                    disabled={winner !== null || currentPlayer !== 'human'}
-                  >
-                    {getCellContent(cell)}
-                  </button>
-                ))
-              )}
+            <div 
+              className="relative bg-amber-100 p-2 rounded-lg border-2 border-amber-200"
+              style={{
+                width: 'min(90vw, 420px)',
+                height: 'min(90vw, 420px)'
+              }}
+            >
+              {/* 绘制棋盘线条 */}
+              <svg 
+                className="absolute inset-2 w-full h-full"
+                viewBox="0 0 280 280"
+                style={{ width: 'calc(100% - 16px)', height: 'calc(100% - 16px)' }}
+              >
+                {/* 横线 */}
+                {Array.from({ length: BOARD_SIZE }, (_, i) => (
+                  <line
+                    key={`h-${i}`}
+                    x1="10"
+                    y1={10 + i * 18.57}
+                    x2="270"
+                    y2={10 + i * 18.57}
+                    stroke="#8B4513"
+                    strokeWidth="1"
+                  />
+                ))}
+                {/* 竖线 */}
+                {Array.from({ length: BOARD_SIZE }, (_, i) => (
+                  <line
+                    key={`v-${i}`}
+                    x1={10 + i * 18.57}
+                    y1="10"
+                    x2={10 + i * 18.57}
+                    y2="270"
+                    stroke="#8B4513"
+                    strokeWidth="1"
+                  />
+                ))}
+              </svg>
+              
+              {/* 棋子 */}
+              <div className="absolute inset-2 grid grid-cols-15 gap-0"
+                   style={{ gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)` }}>
+                {board.map((row, rowIndex) =>
+                  row.map((cell, colIndex) => (
+                    <button
+                      key={`${rowIndex}-${colIndex}`}
+                      className="w-full aspect-square flex items-center justify-center hover:bg-amber-200/50 rounded-full transition-colors"
+                      onClick={() => handleCellClick(rowIndex, colIndex)}
+                      disabled={winner !== null || currentPlayer !== 'human'}
+                    >
+                      <span className={getCellClassName(cell)}>
+                        {getCellContent(cell)}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
             </div>
           </div>
 
@@ -399,32 +424,8 @@ const Gomoku = ({ onBack, soundEnabled = true }: GomokuProps) => {
             </Button>
           </div>
 
-          {showSettings && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <h4 className="font-semibold mb-2">调整难度</h4>
-              <Select value={difficulty} onValueChange={(value: Difficulty) => setDifficulty(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="easy">简单</SelectItem>
-                  <SelectItem value="medium">中等</SelectItem>
-                  <SelectItem value="hard">困难</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex gap-2 mt-3">
-                <Button size="sm" onClick={() => setShowSettings(false)} variant="outline">
-                  关闭
-                </Button>
-                <Button size="sm" onClick={resetGame}>
-                  应用并重新开始
-                </Button>
-              </div>
-            </div>
-          )}
-
           <div className="text-center text-xs text-gray-600 mt-4">
-            <p>连续放置5个棋子即可获胜</p>
+            <p>在线条交叉点放置棋子，连续5个即可获胜</p>
           </div>
         </CardContent>
       </Card>
