@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Heart, Shield, Activity } from 'lucide-react';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
@@ -121,11 +122,14 @@ export default function AuthPage() {
 
   if (resetMode) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">重置密码</CardTitle>
-            <CardDescription className="text-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-purple-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader className="space-y-1 text-center">
+            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <Shield className="h-6 w-6 text-blue-600" />
+            </div>
+            <CardTitle className="text-2xl">重置密码</CardTitle>
+            <CardDescription>
               输入您的邮箱地址，我们将发送重置链接
             </CardDescription>
           </CardHeader>
@@ -164,12 +168,19 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">梅尼埃症记录系统</CardTitle>
-          <CardDescription className="text-center">
-            登录或注册来开始记录您的健康数据
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-purple-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-1 text-center">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center mb-4">
+            <Heart className="h-8 w-8 text-white" />
+          </div>
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+            健康生活伴侣
+          </CardTitle>
+          <CardDescription className="text-gray-600">
+            您的专业健康管理助手
+            <br />
+            记录健康数据，陪伴健康生活
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -261,6 +272,23 @@ export default function AuthPage() {
               </form>
             </TabsContent>
           </Tabs>
+          
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-center space-x-4 text-xs text-gray-500">
+              <div className="flex items-center">
+                <Activity className="h-3 w-3 mr-1" />
+                健康记录
+              </div>
+              <div className="flex items-center">
+                <Shield className="h-3 w-3 mr-1" />
+                数据安全
+              </div>
+              <div className="flex items-center">
+                <Heart className="h-3 w-3 mr-1" />
+                专业陪伴
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Play, Pause, RotateCcw, Heart, Wind, Info } from 'lucide-react';
+import { ArrowLeft, Play, Pause, RotateCcw, Heart, Wind, Info, CheckCircle, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 interface BreathingExerciseProps {
   onBack: () => void;
@@ -16,13 +16,15 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
   const [sessionTime, setSessionTime] = useState(0);
   const [completedCycles, setCompletedCycles] = useState(0);
   const [breathingPattern, setBreathingPattern] = useState('4-4-4-4');
-  const [sessionDuration, setSessionDuration] = useState(3); // 分钟
+  const [sessionDuration, setSessionDuration] = useState(3);
   const [showPatternInfo, setShowPatternInfo] = useState(false);
+  const [sessionCompleted, setSessionCompleted] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const progressRef = useRef<number>(0);
+  const { toast } = useToast();
 
   const patterns = {
     '4-4-4-4': { 
@@ -50,11 +52,21 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
     setCountdown(currentPattern.inhale);
     setSessionTime(0);
     setCompletedCycles(0);
+    setSessionCompleted(false);
     progressRef.current = 0;
+    
+    toast({
+      title: "开始呼吸训练",
+      description: `${currentPattern.name} - ${sessionDuration}分钟训练开始`,
+    });
   };
 
   const pauseSession = () => {
     setIsActive(!isActive);
+    toast({
+      title: isActive ? "训练已暂停" : "训练已继续",
+      description: isActive ? "点击继续按钮恢复训练" : "继续您的呼吸练习",
+    });
   };
 
   const resetSession = () => {
@@ -63,7 +75,13 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
     setCountdown(currentPattern.inhale);
     setSessionTime(0);
     setCompletedCycles(0);
+    setSessionCompleted(false);
     progressRef.current = 0;
+    
+    toast({
+      title: "训练已重置",
+      description: "准备开始新的训练",
+    });
   };
 
   // 绘制更流畅的呼吸动画
@@ -206,7 +224,6 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
               const currentIndex = phases.indexOf(currentPhase);
               let nextIndex = (currentIndex + 1) % phases.length;
               
-              // 跳过时长为0的阶段
               while (currentPattern[phases[nextIndex]] === 0) {
                 nextIndex = (nextIndex + 1) % phases.length;
               }
@@ -242,12 +259,18 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
     };
   }, [isActive, phase, currentPattern]);
 
-  // 自动结束会话
+  // 自动结束会话并显示完成提示
   useEffect(() => {
     if (sessionTime >= sessionDuration * 60 && isActive) {
       setIsActive(false);
+      setSessionCompleted(true);
+      
+      toast({
+        title: "🎉 训练完成！",
+        description: `恭喜您完成了${sessionDuration}分钟的呼吸训练，共完成${completedCycles}个呼吸周期`,
+      });
     }
-  }, [sessionTime, sessionDuration]);
+  }, [sessionTime, sessionDuration, completedCycles]);
 
   const getPhaseText = () => {
     switch (phase) {
@@ -277,6 +300,26 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
           <div className="w-16"></div>
         </div>
 
+        {/* 训练完成提示 */}
+        {sessionCompleted && (
+          <Card className="mb-6 border-green-200 bg-green-50">
+            <CardContent className="p-6 text-center">
+              <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-3" />
+              <h3 className="text-lg font-semibold text-green-800 mb-2">训练完成！</h3>
+              <p className="text-green-700">
+                您已完成 {sessionDuration} 分钟的呼吸训练<br />
+                共完成 {completedCycles} 个呼吸周期
+              </p>
+              <Button 
+                onClick={resetSession}
+                className="mt-4 bg-green-600 hover:bg-green-700"
+              >
+                开始新训练
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* 呼吸动画区域 */}
         <Card className="mb-6">
           <CardContent className="p-6">
@@ -299,6 +342,12 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
               <div className="text-sm text-gray-600">
                 {currentPattern.name}
               </div>
+              {!isActive && !sessionCompleted && (
+                <div className="text-sm text-blue-600 mt-3">
+                  <Timer className="h-4 w-4 inline mr-1" />
+                  准备开始 {sessionDuration} 分钟训练
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

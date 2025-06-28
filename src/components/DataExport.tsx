@@ -83,7 +83,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
               onExport={handleQuickExport}
             />
             <div className="mt-6">
-              <AIAssistantSection />
+              <AIAssistantSection exportedData={exportedData} />
             </div>
           </TabsContent>
 
@@ -98,7 +98,7 @@ const DataExport = ({ onBack }: DataExportProps) => {
               onExport={handleCustomExportWrapper}
             />
             <div className="mt-6">
-              <AIAssistantSection />
+              <AIAssistantSection exportedData={exportedData} />
             </div>
           </TabsContent>
         </Tabs>

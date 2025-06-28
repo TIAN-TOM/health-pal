@@ -3,11 +3,11 @@ import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import PersonalSettings from './settings/PersonalSettings';
 import HealthManagement from './settings/HealthManagement';
 import SystemSettings from './settings/SystemSettings';
 import AccountManagement from './settings/AccountManagement';
 import UserInfo from './settings/UserInfo';
+import PersonalSettingsCard from './settings/PersonalSettingsCard';
 
 interface SettingsProps {
   onBack: () => void;
@@ -16,8 +16,7 @@ interface SettingsProps {
   onMedicalRecords: () => void;
   onEducation: () => void;
   onMedicationManagement: () => void;
-  onProfileEdit: () => void;
-  onUserPreferences: () => void;
+  onPersonalProfile: () => void;
   onUserManual: () => void;
 }
 
@@ -28,8 +27,7 @@ const Settings = ({
   onMedicalRecords, 
   onEducation,
   onMedicationManagement,
-  onProfileEdit,
-  onUserPreferences,
+  onPersonalProfile,
   onUserManual
 }: SettingsProps) => {
   const { user, userRole } = useAuth();
@@ -51,7 +49,7 @@ const Settings = ({
         </div>
 
         <div className="space-y-4">
-          <PersonalSettings onProfileEdit={onProfileEdit} onUserPreferences={onUserPreferences} />
+          <PersonalSettingsCard onPersonalProfile={onPersonalProfile} />
           
           <HealthManagement 
             onMedicationManagement={onMedicationManagement}
