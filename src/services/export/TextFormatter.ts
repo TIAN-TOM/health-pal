@@ -12,6 +12,37 @@ export const generateTextFormat = (data: ExportData): string => {
     sections.push(personalInfoSection);
   }
 
+  // 添加个人资料信息（从用户配置文件中获取）
+  if (data.userProfile) {
+    sections.push("\n\n【个人基本资料】");
+    if (data.userProfile.full_name) sections.push(`姓名: ${data.userProfile.full_name}`);
+    if (data.userProfile.age) sections.push(`年龄: ${data.userProfile.age}岁`);
+    if (data.userProfile.gender) sections.push(`性别: ${data.userProfile.gender === 'male' ? '男性' : data.userProfile.gender === 'female' ? '女性' : data.userProfile.gender}`);
+    if (data.userProfile.height) sections.push(`身高: ${data.userProfile.height}cm`);
+    if (data.userProfile.weight) sections.push(`体重: ${data.userProfile.weight}kg`);
+    if (data.userProfile.medical_history && data.userProfile.medical_history.length > 0) {
+      sections.push(`既往病史: ${data.userProfile.medical_history.join(', ')}`);
+    }
+    if (data.userProfile.allergies && data.userProfile.allergies.length > 0) {
+      sections.push(`过敏史: ${data.userProfile.allergies.join(', ')}`);
+    }
+    sections.push("");
+  }
+
+  // 添加常用药物管理信息
+  if (data.medications && data.medications.length > 0) {
+    sections.push("=== 常用药物管理 ===");
+    data.medications.forEach((medication, index) => {
+      sections.push(`${index + 1}. ${medication.name}`);
+      if (medication.dosage) sections.push(`   剂量: ${medication.dosage}`);
+      if (medication.frequency) sections.push(`   频率: ${medication.frequency}`);
+      if (medication.duration) sections.push(`   疗程: ${medication.duration}`);
+      if (medication.instructions) sections.push(`   用法: ${medication.instructions}`);
+      if (medication.side_effects) sections.push(`   副作用: ${medication.side_effects}`);
+      sections.push("");
+    });
+  }
+
   // 血糖管理记录
   if (data.diabetesRecords && data.diabetesRecords.length > 0) {
     sections.push("=== 血糖管理记录 ===");
@@ -138,15 +169,7 @@ export const generateTextFormat = (data: ExportData): string => {
     });
   }
 
-  // 紧急联系人
-  if (data.emergencyContacts && data.emergencyContacts.length > 0) {
-    sections.push("=== 紧急联系人 ===");
-    data.emergencyContacts.forEach((contact, index) => {
-      sections.push(`${index + 1}. ${contact.name}`);
-      sections.push(`   电话: ${contact.phone}`);
-      sections.push("");
-    });
-  }
+  // 注意：不包含紧急联系人等隐私信息
 
   return sections.join('\n');
 };

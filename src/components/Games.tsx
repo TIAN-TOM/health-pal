@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import FlappyBird from '@/components/games/FlappyBird';
 import Gomoku from '@/components/games/Gomoku';
 import BreakoutGame from '@/components/games/BreakoutGame';
+import MemoryCardGame from '@/components/games/MemoryCardGame';
 
 interface GamesProps {
   onBack: () => void;
@@ -20,6 +21,13 @@ const Games = ({ onBack }: GamesProps) => {
   });
 
   const games = [
+    {
+      id: 'memory-cards',
+      name: '记忆翻牌',
+      description: '挑战你的记忆力，找到相同的卡片配对',
+      icon: '🧠',
+      component: MemoryCardGame
+    },
     {
       id: 'flappy-bird',
       name: '小鸟会飞',

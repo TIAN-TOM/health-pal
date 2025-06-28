@@ -28,6 +28,38 @@ const UserWelcomeWithClock = ({ userDisplayName, onSettingsClick }: UserWelcomeW
     return () => clearInterval(timer);
   }, []);
 
+  const getGreeting = (date: Date) => {
+    const hour = date.getHours();
+    const greetings = {
+      dawn: ["夜深了，注意休息哦", "深夜时光，保重身体", "夜猫子，早点睡觉吧"],
+      morning: ["早上好，新的一天开始了", "晨光正好，精神饱满", "早安，美好的一天", "清晨问候，愿你健康"],
+      noon: ["中午好，记得吃午饭", "午间时光，稍作休息", "正午阳光，温暖如你", "午安，保持活力"],
+      afternoon: ["下午好，继续加油", "午后时光，轻松惬意", "下午茶时间到了", "阳光正好，心情也好"],
+      evening: ["晚上好，辛苦了一天", "夜幕降临，温馨时刻", "晚安时光，放松身心", "傍晚时分，享受宁静"],
+      night: ["夜深了，该休息了", "晚安，好梦相伴", "深夜时光，注意身体", "夜晚宁静，早点休息"]
+    };
+
+    let timeGreetings;
+    if (hour >= 0 && hour < 5) {
+      timeGreetings = greetings.dawn;
+    } else if (hour >= 5 && hour < 11) {
+      timeGreetings = greetings.morning;
+    } else if (hour >= 11 && hour < 13) {
+      timeGreetings = greetings.noon;
+    } else if (hour >= 13 && hour < 17) {
+      timeGreetings = greetings.afternoon;
+    } else if (hour >= 17 && hour < 20) {
+      timeGreetings = greetings.evening;
+    } else {
+      timeGreetings = greetings.night;
+    }
+
+    // 根据当前时间生成一个稳定的随机索引
+    const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+    const randomIndex = (dayOfYear + hour) % timeGreetings.length;
+    return timeGreetings[randomIndex];
+  };
+
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('zh-CN', {
       hour12: true,
@@ -48,14 +80,26 @@ const UserWelcomeWithClock = ({ userDisplayName, onSettingsClick }: UserWelcomeW
     }) + ' ' + weekday;
   };
 
+  const getTimeEmoji = (date: Date) => {
+    const hour = date.getHours();
+    if (hour >= 6 && hour < 12) return '🌅';
+    if (hour >= 12 && hour < 18) return '☀️';
+    if (hour >= 18 && hour < 22) return '🌆';
+    return '🌙';
+  };
+
   return (
     <Card className="mb-3">
       <CardContent className="p-3">
         <div className="flex items-center justify-between mb-2">
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-gray-800">
-              欢迎, {userDisplayName}
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+              <span className="mr-2">{getTimeEmoji(currentTime)}</span>
+              {getGreeting(currentTime)}
             </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              {userDisplayName} ✨
+            </p>
           </div>
           
           <Button
