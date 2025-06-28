@@ -32,11 +32,8 @@ const SleepSection = ({
   wakeTime,
   setWakeTime
 }: SleepSectionProps) => {
-  // 判断是否有实际的睡眠数据：只有用户主动修改了默认值或填写了其他信息时才显示绿点
-  const hasSleepData = sleepQuality || 
-    (bedTime && bedTime !== '22:00') || 
-    (wakeTime && wakeTime !== '07:00') ||
-    (sleepHours && parseFloat(sleepHours) !== 9.0);
+  // 判断是否有实际的睡眠数据
+  const hasSleepData = sleepQuality || bedTime || wakeTime || sleepHours;
 
   // 根据入睡时间和起床时间自动计算睡眠时长
   useEffect(() => {
@@ -62,6 +59,9 @@ const SleepSection = ({
       if (sleepHoursCalc >= 0.5 && sleepHoursCalc <= 24) {
         setSleepHours(sleepHoursStr);
       }
+    } else {
+      // 如果没有时间输入，清空睡眠时长
+      setSleepHours('');
     }
   }, [bedTime, wakeTime, setSleepHours]);
 
@@ -92,6 +92,7 @@ const SleepSection = ({
                   type="time"
                   value={bedTime}
                   onChange={(e) => setBedTime(e.target.value)}
+                  placeholder="选择入睡时间"
                 />
               </div>
               <div>
@@ -101,6 +102,7 @@ const SleepSection = ({
                   type="time"
                   value={wakeTime}
                   onChange={(e) => setWakeTime(e.target.value)}
+                  placeholder="选择起床时间"
                 />
               </div>
             </div>
@@ -115,7 +117,7 @@ const SleepSection = ({
                 step="0.1"
                 value={sleepHours}
                 onChange={(e) => setSleepHours(e.target.value)}
-                placeholder="自动计算"
+                placeholder="根据入睡和起床时间自动计算"
                 className="bg-gray-50"
                 readOnly
               />

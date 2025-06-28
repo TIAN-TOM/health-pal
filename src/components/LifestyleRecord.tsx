@@ -24,7 +24,7 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
   const [moodOpen, setMoodOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
 
-  // 表单状态
+  // 表单状态 - 移除默认时间
   const [sleepHours, setSleepHours] = useState('');
   const [sleepQuality, setSleepQuality] = useState('');
   const [bedTime, setBedTime] = useState('');
@@ -39,14 +39,8 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
   const [note, setNote] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    // 设置默认时间
-    if (!bedTime) setBedTime('22:00');
-    if (!wakeTime) setWakeTime('07:00');
-  }, []);
-
   const hasAnyData = () => {
-    return sleepHours || sleepQuality || bedTime !== '22:00' || wakeTime !== '07:00' ||
+    return sleepHours || sleepQuality || bedTime || wakeTime ||
            waterIntake || exerciseType || exerciseDuration || stressLevel ||
            diet.length > 0 || saltPreference || note.trim();
   };
@@ -77,8 +71,8 @@ const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
         note: note.trim() || undefined,
         data: {
           sleep_quality: sleepQuality || undefined,
-          bed_time: bedTime !== '22:00' ? bedTime : undefined,
-          wake_time: wakeTime !== '07:00' ? wakeTime : undefined,
+          bed_time: bedTime || undefined,
+          wake_time: wakeTime || undefined,
           water_intake: waterIntake ? `${waterIntake}杯` : undefined,
           exercise_type: exerciseType || undefined,
           exercise_duration: exerciseDuration ? `${exerciseDuration}分钟` : undefined,

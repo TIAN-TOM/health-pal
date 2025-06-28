@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -272,13 +271,14 @@ const EnhancedFlappyBird = ({ onBack, soundEnabled = true }: EnhancedFlappyBirdP
         addParticles(game.bird.x, game.bird.y, '#FFD700');
       }
 
-      // 碰撞检测（护盾时免疫）
+      // 碰撞检测（护盾时免疫）- 修复护盾逻辑
       if (game.shieldTime <= 0 &&
           game.bird.x + 12 > pipe.x &&
           game.bird.x - 12 < pipe.x + game.pipeWidth &&
           (game.bird.y - 12 < pipe.topHeight || game.bird.y + 12 > pipe.topHeight + game.pipeGap)) {
         setGameState('gameOver');
         playSound(150, 0.5, 'square');
+        return; // 立即结束游戏循环
       }
     });
 
@@ -356,10 +356,21 @@ const EnhancedFlappyBird = ({ onBack, soundEnabled = true }: EnhancedFlappyBirdP
     game.pipes = game.pipes.filter(pipe => pipe.x + game.pipeWidth > 0);
     game.powerUps = game.powerUps.filter(powerUp => powerUp.x > -50);
 
-    // 检查边界碰撞（护盾时免疫下边界）
-    if (game.bird.y - 15 < 0 || (game.shieldTime <= 0 && game.bird.y + 15 > canvas.height)) {
+    // 检查边界碰撞（护盾时免疫下边界，但不免疫上边界）
+    if (game.bird.y - 15 < 0) {
+      // 撞到上边界，护盾也无法保护
       setGameState('gameOver');
       playSound(150, 0.5, 'square');
+      return;
+    } else if (game.shieldTime <= 0 && game.bird.y + 15 > canvas.height) {
+      // 撞到下边界，只有没有护盾时才死亡
+      setGameState('gameOver');
+      playSound(150, 0.5, 'square');
+      return;
+    } else if (game.shieldTime > 0 && game.bird.y + 15 > canvas.height) {
+      // 有护盾时撞到下边界，反弹回去
+      game.bird.y = canvas.height - 15;
+      game.bird.velocity = -2; // 轻微反弹
     }
 
     // 显示特殊效果状态
@@ -377,7 +388,7 @@ const EnhancedFlappyBird = ({ onBack, soundEnabled = true }: EnhancedFlappyBirdP
       ctx.fillStyle = 'rgba(255, 105, 180, 0.1)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     } else if (game.shieldTime > 0) {
-      effectText = '护盾保护';
+      effectText = `护盾保护 (${Math.ceil(game.shieldTime / 60)}s)`;
       effectColor = '#9370DB';
     }
     

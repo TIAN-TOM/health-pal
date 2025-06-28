@@ -269,7 +269,7 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">五子棋设置</CardTitle>
+            <CardTitle className="text-center">五子棋</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="text-center">
@@ -329,7 +329,7 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
             </div>
             
             <div className="text-center">
-              <CardTitle>五子棋增强版</CardTitle>
+              <CardTitle>五子棋</CardTitle>
               <p className="text-sm text-gray-600">难度：{
                 difficulty === 'easy' ? '简单' : 
                 difficulty === 'medium' ? '中等' : '困难'
