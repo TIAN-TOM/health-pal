@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,6 +35,23 @@ const EnhancedFlappyBird = ({ onBack, soundEnabled = true }: EnhancedFlappyBirdP
     obstacles: [] as Array<{ x: number; y: number; width: number; height: number; type: 'moving' | 'rotating' }>,
     particles: [] as Array<{ x: number; y: number; vx: number; vy: number; life: number; color: string }>
   });
+
+  // 初始化云朵 - 移动到前面
+  const initClouds = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const clouds = [];
+    for (let i = 0; i < 5; i++) {
+      clouds.push({
+        x: Math.random() * 400,
+        y: Math.random() * 150 + 20,
+        speed: Math.random() * 0.5 + 0.2,
+        size: Math.random() * 20 + 15
+      });
+    }
+    gameRef.current.clouds = clouds;
+  }, []);
 
   // 音效生成函数
   const playSound = useCallback((frequency: number, duration: number, type: 'sine' | 'square' | 'triangle' = 'sine') => {
@@ -382,23 +400,6 @@ const EnhancedFlappyBird = ({ onBack, soundEnabled = true }: EnhancedFlappyBirdP
       }
     }
   }, [initClouds]);
-
-  // 初始化云朵
-  const initClouds = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const clouds = [];
-    for (let i = 0; i < 5; i++) {
-      clouds.push({
-        x: Math.random() * 400,
-        y: Math.random() * 150 + 20,
-        speed: Math.random() * 0.5 + 0.2,
-        size: Math.random() * 20 + 15
-      });
-    }
-    gameRef.current.clouds = clouds;
-  }, []);
 
   useEffect(() => {
     if (gameState === 'playing') {
