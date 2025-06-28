@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Mic, Square, Play, Trash2, Download } from 'lucide-react';
+import { ArrowLeft, Mic, Square, Play, Trash2, Download, Pause, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -18,10 +18,16 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [playbackTime, setPlaybackTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [recordingQuality, setRecordingQuality] = useState<'high' | 'medium'>('high');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const playbackTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -29,16 +35,53 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
+      if (playbackTimerRef.current) {
+        clearInterval(playbackTimerRef.current);
+      }
       if (audioUrl) {
         URL.revokeObjectURL(audioUrl);
       }
     };
   }, [audioUrl]);
 
+  const getRecordingOptions = () => {
+    const options: MediaRecorderOptions = {
+      mimeType: 'audio/webm;codecs=opus'
+    };
+    
+    if (recordingQuality === 'high') {
+      options.audioBitsPerSecond = 128000;
+    } else {
+      options.audioBitsPerSecond = 64000;
+    }
+    
+    // 回退到其他格式
+    if (!MediaRecorder.isTypeSupported(options.mimeType!)) {
+      if (MediaRecorder.isTypeSupported('audio/webm')) {
+        options.mimeType = 'audio/webm';
+      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        options.mimeType = 'audio/mp4';
+      } else {
+        delete options.mimeType;
+      }
+    }
+    
+    return options;
+  };
+
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: recordingQuality === 'high' ? 48000 : 44100
+        } 
+      });
+      
+      const options = getRecordingOptions();
+      const mediaRecorder = new MediaRecorder(stream, options);
       const chunks: BlobPart[] = [];
 
       mediaRecorder.ondataavailable = (event) => {
@@ -48,7 +91,8 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/wav' });
+        const mimeType = mediaRecorder.mimeType || 'audio/webm';
+        const blob = new Blob(chunks, { type: mimeType });
         setAudioBlob(blob);
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
@@ -56,16 +100,34 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
         
         // 停止所有音轨
         stream.getTracks().forEach(track => track.stop());
+        
+        // 创建音频元素获取时长
+        const audio = new Audio(url);
+        audio.addEventListener('loadedmetadata', () => {
+          setDuration(audio.duration);
+        });
       };
 
       mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start();
+      mediaRecorder.start(1000); // 每秒记录一次数据
       setIsRecording(true);
       setRecordingTime(0);
 
       // 开始计时
       timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime(prev => {
+          const newTime = prev + 1;
+          // 限制最大录音时长为10分钟
+          if (newTime >= 600) {
+            stopRecording();
+            toast({
+              title: "录音时间已达上限",
+              description: "最长录音时间为10分钟",
+              variant: "destructive"
+            });
+          }
+          return newTime;
+        });
       }, 1000);
 
       toast({
@@ -74,9 +136,19 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
       });
     } catch (error) {
       console.error('录音失败:', error);
+      let errorMessage = "无法访问麦克风";
+      
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError') {
+          errorMessage = "请允许访问麦克风权限";
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = "未找到可用的麦克风设备";
+        }
+      }
+      
       toast({
         title: "录音失败",
-        description: "无法访问麦克风，请检查权限设置",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -101,17 +173,48 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
 
   const playRecording = () => {
     if (audioUrl && audioRef.current) {
-      if (isPlaying) {
+      if (isPlaying && !isPaused) {
         audioRef.current.pause();
-        setIsPlaying(false);
+        setIsPaused(true);
+        if (playbackTimerRef.current) {
+          clearInterval(playbackTimerRef.current);
+        }
       } else {
         audioRef.current.src = audioUrl;
+        audioRef.current.volume = volume;
+        audioRef.current.currentTime = playbackTime;
         audioRef.current.play();
         setIsPlaying(true);
+        setIsPaused(false);
+        
+        // 播放进度更新
+        playbackTimerRef.current = setInterval(() => {
+          if (audioRef.current) {
+            setPlaybackTime(audioRef.current.currentTime);
+          }
+        }, 100);
         
         audioRef.current.onended = () => {
           setIsPlaying(false);
+          setIsPaused(false);
+          setPlaybackTime(0);
+          if (playbackTimerRef.current) {
+            clearInterval(playbackTimerRef.current);
+          }
         };
+      }
+    }
+  };
+
+  const stopPlayback = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsPlaying(false);
+      setIsPaused(false);
+      setPlaybackTime(0);
+      if (playbackTimerRef.current) {
+        clearInterval(playbackTimerRef.current);
       }
     }
   };
@@ -120,11 +223,13 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
     if (audioUrl) {
       URL.revokeObjectURL(audioUrl);
     }
+    stopPlayback();
     setAudioBlob(null);
     setAudioUrl('');
     setHasRecording(false);
     setRecordingTime(0);
-    setIsPlaying(false);
+    setPlaybackTime(0);
+    setDuration(0);
     
     toast({
       title: "录音已删除",
@@ -137,7 +242,8 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
       const url = URL.createObjectURL(audioBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `voice-record-${new Date().toISOString().slice(0, 19)}.wav`;
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+      a.download = `voice-record-${timestamp}.webm`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -163,7 +269,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
     setIsLoading(true);
     try {
       await saveVoiceRecord({
-        note: `语音记录 - ${formatTime(recordingTime)}`,
+        note: `语音记录 - 时长${formatTime(recordingTime)} - 质量${recordingQuality === 'high' ? '高' : '标准'}`,
         duration: recordingTime
       });
 
@@ -187,8 +293,18 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getRecordingStatus = () => {
+    if (isRecording) {
+      return `正在录音... ${formatTime(recordingTime)}`;
+    }
+    if (hasRecording) {
+      return `录音完成 - 时长 ${formatTime(recordingTime)}`;
+    }
+    return "准备开始录音";
   };
 
   return (
@@ -215,29 +331,54 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* 录音质量选择 */}
+            {!hasRecording && !isRecording && (
+              <div className="text-center">
+                <label className="text-sm text-gray-600 mb-2 block">录音质量</label>
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    variant={recordingQuality === 'high' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setRecordingQuality('high')}
+                  >
+                    高质量
+                  </Button>
+                  <Button
+                    variant={recordingQuality === 'medium' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setRecordingQuality('medium')}
+                  >
+                    标准
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* 录音状态显示 */}
             <div className="text-center">
-              <div className="text-4xl font-mono text-gray-800 mb-4">
-                {formatTime(recordingTime)}
+              <div className="text-4xl font-mono text-gray-800 mb-2">
+                {isRecording ? formatTime(recordingTime) : (hasRecording ? formatTime(duration) : '00:00')}
+              </div>
+              <div className="text-sm text-gray-600 mb-4">
+                {getRecordingStatus()}
               </div>
               {isRecording && (
                 <div className="flex items-center justify-center space-x-2 text-red-500">
                   <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-lg">正在录音...</span>
+                  <span className="text-sm">录音中...</span>
                 </div>
               )}
             </div>
 
             {/* 录音控制 */}
-            <div className="flex justify-center">
+            <div className="flex justify-center gap-4">
               {!isRecording && !hasRecording && (
                 <Button
                   onClick={startRecording}
-                  className="w-32 h-32 rounded-full bg-red-500 hover:bg-red-600 text-white text-lg font-medium transform hover:scale-105 transition-all duration-200"
+                  className="w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 text-white text-lg font-medium transform hover:scale-105 transition-all duration-200"
                 >
                   <div className="flex flex-col items-center">
-                    <Mic className="h-8 w-8 mb-2" />
-                    <span>开始录音</span>
+                    <Mic className="h-6 w-6" />
                   </div>
                 </Button>
               )}
@@ -245,41 +386,88 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
               {isRecording && (
                 <Button
                   onClick={stopRecording}
-                  className="w-32 h-32 rounded-full bg-gray-600 hover:bg-gray-700 text-white text-lg font-medium transform hover:scale-105 transition-all duration-200"
+                  className="w-20 h-20 rounded-full bg-gray-600 hover:bg-gray-700 text-white text-lg font-medium transform hover:scale-105 transition-all duration-200"
                 >
                   <div className="flex flex-col items-center">
-                    <Square className="h-8 w-8 mb-2" />
-                    <span>停止录音</span>
+                    <Square className="h-6 w-6" />
                   </div>
                 </Button>
               )}
             </div>
 
-            {/* 录音完成后的操作 */}
+            {/* 播放控制和进度条 */}
             {hasRecording && !isRecording && (
               <div className="space-y-4">
-                <div className="text-center text-gray-600">
-                  录音完成，时长 {formatTime(recordingTime)}
+                {/* 播放进度条 */}
+                <div className="w-full">
+                  <input
+                    type="range"
+                    min="0"
+                    max={duration}
+                    value={playbackTime}
+                    onChange={(e) => {
+                      const time = parseFloat(e.target.value);
+                      setPlaybackTime(time);
+                      if (audioRef.current) {
+                        audioRef.current.currentTime = time;
+                      }
+                    }}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>{formatTime(playbackTime)}</span>
+                    <span>{formatTime(duration)}</span>
+                  </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-3">
+                {/* 播放控制按钮 */}
+                <div className="flex justify-center gap-3">
                   <Button
                     onClick={playRecording}
                     variant="outline"
-                    className="px-4 py-3"
+                    size="sm"
+                    className="px-4 py-2"
                   >
-                    <Play className="mr-2 h-4 w-4" />
-                    {isPlaying ? '暂停' : '播放'}
+                    {isPlaying && !isPaused ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                  </Button>
+                  
+                  <Button
+                    onClick={stopPlayback}
+                    variant="outline"
+                    size="sm"
+                    className="px-4 py-2"
+                  >
+                    <Square className="h-4 w-4" />
                   </Button>
                   
                   <Button
                     onClick={downloadRecording}
                     variant="outline"
-                    className="px-4 py-3"
+                    size="sm"
+                    className="px-4 py-2"
                   >
-                    <Download className="mr-2 h-4 w-4" />
-                    下载
+                    <Download className="h-4 w-4" />
                   </Button>
+                </div>
+
+                {/* 音量控制 */}
+                <div className="flex items-center gap-2">
+                  <Volume2 className="h-4 w-4 text-gray-600" />
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={volume}
+                    onChange={(e) => {
+                      const vol = parseFloat(e.target.value);
+                      setVolume(vol);
+                      if (audioRef.current) {
+                        audioRef.current.volume = vol;
+                      }
+                    }}
+                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
                 </div>
                 
                 <Button
@@ -297,11 +485,12 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h4 className="font-medium text-blue-800 mb-2">💡 使用说明</h4>
               <ul className="text-sm text-blue-700 space-y-1">
-                <li>• 点击红色按钮开始录音</li>
-                <li>• 说出您想记录的其他症状或感受</li>
-                <li>• 录音会自动保存到您的记录中</li>
-                <li>• 可以说出无法用选项表达的细节</li>
-                <li>• 支持播放和下载录音文件</li>
+                <li>• 选择录音质量：高质量适合重要记录，标准质量节省存储空间</li>
+                <li>• 点击红色按钮开始录音，最长可录制10分钟</li>
+                <li>• 录音完成后可以播放、暂停、调节音量和进度</li>
+                <li>• 支持下载录音文件到本地设备</li>
+                <li>• 保存后的语音记录将存储在您的健康档案中</li>
+                <li>• 未来将支持AI语音识别和智能分析</li>
               </ul>
             </div>
 

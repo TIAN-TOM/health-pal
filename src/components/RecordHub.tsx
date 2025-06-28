@@ -61,11 +61,6 @@ const RecordHub = ({ onBack, onNavigate }: RecordHubProps) => {
           <div className="w-16"></div>
         </div>
 
-        <div className="mb-6 text-center">
-          <h2 className="text-lg font-medium text-gray-800 mb-2">选择记录类型</h2>
-          <p className="text-gray-600 text-sm">选择您要记录的健康信息类型</p>
-        </div>
-
         <div className="space-y-4">
           {recordTypes.map((type) => {
             const IconComponent = type.icon;
@@ -96,7 +91,7 @@ const RecordHub = ({ onBack, onNavigate }: RecordHubProps) => {
             <div>
               <h3 className="font-medium text-blue-800 mb-1">记录提示</h3>
               <p className="text-blue-700 text-sm">
-                定期记录健康数据有助于发现规律和趋势。建议每天固定时间进行记录，保持数据的连续性和准确性。
+                定期记录有助于发现健康规律和趋势，建议每天固定时间进行记录。
               </p>
             </div>
           </div>

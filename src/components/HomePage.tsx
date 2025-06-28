@@ -26,7 +26,7 @@ const HomePage = ({
   homeRef 
 }: HomePageProps) => {
   const handleDeveloperClick = () => {
-    window.open('https://www.linkedin.com/in/yushun-tian-b9846b31a/', '_blank');
+    window.open('https://www.linkedin.com/in/tom-tian-317580257/', '_blank');
   };
 
   return (
@@ -86,7 +86,7 @@ const HomePage = ({
                 onClick={handleDeveloperClick}
                 className="text-blue-600 hover:text-blue-700 hover:underline transition-colors"
               >
-                Yushun Tian
+                Tom Tian
               </button>
             </div>
           </div>
