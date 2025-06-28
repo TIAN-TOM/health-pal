@@ -11,6 +11,8 @@ export interface ExportData {
   emergencyContacts: any[];
   medicalRecords: any[];
   userMedications: any[];
+  userProfile?: any;
+  medications?: any[];
 }
 
 export const getRecordsByDateRange = async (startDate: Date, endDate: Date): Promise<ExportData> => {
@@ -32,14 +34,16 @@ export const getRecordsByDateRange = async (startDate: Date, endDate: Date): Pro
       diabetesRecords,
       emergencyContacts,
       medicalRecords,
-      userMedications
+      userMedications,
+      userProfile
     ] = await Promise.all([
       getMeniereRecords(startDateStr, endDateStr),
       getDailyCheckins(startDateStr, endDateStr),
       getDiabetesRecords(startDateStr, endDateStr),
       getEmergencyContacts(),
       getMedicalRecords(startDateStr, endDateStr),
-      getUserMedications()
+      getUserMedications(),
+      getUserProfile()
     ]);
 
     return {
@@ -48,7 +52,9 @@ export const getRecordsByDateRange = async (startDate: Date, endDate: Date): Pro
       diabetesRecords: diabetesRecords || [],
       emergencyContacts: emergencyContacts || [],
       medicalRecords: medicalRecords || [],
-      userMedications: userMedications || []
+      userMedications: userMedications || [],
+      userProfile: userProfile,
+      medications: userMedications || []
     };
   } catch (error) {
     console.error('获取导出数据失败:', error);
@@ -104,4 +110,22 @@ const getUserMedications = async () => {
 
   if (error) throw error;
   return data || [];
+};
+
+// 获取用户个人资料
+const getUserProfile = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from('user_preferences')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('获取用户资料失败:', error);
+  }
+  
+  return data;
 };
