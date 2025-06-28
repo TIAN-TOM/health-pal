@@ -67,7 +67,7 @@ const HomePage = ({
             <div>如有严重症状请及时就医</div>
             <div className="mt-2">
               开发者：
-              <button onClick={handleDeveloperClick} className="text-blue-600 hover:text-blue-700 hover:underline transition-colors">Yushun Tian</button>
+              <button onClick={handleDeveloperClick} className="text-blue-600 hover:text-blue-700 hover:underline transition-colors">田雨顺</button>
             </div>
           </div>
         </div>
