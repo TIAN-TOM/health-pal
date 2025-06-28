@@ -32,10 +32,11 @@ const SleepSection = ({
   wakeTime,
   setWakeTime
 }: SleepSectionProps) => {
-  // 只有在有实际数据时才显示绿点，不包括默认时间
-  const hasSleepData = sleepHours || sleepQuality || 
-    (bedTime !== '22:00' && bedTime !== '') || 
-    (wakeTime !== '07:00' && wakeTime !== '');
+  // 判断是否有实际的睡眠数据：只有用户主动修改了默认值或填写了其他信息时才显示绿点
+  const hasSleepData = sleepQuality || 
+    (bedTime && bedTime !== '22:00') || 
+    (wakeTime && wakeTime !== '07:00') ||
+    (sleepHours && parseFloat(sleepHours) !== 9.0);
 
   // 根据入睡时间和起床时间自动计算睡眠时长
   useEffect(() => {

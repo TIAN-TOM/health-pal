@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft, Gamepad2, Play, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import FlappyBird from '@/components/games/FlappyBird';
-import Gomoku from '@/components/games/Gomoku';
+import EnhancedFlappyBird from '@/components/games/EnhancedFlappyBird';
+import EnhancedGomoku from '@/components/games/EnhancedGomoku';
 import BreakoutGame from '@/components/games/BreakoutGame';
 import MemoryCardGame from '@/components/games/MemoryCardGame';
 
@@ -31,16 +30,16 @@ const Games = ({ onBack }: GamesProps) => {
     {
       id: 'flappy-bird',
       name: '小鸟会飞',
-      description: '经典的飞鸟游戏，收集道具，体验慢动作效果',
+      description: '经典的飞鸟游戏，收集道具，体验特殊效果',
       icon: '🐦',
-      component: FlappyBird
+      component: EnhancedFlappyBird
     },
     {
       id: 'gomoku',
       name: '五子棋',
       description: '与智能电脑对战五子棋，可调节难度等级',
       icon: '⚫',
-      component: Gomoku
+      component: EnhancedGomoku
     },
     {
       id: 'breakout',
