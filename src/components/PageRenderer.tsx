@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Settings from '@/components/Settings';
 import EmergencyMode from '@/components/EmergencyMode';
@@ -77,7 +78,6 @@ const PageRenderer = ({
       return (
         <MedicalRecords
           onBack={() => onBack(navigationSource)}
-          onRecordClick={onRecordClick}
         />
       );
 
@@ -99,7 +99,6 @@ const PageRenderer = ({
     case "history":
       return (
         <HistoryView
-          onBack={() => onBack("home")}
           onRecordClick={onRecordClick}
         />
       );
