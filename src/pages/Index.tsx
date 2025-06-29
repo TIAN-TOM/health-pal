@@ -14,11 +14,19 @@ export default function Index() {
   const [selectedRecord, setSelectedRecord] = useState<MeniereRecord | null>(null);
   const [navigationSource, setNavigationSource] = useState<string>("home");
   
-  // 用于记忆页面滚动位置
   const scrollPositions = useRef<Record<string, number>>({});
   const homeRef = useRef<HTMLDivElement>(null);
 
-  // 保存当前页面的滚动位置
+  // 修复登录后自动跳转到首页的问题
+  useEffect(() => {
+    if (user && currentPage !== "home") {
+      // 当用户登录成功后，确保跳转到首页
+      setCurrentPage("home");
+      setNavigationSource("home");
+      setSelectedRecord(null);
+    }
+  }, [user]);
+
   const saveScrollPosition = (page: string) => {
     if (page === "home" && homeRef.current) {
       scrollPositions.current[page] = homeRef.current.scrollTop;
@@ -27,11 +35,9 @@ export default function Index() {
     }
   };
 
-  // 恢复页面的滚动位置
   const restoreScrollPosition = (page: string) => {
     setTimeout(() => {
       if (page === "home" && homeRef.current) {
-        // 保存的位置存在时使用保存的位置，否则滚动到功能卡片区域（大约380px）
         const savedPosition = scrollPositions.current[page];
         const targetPosition = savedPosition !== undefined ? savedPosition : 380;
         homeRef.current.scrollTo({ top: targetPosition, behavior: 'smooth' });

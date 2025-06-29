@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { RotateCcw, Trophy, Clock, Zap, Eye, Shuffle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ interface GameCard {
   isFlipped: boolean;
   isMatched: boolean;
   isHinted: boolean;
+  backgroundColor?: string;
 }
 
 interface PowerUp {
@@ -72,10 +72,30 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
 
-  const cardEmojis = {
-    easy: ['🌟', '🎯', '🎪', '🎭', '🎨', '🎵'],
-    medium: ['🌟', '🎯', '🎪', '🎭', '🎨', '🎵', '🌸', '🦋', '🌈', '⭐'],
-    hard: ['🌟', '🎯', '🎪', '🎭', '🎨', '🎵', '🌸', '🦋', '🌈', '⭐', '🎀', '🎈', '🌺', '🍀', '🔥', '💎']
+  // 使用高对比度的符号和颜色配对，更适合老花眼用户
+  const cardSymbols = {
+    easy: [
+      { symbol: '♠️', bg: 'bg-slate-200' }, { symbol: '♥️', bg: 'bg-red-200' }, 
+      { symbol: '♦️', bg: 'bg-orange-200' }, { symbol: '♣️', bg: 'bg-green-200' }, 
+      { symbol: '★', bg: 'bg-yellow-200' }, { symbol: '●', bg: 'bg-purple-200' }
+    ],
+    medium: [
+      { symbol: '♠️', bg: 'bg-slate-200' }, { symbol: '♥️', bg: 'bg-red-200' }, 
+      { symbol: '♦️', bg: 'bg-orange-200' }, { symbol: '♣️', bg: 'bg-green-200' }, 
+      { symbol: '★', bg: 'bg-yellow-200' }, { symbol: '●', bg: 'bg-purple-200' },
+      { symbol: '▲', bg: 'bg-blue-200' }, { symbol: '■', bg: 'bg-pink-200' },
+      { symbol: '◆', bg: 'bg-indigo-200' }, { symbol: '▼', bg: 'bg-teal-200' }
+    ],
+    hard: [
+      { symbol: '♠️', bg: 'bg-slate-200' }, { symbol: '♥️', bg: 'bg-red-200' }, 
+      { symbol: '♦️', bg: 'bg-orange-200' }, { symbol: '♣️', bg: 'bg-green-200' }, 
+      { symbol: '★', bg: 'bg-yellow-200' }, { symbol: '●', bg: 'bg-purple-200' },
+      { symbol: '▲', bg: 'bg-blue-200' }, { symbol: '■', bg: 'bg-pink-200' },
+      { symbol: '◆', bg: 'bg-indigo-200' }, { symbol: '▼', bg: 'bg-teal-200' },
+      { symbol: '♨️', bg: 'bg-cyan-200' }, { symbol: '✦', bg: 'bg-lime-200' },
+      { symbol: '◉', bg: 'bg-rose-200' }, { symbol: '◈', bg: 'bg-amber-200' },
+      { symbol: '◎', bg: 'bg-emerald-200' }, { symbol: '※', bg: 'bg-violet-200' }
+    ]
   };
 
   const gridSizes = {
@@ -84,7 +104,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     hard: { pairs: 16, cols: 8 }
   };
 
-  // 播放音效
   const playSound = (type: 'flip' | 'match' | 'complete' | 'combo' | 'powerup') => {
     if (!soundEnabled) return;
     
@@ -131,15 +150,16 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     oscillator.stop(audioContext.currentTime + duration);
   };
 
-  // 初始化游戏
+  // 修改初始化游戏函数以包含背景色
   const initializeGame = () => {
     const { pairs } = gridSizes[difficulty];
-    const selectedEmojis = cardEmojis[difficulty].slice(0, pairs);
-    const gameCards = [...selectedEmojis, ...selectedEmojis]
+    const selectedSymbols = cardSymbols[difficulty].slice(0, pairs);
+    const gameCards = [...selectedSymbols, ...selectedSymbols]
       .sort(() => Math.random() - 0.5)
-      .map((value, index) => ({
+      .map((item, index) => ({
         id: index,
-        value,
+        value: item.symbol,
+        backgroundColor: item.bg,
         isFlipped: false,
         isMatched: false,
         isHinted: false
@@ -156,14 +176,12 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     setCombo(0);
     setMaxCombo(0);
     
-    // 重置道具冷却
     setPowerUps(prev => prev.map(powerUp => ({
       ...powerUp,
       currentCooldown: 0
     })));
   };
 
-  // 使用道具
   const usePowerUp = (powerUpId: string) => {
     const powerUp = powerUps.find(p => p.id === powerUpId);
     if (!powerUp || powerUp.currentCooldown > 0 || totalCoins < powerUp.cost) return;
@@ -184,7 +202,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
 
     switch (powerUpId) {
       case 'peek':
-        // 显示所有卡片3秒
         setCards(prev => prev.map(card => 
           card.isMatched ? card : { ...card, isFlipped: true }
         ));
@@ -196,7 +213,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         break;
         
       case 'hint':
-        // 找到一对匹配的卡片并高亮
         const unmatchedCards = cards.filter(card => !card.isMatched);
         const values = new Set();
         const pairs: GameCard[] = [];
@@ -226,17 +242,21 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         break;
         
       case 'shuffle':
-        // 重新排列未匹配的卡片
         const matchedCards = cards.filter(card => card.isMatched);
-        const unmatchedValues = cards.filter(card => !card.isMatched).map(card => card.value);
-        const shuffledValues = [...unmatchedValues].sort(() => Math.random() - 0.5);
+        const unmatchedItems = cards.filter(card => !card.isMatched).map(card => ({
+          symbol: card.value,
+          bg: card.backgroundColor
+        }));
+        const shuffledItems = [...unmatchedItems].sort(() => Math.random() - 0.5);
         
         let shuffleIndex = 0;
         setCards(prev => prev.map(card => {
           if (card.isMatched) return card;
+          const item = shuffledItems[shuffleIndex++];
           return {
             ...card,
-            value: shuffledValues[shuffleIndex++],
+            value: item.symbol,
+            backgroundColor: item.bg,
             isFlipped: false
           };
         }));
@@ -245,14 +265,12 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     }
   };
 
-  // 游戏计时器和冷却更新
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isGameActive && !isGameComplete) {
       interval = setInterval(() => {
         setGameTime(prev => prev + 1);
         
-        // 更新道具冷却
         setPowerUps(prev => prev.map(powerUp => ({
           ...powerUp,
           currentCooldown: Math.max(0, powerUp.currentCooldown - 1)
@@ -262,14 +280,12 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     return () => clearInterval(interval);
   }, [isGameActive, isGameComplete]);
 
-  // 检查游戏完成
   useEffect(() => {
     const { pairs } = gridSizes[difficulty];
     if (matches === pairs && isGameActive) {
       setIsGameComplete(true);
       setIsGameActive(false);
       
-      // 计算奖励金币
       const timeBonus = Math.max(0, 300 - gameTime);
       const moveBonus = Math.max(0, pairs * 2 - moves);
       const comboBonus = maxCombo * 2;
@@ -286,7 +302,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     }
   }, [matches, difficulty, isGameActive, gameTime, moves, maxCombo]);
 
-  // 处理卡片点击
   const handleCardClick = (cardId: number) => {
     if (!isGameActive || isGameComplete) return;
     
@@ -310,7 +325,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
       const secondCard = cards.find(c => c.id === secondId);
 
       if (firstCard && secondCard && firstCard.value === secondCard.value) {
-        // 匹配成功
         setTimeout(() => {
           setCards(prev => prev.map(c => 
             c.id === firstId || c.id === secondId 
@@ -320,7 +334,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
           setMatches(prev => prev + 1);
           setFlippedCards([]);
           
-          // 连击系统
           setCombo(prev => {
             const newCombo = prev + 1;
             setMaxCombo(current => Math.max(current, newCombo));
@@ -333,7 +346,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
           playSound('match');
         }, 500);
       } else {
-        // 不匹配，重置连击
         setCombo(0);
         setTimeout(() => {
           setCards(prev => prev.map(c => 
@@ -347,20 +359,17 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     }
   };
 
-  // 格式化时间
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // 获取难度文本
   const getDifficultyText = (level: string) => {
     const map = { easy: '简单', medium: '中等', hard: '困难' };
     return map[level as keyof typeof map] || level;
   };
 
-  // 获取评分
   const getScoreRating = () => {
     const { pairs } = gridSizes[difficulty];
     const perfectMoves = pairs;
@@ -380,7 +389,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
 
   return (
     <div className="space-y-4">
-      {/* 游戏状态栏 */}
       <div className="flex justify-between items-center p-4 bg-white rounded-lg shadow-sm">
         <div className="flex items-center space-x-4">
           <div className="flex items-center">
@@ -418,7 +426,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         </div>
       </div>
 
-      {/* 道具栏 */}
       <div className="flex justify-center space-x-2 p-2 bg-gray-50 rounded-lg">
         {powerUps.map(powerUp => (
           <Button
@@ -442,7 +449,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         ))}
       </div>
 
-      {/* 游戏完成提示 */}
       {isGameComplete && (
         <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
           <CardContent className="p-4 text-center">
@@ -467,12 +473,11 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         </Card>
       )}
 
-      {/* 游戏网格 */}
       <div 
-        className={`grid gap-2 justify-center`}
+        className={`grid gap-3 justify-center`}
         style={{ 
           gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-          maxWidth: cols <= 5 ? '400px' : '600px',
+          maxWidth: cols <= 5 ? '450px' : '700px',
           margin: '0 auto'
         }}
       >
@@ -480,22 +485,22 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
           <Card
             key={card.id}
             className={`
-              aspect-square cursor-pointer transition-all duration-500 transform hover:scale-105
+              aspect-square cursor-pointer transition-all duration-500 transform hover:scale-105 border-2
               ${card.isFlipped || card.isMatched 
-                ? 'bg-white border-blue-300 shadow-md' 
-                : 'bg-gradient-to-br from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700'
+                ? `${card.backgroundColor} border-gray-300 shadow-lg` 
+                : 'bg-gradient-to-br from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700 border-gray-400'
               }
-              ${card.isMatched ? 'ring-2 ring-green-400 bg-green-50' : ''}
+              ${card.isMatched ? 'ring-4 ring-green-400 ring-opacity-75' : ''}
               ${card.isHinted ? 'ring-4 ring-yellow-400 ring-opacity-75 animate-pulse' : ''}
             `}
             onClick={() => handleCardClick(card.id)}
           >
             <CardContent className="p-0 h-full flex items-center justify-center">
               <div className={`
-                text-2xl sm:text-3xl transition-all duration-500 
+                text-4xl sm:text-5xl font-bold transition-all duration-500 
                 ${card.isFlipped || card.isMatched 
-                  ? 'opacity-100 transform rotate-0' 
-                  : 'opacity-0 transform rotate-180'
+                  ? 'opacity-100 transform rotate-0 text-gray-800' 
+                  : 'opacity-0 transform rotate-180 text-white'
                 }
               `}>
                 {(card.isFlipped || card.isMatched) ? card.value : '?'}
@@ -505,7 +510,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         ))}
       </div>
 
-      {/* 游戏说明 */}
       <div className="p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
         <h3 className="font-medium mb-2">🧠 游戏说明：</h3>
         <ul className="space-y-1">
@@ -513,6 +517,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
           <li>• 使用金币购买道具帮助游戏进行</li>
           <li>• 完成游戏获得金币奖励，效率越高奖励越多</li>
           <li>• 连续匹配可获得连击加分</li>
+          <li>• 卡片使用高对比度颜色和符号，便于识别</li>
         </ul>
       </div>
     </div>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import UserWelcomeWithClock from '@/components/UserWelcomeWithClock';
 import NavigationActions from '@/components/NavigationActions';
@@ -7,7 +8,8 @@ import DailyQuote from '@/components/DailyQuote';
 import AnnouncementDisplay from '@/components/AnnouncementDisplay';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { BookOpen, Sparkles } from 'lucide-react';
+import { BookOpen, Sparkles, FileText } from 'lucide-react';
+
 interface HomePageProps {
   userDisplayName: string;
   onSettingsClick: () => void;
@@ -15,6 +17,7 @@ interface HomePageProps {
   onNavigate: (page: string, source?: string) => void;
   homeRef: React.RefObject<HTMLDivElement>;
 }
+
 const HomePage = ({
   userDisplayName,
   onSettingsClick,
@@ -25,9 +28,14 @@ const HomePage = ({
   const handleDeveloperClick = () => {
     window.open('https://www.linkedin.com/in/tom-tian-317580257/', '_blank');
   };
-  return <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50" ref={homeRef}>
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50" ref={homeRef}>
       <div className="container mx-auto px-4 py-3 max-w-md space-y-3">
-        <UserWelcomeWithClock userDisplayName={userDisplayName} onSettingsClick={onSettingsClick} />
+        <UserWelcomeWithClock 
+          userDisplayName={userDisplayName} 
+          onSettingsClick={onSettingsClick} 
+        />
         
         <AnnouncementDisplay />
         
@@ -48,15 +56,33 @@ const HomePage = ({
           </Card>
         </div>
         
-        {/* 使用手册快速入口 */}
-        <Button onClick={() => onNavigate('user-manual', 'home')} variant="outline" className="w-full bg-white/70 hover:bg-white/90 border-blue-200 text-blue-700 font-medium py-3">
-          <BookOpen className="h-4 w-4 mr-2" />
-          查看使用手册
-        </Button>
+        {/* 快速操作按钮组 */}
+        <div className="grid grid-cols-2 gap-2">
+          <Button 
+            onClick={() => onNavigate('user-manual', 'home')} 
+            variant="outline" 
+            className="bg-white/70 hover:bg-white/90 border-blue-200 text-blue-700 font-medium py-3"
+          >
+            <BookOpen className="h-4 w-4 mr-2" />
+            使用手册
+          </Button>
+          
+          <Button 
+            onClick={() => onNavigate('update-logs', 'home')} 
+            variant="outline" 
+            className="bg-white/70 hover:bg-white/90 border-green-200 text-green-700 font-medium py-3"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            更新日志
+          </Button>
+        </div>
         
         <DailyQuote />
         
-        <NavigationActions onDataExport={() => onNavigate("export")} onDailyData={() => onNavigate("daily-data")} />
+        <NavigationActions 
+          onDataExport={() => onNavigate("export")} 
+          onDailyData={() => onNavigate("daily-data")} 
+        />
         
         {/* 版权信息 - 缩减上方间距 */}
         <div className="pt-1 pb-4 text-center">
@@ -67,11 +93,18 @@ const HomePage = ({
             <div>如有严重症状请及时就医</div>
             <div className="mt-2">
               开发者：
-              <button onClick={handleDeveloperClick} className="text-blue-600 hover:text-blue-700 hover:underline transition-colors">田雨顺</button>
+              <button 
+                onClick={handleDeveloperClick} 
+                className="text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+              >
+                田雨顺
+              </button>
             </div>
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default HomePage;
