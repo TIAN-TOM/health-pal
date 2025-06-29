@@ -12,6 +12,7 @@ import LearningResources from './settings/LearningResources';
 import AdminSection from './settings/AdminSection';
 import DeveloperContact from './settings/DeveloperContact';
 import UserManualSection from './settings/UserManualSection';
+import AccountManagement from './settings/AccountManagement';
 
 interface SettingsProps {
   onBack: () => void;
@@ -77,6 +78,8 @@ const Settings = ({
           <UserManualSection
             onUserManual={onUserManual}
           />
+          
+          <AccountManagement />
           
           {userRole === 'admin' && (
             <AdminSection onAdminPanel={onAdminPanel} />

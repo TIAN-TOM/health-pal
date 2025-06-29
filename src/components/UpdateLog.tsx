@@ -28,9 +28,40 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
 
   const updateHistory: UpdateEntry[] = [
     {
-      version: "v2.4.0",
+      version: "v2.5.0",
       date: "2025-06-29",
       highlight: true,
+      updates: [
+        {
+          type: "feature",
+          title: "深色模式功能",
+          description: "完善深色模式切换功能，支持系统级主题切换和本地存储偏好设置"
+        },
+        {
+          type: "improvement",
+          title: "记忆翻牌游戏移动端优化",
+          description: "大幅优化手机端显示效果，增大卡片尺寸，加强背景色对比度，改善老年用户体验"
+        },
+        {
+          type: "improvement",
+          title: "五子棋视觉效果优化",
+          description: "改进移动端五子棋落子显示，采用红色边框标记玩家棋子，提升可视性"
+        },
+        {
+          type: "improvement",
+          title: "设置页面功能完善",
+          description: "恢复账号管理功能，包括退出登录和注销账号选项，完善系统设置存储机制"
+        },
+        {
+          type: "bugfix",
+          title: "系统设置持久化",
+          description: "修复通知设置、音效设置等系统偏好无法正确保存的问题"
+        }
+      ]
+    },
+    {
+      version: "v2.4.0",
+      date: "2025-06-29",
       updates: [
         {
           type: "feature",

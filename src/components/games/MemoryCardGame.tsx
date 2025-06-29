@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { RotateCcw, Trophy, Clock, Zap, Eye, Shuffle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -45,7 +44,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     {
       id: 'peek',
       name: '窥视',
-      icon: <Eye className="h-4 w-4" />,
+      icon: <Eye className="w-3 h-3 sm:h-4 sm:w-4" />,
       description: '短暂显示所有卡片',
       cost: 3,
       cooldown: 0,
@@ -54,7 +53,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     {
       id: 'hint',
       name: '提示',
-      icon: <Zap className="h-4 w-4" />,
+      icon: <Zap className="w-3 h-3 sm:h-4 sm:w-4" />,
       description: '高亮一对匹配的卡片',
       cost: 5,
       cooldown: 0,
@@ -63,7 +62,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     {
       id: 'shuffle',
       name: '重排',
-      icon: <Shuffle className="h-4 w-4" />,
+      icon: <Shuffle className="w-3 h-3 sm:h-4 sm:w-4" />,
       description: '重新排列未匹配的卡片',
       cost: 2,
       cooldown: 10,
@@ -73,52 +72,53 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
 
-  // 优化后的卡片内容和背景色配对
+  // 优化后的卡片内容和背景色配对 - 更大的emoji和更清晰的背景色
   const cardSets = {
     easy: [
-      { symbol: '🌞', bg: 'bg-yellow-200' },
-      { symbol: '🌙', bg: 'bg-purple-200' },
-      { symbol: '⭐', bg: 'bg-orange-200' },
-      { symbol: '💎', bg: 'bg-blue-200' },
-      { symbol: '🌸', bg: 'bg-pink-200' },
-      { symbol: '🍀', bg: 'bg-green-200' }
+      { symbol: '🌞', bg: 'bg-yellow-300' },
+      { symbol: '🌙', bg: 'bg-purple-300' },
+      { symbol: '⭐', bg: 'bg-orange-300' },
+      { symbol: '💎', bg: 'bg-blue-300' },
+      { symbol: '🌸', bg: 'bg-pink-300' },
+      { symbol: '🍀', bg: 'bg-green-300' }
     ],
     medium: [
-      { symbol: '🌞', bg: 'bg-yellow-200' },
-      { symbol: '🌙', bg: 'bg-purple-200' },
-      { symbol: '⭐', bg: 'bg-orange-200' },
-      { symbol: '💎', bg: 'bg-blue-200' },
-      { symbol: '🌸', bg: 'bg-pink-200' },
-      { symbol: '🍀', bg: 'bg-green-200' },
-      { symbol: '🔥', bg: 'bg-red-200' },
-      { symbol: '❄️', bg: 'bg-cyan-200' },
-      { symbol: '🌈', bg: 'bg-indigo-200' },
-      { symbol: '⚡', bg: 'bg-amber-200' }
+      { symbol: '🌞', bg: 'bg-yellow-300' },
+      { symbol: '🌙', bg: 'bg-purple-300' },
+      { symbol: '⭐', bg: 'bg-orange-300' },
+      { symbol: '💎', bg: 'bg-blue-300' },
+      { symbol: '🌸', bg: 'bg-pink-300' },
+      { symbol: '🍀', bg: 'bg-green-300' },
+      { symbol: '🔥', bg: 'bg-red-300' },
+      { symbol: '❄️', bg: 'bg-cyan-300' },
+      { symbol: '🌈', bg: 'bg-indigo-300' },
+      { symbol: '⚡', bg: 'bg-amber-300' }
     ],
     hard: [
-      { symbol: '🌞', bg: 'bg-yellow-200' },
-      { symbol: '🌙', bg: 'bg-purple-200' },
-      { symbol: '⭐', bg: 'bg-orange-200' },
-      { symbol: '💎', bg: 'bg-blue-200' },
-      { symbol: '🌸', bg: 'bg-pink-200' },
-      { symbol: '🍀', bg: 'bg-green-200' },
-      { symbol: '🔥', bg: 'bg-red-200' },
-      { symbol: '❄️', bg: 'bg-cyan-200' },
-      { symbol: '🌈', bg: 'bg-indigo-200' },
-      { symbol: '⚡', bg: 'bg-amber-200' },
-      { symbol: '🎯', bg: 'bg-rose-200' },
-      { symbol: '🎪', bg: 'bg-violet-200' },
-      { symbol: '🎭', bg: 'bg-teal-200' },
-      { symbol: '🎨', bg: 'bg-lime-200' },
-      { symbol: '🎵', bg: 'bg-emerald-200' },
-      { symbol: '🦋', bg: 'bg-sky-200' }
+      { symbol: '🌞', bg: 'bg-yellow-300' },
+      { symbol: '🌙', bg: 'bg-purple-300' },
+      { symbol: '⭐', bg: 'bg-orange-300' },
+      { symbol: '💎', bg: 'bg-blue-300' },
+      { symbol: '🌸', bg: 'bg-pink-300' },
+      { symbol: '🍀', bg: 'bg-green-300' },
+      { symbol: '🔥', bg: 'bg-red-300' },
+      { symbol: '❄️', bg: 'bg-cyan-300' },
+      { symbol: '🌈', bg: 'bg-indigo-300' },
+      { symbol: '⚡', bg: 'bg-amber-300' },
+      { symbol: '🎯', bg: 'bg-rose-300' },
+      { symbol: '🎪', bg: 'bg-violet-300' },
+      { symbol: '🎭', bg: 'bg-teal-300' },
+      { symbol: '🎨', bg: 'bg-lime-300' },
+      { symbol: '🎵', bg: 'bg-emerald-300' },
+      { symbol: '🦋', bg: 'bg-sky-300' }
     ]
   };
 
+  // 移动端优化的网格配置
   const gridSizes = {
-    easy: { pairs: 6, cols: 3 }, // 改为3列以增大卡片
-    medium: { pairs: 10, cols: 4 }, // 改为4列
-    hard: { pairs: 16, cols: 4 } // 改为4列
+    easy: { pairs: 6, cols: 3, rows: 4 },
+    medium: { pairs: 8, cols: 4, rows: 4 },
+    hard: { pairs: 12, cols: 4, rows: 6 }
   };
 
   // 播放音效
@@ -222,7 +222,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
 
     switch (powerUpId) {
       case 'peek':
-        // 显示所有卡片3秒
         setCards(prev => prev.map(card => 
           card.isMatched ? card : { ...card, isFlipped: true }
         ));
@@ -234,7 +233,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         break;
         
       case 'hint':
-        // 找到一对匹配的卡片并高亮
         const unmatchedCards = cards.filter(card => !card.isMatched);
         const values = new Set();
         const pairs: GameCard[] = [];
@@ -264,7 +262,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         break;
         
       case 'shuffle':
-        // 重新排列未匹配的卡片
         const matchedCards = cards.filter(card => card.isMatched);
         const unmatchedData = cards.filter(card => !card.isMatched).map(card => ({
           value: card.value,
@@ -420,47 +417,48 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
   const { cols } = gridSizes[difficulty];
 
   return (
-    <div className="space-y-4">
-      {/* 游戏状态栏 */}
-      <div className="flex justify-between items-center p-4 bg-white rounded-lg shadow-sm">
-        <div className="flex items-center space-x-4">
+    <div className="space-y-4 px-2 sm:px-4">
+      {/* 移动端优化的游戏状态栏 */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 bg-white rounded-lg shadow-sm space-y-2 sm:space-y-0">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
           <div className="flex items-center">
-            <Clock className="h-4 w-4 mr-1" />
-            <span className="font-mono">{formatTime(gameTime)}</span>
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+            <span className="font-mono text-xs sm:text-base">{formatTime(gameTime)}</span>
           </div>
-          <div>步数: {moves}</div>
-          <div>配对: {matches}/{gridSizes[difficulty].pairs}</div>
+          <div className="text-xs sm:text-base">步数: {moves}</div>
+          <div className="text-xs sm:text-base">配对: {matches}/{gridSizes[difficulty].pairs}</div>
           {combo > 1 && (
-            <div className="text-orange-600 font-bold">
+            <div className="text-orange-600 font-bold text-xs sm:text-base">
               连击 x{combo}
             </div>
           )}
         </div>
         <div className="flex items-center space-x-2">
-          <div className="text-yellow-600 font-bold">💰 {totalCoins}</div>
+          <div className="text-yellow-600 font-bold text-xs sm:text-base">💰 {totalCoins}</div>
           <select 
             value={difficulty} 
             onChange={(e) => setDifficulty(e.target.value as any)}
-            className="px-2 py-1 border rounded text-sm"
+            className="px-2 py-1 border rounded text-xs sm:text-sm"
             disabled={isGameActive && moves > 0}
           >
             <option value="easy">简单 (3×4)</option>
-            <option value="medium">中等 (4×5)</option>
-            <option value="hard">困难 (4×8)</option>
+            <option value="medium">中等 (4×4)</option>
+            <option value="hard">困难 (4×6)</option>
           </select>
           <Button
             onClick={initializeGame}
             size="sm"
             variant="outline"
+            className="text-xs px-2"
           >
-            <RotateCcw className="h-4 w-4 mr-1" />
+            <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
             重新开始
           </Button>
         </div>
       </div>
 
-      {/* 道具栏 */}
-      <div className="flex justify-center space-x-2 p-2 bg-gray-50 rounded-lg">
+      {/* 移动端优化的道具栏 */}
+      <div className="flex justify-center space-x-1 sm:space-x-2 p-2 bg-gray-50 rounded-lg overflow-x-auto">
         {powerUps.map(powerUp => (
           <Button
             key={powerUp.id}
@@ -468,7 +466,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
             disabled={powerUp.currentCooldown > 0 || totalCoins < powerUp.cost}
             variant="outline"
             size="sm"
-            className={`flex flex-col items-center p-2 h-auto ${
+            className={`flex flex-col items-center p-1 sm:p-2 h-auto min-w-0 flex-shrink-0 ${
               powerUp.currentCooldown > 0 ? 'opacity-50' : ''
             }`}
             title={`${powerUp.description} (花费: ${powerUp.cost}💰)`}
@@ -487,8 +485,8 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
       {isGameComplete && (
         <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl mb-2">
-              <Trophy className="h-6 w-6 inline mr-2 text-yellow-600" />
+            <div className="text-xl sm:text-2xl mb-2">
+              <Trophy className="h-5 w-5 sm:h-6 sm:w-6 inline mr-2 text-yellow-600" />
               恭喜完成！
               {getScoreRating().emoji}
             </div>
@@ -508,33 +506,33 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         </Card>
       )}
 
-      {/* 优化后的游戏网格 - 增大卡片尺寸 */}
+      {/* 移动端优化的游戏网格 */}
       <div 
-        className={`grid gap-3 justify-center`}
+        className={`grid gap-2 sm:gap-3 justify-center mx-auto`}
         style={{ 
           gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-          maxWidth: cols <= 4 ? '500px' : '650px',
-          margin: '0 auto'
+          maxWidth: '100%',
+          aspectRatio: cols <= 3 ? '3/4' : '4/5'
         }}
       >
         {cards.map((card) => (
           <Card
             key={card.id}
             className={`
-              aspect-square cursor-pointer transition-all duration-500 transform hover:scale-105
+              aspect-square cursor-pointer transition-all duration-500 transform hover:scale-105 active:scale-95
               ${card.isFlipped || card.isMatched 
-                ? `${card.backgroundColor} border-gray-300 shadow-lg` 
-                : 'bg-gradient-to-br from-gray-400 to-gray-600 hover:from-gray-500 hover:to-gray-700'
+                ? `${card.backgroundColor} border-gray-400 shadow-lg` 
+                : 'bg-gradient-to-br from-gray-500 to-gray-700 hover:from-gray-400 hover:to-gray-600'
               }
-              ${card.isMatched ? 'ring-2 ring-green-400' : ''}
+              ${card.isMatched ? 'ring-2 ring-green-500' : ''}
               ${card.isHinted ? 'ring-4 ring-yellow-400 ring-opacity-75 animate-pulse' : ''}
-              min-h-[80px] min-w-[80px]
+              w-full h-full
             `}
             onClick={() => handleCardClick(card.id)}
           >
             <CardContent className="p-0 h-full flex items-center justify-center">
               <div className={`
-                text-4xl sm:text-5xl transition-all duration-500 font-bold
+                text-3xl sm:text-4xl md:text-5xl transition-all duration-500 font-bold leading-none
                 ${card.isFlipped || card.isMatched 
                   ? 'opacity-100 transform rotate-0' 
                   : 'opacity-0 transform rotate-180'
@@ -548,7 +546,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
       </div>
 
       {/* 游戏说明 */}
-      <div className="p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
+      <div className="p-3 sm:p-4 bg-gray-50 rounded-lg text-xs sm:text-sm text-gray-600">
         <h3 className="font-medium mb-2">🧠 游戏说明：</h3>
         <ul className="space-y-1">
           <li>• 点击卡片翻开，找到相同的一对获得连击奖励</li>

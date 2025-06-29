@@ -4,15 +4,56 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Settings, Bell, Moon, Sun, Volume2, FileText } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
 
 const SystemSettings = () => {
-  const [notifications, setNotifications] = React.useState(true);
-  const [darkMode, setDarkMode] = React.useState(false);
-  const [soundEnabled, setSoundEnabled] = React.useState(true);
+  const { toast } = useToast();
+  const [notifications, setNotifications] = React.useState(() => {
+    return localStorage.getItem('notifications-enabled') === 'true';
+  });
+  const [darkMode, setDarkMode] = React.useState(() => {
+    return localStorage.getItem('dark-mode') === 'true' || document.documentElement.classList.contains('dark');
+  });
+  const [soundEnabled, setSoundEnabled] = React.useState(() => {
+    return localStorage.getItem('sound-enabled') !== 'false';
+  });
 
   const handleUpdateLog = () => {
-    // 这里需要通过父组件传递导航功能
     window.dispatchEvent(new CustomEvent('navigate-to-update-log'));
+  };
+
+  const handleNotificationsChange = (enabled: boolean) => {
+    setNotifications(enabled);
+    localStorage.setItem('notifications-enabled', enabled.toString());
+    toast({
+      title: enabled ? "已开启推送通知" : "已关闭推送通知",
+      description: enabled ? "您将收到重要的应用通知" : "您将不再收到应用通知"
+    });
+  };
+
+  const handleDarkModeChange = (enabled: boolean) => {
+    setDarkMode(enabled);
+    localStorage.setItem('dark-mode', enabled.toString());
+    
+    if (enabled) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    
+    toast({
+      title: enabled ? "已开启深色模式" : "已关闭深色模式",
+      description: enabled ? "界面已切换为深色主题" : "界面已切换为浅色主题"
+    });
+  };
+
+  const handleSoundChange = (enabled: boolean) => {
+    setSoundEnabled(enabled);
+    localStorage.setItem('sound-enabled', enabled.toString());
+    toast({
+      title: enabled ? "已开启音效" : "已关闭音效",
+      description: enabled ? "应用音效已启用" : "应用音效已禁用"
+    });
   };
 
   return (
@@ -31,7 +72,7 @@ const SystemSettings = () => {
           </div>
           <Switch 
             checked={notifications} 
-            onCheckedChange={setNotifications}
+            onCheckedChange={handleNotificationsChange}
           />
         </div>
         
@@ -42,7 +83,7 @@ const SystemSettings = () => {
           </div>
           <Switch 
             checked={darkMode} 
-            onCheckedChange={setDarkMode}
+            onCheckedChange={handleDarkModeChange}
           />
         </div>
         
@@ -53,7 +94,7 @@ const SystemSettings = () => {
           </div>
           <Switch 
             checked={soundEnabled} 
-            onCheckedChange={setSoundEnabled}
+            onCheckedChange={handleSoundChange}
           />
         </div>
 
