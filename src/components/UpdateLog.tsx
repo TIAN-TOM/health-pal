@@ -178,7 +178,7 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
         </div>
 
         <div className="space-y-4">
-          {updateHistory.map((entry) => (
+          {updateHistory.map((entry, entryIndex) => (
             <Card 
               key={entry.version} 
               className={`hover:shadow-lg transition-shadow duration-200 ${
@@ -204,10 +204,10 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {entry.updates.map((update, index) => {
+                  {entry.updates.map((update, updateIndex) => {
                     const badge = getTypeBadge(update.type);
                     return (
-                      <div key={index} className="flex items-start space-x-3">
+                      <div key={updateIndex} className="flex items-start space-x-3">
                         <div className="flex-shrink-0 mt-1">
                           {getTypeIcon(update.type)}
                         </div>
@@ -224,7 +224,7 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
                     );
                   })}
                 </div>
-                {index < updateHistory.length - 1 && <Separator className="mt-4" />}
+                {entryIndex < updateHistory.length - 1 && <Separator className="mt-4" />}
               </CardContent>
             </Card>
           ))}

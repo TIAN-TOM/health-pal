@@ -34,7 +34,7 @@ const Settings = ({
   onPersonalProfile,
   onUserManual,
 }: SettingsProps) => {
-  const { userRole } = useAuth();
+  const { userRole, user } = useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -49,7 +49,10 @@ const Settings = ({
         </div>
 
         <div className="space-y-4">
-          <UserInfo />
+          <UserInfo 
+            userEmail={user?.email}
+            userRole={userRole || 'user'}
+          />
           
           <PersonalSettingsCard 
             onPersonalProfile={onPersonalProfile}
@@ -64,10 +67,14 @@ const Settings = ({
           <HealthManagement
             onMedicalRecords={onMedicalRecords}
             onMedicationManagement={onMedicationManagement}
+            onEmergencyContacts={onEmergencyContacts}
           />
           
           <LearningResources
             onEducation={onEducation}
+          />
+          
+          <UserManualSection
             onUserManual={onUserManual}
           />
           
