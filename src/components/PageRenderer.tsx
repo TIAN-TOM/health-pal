@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Settings from '@/components/Settings';
 import EmergencyMode from '@/components/EmergencyMode';
@@ -149,7 +148,6 @@ const PageRenderer = ({
     case "calendar":
       return (
         <CalendarView
-          onBack={() => onBack("home")}
           onRecordClick={onRecordClick}
         />
       );
