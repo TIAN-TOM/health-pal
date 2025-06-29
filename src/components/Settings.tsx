@@ -18,6 +18,7 @@ interface SettingsProps {
   onMedicationManagement: () => void;
   onPersonalProfile: () => void;
   onUserManual: () => void;
+  onUpdateLog: () => void;
 }
 
 const Settings = ({ 
@@ -28,7 +29,8 @@ const Settings = ({
   onEducation,
   onMedicationManagement,
   onPersonalProfile,
-  onUserManual
+  onUserManual,
+  onUpdateLog
 }: SettingsProps) => {
   const { user, userRole } = useAuth();
 
@@ -60,6 +62,7 @@ const Settings = ({
           <SystemSettings 
             onEducation={onEducation}
             onUserManual={onUserManual}
+            onUpdateLog={onUpdateLog}
             onAdminPanel={userRole === 'admin' ? onAdminPanel : undefined}
           />
 

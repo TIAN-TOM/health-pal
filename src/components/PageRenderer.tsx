@@ -24,6 +24,7 @@ import Games from '@/components/Games';
 import RecordHub from '@/components/RecordHub';
 import BreathingExercise from '@/components/BreathingExercise';
 import PersonalProfile from '@/components/PersonalProfile';
+import UpdateLog from '@/components/UpdateLog';
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
@@ -102,8 +103,11 @@ const PageRenderer = ({
           onMedicationManagement={() => onNavigation("medication-management", "settings")}
           onPersonalProfile={() => onNavigation("personal-profile", "settings")}
           onUserManual={() => onNavigation("user-manual", "settings")}
+          onUpdateLog={() => onNavigation("update-log", "settings")}
         />
       );
+    case "update-log":
+      return <UpdateLog onBack={() => onBack(navigationSource)} />;
     case "personal-profile":
       return <PersonalProfile onBack={() => onBack(navigationSource)} />;
     case "user-preferences":
