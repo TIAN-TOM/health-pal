@@ -1,4 +1,3 @@
-
 import React from 'react';
 import DailyCheckin from '@/components/DailyCheckin';
 import DizzinessRecord from '@/components/DizzinessRecord';
@@ -25,7 +24,6 @@ import Games from '@/components/Games';
 import RecordHub from '@/components/RecordHub';
 import BreathingExercise from '@/components/BreathingExercise';
 import PersonalProfile from '@/components/PersonalProfile';
-import UpdateLog from '@/components/UpdateLog';
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
@@ -47,18 +45,6 @@ const PageRenderer = ({
   onNavigation, 
   onRecordClick 
 }: PageRendererProps) => {
-  // 监听更新日志导航事件
-  React.useEffect(() => {
-    const handleUpdateLogNavigation = () => {
-      onNavigation('update-log', 'settings');
-    };
-
-    window.addEventListener('navigate-to-update-log', handleUpdateLogNavigation);
-    return () => {
-      window.removeEventListener('navigate-to-update-log', handleUpdateLogNavigation);
-    };
-  }, [onNavigation]);
-
   switch (currentPage) {
     case "emergency":
       return (
@@ -118,8 +104,6 @@ const PageRenderer = ({
           onUserManual={() => onNavigation("user-manual", "settings")}
         />
       );
-    case "update-log":
-      return <UpdateLog onBack={() => onBack(navigationSource)} />;
     case "personal-profile":
       return <PersonalProfile onBack={() => onBack(navigationSource)} />;
     case "user-preferences":

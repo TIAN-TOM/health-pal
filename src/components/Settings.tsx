@@ -1,23 +1,18 @@
 
 import React from 'react';
-import { ArrowLeft, Settings as SettingsIcon } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import PersonalSettingsCard from './settings/PersonalSettingsCard';
-import UserInfo from './settings/UserInfo';
-import SystemSettings from './settings/SystemSettings';
-import SecurityAndContacts from './settings/SecurityAndContacts';
 import HealthManagement from './settings/HealthManagement';
-import LearningResources from './settings/LearningResources';
-import AdminSection from './settings/AdminSection';
-import DeveloperContact from './settings/DeveloperContact';
-import UserManualSection from './settings/UserManualSection';
+import SystemSettings from './settings/SystemSettings';
 import AccountManagement from './settings/AccountManagement';
+import UserInfo from './settings/UserInfo';
+import PersonalSettingsCard from './settings/PersonalSettingsCard';
 
 interface SettingsProps {
   onBack: () => void;
-  onAdminPanel: () => void;
-  onEmergencyContacts: () => void;
+  onAdminPanel?: () => void;
+  onEmergencyContacts: ()=> void;
   onMedicalRecords: () => void;
   onEducation: () => void;
   onMedicationManagement: () => void;
@@ -25,67 +20,52 @@ interface SettingsProps {
   onUserManual: () => void;
 }
 
-const Settings = ({
-  onBack,
-  onAdminPanel,
-  onEmergencyContacts,
-  onMedicalRecords,
+const Settings = ({ 
+  onBack, 
+  onAdminPanel, 
+  onEmergencyContacts, 
+  onMedicalRecords, 
   onEducation,
   onMedicationManagement,
   onPersonalProfile,
-  onUserManual,
+  onUserManual
 }: SettingsProps) => {
-  const { userRole, user } = useAuth();
+  const { user, userRole } = useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <div className="container mx-auto px-4 py-6 max-w-2xl">
-        <div className="flex items-center justify-between mb-6">
-          <Button variant="ghost" size="sm" onClick={onBack}>
+      <div className="container mx-auto px-4 py-6 max-w-md">
+        <div className="flex items-center mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="mr-2"
+          >
             <ArrowLeft className="h-4 w-4 mr-1" />
             返回
           </Button>
-          <h1 className="text-xl font-bold">设置中心</h1>
-          <div className="w-16" />
+          <h1 className="text-xl font-bold text-gray-800">设置</h1>
         </div>
 
         <div className="space-y-4">
-          <UserInfo 
-            userEmail={user?.email}
-            userRole={userRole || 'user'}
-          />
+          <PersonalSettingsCard onPersonalProfile={onPersonalProfile} />
           
-          <PersonalSettingsCard 
-            onPersonalProfile={onPersonalProfile}
-          />
-          
-          <SystemSettings />
-          
-          <SecurityAndContacts 
-            onEmergencyContacts={onEmergencyContacts}
-          />
-          
-          <HealthManagement
-            onMedicalRecords={onMedicalRecords}
+          <HealthManagement 
             onMedicationManagement={onMedicationManagement}
+            onMedicalRecords={onMedicalRecords}
             onEmergencyContacts={onEmergencyContacts}
           />
           
-          <LearningResources
+          <SystemSettings 
             onEducation={onEducation}
-          />
-          
-          <UserManualSection
             onUserManual={onUserManual}
+            onAdminPanel={userRole === 'admin' ? onAdminPanel : undefined}
           />
-          
+
           <AccountManagement />
-          
-          {userRole === 'admin' && (
-            <AdminSection onAdminPanel={onAdminPanel} />
-          )}
-          
-          <DeveloperContact />
+
+          <UserInfo userEmail={user?.email} userRole={userRole} />
         </div>
       </div>
     </div>
