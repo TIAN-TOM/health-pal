@@ -147,9 +147,7 @@ const PageRenderer = ({
 
     case "calendar":
       return (
-        <CalendarView
-          onRecordClick={onRecordClick}
-        />
+        <CalendarView />
       );
 
     case "export":
