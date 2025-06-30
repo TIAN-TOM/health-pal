@@ -1,15 +1,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { getBeijingDateString } from '@/utils/beijingTime';
+import type { Tables } from '@/integrations/supabase/types';
 
-export interface UserPoints {
-  user_id: string;
-  total_points: number;
-  checkin_streak: number;
-  last_checkin_date: string | null;
-  created_at: string;
-  updated_at: string;
-}
+type UserPoints = Tables<'user_points'>;
 
 export const getUserPoints = async (): Promise<UserPoints | null> => {
   const { data: { user } } = await supabase.auth.getUser();
@@ -177,3 +171,6 @@ export const addPoints = async (amount: number, reason: string = ''): Promise<bo
 
   return !error;
 };
+
+// Export the type for use in other components
+export type { UserPoints };

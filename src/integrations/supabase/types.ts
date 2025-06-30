@@ -470,6 +470,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_points: {
+        Row: {
+          checkin_streak: number
+          created_at: string
+          id: string
+          last_checkin_date: string | null
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checkin_streak?: number
+          created_at?: string
+          id?: string
+          last_checkin_date?: string | null
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checkin_streak?: number
+          created_at?: string
+          id?: string
+          last_checkin_date?: string | null
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           age: number | null
