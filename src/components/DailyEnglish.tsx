@@ -5,19 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import DailyQuote from '@/components/DailyQuote';
+import { getRandomQuote, getRandomWords, getRandomPhrases, getListeningTexts } from '@/services/englishService';
+import type { Tables } from '@/integrations/supabase/types';
 
 interface DailyEnglishProps {
   onBack: () => void;
 }
 
-interface EnglishWord {
-  word: string;
-  pronunciation: string;
-  meaning: string;
-  example: string;
-  translation: string;
-}
+type EnglishQuote = Tables<'english_quotes'>;
+type EnglishWord = Tables<'english_words'>;
+type EnglishPhrase = Tables<'english_phrases'>;
+type EnglishListening = Tables<'english_listening'>;
 
 const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
   const [soundEnabled, setSoundEnabled] = useState(() => {
@@ -25,62 +23,35 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
     return saved !== null ? JSON.parse(saved) : true;
   });
 
-  const [dailyWords] = useState<EnglishWord[]>([
-    {
-      word: "Perseverance",
-      pronunciation: "/ˌpɜːrsəˈvɪrəns/",
-      meaning: "坚持不懈；毅力",
-      example: "Success is the result of perseverance and hard work.",
-      translation: "成功是坚持不懈和努力工作的结果。"
-    },
-    {
-      word: "Courage",
-      pronunciation: "/ˈkɜːrɪdʒ/",
-      meaning: "勇气；胆量",
-      example: "It takes courage to admit your mistakes.",
-      translation: "承认错误需要勇气。"
-    },
-    {
-      word: "Wisdom",
-      pronunciation: "/ˈwɪzdəm/",
-      meaning: "智慧；明智",
-      example: "True wisdom comes from experience.",
-      translation: "真正的智慧来自于经验。"
-    }
-  ]);
+  const [dailyQuote, setDailyQuote] = useState<EnglishQuote | null>(null);
+  const [dailyWords, setDailyWords] = useState<EnglishWord[]>([]);
+  const [phrases, setPhrases] = useState<EnglishPhrase[]>([]);
+  const [listeningTexts, setListeningTexts] = useState<EnglishListening[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [phrases] = useState([
-    {
-      english: "Every cloud has a silver lining.",
-      chinese: "乌云背后总有一线阳光。",
-      meaning: "困难中总有希望。"
-    },
-    {
-      english: "Actions speak louder than words.",
-      chinese: "行动胜过言语。",
-      meaning: "实际行动比空话更有说服力。"
-    },
-    {
-      english: "Rome wasn't built in a day.",
-      chinese: "罗马不是一天建成的。",
-      meaning: "成功需要时间和耐心。"
-    }
-  ]);
+  useEffect(() => {
+    loadEnglishContent();
+  }, []);
 
-  const [listeningTexts] = useState([
-    {
-      title: "Daily Conversation",
-      text: "Good morning! How are you today? I'm doing well, thank you for asking.",
-      translation: "早上好！你今天怎么样？我很好，谢谢你的关心。",
-      level: "初级"
-    },
-    {
-      title: "Health Discussion",
-      text: "Regular exercise and a balanced diet are essential for maintaining good health.",
-      translation: "规律运动和均衡饮食对保持健康至关重要。",
-      level: "中级"
+  const loadEnglishContent = async () => {
+    try {
+      const [quote, words, phrasesList, listening] = await Promise.all([
+        getRandomQuote(),
+        getRandomWords(3),
+        getRandomPhrases(3),
+        getListeningTexts(2)
+      ]);
+
+      setDailyQuote(quote);
+      setDailyWords(words);
+      setPhrases(phrasesList);
+      setListeningTexts(listening);
+    } catch (error) {
+      console.error('加载英语内容失败:', error);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
   const playSound = (text: string) => {
     if (!soundEnabled) return;
@@ -97,6 +68,35 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
     setSoundEnabled(enabled);
     localStorage.setItem('english-sound-enabled', JSON.stringify(enabled));
   };
+
+  const getDifficultyColor = (level: string) => {
+    switch (level) {
+      case 'beginner': return 'text-green-600 bg-green-100';
+      case 'intermediate': return 'text-yellow-600 bg-yellow-100';
+      case 'advanced': return 'text-red-600 bg-red-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const getDifficultyText = (level: string) => {
+    switch (level) {
+      case 'beginner': return '初级';
+      case 'intermediate': return '中级';
+      case 'advanced': return '高级';
+      default: return level;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">加载中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -133,18 +133,54 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <DailyQuote />
+                {dailyQuote ? (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-xs px-2 py-1 rounded ${getDifficultyColor(dailyQuote.difficulty_level || 'intermediate')}`}>
+                          {getDifficultyText(dailyQuote.difficulty_level || 'intermediate')}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => playSound(dailyQuote.quote_text)}
+                        >
+                          <Volume2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <blockquote className="text-lg font-medium text-gray-800 mb-2">
+                        "{dailyQuote.quote_text}"
+                      </blockquote>
+                      <p className="text-gray-700 mb-3">{dailyQuote.quote_translation}</p>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-600">
+                          — {dailyQuote.author}
+                          {dailyQuote.author_translation && (
+                            <span className="text-gray-500 ml-1">({dailyQuote.author_translation})</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-8">暂无名言内容</p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="words" className="space-y-4">
             {dailyWords.map((word, index) => (
-              <Card key={index}>
+              <Card key={word.id}>
                 <CardContent className="p-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold text-blue-600">{word.word}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-blue-600">{word.word}</h3>
+                        <span className={`text-xs px-2 py-1 rounded ${getDifficultyColor(word.difficulty_level || 'intermediate')}`}>
+                          {getDifficultyText(word.difficulty_level || 'intermediate')}
+                        </span>
+                      </div>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -156,13 +192,13 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
                     <p className="text-sm text-gray-600">{word.pronunciation}</p>
                     <p className="font-medium">{word.meaning}</p>
                     <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-sm italic mb-2">{word.example}</p>
-                      <p className="text-sm text-gray-700">{word.translation}</p>
+                      <p className="text-sm italic mb-2">{word.example_sentence}</p>
+                      <p className="text-sm text-gray-700">{word.example_translation}</p>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="mt-2"
-                        onClick={() => playSound(word.example)}
+                        onClick={() => playSound(word.example_sentence)}
                       >
                         <Volume2 className="h-3 w-3 mr-1" />
                         朗读例句
@@ -172,42 +208,61 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
                 </CardContent>
               </Card>
             ))}
+            {dailyWords.length === 0 && (
+              <p className="text-gray-500 text-center py-8">暂无单词内容</p>
+            )}
           </TabsContent>
 
           <TabsContent value="phrases" className="space-y-4">
             {phrases.map((phrase, index) => (
-              <Card key={index}>
+              <Card key={phrase.id}>
                 <CardContent className="p-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-base font-bold text-green-600">{phrase.english}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base font-bold text-green-600">{phrase.phrase_english}</h3>
+                        <span className={`text-xs px-2 py-1 rounded ${getDifficultyColor(phrase.difficulty_level || 'intermediate')}`}>
+                          {getDifficultyText(phrase.difficulty_level || 'intermediate')}
+                        </span>
+                      </div>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => playSound(phrase.english)}
+                        onClick={() => playSound(phrase.phrase_english)}
                       >
                         <Volume2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    <p className="text-gray-800">{phrase.chinese}</p>
+                    <p className="text-gray-800">{phrase.phrase_chinese}</p>
                     <div className="flex items-center text-sm text-gray-600">
                       <Lightbulb className="h-4 w-4 mr-1" />
-                      <span>{phrase.meaning}</span>
+                      <span>{phrase.meaning_explanation}</span>
                     </div>
+                    {phrase.example_sentence && (
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-sm italic mb-1">{phrase.example_sentence}</p>
+                        {phrase.example_translation && (
+                          <p className="text-sm text-gray-700">{phrase.example_translation}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             ))}
+            {phrases.length === 0 && (
+              <p className="text-gray-500 text-center py-8">暂无短语内容</p>
+            )}
           </TabsContent>
 
           <TabsContent value="listening" className="space-y-4">
             {listeningTexts.map((text, index) => (
-              <Card key={index}>
+              <Card key={text.id}>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span className="text-lg">{text.title}</span>
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                      {text.level}
+                    <span className={`text-xs px-2 py-1 rounded ${getDifficultyColor(text.difficulty_level || 'intermediate')}`}>
+                      {getDifficultyText(text.difficulty_level || 'intermediate')}
                     </span>
                   </CardTitle>
                 </CardHeader>
@@ -218,20 +273,28 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => playSound(text.text)}
+                        onClick={() => playSound(text.content)}
                       >
                         <Volume2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    <p className="text-gray-800">{text.text}</p>
+                    <p className="text-gray-800 leading-relaxed">{text.content}</p>
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="font-medium mb-2">中文翻译：</p>
                     <p className="text-gray-700">{text.translation}</p>
                   </div>
+                  {text.estimated_duration && (
+                    <div className="text-xs text-gray-500 text-center">
+                      预计听力时长：{text.estimated_duration}秒
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
+            {listeningTexts.length === 0 && (
+              <p className="text-gray-500 text-center py-8">暂无听力内容</p>
+            )}
           </TabsContent>
         </Tabs>
 

@@ -1,226 +1,206 @@
 
 import React from 'react';
-import { ArrowLeft, Calendar, Star, Bug, Zap, Plus } from 'lucide-react';
+import { ArrowLeft, Calendar, Award, Globe, ShoppingCart, Database, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface UpdateLogProps {
-  onBack: () => void;
+  onBack: (targetPage?: string) => void;
 }
 
 const UpdateLog = ({ onBack }: UpdateLogProps) => {
   const updates = [
     {
-      date: '2025-06-29',
-      version: 'v1.2.0',
-      items: [
+      version: "v2.1.0",
+      date: "2025-06-30",
+      type: "major",
+      title: "英语学习系统与积分商城上线",
+      changes: [
         {
-          type: 'feature',
-          title: '新增更新日志功能',
-          description: '用户现在可以查看每日功能更新和改进记录'
+          category: "新功能",
+          icon: <Globe className="h-4 w-4" />,
+          items: [
+            "完善每日英语模块，支持数据库存储",
+            "新增英语名言、单词、短语、听力四大板块",
+            "支持难度分级（初级、中级、高级）",
+            "增加语音朗读功能和音频控制",
+            "丰富的英语学习内容示例数据"
+          ]
         },
         {
-          type: 'improvement',
-          title: '优化记忆翻牌游戏',
-          description: '增大卡片尺寸，使用不同背景色帮助老花眼用户更好识别'
+          category: "积分系统",
+          icon: <Award className="h-4 w-4" />,
+          items: [
+            "全新积分商城系统上线",
+            "支持游戏皮肤、道具、徽章等多种商品类型",
+            "完善的用户购买记录管理",
+            "在每日打卡页面集成积分商城入口",
+            "积分奖励规则优化与可视化展示"
+          ]
         },
         {
-          type: 'improvement',
-          title: '完善深色模式',
-          description: '添加深色模式切换功能，并支持记忆用户选择'
+          category: "数据库优化",
+          icon: <Database className="h-4 w-4" />,
+          items: [
+            "新增英语学习内容相关数据表",
+            "创建积分商城商品与购买记录表",
+            "完善RLS安全策略，保证数据安全",
+            "优化数据库查询性能",
+            "增加数据完整性约束"
+          ]
         },
         {
-          type: 'fix',
-          title: '修复五子棋显示问题',
-          description: '最后落子现在显示为红色边框，提升视觉效果'
+          category: "用户体验",
+          icon: <Zap className="h-4 w-4" />,
+          items: [
+            "首页新增更新日志快速入口",
+            "使用手册和更新日志并排显示",
+            "优化英语学习内容的视觉呈现",
+            "改进积分显示和奖励提示",
+            "增强移动端适配效果"
+          ]
         }
       ]
     },
     {
-      date: '2025-06-28',
-      version: 'v1.1.5',
-      items: [
+      version: "v2.0.5",
+      date: "2025-06-29",
+      type: "minor",
+      title: "用户积分系统基础版",
+      changes: [
         {
-          type: 'feature',
-          title: '新增呼吸练习功能',
-          description: '添加引导式呼吸练习，帮助用户放松身心'
-        },
-        {
-          type: 'improvement',
-          title: '优化数据导出',
-          description: '改进数据导出格式，更便于医生查看'
-        },
-        {
-          type: 'fix',
-          title: '修复日历显示',
-          description: '解决某些日期显示异常的问题'
+          category: "积分功能",
+          icon: <Award className="h-4 w-4" />,
+          items: [
+            "建立用户积分基础数据表",
+            "实现每日打卡积分奖励机制",
+            "连续打卡额外奖励系统",
+            "积分消费和增加API接口",
+            "积分历史记录功能"
+          ]
         }
       ]
     },
     {
-      date: '2025-06-27',
-      version: 'v1.1.4',
-      items: [
+      version: "v2.0.0",
+      date: "2025-06-15",
+      type: "major",
+      title: "核心功能重构与优化",
+      changes: [
         {
-          type: 'feature',
-          title: '新增游戏中心',
-          description: '添加记忆翻牌、五子棋等益智游戏'
+          category: "系统架构",
+          icon: <Database className="h-4 w-4" />,
+          items: [
+            "完善Supabase数据库架构",
+            "优化用户认证与权限管理",
+            "重构核心服务层代码",
+            "提升系统安全性与稳定性"
+          ]
         },
         {
-          type: 'improvement',
-          title: '优化用户界面',
-          description: '改进整体视觉设计和交互体验'
-        },
-        {
-          type: 'improvement',
-          title: '完善记录功能',
-          description: '增强眩晕、糖尿病等记录的详细程度'
-        }
-      ]
-    },
-    {
-      date: '2025-06-26',
-      version: 'v1.1.3',
-      items: [
-        {
-          type: 'feature',
-          title: '新增紧急模式',
-          description: '一键进入紧急状态，快速联系紧急联系人'
-        },
-        {
-          type: 'improvement',
-          title: '优化数据统计',
-          description: '改进每日数据中心的图表显示'
-        },
-        {
-          type: 'fix',
-          title: '修复语音记录',
-          description: '解决部分设备语音记录失败的问题'
+          category: "功能模块",
+          icon: <Calendar className="h-4 w-4" />,
+          items: [
+            "每日打卡系统正式上线",
+            "健康数据记录功能增强",
+            "语音记录与转录功能",
+            "解压小游戏模块",
+            "呼吸训练功能"
+          ]
         }
       ]
     }
   ];
 
-  const getIcon = (type: string) => {
+  const getTypeColor = (type: string) => {
     switch (type) {
-      case 'feature':
-        return <Plus className="h-4 w-4 text-green-600" />;
-      case 'improvement':
-        return <Zap className="h-4 w-4 text-blue-600" />;
-      case 'fix':
-        return <Bug className="h-4 w-4 text-orange-600" />;
-      default:
-        return <Star className="h-4 w-4 text-gray-600" />;
+      case 'major': return 'bg-red-100 text-red-800';
+      case 'minor': return 'bg-blue-100 text-blue-800';
+      case 'patch': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getTypeText = (type: string) => {
     switch (type) {
-      case 'feature':
-        return '新功能';
-      case 'improvement':
-        return '优化';
-      case 'fix':
-        return '修复';
-      default:
-        return '更新';
-    }
-  };
-
-  const getTypeBgColor = (type: string) => {
-    switch (type) {
-      case 'feature':
-        return 'bg-green-100 text-green-800';
-      case 'improvement':
-        return 'bg-blue-100 text-blue-800';
-      case 'fix':
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'major': return '重大更新';
+      case 'minor': return '功能更新';
+      case 'patch': return '修复更新';
+      default: return '更新';
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <div className="container mx-auto px-4 py-6 max-w-md">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        {/* 头部 */}
         <div className="flex items-center mb-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="mr-2"
-          >
+          <Button variant="ghost" size="sm" onClick={() => onBack()} className="mr-2">
             <ArrowLeft className="h-4 w-4 mr-1" />
             返回
           </Button>
           <h1 className="text-xl font-bold text-gray-800">更新日志</h1>
         </div>
 
+        {/* 更新列表 */}
         <div className="space-y-6">
-          {updates.map((update, updateIndex) => (
-            <Card key={updateIndex} className="shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Calendar className="h-5 w-5 mr-2 text-blue-600" />
-                    <span>{update.date}</span>
+          {updates.map((update, index) => (
+            <Card key={index} className="shadow-lg">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Badge className={getTypeColor(update.type)}>
+                      {getTypeText(update.type)}
+                    </Badge>
+                    <h2 className="text-xl font-bold text-gray-800">{update.title}</h2>
                   </div>
-                  <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                    {update.version}
-                  </span>
-                </CardTitle>
+                  <div className="text-right">
+                    <div className="text-lg font-semibold text-blue-600">{update.version}</div>
+                    <div className="text-sm text-gray-500">{update.date}</div>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {update.items.map((item, itemIndex) => (
-                  <div key={itemIndex} className="border-l-4 border-gray-200 pl-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 mt-1">
-                        {getIcon(item.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h3 className="text-sm font-medium text-gray-900">
-                            {item.title}
-                          </h3>
-                          <span className={`text-xs px-2 py-1 rounded-full ${getTypeBgColor(item.type)}`}>
-                            {getTypeText(item.type)}
-                          </span>
+              <CardContent>
+                <div className="space-y-6">
+                  {update.changes.map((category, catIndex) => (
+                    <div key={catIndex}>
+                      <div className="flex items-center mb-3">
+                        <div className="flex items-center text-gray-700 font-medium">
+                          {category.icon}
+                          <span className="ml-2">{category.category}</span>
                         </div>
-                        <p className="text-sm text-gray-600">
-                          {item.description}
-                        </p>
                       </div>
+                      <ul className="space-y-2 ml-6">
+                        {category.items.map((item, itemIndex) => (
+                          <li key={itemIndex} className="flex items-start">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <span className="text-gray-700 text-sm leading-relaxed">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* 底部说明 */}
-        <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-          <h3 className="text-sm font-medium text-blue-900 mb-2">更新说明</h3>
-          <div className="text-xs text-blue-700 space-y-1">
-            <div className="flex items-center">
-              <Plus className="h-3 w-3 mr-2 text-green-600" />
-              <span>新功能 - 全新添加的功能特性</span>
+        {/* 底部提示 */}
+        <Card className="mt-8 bg-blue-50 border-blue-200">
+          <CardContent className="p-6 text-center">
+            <div className="flex items-center justify-center mb-3">
+              <Calendar className="h-6 w-6 text-blue-600 mr-2" />
+              <h3 className="text-lg font-medium text-blue-800">持续更新中</h3>
             </div>
-            <div className="flex items-center">
-              <Zap className="h-3 w-3 mr-2 text-blue-600" />
-              <span>优化 - 现有功能的改进和完善</span>
-            </div>
-            <div className="flex items-center">
-              <Bug className="h-3 w-3 mr-2 text-orange-600" />
-              <span>修复 - 问题和错误的解决</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 版权信息 */}
-        <div className="mt-6 text-center text-xs text-gray-500">
-          持续改进中，感谢您的使用和反馈
-        </div>
+            <p className="text-blue-700 text-sm leading-relaxed">
+              我们会持续改进应用功能，为您提供更好的健康管理体验。
+              <br />
+              如有建议或问题，欢迎通过设置页面联系我们。
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

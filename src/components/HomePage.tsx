@@ -7,7 +7,7 @@ import FunctionCards from '@/components/FunctionCards';
 import AnnouncementDisplay from '@/components/AnnouncementDisplay';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { BookOpen, Globe } from 'lucide-react';
+import { BookOpen, Globe, History } from 'lucide-react';
 
 interface HomePageProps {
   userDisplayName: string;
@@ -55,15 +55,26 @@ const HomePage = ({
           </Card>
         </div>
         
-        {/* 使用手册快速入口 */}
-        <Button 
-          onClick={() => onNavigate('user-manual', 'home')} 
-          variant="outline" 
-          className="w-full bg-white/70 hover:bg-white/90 border-blue-200 text-blue-700 font-medium py-3"
-        >
-          <BookOpen className="h-4 w-4 mr-2" />
-          查看使用手册
-        </Button>
+        {/* 使用手册和更新日志快速入口 */}
+        <div className="grid grid-cols-2 gap-3">
+          <Button 
+            onClick={() => onNavigate('user-manual', 'home')} 
+            variant="outline" 
+            className="bg-white/70 hover:bg-white/90 border-blue-200 text-blue-700 font-medium py-3"
+          >
+            <BookOpen className="h-4 w-4 mr-2" />
+            使用手册
+          </Button>
+          
+          <Button 
+            onClick={() => onNavigate('update-log', 'home')} 
+            variant="outline" 
+            className="bg-white/70 hover:bg-white/90 border-green-200 text-green-700 font-medium py-3"
+          >
+            <History className="h-4 w-4 mr-2" />
+            更新日志
+          </Button>
+        </div>
         
         <NavigationActions 
           onDataExport={() => onNavigate("export")} 

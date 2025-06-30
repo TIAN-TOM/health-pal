@@ -5,6 +5,7 @@ import { Calendar, Heart, MessageCircle, Check, Award, Flame } from 'lucide-reac
 import { createCheckin } from '@/services/dailyCheckinService';
 import { updatePointsForCheckin, getUserPoints, type UserPoints } from '@/services/pointsService';
 import { useToast } from '@/hooks/use-toast';
+import PointsStore from '@/components/PointsStore';
 import type { Tables } from '@/integrations/supabase/types';
 
 type DailyCheckin = Tables<'daily_checkins'>;
@@ -92,122 +93,127 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory }: Che
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center">
-            <Calendar className="h-5 w-5 mr-2 text-blue-600" />
-            每日打卡
-          </CardTitle>
-          {userPoints && (
-            <div className="flex items-center space-x-4 text-sm">
-              <div className="flex items-center">
-                <Award className="h-4 w-4 mr-1 text-yellow-600" />
-                <span className="font-bold text-yellow-600">{userPoints.total_points}</span>
-                <span className="text-gray-600 ml-1">积分</span>
-              </div>
-              {userPoints.checkin_streak > 0 && (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center">
+              <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+              每日打卡
+            </CardTitle>
+            {userPoints && (
+              <div className="flex items-center space-x-4 text-sm">
                 <div className="flex items-center">
-                  <Flame className="h-4 w-4 mr-1 text-orange-600" />
-                  <span className="font-bold text-orange-600">{userPoints.checkin_streak}</span>
-                  <span className="text-gray-600 ml-1">天</span>
+                  <Award className="h-4 w-4 mr-1 text-yellow-600" />
+                  <span className="font-bold text-yellow-600">{userPoints.total_points}</span>
+                  <span className="text-gray-600 ml-1">积分</span>
                 </div>
-              )}
+                {userPoints.checkin_streak > 0 && (
+                  <div className="flex items-center">
+                    <Flame className="h-4 w-4 mr-1 text-orange-600" />
+                    <span className="font-bold text-orange-600">{userPoints.checkin_streak}</span>
+                    <span className="text-gray-600 ml-1">天</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {todayCheckin ? (
+            <div className="text-center p-6 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center justify-center mb-3">
+                <Check className="h-8 w-8 text-green-600 mr-2" />
+                <span className="text-xl font-bold text-green-800">今日已打卡</span>
+              </div>
+              <div className="text-green-700 space-y-2">
+                <p>心情评分: {getMoodEmoji(todayCheckin.mood_score || 3)} {getMoodText(todayCheckin.mood_score || 3)} ({todayCheckin.mood_score}/5)</p>
+                {todayCheckin.note && (
+                  <p className="text-sm">备注: {todayCheckin.note}</p>
+                )}
+                {earnedPoints && earnedPoints.points > 0 && (
+                  <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-center justify-center mb-2">
+                      <Award className="h-5 w-5 text-yellow-600 mr-1" />
+                      <span className="font-bold text-yellow-600">获得 {earnedPoints.points} 积分！</span>
+                    </div>
+                    {getStreakReward(earnedPoints.streak) && (
+                      <div className={`flex items-center justify-center ${getStreakReward(earnedPoints.streak)?.color}`}>
+                        <span className="text-lg mr-1">{getStreakReward(earnedPoints.streak)?.emoji}</span>
+                        <span className="font-medium">{getStreakReward(earnedPoints.streak)?.text}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="text-lg font-medium mb-2">今日心情如何？</h3>
+                <div className="flex justify-center items-center space-x-4 mb-4">
+                  <span className="text-2xl">{getMoodEmoji(moodScore)}</span>
+                  <span className="font-medium">{getMoodText(moodScore)}</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2">
+                  <span className="text-sm text-gray-500">1</span>
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    value={moodScore}
+                    onChange={(e) => setMoodScore(Number(e.target.value))}
+                    className="w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-500">5</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <MessageCircle className="h-4 w-4 inline mr-1" />
+                  今日感想（可选）
+                </label>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="记录今天的心情或感想..."
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  rows={3}
+                />
+              </div>
+
+              <Button 
+                onClick={handleCheckin}
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                <Heart className="h-4 w-4 mr-2" />
+                {loading ? '打卡中...' : '完成打卡'}
+              </Button>
+
+              {/* 积分奖励说明 */}
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-blue-800 mb-2 flex items-center">
+                  <Award className="h-4 w-4 mr-1" />
+                  积分奖励规则
+                </h4>
+                <div className="text-sm text-blue-700 space-y-1">
+                  <p>• 每日打卡：10分 + 连击奖励</p>
+                  <p>• 连续7天：额外20分</p>
+                  <p>• 连续30天：额外50分</p>
+                  <p>• 连续100天：额外100分</p>
+                  <p>• 积分可用于兑换游戏道具</p>
+                </div>
+              </div>
             </div>
           )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {todayCheckin ? (
-          <div className="text-center p-6 bg-green-50 rounded-lg border border-green-200">
-            <div className="flex items-center justify-center mb-3">
-              <Check className="h-8 w-8 text-green-600 mr-2" />
-              <span className="text-xl font-bold text-green-800">今日已打卡</span>
-            </div>
-            <div className="text-green-700 space-y-2">
-              <p>心情评分: {getMoodEmoji(todayCheckin.mood_score || 3)} {getMoodText(todayCheckin.mood_score || 3)} ({todayCheckin.mood_score}/5)</p>
-              {todayCheckin.note && (
-                <p className="text-sm">备注: {todayCheckin.note}</p>
-              )}
-              {earnedPoints && earnedPoints.points > 0 && (
-                <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <div className="flex items-center justify-center mb-2">
-                    <Award className="h-5 w-5 text-yellow-600 mr-1" />
-                    <span className="font-bold text-yellow-600">获得 {earnedPoints.points} 积分！</span>
-                  </div>
-                  {getStreakReward(earnedPoints.streak) && (
-                    <div className={`flex items-center justify-center ${getStreakReward(earnedPoints.streak)?.color}`}>
-                      <span className="text-lg mr-1">{getStreakReward(earnedPoints.streak)?.emoji}</span>
-                      <span className="font-medium">{getStreakReward(earnedPoints.streak)?.text}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="text-center">
-              <h3 className="text-lg font-medium mb-2">今日心情如何？</h3>
-              <div className="flex justify-center items-center space-x-4 mb-4">
-                <span className="text-2xl">{getMoodEmoji(moodScore)}</span>
-                <span className="font-medium">{getMoodText(moodScore)}</span>
-              </div>
-              <div className="flex items-center justify-center space-x-2">
-                <span className="text-sm text-gray-500">1</span>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  value={moodScore}
-                  onChange={(e) => setMoodScore(Number(e.target.value))}
-                  className="w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-                <span className="text-sm text-gray-500">5</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <MessageCircle className="h-4 w-4 inline mr-1" />
-                今日感想（可选）
-              </label>
-              <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="记录今天的心情或感想..."
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                rows={3}
-              />
-            </div>
-
-            <Button 
-              onClick={handleCheckin}
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-            >
-              <Heart className="h-4 w-4 mr-2" />
-              {loading ? '打卡中...' : '完成打卡'}
-            </Button>
-
-            {/* 积分奖励说明 */}
-            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 className="font-medium text-blue-800 mb-2 flex items-center">
-                <Award className="h-4 w-4 mr-1" />
-                积分奖励规则
-              </h4>
-              <div className="text-sm text-blue-700 space-y-1">
-                <p>• 每日打卡：10分 + 连击奖励</p>
-                <p>• 连续7天：额外20分</p>
-                <p>• 连续30天：额外50分</p>
-                <p>• 连续100天：额外100分</p>
-                <p>• 积分可用于兑换游戏道具</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      
+      {/* 积分商城 */}
+      <PointsStore />
+    </div>
   );
 };
 

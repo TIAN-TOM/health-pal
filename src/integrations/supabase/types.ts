@@ -278,6 +278,162 @@ export type Database = {
           },
         ]
       }
+      english_listening: {
+        Row: {
+          content: string
+          created_at: string
+          difficulty_level: string | null
+          estimated_duration: number | null
+          id: string
+          title: string
+          topic: string | null
+          translation: string
+          updated_at: string
+          word_count: number | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          difficulty_level?: string | null
+          estimated_duration?: number | null
+          id?: string
+          title: string
+          topic?: string | null
+          translation: string
+          updated_at?: string
+          word_count?: number | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          difficulty_level?: string | null
+          estimated_duration?: number | null
+          id?: string
+          title?: string
+          topic?: string | null
+          translation?: string
+          updated_at?: string
+          word_count?: number | null
+        }
+        Relationships: []
+      }
+      english_phrases: {
+        Row: {
+          category: string | null
+          created_at: string
+          difficulty_level: string | null
+          example_sentence: string | null
+          example_translation: string | null
+          id: string
+          meaning_explanation: string
+          phrase_chinese: string
+          phrase_english: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          difficulty_level?: string | null
+          example_sentence?: string | null
+          example_translation?: string | null
+          id?: string
+          meaning_explanation: string
+          phrase_chinese: string
+          phrase_english: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          difficulty_level?: string | null
+          example_sentence?: string | null
+          example_translation?: string | null
+          id?: string
+          meaning_explanation?: string
+          phrase_chinese?: string
+          phrase_english?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      english_quotes: {
+        Row: {
+          author: string
+          author_translation: string | null
+          category: string | null
+          created_at: string
+          difficulty_level: string | null
+          id: string
+          quote_text: string
+          quote_translation: string
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          author_translation?: string | null
+          category?: string | null
+          created_at?: string
+          difficulty_level?: string | null
+          id?: string
+          quote_text: string
+          quote_translation: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          author_translation?: string | null
+          category?: string | null
+          created_at?: string
+          difficulty_level?: string | null
+          id?: string
+          quote_text?: string
+          quote_translation?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      english_words: {
+        Row: {
+          created_at: string
+          difficulty_level: string | null
+          example_sentence: string
+          example_translation: string
+          frequency_rank: number | null
+          id: string
+          meaning: string
+          pronunciation: string
+          updated_at: string
+          word: string
+          word_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          difficulty_level?: string | null
+          example_sentence: string
+          example_translation: string
+          frequency_rank?: number | null
+          id?: string
+          meaning: string
+          pronunciation: string
+          updated_at?: string
+          word: string
+          word_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          difficulty_level?: string | null
+          example_sentence?: string
+          example_translation?: string
+          frequency_rank?: number | null
+          id?: string
+          meaning?: string
+          pronunciation?: string
+          updated_at?: string
+          word?: string
+          word_type?: string | null
+        }
+        Relationships: []
+      }
       medical_records: {
         Row: {
           created_at: string
@@ -383,6 +539,45 @@ export type Database = {
           type?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      points_store_items: {
+        Row: {
+          created_at: string
+          icon_url: string | null
+          id: string
+          is_available: boolean
+          item_description: string | null
+          item_name: string
+          item_type: string
+          price_points: number
+          stock_quantity: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          icon_url?: string | null
+          id?: string
+          is_available?: boolean
+          item_description?: string | null
+          item_name: string
+          item_type: string
+          price_points: number
+          stock_quantity?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          icon_url?: string | null
+          id?: string
+          is_available?: boolean
+          item_description?: string | null
+          item_name?: string
+          item_type?: string
+          price_points?: number
+          stock_quantity?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -550,6 +745,41 @@ export type Database = {
           weight?: number | null
         }
         Relationships: []
+      }
+      user_purchases: {
+        Row: {
+          id: string
+          is_active: boolean
+          item_id: string
+          points_spent: number
+          purchased_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean
+          item_id: string
+          points_spent: number
+          purchased_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean
+          item_id?: string
+          points_spent?: number
+          purchased_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_purchases_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "points_store_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
