@@ -3,17 +3,22 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ShoppingCart, Award, Star, Package } from 'lucide-react';
-import { getStoreItems, getUserPurchases, purchaseItem, type StoreItem } from '@/services/pointsStoreService';
-import { getUserPoints, type UserPoints } from '@/services/pointsService';
+import { Badge } from '@/components/ui/badge';
+import { ShoppingCart, Award, Star, Package, Shield, Clock, Trophy, BookOpen } from 'lucide-react';
+import { getStoreItems, getUserPurchases, purchaseItem, canPurchaseItem, type StoreItem } from '@/services/pointsStoreService';
+import { getEffectiveUserPoints } from '@/services/pointsService';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 const PointsStore = () => {
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
-  const [userPoints, setUserPoints] = useState<UserPoints | null>(null);
+  const [userPoints, setUserPoints] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [purchaseLoading, setPurchaseLoading] = useState<string | null>(null);
   const { toast } = useToast();
+  const { userRole } = useAuth();
+
+  const isAdmin = userRole === 'admin';
 
   useEffect(() => {
     loadData();
@@ -23,7 +28,7 @@ const PointsStore = () => {
     try {
       const [items, points] = await Promise.all([
         getStoreItems(),
-        getUserPoints()
+        getEffectiveUserPoints()
       ]);
       
       setStoreItems(items);
@@ -36,10 +41,13 @@ const PointsStore = () => {
   };
 
   const handlePurchase = async (item: StoreItem) => {
-    if (!userPoints || userPoints.total_points < item.price_points) {
+    // 检查购买条件
+    const { canPurchase, reason } = await canPurchaseItem(item);
+    
+    if (!canPurchase) {
       toast({
-        title: "积分不足",
-        description: `需要 ${item.price_points} 积分，当前只有 ${userPoints?.total_points || 0} 积分`,
+        title: "无法购买",
+        description: reason,
         variant: "destructive",
       });
       return;
@@ -53,7 +61,7 @@ const PointsStore = () => {
       if (success) {
         toast({
           title: "购买成功！",
-          description: `成功购买 ${item.item_name}`,
+          description: `成功购买 ${item.item_name}，道具效果已激活`,
         });
         
         // 重新加载数据
@@ -77,13 +85,19 @@ const PointsStore = () => {
     }
   };
 
-  const getItemTypeIcon = (type: string) => {
+  const getItemIcon = (type: string, itemName: string) => {
+    if (itemName.includes('皮肤')) return '🎨';
+    if (itemName.includes('加时')) return <Clock className="h-5 w-5" />;
+    if (itemName.includes('护盾')) return <Shield className="h-5 w-5" />;
+    if (itemName.includes('徽章')) return <Trophy className="h-5 w-5" />;
+    if (itemName.includes('英语') || itemName.includes('学习')) return <BookOpen className="h-5 w-5" />;
+    
     switch (type) {
       case 'game_skin': return '🎨';
       case 'game_power': return '⚡';
-      case 'virtual_badge': return '🏆';
+      case 'virtual_badge': return <Trophy className="h-5 w-5" />;
       case 'unlock_feature': return '🔓';
-      default: return '📦';
+      default: return <Package className="h-4 w-4" />;
     }
   };
 
@@ -95,6 +109,16 @@ const PointsStore = () => {
       case 'unlock_feature': return '功能解锁';
       default: return '商品';
     }
+  };
+
+  const getItemEffectDescription = (itemName: string) => {
+    if (itemName.includes('五子棋经典皮肤')) return '为五子棋游戏启用经典木质纹理棋盘';
+    if (itemName.includes('记忆翻牌加时道具')) return '每次使用可为记忆翻牌游戏增加30秒时间（可用5次）';
+    if (itemName.includes('打卡达人徽章')) return '专属徽章，彰显您的打卡毅力';
+    if (itemName.includes('呼吸练习增强版')) return '解锁更多呼吸练习模式和个性化设置';
+    if (itemName.includes('飞鸟游戏护盾')) return '为飞鸟游戏提供碰撞保护（可用3次）';
+    if (itemName.includes('英语学习进阶')) return '解锁高难度英语学习内容和专属练习模式';
+    return '为您带来更好的应用体验';
   };
 
   if (loading) {
@@ -130,9 +154,14 @@ const PointsStore = () => {
                 <div className="flex items-center">
                   <Award className="h-5 w-5 text-yellow-600 mr-2" />
                   <span className="font-medium">我的积分</span>
+                  {isAdmin && (
+                    <Badge variant="outline" className="ml-2 text-xs">
+                      管理员
+                    </Badge>
+                  )}
                 </div>
                 <span className="text-xl font-bold text-yellow-600">
-                  {userPoints?.total_points || 0}
+                  {isAdmin ? '∞' : userPoints}
                 </span>
               </div>
             </CardContent>
@@ -146,22 +175,32 @@ const PointsStore = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center mb-2">
-                        <span className="text-2xl mr-2">{item.icon_url || getItemTypeIcon(item.item_type)}</span>
+                        <span className="text-2xl mr-2">
+                          {typeof getItemIcon(item.item_type, item.item_name) === 'string' 
+                            ? getItemIcon(item.item_type, item.item_name)
+                            : <div className="text-blue-600">{getItemIcon(item.item_type, item.item_name)}</div>
+                          }
+                        </span>
                         <div>
                           <h3 className="font-medium text-gray-800">{item.item_name}</h3>
                           <p className="text-xs text-gray-500">{getItemTypeText(item.item_type)}</p>
                         </div>
                       </div>
                       
-                      {item.item_description && (
-                        <p className="text-sm text-gray-600 mb-3">{item.item_description}</p>
-                      )}
+                      <p className="text-sm text-gray-600 mb-3">
+                        {item.item_description || getItemEffectDescription(item.item_name)}
+                      </p>
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <Star className="h-4 w-4 text-yellow-500 mr-1" />
                           <span className="font-bold text-yellow-600">{item.price_points}</span>
                           <span className="text-sm text-gray-500 ml-1">积分</span>
+                          {item.stock_quantity !== -1 && item.stock_quantity !== null && (
+                            <Badge variant="outline" className="ml-2 text-xs">
+                              库存: {item.stock_quantity}
+                            </Badge>
+                          )}
                         </div>
                         
                         <Button
@@ -169,8 +208,7 @@ const PointsStore = () => {
                           onClick={() => handlePurchase(item)}
                           disabled={
                             purchaseLoading === item.id || 
-                            !userPoints || 
-                            userPoints.total_points < item.price_points
+                            (!isAdmin && userPoints < item.price_points)
                           }
                           className="bg-blue-600 hover:bg-blue-700"
                         >

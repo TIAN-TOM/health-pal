@@ -4,6 +4,7 @@ import { getBeijingDateString } from '@/utils/beijingTime';
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserPoints = Tables<'user_points'>;
+type PointsTransaction = Tables<'points_transactions'>;
 
 export const getUserPoints = async (): Promise<UserPoints | null> => {
   const { data: { user } } = await supabase.auth.getUser();
@@ -24,6 +25,25 @@ export const getUserPoints = async (): Promise<UserPoints | null> => {
   }
 
   return data;
+};
+
+export const getEffectiveUserPoints = async (): Promise<number> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return 0;
+  }
+
+  const { data, error } = await supabase.rpc('get_effective_user_points', {
+    check_user_id: user.id
+  });
+
+  if (error) {
+    console.error('获取有效积分失败:', error);
+    return 0;
+  }
+
+  return data || 0;
 };
 
 export const updatePointsForCheckin = async (): Promise<{ points: number; streak: number } | null> => {
@@ -56,6 +76,14 @@ export const updatePointsForCheckin = async (): Promise<{ points: number; streak
       return null;
     }
 
+    // 记录积分交易
+    await supabase.from('points_transactions').insert({
+      user_id: user.id,
+      amount: 10,
+      transaction_type: 'checkin',
+      description: '每日打卡奖励'
+    });
+
     return { points: 10, streak: 1 };
   }
 
@@ -69,31 +97,21 @@ export const updatePointsForCheckin = async (): Promise<{ points: number; streak
     const daysDiff = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
     
     if (daysDiff === 1) {
-      // 连续打卡
       newStreak = userPoints.checkin_streak + 1;
     } else if (daysDiff > 1) {
-      // 中断了，重新开始
       newStreak = 1;
     } else {
-      // 同一天重复打卡，不增加积分
       return { points: 0, streak: userPoints.checkin_streak };
     }
   }
 
   // 计算积分奖励
   let bonusPoints = 0;
-  if (newStreak >= 7) {
-    bonusPoints += 20; // 连续7天额外奖励
-  }
-  if (newStreak >= 30) {
-    bonusPoints += 50; // 连续30天额外奖励
-  }
-  if (newStreak >= 100) {
-    bonusPoints += 100; // 连续100天额外奖励
-  }
+  if (newStreak >= 7) bonusPoints += 20;
+  if (newStreak >= 30) bonusPoints += 50;
+  if (newStreak >= 100) bonusPoints += 100;
 
-  // 连击奖励：每连续打卡一天多1分
-  const streakBonus = Math.min(newStreak - 1, 10); // 最多额外10分
+  const streakBonus = Math.min(newStreak - 1, 10);
   const totalEarnedPoints = basePoints + bonusPoints + streakBonus;
 
   // 更新积分
@@ -112,10 +130,18 @@ export const updatePointsForCheckin = async (): Promise<{ points: number; streak
     return null;
   }
 
+  // 记录积分交易
+  await supabase.from('points_transactions').insert({
+    user_id: user.id,
+    amount: totalEarnedPoints,
+    transaction_type: 'checkin',
+    description: `每日打卡奖励 (连续${newStreak}天)`
+  });
+
   return { points: totalEarnedPoints, streak: newStreak };
 };
 
-export const spendPoints = async (amount: number): Promise<boolean> => {
+export const spendPoints = async (amount: number, description: string = '', referenceId?: string): Promise<boolean> => {
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
@@ -135,6 +161,17 @@ export const spendPoints = async (amount: number): Promise<boolean> => {
     })
     .eq('user_id', user.id);
 
+  if (!error) {
+    // 记录积分交易
+    await supabase.from('points_transactions').insert({
+      user_id: user.id,
+      amount: -amount,
+      transaction_type: 'purchase',
+      description,
+      reference_id: referenceId
+    });
+  }
+
   return !error;
 };
 
@@ -148,7 +185,6 @@ export const addPoints = async (amount: number, reason: string = ''): Promise<bo
   let userPoints = await getUserPoints();
   
   if (!userPoints) {
-    // 首次创建积分记录
     const { error } = await supabase
       .from('user_points')
       .insert({
@@ -157,6 +193,15 @@ export const addPoints = async (amount: number, reason: string = ''): Promise<bo
         checkin_streak: 0,
         last_checkin_date: null
       });
+
+    if (!error) {
+      await supabase.from('points_transactions').insert({
+        user_id: user.id,
+        amount,
+        transaction_type: 'reward',
+        description: reason
+      });
+    }
 
     return !error;
   }
@@ -169,8 +214,62 @@ export const addPoints = async (amount: number, reason: string = ''): Promise<bo
     })
     .eq('user_id', user.id);
 
+  if (!error) {
+    await supabase.from('points_transactions').insert({
+      user_id: user.id,
+      amount,
+      transaction_type: 'reward',
+      description: reason
+    });
+  }
+
   return !error;
 };
 
-// Export the type for use in other components
-export type { UserPoints };
+// 管理员功能
+export const adminUpdateUserPoints = async (
+  targetUserId: string, 
+  pointsChange: number, 
+  transactionType: 'admin_grant' | 'admin_deduct', 
+  description: string = ''
+): Promise<boolean> => {
+  const { data, error } = await supabase.rpc('admin_update_user_points', {
+    target_user_id: targetUserId,
+    points_change: pointsChange,
+    transaction_type: transactionType,
+    description
+  });
+
+  if (error) {
+    console.error('管理员更新积分失败:', error);
+    return false;
+  }
+
+  return true;
+};
+
+export const getPointsTransactions = async (userId?: string): Promise<PointsTransaction[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return [];
+  }
+
+  const targetUserId = userId || user.id;
+  
+  const { data, error } = await supabase
+    .from('points_transactions')
+    .select('*')
+    .eq('user_id', targetUserId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error('获取积分交易记录失败:', error);
+    return [];
+  }
+
+  return data || [];
+};
+
+export type { UserPoints, PointsTransaction };

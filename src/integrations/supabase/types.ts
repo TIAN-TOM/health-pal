@@ -581,6 +581,39 @@ export type Database = {
         }
         Relationships: []
       }
+      points_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          reference_id: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -807,6 +840,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_user_points: {
+        Args: {
+          target_user_id: string
+          points_change: number
+          transaction_type: string
+          description?: string
+        }
+        Returns: boolean
+      }
+      get_effective_user_points: {
+        Args: { check_user_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _user_id: string

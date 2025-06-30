@@ -1,20 +1,21 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Bell, Megaphone, Users, BarChart3, Activity, Database, Settings2, BookOpen } from 'lucide-react';
+import { ArrowLeft, Bell, Megaphone, Users, BarChart3, Activity, Database, Settings2, BookOpen, Award } from 'lucide-react';
 import AdminNotifications from '@/components/AdminNotifications';
 import AnnouncementManagement from '@/components/AnnouncementManagement';
 import AdminUserManagement from '@/components/AdminUserManagement';
 import AdminEducationManagement from '@/components/AdminEducationManagement';
-import { useAdminStats } from '@/hooks/useAdminStats';
+import AdminPointsManagement from './admin/AdminPointsManagement';
+import { useAdminStats, useUserManagement } from '@/hooks/useAdminStats';
 
 interface AdminPanelProps {
   onBack: () => void;
 }
 
 const AdminPanel = ({ onBack }: AdminPanelProps) => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [currentTab, setCurrentTab] = useState('stats');
+  const { users, loading: usersLoading } = useUserManagement();
   const { stats, refreshStats } = useAdminStats();
 
   const tabs = [
@@ -24,11 +25,17 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
     { id: 'announcements', label: '公告管理', icon: Megaphone },
     { id: 'education', label: '科普管理', icon: BookOpen },
     { id: 'data', label: '数据管理', icon: Database },
-    { id: 'system', label: '系统设置', icon: Settings2 }
+    { id: 'system', label: '系统设置', icon: Settings2 },
+    {
+      id: 'points',
+      label: '积分管理',
+      icon: <Award className="h-4 w-4" />,
+      component: <AdminPointsManagement users={users} />
+    }
   ];
 
   const renderContent = () => {
-    switch (activeTab) {
+    switch (currentTab) {
       case 'users':
         return <AdminUserManagement />;
       case 'notifications':
@@ -255,7 +262,7 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
                   <Button 
                     variant="outline" 
                     className="flex flex-col items-center p-4 h-auto"
-                    onClick={() => setActiveTab('users')}
+                    onClick={() => setCurrentTab('users')}
                   >
                     <Users className="h-6 w-6 mb-2" />
                     <span className="text-sm">用户管理</span>
@@ -263,7 +270,7 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
                   <Button 
                     variant="outline" 
                     className="flex flex-col items-center p-4 h-auto"
-                    onClick={() => setActiveTab('notifications')}
+                    onClick={() => setCurrentTab('notifications')}
                   >
                     <Bell className="h-6 w-6 mb-2" />
                     <span className="text-sm">通知管理</span>
@@ -271,7 +278,7 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
                   <Button 
                     variant="outline" 
                     className="flex flex-col items-center p-4 h-auto"
-                    onClick={() => setActiveTab('announcements')}
+                    onClick={() => setCurrentTab('announcements')}
                   >
                     <Megaphone className="h-6 w-6 mb-2" />
                     <span className="text-sm">公告管理</span>
@@ -279,7 +286,7 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
                   <Button 
                     variant="outline" 
                     className="flex flex-col items-center p-4 h-auto"
-                    onClick={() => setActiveTab('education')}
+                    onClick={() => setCurrentTab('education')}
                   >
                     <BookOpen className="h-6 w-6 mb-2" />
                     <span className="text-sm">科普管理</span>
@@ -287,7 +294,7 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
                   <Button 
                     variant="outline" 
                     className="flex flex-col items-center p-4 h-auto"
-                    onClick={() => setActiveTab('data')}
+                    onClick={() => setCurrentTab('data')}
                   >
                     <Database className="h-6 w-6 mb-2" />
                     <span className="text-sm">数据管理</span>
@@ -325,9 +332,9 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => setCurrentTab(tab.id)}
                 className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
-                  activeTab === tab.id
+                  currentTab === tab.id
                     ? 'bg-blue-100 text-blue-700'
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
