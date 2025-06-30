@@ -1,10 +1,11 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { spendPoints, getEffectiveUserPoints } from '@/services/pointsService';
 import type { Tables } from '@/integrations/supabase/types';
 
 type StoreItem = Tables<'points_store_items'>;
-type UserPurchase = Tables<'user_purchases'>;
+type UserPurchase = Tables<'user_purchases'> & {
+  points_store_items: StoreItem | null;
+};
 
 // 用户道具效果存储
 interface UserItemEffects {
@@ -48,7 +49,7 @@ export const getUserPurchases = async (): Promise<UserPurchase[]> => {
     return [];
   }
 
-  return data || [];
+  return data as UserPurchase[] || [];
 };
 
 // 获取用户道具效果

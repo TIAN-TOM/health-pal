@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,8 @@ import AnnouncementManagement from '@/components/AnnouncementManagement';
 import AdminUserManagement from '@/components/AdminUserManagement';
 import AdminEducationManagement from '@/components/AdminEducationManagement';
 import AdminPointsManagement from './admin/AdminPointsManagement';
-import { useAdminStats, useUserManagement } from '@/hooks/useAdminStats';
+import { useAdminStats } from '@/hooks/useAdminStats';
+import { useUserManagement } from '@/hooks/useUserManagement';
 
 interface AdminPanelProps {
   onBack: () => void;
@@ -26,12 +28,7 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
     { id: 'education', label: '科普管理', icon: BookOpen },
     { id: 'data', label: '数据管理', icon: Database },
     { id: 'system', label: '系统设置', icon: Settings2 },
-    {
-      id: 'points',
-      label: '积分管理',
-      icon: <Award className="h-4 w-4" />,
-      component: <AdminPointsManagement users={users} />
-    }
+    { id: 'points', label: '积分管理', icon: Award }
   ];
 
   const renderContent = () => {
@@ -44,6 +41,8 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
         return <AnnouncementManagement />;
       case 'education':
         return <AdminEducationManagement />;
+      case 'points':
+        return <AdminPointsManagement users={users} />;
       case 'data':
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
