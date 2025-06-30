@@ -1,3 +1,4 @@
+
 import React from 'react';
 import DailyCheckin from '@/components/DailyCheckin';
 import DizzinessRecord from '@/components/DizzinessRecord';
@@ -25,6 +26,7 @@ import RecordHub from '@/components/RecordHub';
 import BreathingExercise from '@/components/BreathingExercise';
 import PersonalProfile from '@/components/PersonalProfile';
 import UpdateLog from '@/components/UpdateLog';
+import DailyEnglish from '@/components/DailyEnglish';
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
@@ -56,6 +58,8 @@ const PageRenderer = ({
       );
     case "checkin":
       return <DailyCheckin onBack={() => onBack("home")} />;
+    case "daily-english":
+      return <DailyEnglish onBack={() => onBack("home")} />;
     case "record-hub":
       return <RecordHub onBack={() => onBack("home")} onNavigate={onNavigation} />;
     case "dizziness":

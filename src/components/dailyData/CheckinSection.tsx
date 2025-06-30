@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Heart, MessageCircle, Check } from 'lucide-react';
+import { Calendar, Heart, MessageCircle, Check, Award, Flame } from 'lucide-react';
 import { createCheckin } from '@/services/dailyCheckinService';
+import { updatePointsForCheckin, getUserPoints, type UserPoints } from '@/services/pointsService';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -19,18 +20,42 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory }: Che
   const [moodScore, setMoodScore] = useState(3);
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
+  const [userPoints, setUserPoints] = useState<UserPoints | null>(null);
+  const [earnedPoints, setEarnedPoints] = useState<{ points: number; streak: number } | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadUserPoints();
+  }, []);
+
+  const loadUserPoints = async () => {
+    const points = await getUserPoints();
+    setUserPoints(points);
+  };
 
   const handleCheckin = async () => {
     try {
       setLoading(true);
+      
+      // 创建打卡记录
       const newCheckin = await createCheckin(moodScore, note || undefined);
+      
+      // 更新积分
+      const pointsResult = await updatePointsForCheckin();
+      if (pointsResult) {
+        setEarnedPoints(pointsResult);
+        await loadUserPoints(); // 重新加载积分信息
+      }
+      
       onCheckinSuccess(newCheckin);
       setNote('');
       onReloadHistory();
+      
       toast({
         title: "打卡成功！",
-        description: "今日打卡已完成，继续保持好习惯！",
+        description: pointsResult 
+          ? `获得 ${pointsResult.points} 积分，连续打卡 ${pointsResult.streak} 天！` 
+          : "今日打卡已完成，继续保持好习惯！",
       });
     } catch (error: any) {
       toast({
@@ -59,13 +84,39 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory }: Che
     return '很糟糕';
   };
 
+  const getStreakReward = (streak: number) => {
+    if (streak >= 100) return { emoji: '🏆', text: '百日坚持！', color: 'text-yellow-600' };
+    if (streak >= 30) return { emoji: '💎', text: '月度达人！', color: 'text-purple-600' };
+    if (streak >= 7) return { emoji: '🔥', text: '一周连击！', color: 'text-orange-600' };
+    if (streak >= 3) return { emoji: '⭐', text: '连续打卡', color: 'text-blue-600' };
+    return null;
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <Calendar className="h-5 w-5 mr-2 text-blue-600" />
-          每日打卡
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center">
+            <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+            每日打卡
+          </CardTitle>
+          {userPoints && (
+            <div className="flex items-center space-x-4 text-sm">
+              <div className="flex items-center">
+                <Award className="h-4 w-4 mr-1 text-yellow-600" />
+                <span className="font-bold text-yellow-600">{userPoints.total_points}</span>
+                <span className="text-gray-600 ml-1">积分</span>
+              </div>
+              {userPoints.checkin_streak > 0 && (
+                <div className="flex items-center">
+                  <Flame className="h-4 w-4 mr-1 text-orange-600" />
+                  <span className="font-bold text-orange-600">{userPoints.checkin_streak}</span>
+                  <span className="text-gray-600 ml-1">天</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {todayCheckin ? (
@@ -74,10 +125,24 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory }: Che
               <Check className="h-8 w-8 text-green-600 mr-2" />
               <span className="text-xl font-bold text-green-800">今日已打卡</span>
             </div>
-            <div className="text-green-700">
+            <div className="text-green-700 space-y-2">
               <p>心情评分: {getMoodEmoji(todayCheckin.mood_score || 3)} {getMoodText(todayCheckin.mood_score || 3)} ({todayCheckin.mood_score}/5)</p>
               {todayCheckin.note && (
-                <p className="mt-2 text-sm">备注: {todayCheckin.note}</p>
+                <p className="text-sm">备注: {todayCheckin.note}</p>
+              )}
+              {earnedPoints && earnedPoints.points > 0 && (
+                <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="flex items-center justify-center mb-2">
+                    <Award className="h-5 w-5 text-yellow-600 mr-1" />
+                    <span className="font-bold text-yellow-600">获得 {earnedPoints.points} 积分！</span>
+                  </div>
+                  {getStreakReward(earnedPoints.streak) && (
+                    <div className={`flex items-center justify-center ${getStreakReward(earnedPoints.streak)?.color}`}>
+                      <span className="text-lg mr-1">{getStreakReward(earnedPoints.streak)?.emoji}</span>
+                      <span className="font-medium">{getStreakReward(earnedPoints.streak)?.text}</span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -125,6 +190,21 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory }: Che
               <Heart className="h-4 w-4 mr-2" />
               {loading ? '打卡中...' : '完成打卡'}
             </Button>
+
+            {/* 积分奖励说明 */}
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <h4 className="font-medium text-blue-800 mb-2 flex items-center">
+                <Award className="h-4 w-4 mr-1" />
+                积分奖励规则
+              </h4>
+              <div className="text-sm text-blue-700 space-y-1">
+                <p>• 每日打卡：10分 + 连击奖励</p>
+                <p>• 连续7天：额外20分</p>
+                <p>• 连续30天：额外50分</p>
+                <p>• 连续100天：额外100分</p>
+                <p>• 积分可用于兑换游戏道具</p>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>

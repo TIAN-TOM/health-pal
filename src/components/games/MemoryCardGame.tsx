@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
-import { RotateCcw, Trophy, Clock, Zap, Eye, Shuffle } from 'lucide-react';
+import { RotateCcw, Trophy, Clock, Zap, Eye, Shuffle, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface MemoryCardGameProps {
   onBack: () => void;
@@ -27,6 +27,17 @@ interface PowerUp {
   currentCooldown: number;
 }
 
+interface CardTheme {
+  id: string;
+  name: string;
+  description: string;
+  cards: {
+    easy: string[];
+    medium: string[];
+    hard: string[];
+  };
+}
+
 const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
   const [cards, setCards] = useState<GameCard[]>([]);
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
@@ -36,6 +47,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
   const [gameTime, setGameTime] = useState(0);
   const [isGameActive, setIsGameActive] = useState(false);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
+  const [selectedTheme, setSelectedTheme] = useState('animals');
   const [coins, setCoins] = useState(0);
   const [totalCoins, setTotalCoins] = useState(() => {
     return parseInt(localStorage.getItem('memory-game-coins') || '0');
@@ -72,11 +84,68 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
 
-  const cardEmojis = {
-    easy: ['🌟', '🎯', '🎪', '🎭', '🎨', '🎵'],
-    medium: ['🌟', '🎯', '🎪', '🎭', '🎨', '🎵', '🌸', '🦋', '🌈', '⭐'],
-    hard: ['🌟', '🎯', '🎪', '🎭', '🎨', '🎵', '🌸', '🦋', '🌈', '⭐', '🎀', '🎈', '🌺', '🍀', '🔥', '💎']
-  };
+  const cardThemes: CardTheme[] = [
+    {
+      id: 'animals',
+      name: '可爱动物',
+      description: '萌萌的小动物们',
+      cards: {
+        easy: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊'],
+        medium: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐼', '🐨', '🐸', '🐵'],
+        hard: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐼', '🐨', '🐸', '🐵', '🦁', '🐯', '🐷', '🐮', '🐺', '🦝']
+      }
+    },
+    {
+      id: 'fruits',
+      name: '新鲜水果',
+      description: '营养美味的水果',
+      cards: {
+        easy: ['🍎', '🍌', '🍊', '🍇', '🍓', '🥝'],
+        medium: ['🍎', '🍌', '🍊', '🍇', '🍓', '🥝', '🍑', '🍒', '🥭', '🍍'],
+        hard: ['🍎', '🍌', '🍊', '🍇', '🍓', '🥝', '🍑', '🍒', '🥭', '🍍', '🥑', '🍈', '🍉', '🫐', '🥥', '🍋']
+      }
+    },
+    {
+      id: 'nature',
+      name: '自然风光',
+      description: '美丽的自然景象',
+      cards: {
+        easy: ['🌸', '🌺', '🌻', '🌷', '🌹', '🌼'],
+        medium: ['🌸', '🌺', '🌻', '🌷', '🌹', '🌼', '🌿', '🍀', '🌳', '🌲'],
+        hard: ['🌸', '🌺', '🌻', '🌷', '🌹', '🌼', '🌿', '🍀', '🌳', '🌲', '⭐', '🌙', '☀️', '🌈', '⚡', '❄️']
+      }
+    },
+    {
+      id: 'food',
+      name: '美味食物',
+      description: '令人垂涎的美食',
+      cards: {
+        easy: ['🍕', '🍔', '🌮', '🍝', '🍜', '🍱'],
+        medium: ['🍕', '🍔', '🌮', '🍝', '🍜', '🍱', '🍰', '🍪', '🍩', '🧁'],
+        hard: ['🍕', '🍔', '🌮', '🍝', '🍜', '🍱', '🍰', '🍪', '🍩', '🧁', '🍦', '🍧', '🥐', '🥞', '🧀', '🥨']
+      }
+    },
+    {
+      id: 'sports',
+      name: '运动器材',
+      description: '各种运动用品',
+      cards: {
+        easy: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐'],
+        medium: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏓', '🏸', '🥎', '🏑'],
+        hard: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏓', '🏸', '🥎', '🏑', '🥍', '🏒', '🏹', '⛳', '🥊', '🥋']
+      }
+    },
+    {
+      id: 'music',
+      name: '音乐艺术',
+      description: '美妙的音乐世界',
+      cards: {
+        easy: ['🎵', '🎶', '🎼', '🎹', '🎸', '🥁'],
+        medium: ['🎵', '🎶', '🎼', '🎹', '🎸', '🥁', '🎺', '🎷', '🎻', '🪕'],
+        hard: ['🎵', '🎶', '🎼', '🎹', '🎸', '🥁', '🎺', '🎷', '🎻', '🪕', '🎯', '🎪', '🎭', '🎨', '🖼️', '🎬']
+      }
+    }
+  ];
 
   const gridSizes = {
     easy: { pairs: 6, cols: 4 },
@@ -134,7 +203,9 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
   // 初始化游戏
   const initializeGame = () => {
     const { pairs } = gridSizes[difficulty];
-    const selectedEmojis = cardEmojis[difficulty].slice(0, pairs);
+    const currentTheme = cardThemes.find(theme => theme.id === selectedTheme);
+    const selectedEmojis = currentTheme?.cards[difficulty].slice(0, pairs) || [];
+    
     const gameCards = [...selectedEmojis, ...selectedEmojis]
       .sort(() => Math.random() - 0.5)
       .map((value, index) => ({
@@ -163,7 +234,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     })));
   };
 
-  // 使用道具
   const usePowerUp = (powerUpId: string) => {
     const powerUp = powerUps.find(p => p.id === powerUpId);
     if (!powerUp || powerUp.currentCooldown > 0 || totalCoins < powerUp.cost) return;
@@ -184,7 +254,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
 
     switch (powerUpId) {
       case 'peek':
-        // 显示所有卡片3秒
         setCards(prev => prev.map(card => 
           card.isMatched ? card : { ...card, isFlipped: true }
         ));
@@ -196,7 +265,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         break;
         
       case 'hint':
-        // 找到一对匹配的卡片并高亮
         const unmatchedCards = cards.filter(card => !card.isMatched);
         const values = new Set();
         const pairs: GameCard[] = [];
@@ -226,7 +294,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         break;
         
       case 'shuffle':
-        // 重新排列未匹配的卡片
         const matchedCards = cards.filter(card => card.isMatched);
         const unmatchedValues = cards.filter(card => !card.isMatched).map(card => card.value);
         const shuffledValues = [...unmatchedValues].sort(() => Math.random() - 0.5);
@@ -245,14 +312,12 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     }
   };
 
-  // 游戏计时器和冷却更新
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isGameActive && !isGameComplete) {
       interval = setInterval(() => {
         setGameTime(prev => prev + 1);
         
-        // 更新道具冷却
         setPowerUps(prev => prev.map(powerUp => ({
           ...powerUp,
           currentCooldown: Math.max(0, powerUp.currentCooldown - 1)
@@ -262,14 +327,12 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     return () => clearInterval(interval);
   }, [isGameActive, isGameComplete]);
 
-  // 检查游戏完成
   useEffect(() => {
     const { pairs } = gridSizes[difficulty];
     if (matches === pairs && isGameActive) {
       setIsGameComplete(true);
       setIsGameActive(false);
       
-      // 计算奖励金币
       const timeBonus = Math.max(0, 300 - gameTime);
       const moveBonus = Math.max(0, pairs * 2 - moves);
       const comboBonus = maxCombo * 2;
@@ -286,7 +349,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     }
   }, [matches, difficulty, isGameActive, gameTime, moves, maxCombo]);
 
-  // 处理卡片点击
   const handleCardClick = (cardId: number) => {
     if (!isGameActive || isGameComplete) return;
     
@@ -310,7 +372,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
       const secondCard = cards.find(c => c.id === secondId);
 
       if (firstCard && secondCard && firstCard.value === secondCard.value) {
-        // 匹配成功
         setTimeout(() => {
           setCards(prev => prev.map(c => 
             c.id === firstId || c.id === secondId 
@@ -320,7 +381,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
           setMatches(prev => prev + 1);
           setFlippedCards([]);
           
-          // 连击系统
           setCombo(prev => {
             const newCombo = prev + 1;
             setMaxCombo(current => Math.max(current, newCombo));
@@ -333,7 +393,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
           playSound('match');
         }, 500);
       } else {
-        // 不匹配，重置连击
         setCombo(0);
         setTimeout(() => {
           setCards(prev => prev.map(c => 
@@ -347,20 +406,17 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     }
   };
 
-  // 格式化时间
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // 获取难度文本
   const getDifficultyText = (level: string) => {
     const map = { easy: '简单', medium: '中等', hard: '困难' };
     return map[level as keyof typeof map] || level;
   };
 
-  // 获取评分
   const getScoreRating = () => {
     const { pairs } = gridSizes[difficulty];
     const perfectMoves = pairs;
@@ -374,9 +430,10 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
 
   useEffect(() => {
     initializeGame();
-  }, [difficulty]);
+  }, [difficulty, selectedTheme]);
 
   const { cols } = gridSizes[difficulty];
+  const currentTheme = cardThemes.find(theme => theme.id === selectedTheme);
 
   return (
     <div className="space-y-4">
@@ -397,16 +454,6 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         </div>
         <div className="flex items-center space-x-2">
           <div className="text-yellow-600 font-bold">💰 {totalCoins}</div>
-          <select 
-            value={difficulty} 
-            onChange={(e) => setDifficulty(e.target.value as any)}
-            className="px-2 py-1 border rounded text-sm"
-            disabled={isGameActive && moves > 0}
-          >
-            <option value="easy">简单 (3×4)</option>
-            <option value="medium">中等 (4×5)</option>
-            <option value="hard">困难 (4×8)</option>
-          </select>
           <Button
             onClick={initializeGame}
             size="sm"
@@ -415,6 +462,46 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
             <RotateCcw className="h-4 w-4 mr-1" />
             重新开始
           </Button>
+        </div>
+      </div>
+
+      {/* 游戏设置栏 */}
+      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <Palette className="h-4 w-4" />
+            <span className="text-sm font-medium">主题:</span>
+            <Select value={selectedTheme} onValueChange={setSelectedTheme} disabled={isGameActive && moves > 0}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {cardThemes.map((theme) => (
+                  <SelectItem key={theme.id} value={theme.id}>
+                    {theme.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium">难度:</span>
+            <select 
+              value={difficulty} 
+              onChange={(e) => setDifficulty(e.target.value as any)}
+              className="px-2 py-1 border rounded text-sm"
+              disabled={isGameActive && moves > 0}
+            >
+              <option value="easy">简单 (3×4)</option>
+              <option value="medium">中等 (4×5)</option>
+              <option value="hard">困难 (4×8)</option>
+            </select>
+          </div>
+        </div>
+        
+        <div className="text-xs text-gray-600">
+          {currentTheme?.description}
         </div>
       </div>
 
@@ -452,6 +539,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
               {getScoreRating().emoji}
             </div>
             <div className="space-y-1 text-sm">
+              <div>主题: {currentTheme?.name}</div>
               <div>难度: {getDifficultyText(difficulty)}</div>
               <div>用时: {formatTime(gameTime)}</div>
               <div>总步数: {moves}</div>
@@ -472,7 +560,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         className={`grid gap-2 justify-center`}
         style={{ 
           gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-          maxWidth: cols <= 5 ? '400px' : '600px',
+          maxWidth: cols <= 5 ? '320px' : '480px',
           margin: '0 auto'
         }}
       >
@@ -492,7 +580,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
           >
             <CardContent className="p-0 h-full flex items-center justify-center">
               <div className={`
-                text-2xl sm:text-3xl transition-all duration-500 
+                text-lg sm:text-xl transition-all duration-500 
                 ${card.isFlipped || card.isMatched 
                   ? 'opacity-100 transform rotate-0' 
                   : 'opacity-0 transform rotate-180'
@@ -509,10 +597,10 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
       <div className="p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
         <h3 className="font-medium mb-2">🧠 游戏说明：</h3>
         <ul className="space-y-1">
+          <li>• 选择喜欢的图案主题和难度等级</li>
           <li>• 点击卡片翻开，找到相同的一对获得连击奖励</li>
           <li>• 使用金币购买道具帮助游戏进行</li>
           <li>• 完成游戏获得金币奖励，效率越高奖励越多</li>
-          <li>• 连续匹配可获得连击加分</li>
         </ul>
       </div>
     </div>
