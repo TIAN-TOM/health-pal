@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft, Gamepad2, Play, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,6 @@ import EnhancedFlappyBird from '@/components/games/EnhancedFlappyBird';
 import EnhancedGomoku from '@/components/games/EnhancedGomoku';
 import BreakoutGame from '@/components/games/BreakoutGame';
 import MemoryCardGame from '@/components/games/MemoryCardGame';
-import SpotTheDifferenceGame from '@/components/games/SpotTheDifferenceGame';
 
 interface GamesProps {
   onBack: () => void;
@@ -22,13 +20,6 @@ const Games = ({ onBack }: GamesProps) => {
   });
 
   const games = [
-    {
-      id: 'spot-difference',
-      name: '找不同',
-      description: '仔细观察两张图片，找出它们之间的不同之处',
-      icon: '👁️',
-      component: SpotTheDifferenceGame
-    },
     {
       id: 'memory-cards',
       name: '记忆翻牌',

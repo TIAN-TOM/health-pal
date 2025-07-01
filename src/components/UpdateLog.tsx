@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowLeft, Calendar, Award, Globe, ShoppingCart, Database, Zap } from 'lucide-react';
+import { ArrowLeft, Calendar, Award, Globe, ShoppingCart, Database, Zap, Palette, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,54 @@ interface UpdateLogProps {
 
 const UpdateLog = ({ onBack }: UpdateLogProps) => {
   const updates = [
+    {
+      version: "v2.2.0",
+      date: "2025-07-01",
+      type: "major",
+      title: "游戏体验优化与皮肤系统",
+      changes: [
+        {
+          category: "游戏优化",
+          icon: <Palette className="h-4 w-4" />,
+          items: [
+            "五子棋新增皮肤切换功能，支持经典木质皮肤",
+            "记忆翻牌游戏优化计时逻辑，从翻开第一张牌开始计时",
+            "移除体验较差的找不同游戏，专注核心游戏优化",
+            "游戏皮肤系统与积分商城深度整合"
+          ]
+        },
+        {
+          category: "积分商城",
+          icon: <ShoppingCart className="h-4 w-4" />,
+          items: [
+            "新增补签卡功能，可补签错过的打卡日期",
+            "移除游戏道具类商品，简化商城结构",
+            "优化商品分类与描述展示",
+            "完善道具效果系统与用户反馈"
+          ]
+        },
+        {
+          category: "每日功能",
+          icon: <RefreshCw className="h-4 w-4" />,
+          items: [
+            "每日打卡页面优化，移除不准确的连续天数显示",
+            "每日英语内容确保每天更新不重复",
+            "优化学习提示文案，提升用户体验",
+            "增强北京时间零点自动更新机制"
+          ]
+        },
+        {
+          category: "系统改进",
+          icon: <Database className="h-4 w-4" />,
+          items: [
+            "新增皮肤管理服务模块",
+            "优化用户道具效果存储机制",
+            "改进商品购买验证逻辑",
+            "完善错误处理与用户提示"
+          ]
+        }
+      ]
+    },
     {
       version: "v2.1.0",
       date: "2025-06-30",

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Award, Star, Package, Shield, Clock, Trophy, BookOpen } from 'lucide-react';
+import { ShoppingCart, Award, Star, Package, Trophy, BookOpen, Calendar } from 'lucide-react';
 import { getStoreItems, getUserPurchases, purchaseItem, canPurchaseItem, type StoreItem } from '@/services/pointsStoreService';
 import { getEffectiveUserPoints } from '@/services/pointsService';
 import { useToast } from '@/hooks/use-toast';
@@ -87,14 +87,13 @@ const PointsStore = () => {
 
   const getItemIcon = (type: string, itemName: string) => {
     if (itemName.includes('皮肤')) return '🎨';
-    if (itemName.includes('加时')) return <Clock className="h-5 w-5" />;
-    if (itemName.includes('护盾')) return <Shield className="h-5 w-5" />;
+    if (itemName.includes('补签卡')) return <Calendar className="h-5 w-5" />;
     if (itemName.includes('徽章')) return <Trophy className="h-5 w-5" />;
     if (itemName.includes('英语') || itemName.includes('学习')) return <BookOpen className="h-5 w-5" />;
     
     switch (type) {
       case 'game_skin': return '🎨';
-      case 'game_power': return '⚡';
+      case 'makeup_card': return <Calendar className="h-5 w-5" />;
       case 'virtual_badge': return <Trophy className="h-5 w-5" />;
       case 'unlock_feature': return '🔓';
       default: return <Package className="h-4 w-4" />;
@@ -104,7 +103,7 @@ const PointsStore = () => {
   const getItemTypeText = (type: string) => {
     switch (type) {
       case 'game_skin': return '游戏皮肤';
-      case 'game_power': return '游戏道具';
+      case 'makeup_card': return '功能道具';
       case 'virtual_badge': return '虚拟徽章';
       case 'unlock_feature': return '功能解锁';
       default: return '商品';
@@ -113,10 +112,9 @@ const PointsStore = () => {
 
   const getItemEffectDescription = (itemName: string) => {
     if (itemName.includes('五子棋经典皮肤')) return '为五子棋游戏启用经典木质纹理棋盘';
-    if (itemName.includes('记忆翻牌加时道具')) return '每次使用可为记忆翻牌游戏增加30秒时间（可用5次）';
+    if (itemName.includes('补签卡')) return '可以补签过去错过的打卡日期，保持连续打卡记录';
     if (itemName.includes('打卡达人徽章')) return '专属徽章，彰显您的打卡毅力';
     if (itemName.includes('呼吸练习增强版')) return '解锁更多呼吸练习模式和个性化设置';
-    if (itemName.includes('飞鸟游戏护盾')) return '为飞鸟游戏提供碰撞保护（可用3次）';
     if (itemName.includes('英语学习进阶')) return '解锁高难度英语学习内容和专属练习模式';
     return '为您带来更好的应用体验';
   };

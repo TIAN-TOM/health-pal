@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RotateCcw, User, Bot } from 'lucide-react';
+import { RotateCcw, User, Bot, Palette } from 'lucide-react';
+import { checkGomokuSkinUnlocked, getSkinPreference, setSkinPreference } from '@/services/skinService';
 
 interface EnhancedGomokuProps {
   onBack: () => void;
@@ -11,6 +12,7 @@ interface EnhancedGomokuProps {
 
 type Player = 'human' | 'ai' | null;
 type Difficulty = 'easy' | 'medium' | 'hard';
+type SkinType = 'default' | 'classic';
 
 const BOARD_SIZE = 15;
 
@@ -24,6 +26,50 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [winningLine, setWinningLine] = useState<Array<{row: number, col: number}>>([]);
   const [lastMove, setLastMove] = useState<{row: number, col: number} | null>(null);
+  const [skinUnlocked, setSkinUnlocked] = useState(false);
+  const [currentSkin, setCurrentSkin] = useState<SkinType>('default');
+
+  useEffect(() => {
+    const loadSkinStatus = async () => {
+      const unlocked = await checkGomokuSkinUnlocked();
+      setSkinUnlocked(unlocked);
+      
+      const savedSkin = getSkinPreference('gomoku') as SkinType;
+      if (savedSkin === 'classic' && unlocked) {
+        setCurrentSkin('classic');
+      }
+    };
+    
+    loadSkinStatus();
+  }, []);
+
+  const handleSkinChange = (skin: SkinType) => {
+    if (skin === 'classic' && !skinUnlocked) return;
+    setCurrentSkin(skin);
+    setSkinPreference('gomoku', skin);
+  };
+
+  const getSkinStyles = () => {
+    if (currentSkin === 'classic') {
+      return {
+        boardBg: 'bg-amber-100',
+        boardBorder: 'border-amber-300',
+        innerBg: 'bg-gradient-to-br from-amber-50 to-yellow-100',
+        lineColor: '#8B4513',
+        containerBg: 'bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-100',
+        containerBorder: 'border-amber-400'
+      };
+    }
+    
+    return {
+      boardBg: 'bg-amber-100',
+      boardBorder: 'border-amber-200',
+      innerBg: 'bg-amber-50',
+      lineColor: '#8B4513',
+      containerBg: 'bg-amber-100',
+      containerBorder: 'border-amber-200'
+    };
+  };
 
   // 音效函数
   const playSound = useCallback((frequency: number, duration: number) => {
@@ -264,6 +310,8 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
     setLastMove(null);
   };
 
+  const skinStyles = getSkinStyles();
+
   if (!gameStarted) {
     return (
       <div className="max-w-2xl mx-auto">
@@ -284,6 +332,30 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
                   <SelectItem value="hard">困难 - 高级对手</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* 皮肤选择 */}
+            <div className="text-center">
+              <h3 className="text-lg font-semibold mb-4 flex items-center justify-center">
+                <Palette className="h-5 w-5 mr-2" />
+                选择皮肤
+              </h3>
+              <Select value={currentSkin} onValueChange={handleSkinChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">默认皮肤</SelectItem>
+                  <SelectItem value="classic" disabled={!skinUnlocked}>
+                    经典木质皮肤 {!skinUnlocked && '(需要积分商城解锁)'}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {!skinUnlocked && (
+                <p className="text-sm text-gray-500 mt-2">
+                  前往积分商城购买"五子棋经典皮肤"解锁更多皮肤选项
+                </p>
+              )}
             </div>
             
             <div className="text-center space-y-4">
@@ -330,10 +402,11 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
             
             <div className="text-center">
               <CardTitle>五子棋</CardTitle>
-              <p className="text-sm text-gray-600">难度：{
-                difficulty === 'easy' ? '简单' : 
-                difficulty === 'medium' ? '中等' : '困难'
-              }</p>
+              <p className="text-sm text-gray-600">
+                {difficulty === 'easy' ? '简单' : 
+                 difficulty === 'medium' ? '中等' : '困难'} | 
+                {currentSkin === 'classic' ? '经典皮肤' : '默认皮肤'}
+              </p>
             </div>
             
             <div className="w-20"></div>
@@ -363,11 +436,11 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
           )}
 
           <div className="flex justify-center mb-4">
-            <div className="relative bg-amber-100 p-4 rounded-lg border-2 border-amber-200">
+            <div className={`relative p-4 rounded-lg border-2 ${skinStyles.containerBg} ${skinStyles.containerBorder}`}>
               <svg 
                 width="360" 
                 height="360" 
-                className="border border-amber-300 bg-amber-50"
+                className={`border ${skinStyles.boardBorder} ${skinStyles.innerBg}`}
               >
                 {/* 绘制棋盘网格线 */}
                 {Array.from({ length: BOARD_SIZE }, (_, i) => (
@@ -378,7 +451,7 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
                       y1={12 + i * 24}
                       x2="348"
                       y2={12 + i * 24}
-                      stroke="#8B4513"
+                      stroke={skinStyles.lineColor}
                       strokeWidth="1"
                     />
                     {/* 竖线 */}
@@ -387,7 +460,7 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
                       y1="12"
                       x2={12 + i * 24}
                       y2="348"
-                      stroke="#8B4513"
+                      stroke={skinStyles.lineColor}
                       strokeWidth="1"
                     />
                   </g>

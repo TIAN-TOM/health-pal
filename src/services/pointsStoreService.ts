@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { spendPoints, getEffectiveUserPoints } from '@/services/pointsService';
 import type { Tables } from '@/integrations/supabase/types';
@@ -10,9 +11,9 @@ type UserPurchase = Tables<'user_purchases'> & {
 // 用户道具效果存储
 interface UserItemEffects {
   gameSkinsUnlocked: string[];
-  gamePowersActive: { [key: string]: number }; // 道具ID -> 剩余使用次数
   virtualBadges: string[];
   unlockedFeatures: string[];
+  makeupCards: number; // 补签卡数量
 }
 
 export const getStoreItems = async (): Promise<StoreItem[]> => {
@@ -58,9 +59,9 @@ export const getUserItemEffects = async (): Promise<UserItemEffects> => {
   
   const effects: UserItemEffects = {
     gameSkinsUnlocked: [],
-    gamePowersActive: {},
     virtualBadges: [],
-    unlockedFeatures: []
+    unlockedFeatures: [],
+    makeupCards: 0
   };
 
   purchases.forEach(purchase => {
@@ -71,27 +72,19 @@ export const getUserItemEffects = async (): Promise<UserItemEffects> => {
       case 'game_skin':
         effects.gameSkinsUnlocked.push(item.id);
         break;
-      case 'game_power':
-        // 游戏道具通常有使用次数限制
-        effects.gamePowersActive[item.id] = (effects.gamePowersActive[item.id] || 0) + getItemUsageCount(item.item_name);
-        break;
       case 'virtual_badge':
         effects.virtualBadges.push(item.id);
         break;
       case 'unlock_feature':
         effects.unlockedFeatures.push(item.id);
         break;
+      case 'makeup_card':
+        effects.makeupCards += 1; // 每购买一次补签卡增加1张
+        break;
     }
   });
 
   return effects;
-};
-
-// 根据道具名称获取使用次数
-const getItemUsageCount = (itemName: string): number => {
-  if (itemName.includes('加时道具')) return 5; // 记忆翻牌加时道具可用5次
-  if (itemName.includes('护盾')) return 3; // 飞鸟游戏护盾可用3次
-  return 1;
 };
 
 // 检查用户是否可以购买商品
@@ -114,7 +107,7 @@ export const canPurchaseItem = async (item: StoreItem): Promise<{ canPurchase: b
   }
 
   // 检查是否已购买（某些商品只能购买一次）
-  if (item.item_type === 'virtual_badge' || item.item_type === 'unlock_feature') {
+  if (item.item_type === 'virtual_badge' || item.item_type === 'unlock_feature' || item.item_type === 'game_skin') {
     const purchases = await getUserPurchases();
     const alreadyPurchased = purchases.some(p => p.item_id === item.id);
     if (alreadyPurchased) {
@@ -186,9 +179,6 @@ export const purchaseItem = async (itemId: string, itemPrice: number): Promise<b
 
 // 应用道具效果
 const applyItemEffect = async (item: StoreItem, userId: string) => {
-  // 这里可以根据不同道具类型应用实际效果
-  // 例如：更新用户的游戏设置、解锁新功能等
-  
   try {
     // 存储道具效果到用户偏好设置或专门的道具效果表
     const effectData = {
@@ -199,36 +189,32 @@ const applyItemEffect = async (item: StoreItem, userId: string) => {
       isActive: true
     };
 
-    // 这里可以扩展为更复杂的道具效果系统
     console.log('应用道具效果:', effectData);
+    
+    // 如果是补签卡，可以在这里记录到用户的补签卡余额
+    if (item.item_type === 'makeup_card') {
+      const currentCount = parseInt(localStorage.getItem('makeup-cards-count') || '0');
+      localStorage.setItem('makeup-cards-count', (currentCount + 1).toString());
+    }
     
   } catch (error) {
     console.error('应用道具效果失败:', error);
   }
 };
 
-// 使用游戏道具
-export const useGamePower = async (itemId: string): Promise<boolean> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    return false;
-  }
+// 获取补签卡数量
+export const getMakeupCardsCount = (): number => {
+  return parseInt(localStorage.getItem('makeup-cards-count') || '0');
+};
 
-  const effects = await getUserItemEffects();
-  const remainingUses = effects.gamePowersActive[itemId] || 0;
-  
-  if (remainingUses <= 0) {
-    return false;
+// 使用补签卡
+export const useMakeupCard = (): boolean => {
+  const currentCount = getMakeupCardsCount();
+  if (currentCount > 0) {
+    localStorage.setItem('makeup-cards-count', (currentCount - 1).toString());
+    return true;
   }
-
-  // 这里可以实现具体的道具使用逻辑
-  // 例如：在游戏中应用护盾效果、增加时间等
-  
-  // 减少使用次数（这里简化处理，实际可能需要更复杂的状态管理）
-  console.log(`使用游戏道具 ${itemId}，剩余使用次数: ${remainingUses - 1}`);
-  
-  return true;
+  return false;
 };
 
 // 检查用户是否拥有特定道具效果
@@ -245,6 +231,8 @@ export const hasItemEffect = async (itemType: string, itemName?: string): Promis
         // 这里可以根据具体需求检查特定功能
         return true;
       });
+    case 'makeup_card':
+      return effects.makeupCards > 0;
     default:
       return false;
   }
