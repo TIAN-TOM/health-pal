@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Heart, MessageCircle, Check, Award, Flame } from 'lucide-react';
+import { Calendar, Heart, MessageCircle, Check, Award } from 'lucide-react';
 import { createCheckin } from '@/services/dailyCheckinService';
 import { updatePointsForCheckin, getUserPoints, type UserPoints } from '@/services/pointsService';
 import { useToast } from '@/hooks/use-toast';
@@ -102,19 +102,12 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory }: Che
               每日打卡
             </CardTitle>
             {userPoints && (
-              <div className="flex items-center space-x-4 text-sm">
+              <div className="flex items-center space-x-2 text-sm">
                 <div className="flex items-center">
                   <Award className="h-4 w-4 mr-1 text-yellow-600" />
                   <span className="font-bold text-yellow-600">{userPoints.total_points}</span>
                   <span className="text-gray-600 ml-1">积分</span>
                 </div>
-                {userPoints.checkin_streak > 0 && (
-                  <div className="flex items-center">
-                    <Flame className="h-4 w-4 mr-1 text-orange-600" />
-                    <span className="font-bold text-orange-600">{userPoints.checkin_streak}</span>
-                    <span className="text-gray-600 ml-1">天</span>
-                  </div>
-                )}
               </div>
             )}
           </div>

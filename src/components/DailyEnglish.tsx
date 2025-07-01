@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Book, Volume2, VolumeX, Award, Lightbulb, Globe } from 'lucide-react';
+import { ArrowLeft, Book, Volume2, VolumeX, Award, Lightbulb, Globe, Calendar, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { getRandomQuote, getRandomWords, getRandomPhrases, getListeningTexts } from '@/services/englishService';
+import { getRandomQuote, getRandomWords, getRandomPhrases, getListeningTexts, getDailyEnglishContent } from '@/services/englishService';
+import { getBeijingDateString } from '@/utils/beijingTime';
 import type { Tables } from '@/integrations/supabase/types';
 
 interface DailyEnglishProps {
@@ -28,26 +29,80 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
   const [phrases, setPhrases] = useState<EnglishPhrase[]>([]);
   const [listeningTexts, setListeningTexts] = useState<EnglishListening[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentDate, setCurrentDate] = useState(getBeijingDateString());
+  const [lastLoadedDate, setLastLoadedDate] = useState<string>('');
 
   useEffect(() => {
     loadEnglishContent();
-  }, []);
+    
+    // 设置定时检查，每10秒检查一次是否需要更新
+    const interval = setInterval(() => {
+      const now = getBeijingDateString();
+      if (now !== currentDate) {
+        setCurrentDate(now);
+        loadEnglishContent();
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [currentDate]);
 
   const loadEnglishContent = async () => {
+    // 如果今天的内容已经加载过，不重复加载
+    if (lastLoadedDate === currentDate && dailyQuote) {
+      setLoading(false);
+      return;
+    }
+
     try {
+      setLoading(true);
+      
       const [quote, words, phrasesList, listening] = await Promise.all([
-        getRandomQuote(),
-        getRandomWords(3),
-        getRandomPhrases(3),
-        getListeningTexts(2)
+        getRandomQuote(currentDate),
+        getRandomWords(3, currentDate),
+        getRandomPhrases(3, currentDate),
+        getListeningTexts(2, currentDate)
       ]);
 
       setDailyQuote(quote);
       setDailyWords(words);
       setPhrases(phrasesList);
       setListeningTexts(listening);
+      setLastLoadedDate(currentDate);
+      
+      console.log(`加载 ${currentDate} 的英语内容完成`);
     } catch (error) {
       console.error('加载英语内容失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 手动刷新内容
+  const refreshContent = () => {
+    setLastLoadedDate(''); // 清除缓存标记
+    loadEnglishContent();
+  };
+
+  // 预览其他日期内容（测试功能）
+  const previewDate = async (dateOffset: number) => {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + dateOffset);
+    const dateStr = targetDate.getFullYear() + '-' + 
+      String(targetDate.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(targetDate.getDate()).padStart(2, '0');
+    
+    try {
+      setLoading(true);
+      const content = await getDailyEnglishContent(dateStr);
+      setDailyQuote(content.quote);
+      setDailyWords(content.words);
+      setPhrases(content.phrases);
+      setListeningTexts(content.listening);
+      setCurrentDate(dateStr);
+      setLastLoadedDate(dateStr);
+    } catch (error) {
+      console.error('预览日期内容失败:', error);
     } finally {
       setLoading(false);
     }
@@ -98,6 +153,8 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
     );
   }
 
+  const isToday = currentDate === getBeijingDateString();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <div className="container mx-auto px-4 py-6 max-w-md">
@@ -106,14 +163,37 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
             <ArrowLeft className="h-4 w-4 mr-1" />
             返回
           </Button>
-          <h1 className="text-xl font-bold text-gray-800">每日英语</h1>
+          <div className="text-center">
+            <h1 className="text-xl font-bold text-gray-800">每日英语</h1>
+            <div className="flex items-center text-sm text-gray-600 mt-1">
+              <Calendar className="h-3 w-3 mr-1" />
+              {currentDate}
+              {isToday && <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">今日</span>}
+            </div>
+          </div>
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={refreshContent}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
             {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
             <Switch
               checked={soundEnabled}
               onCheckedChange={handleSoundToggle}
             />
           </div>
+        </div>
+
+        {/* 开发测试按钮 - 生产环境可以移除 */}
+        <div className="mb-4 flex justify-center space-x-2">
+          <Button variant="outline" size="sm" onClick={() => previewDate(-1)}>
+            昨天
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => previewDate(0)}>
+            今天
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => previewDate(1)}>
+            明天
+          </Button>
         </div>
 
         <Tabs defaultValue="quotes" className="space-y-4">
@@ -304,7 +384,7 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
             <div>
               <h3 className="font-medium text-blue-800 mb-1">学习提示</h3>
               <p className="text-blue-700 text-sm">
-                每天坚持学习英语，积少成多。建议结合朗读、听力和记忆练习，提高学习效果。
+                每天零点准时更新内容，确保一个月内每天的学习材料都不相同。坚持每日学习，积少成多！
               </p>
             </div>
           </div>
