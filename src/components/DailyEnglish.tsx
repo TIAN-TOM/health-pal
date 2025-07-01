@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Book, Volume2, VolumeX, Award, Lightbulb, Globe, Calendar, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -384,7 +383,7 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
             <div>
               <h3 className="font-medium text-blue-800 mb-1">学习提示</h3>
               <p className="text-blue-700 text-sm">
-                每天零点准时更新内容，确保一个月内每天的学习材料都不相同。坚持每日学习，积少成多！
+                每天学习内容精心安排，涵盖名言、单词、短语和听力训练。坚持每日学习，积少成多！
               </p>
             </div>
           </div>

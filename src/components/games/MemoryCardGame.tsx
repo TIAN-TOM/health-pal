@@ -46,6 +46,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
   const [isGameComplete, setIsGameComplete] = useState(false);
   const [gameTime, setGameTime] = useState(0);
   const [isGameActive, setIsGameActive] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false); // 新增：标记游戏是否已开始
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
   const [selectedTheme, setSelectedTheme] = useState('animals');
   const [coins, setCoins] = useState(0);
@@ -222,7 +223,8 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     setMatches(0);
     setIsGameComplete(false);
     setGameTime(0);
-    setIsGameActive(true);
+    setIsGameActive(false); // 游戏初始化时设为false
+    setGameStarted(false); // 重置游戏开始状态
     setCoins(0);
     setCombo(0);
     setMaxCombo(0);
@@ -312,9 +314,10 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     }
   };
 
+  // 修改计时器useEffect，只有在游戏开始且激活时才计时
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isGameActive && !isGameComplete) {
+    if (isGameActive && gameStarted && !isGameComplete) {
       interval = setInterval(() => {
         setGameTime(prev => prev + 1);
         
@@ -325,7 +328,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isGameActive, isGameComplete]);
+  }, [isGameActive, gameStarted, isGameComplete]);
 
   useEffect(() => {
     const { pairs } = gridSizes[difficulty];
@@ -350,7 +353,13 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
   }, [matches, difficulty, isGameActive, gameTime, moves, maxCombo]);
 
   const handleCardClick = (cardId: number) => {
-    if (!isGameActive || isGameComplete) return;
+    if (!isGameActive || isGameComplete) {
+      // 如果游戏未激活，则激活游戏并开始计时
+      if (!gameStarted) {
+        setIsGameActive(true);
+        setGameStarted(true);
+      }
+    }
     
     const card = cards.find(c => c.id === cardId);
     if (!card || card.isFlipped || card.isMatched || flippedCards.length >= 2) return;
@@ -451,6 +460,11 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
               连击 x{combo}
             </div>
           )}
+          {!gameStarted && (
+            <div className="text-blue-600 text-sm">
+              点击任意卡片开始游戏
+            </div>
+          )}
         </div>
         <div className="flex items-center space-x-2">
           <div className="text-yellow-600 font-bold">💰 {totalCoins}</div>
@@ -471,7 +485,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
           <div className="flex items-center space-x-2">
             <Palette className="h-4 w-4" />
             <span className="text-sm font-medium">主题:</span>
-            <Select value={selectedTheme} onValueChange={setSelectedTheme} disabled={isGameActive && moves > 0}>
+            <Select value={selectedTheme} onValueChange={setSelectedTheme} disabled={gameStarted && moves > 0}>
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
@@ -491,7 +505,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
               value={difficulty} 
               onChange={(e) => setDifficulty(e.target.value as any)}
               className="px-2 py-1 border rounded text-sm"
-              disabled={isGameActive && moves > 0}
+              disabled={gameStarted && moves > 0}
             >
               <option value="easy">简单 (3×4)</option>
               <option value="medium">中等 (4×5)</option>
@@ -601,6 +615,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
           <li>• 点击卡片翻开，找到相同的一对获得连击奖励</li>
           <li>• 使用金币购买道具帮助游戏进行</li>
           <li>• 完成游戏获得金币奖励，效率越高奖励越多</li>
+          <li>• <strong>计时从翻开第一张牌开始</strong></li>
         </ul>
       </div>
     </div>
