@@ -835,6 +835,48 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_records: {
+        Row: {
+          created_at: string
+          duration: number
+          expires_at: string
+          file_path: string | null
+          file_size: number | null
+          id: string
+          note: string | null
+          title: string
+          transcription: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: number
+          expires_at?: string
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          note?: string | null
+          title?: string
+          transcription?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number
+          expires_at?: string
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          note?: string | null
+          title?: string
+          transcription?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -848,6 +890,10 @@ export type Database = {
           description?: string
         }
         Returns: boolean
+      }
+      delete_expired_voice_records: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       get_effective_user_points: {
         Args: { check_user_id: string }
