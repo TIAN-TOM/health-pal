@@ -62,6 +62,46 @@ class SeededRandom {
   }
 }
 
+// 转换预定义内容为完整的数据库格式
+const convertToQuoteFormat = (quotes: any[]): EnglishQuote[] => {
+  return quotes.map((quote, index) => ({
+    ...quote,
+    id: `predefined-quote-${index}`,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }));
+};
+
+const convertToWordFormat = (words: any[]): EnglishWord[] => {
+  return words.map((word, index) => ({
+    ...word,
+    id: `predefined-word-${index}`,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    frequency_rank: index + 1
+  }));
+};
+
+const convertToPhraseFormat = (phrases: any[]): EnglishPhrase[] => {
+  return phrases.map((phrase, index) => ({
+    ...phrase,
+    id: `predefined-phrase-${index}`,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    category: phrase.category || 'general'
+  }));
+};
+
+const convertToListeningFormat = (listening: any[]): EnglishListening[] => {
+  return listening.map((item, index) => ({
+    ...item,
+    id: `predefined-listening-${index}`,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    word_count: item.content ? item.content.split(' ').length : 0
+  }));
+};
+
 // 合并数据库内容和预定义内容
 const combineContent = <T>(dbContent: T[], predefinedContent: T[]): T[] => {
   return [...dbContent, ...predefinedContent];
@@ -78,7 +118,8 @@ export const getRandomQuote = async (date?: string): Promise<EnglishQuote | null
   }
 
   // 合并数据库内容和预定义内容
-  const allQuotes = combineContent(data || [], [...beginnerQuotes, ...intermediateQuotes]);
+  const predefinedQuotes = convertToQuoteFormat([...beginnerQuotes, ...intermediateQuotes]);
+  const allQuotes = combineContent(data || [], predefinedQuotes);
   
   if (allQuotes.length === 0) return null;
 
@@ -98,7 +139,8 @@ export const getRandomWords = async (limit: number = 3, date?: string): Promise<
   }
 
   // 合并数据库内容和预定义内容
-  const allWords = combineContent(data || [], [...beginnerWords, ...intermediateWords]);
+  const predefinedWords = convertToWordFormat([...beginnerWords, ...intermediateWords]);
+  const allWords = combineContent(data || [], predefinedWords);
   
   if (allWords.length === 0) return [];
 
@@ -118,7 +160,8 @@ export const getRandomPhrases = async (limit: number = 3, date?: string): Promis
   }
 
   // 合并数据库内容和预定义内容
-  const allPhrases = combineContent(data || [], [...beginnerPhrases, ...intermediatePhrases]);
+  const predefinedPhrases = convertToPhraseFormat([...beginnerPhrases, ...intermediatePhrases]);
+  const allPhrases = combineContent(data || [], predefinedPhrases);
   
   if (allPhrases.length === 0) return [];
 
@@ -138,7 +181,8 @@ export const getListeningTexts = async (limit: number = 2, date?: string): Promi
   }
 
   // 合并数据库内容和预定义内容
-  const allListening = combineContent(data || [], [...beginnerListening, ...intermediateListening]);
+  const predefinedListening = convertToListeningFormat([...beginnerListening, ...intermediateListening]);
+  const allListening = combineContent(data || [], predefinedListening);
   
   if (allListening.length === 0) return [];
 

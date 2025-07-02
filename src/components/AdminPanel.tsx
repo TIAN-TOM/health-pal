@@ -20,11 +20,6 @@ interface AdminPanelProps {
 const AdminPanel = ({ onBack }: AdminPanelProps) => {
   const { userRole } = useAuth();
   const [activeTab, setActiveTab] = useState('users');
-  const [users, setUsers] = useState<Array<{
-    id: string;
-    email: string;
-    full_name: string | null;
-  }>>([]);
 
   if (userRole !== 'admin') {
     return (
@@ -97,11 +92,11 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
               </TabsList>
 
               <TabsContent value="users" className="mt-6">
-                <AdminUserManagement onUsersLoad={setUsers} />
+                <AdminUserManagement />
               </TabsContent>
 
               <TabsContent value="points" className="mt-6">
-                <AdminPointsManagement users={users} />
+                <AdminPointsManagement />
               </TabsContent>
 
               <TabsContent value="education" className="mt-6">
