@@ -113,7 +113,18 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
         
         const audio = new Audio(url);
         audio.addEventListener('loadedmetadata', () => {
-          setDuration(audio.duration);
+          console.log('Audio metadata loaded, duration:', audio.duration);
+          if (isFinite(audio.duration) && !isNaN(audio.duration)) {
+            setDuration(audio.duration);
+          } else {
+            // 如果音频持续时间无效，使用录音时间作为备选
+            setDuration(recordingTime);
+          }
+        });
+        audio.addEventListener('error', (e) => {
+          console.error('Audio error:', e);
+          // 使用录音时间作为持续时间
+          setDuration(recordingTime);
         });
       };
 
@@ -287,12 +298,23 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
       });
 
       toast({
-        title: "记录已保存",
+        title: "保存成功",
         description: "语音记录已成功保存，将保留30天",
       });
 
-      // 重置状态
-      deleteRecording();
+      // 清理当前录音状态
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+      stopPlayback();
+      setAudioBlob(null);
+      setAudioUrl('');
+      setHasRecording(false);
+      setRecordingTime(0);
+      setPlaybackTime(0);
+      setDuration(0);
+      setNote('');
+      
       loadVoiceRecords();
     } catch (error) {
       console.error('保存记录失败:', error);
@@ -395,6 +417,45 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
     }
   };
 
+  const downloadHistoryRecord = async (record: VoiceRecord) => {
+    try {
+      if (!record.file_path) {
+        toast({
+          title: "下载失败",
+          description: "语音文件路径不存在",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const signedUrl = await getVoiceFileUrl(record.file_path);
+      const response = await fetch(signedUrl);
+      const blob = await response.blob();
+      
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const timestamp = new Date(record.created_at).toISOString().slice(0, 19).replace(/:/g, '-');
+      a.download = `${record.title}-${timestamp}.webm`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "下载完成",
+        description: "录音文件已保存到您的设备",
+      });
+    } catch (error) {
+      console.error('下载历史记录失败:', error);
+      toast({
+        title: "下载失败",
+        description: "请稍后重试",
+        variant: "destructive"
+      });
+    }
+  };
+
   const formatTime = (seconds: number) => {
     if (!isFinite(seconds) || isNaN(seconds)) {
       return '00:00';
@@ -406,6 +467,14 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('zh-CN');
+  };
+
+  // 获取有效的持续时间，优先使用音频元数据的持续时间，其次使用录音时间
+  const getEffectiveDuration = () => {
+    if (isFinite(duration) && !isNaN(duration) && duration > 0) {
+      return duration;
+    }
+    return recordingTime;
   };
 
   if (showHistory) {
@@ -458,6 +527,14 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                             className="text-blue-600 border-blue-300 hover:bg-blue-50"
                           >
                             {playingRecordId === record.id && isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            onClick={() => downloadHistoryRecord(record)}
+                            variant="outline"
+                            size="sm"
+                            className="text-green-600 border-green-300 hover:bg-green-50"
+                          >
+                            <Download className="h-4 w-4" />
                           </Button>
                           <Button
                             onClick={() => handleDeleteSavedRecord(record)}
@@ -514,7 +591,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
           <CardContent className="space-y-6">
             <div className="text-center">
               <div className="text-4xl font-mono text-gray-800 mb-2">
-                {isRecording ? formatTime(recordingTime) : (hasRecording ? formatTime(duration) : '00:00')}
+                {isRecording ? formatTime(recordingTime) : (hasRecording ? formatTime(getEffectiveDuration()) : '00:00')}
               </div>
               <div className="text-sm text-gray-600 mb-4">
                 {isRecording ? '正在录音...' : (hasRecording ? `录音完成 - 时长 ${formatTime(recordingTime)}` : '准备开始录音')}
@@ -553,7 +630,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                   <input
                     type="range"
                     min="0"
-                    max={duration || 0}
+                    max={getEffectiveDuration() || 0}
                     value={playbackTime}
                     onChange={(e) => {
                       const time = parseFloat(e.target.value);
@@ -566,7 +643,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                   />
                   <div className="flex justify-between text-xs text-gray-500 mt-1">
                     <span>{formatTime(playbackTime)}</span>
-                    <span>{formatTime(duration)}</span>
+                    <span>{formatTime(getEffectiveDuration())}</span>
                   </div>
                 </div>
                 
@@ -626,7 +703,6 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h4 className="font-medium text-blue-800 mb-2">💡 功能说明</h4>
               <ul className="text-sm text-blue-700 space-y-1">
-                <li>• 自动使用最佳录音设置</li>
                 <li>• 录音完成后可以播放、暂停、调节音量和进度</li>
                 <li>• 支持下载录音文件到本地设备</li>
                 <li>• 保存后的语音记录将在数据库中保留30天</li>
