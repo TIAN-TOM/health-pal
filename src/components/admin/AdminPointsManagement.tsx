@@ -8,17 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { adminUpdateUserPoints, getPointsTransactions, type PointsTransaction } from '@/services/pointsService';
+import { useUserManagement } from '@/hooks/useUserManagement';
 import { Coins, Plus, Minus, History, Search } from 'lucide-react';
 
-interface AdminPointsManagementProps {
-  users: Array<{
-    id: string;
-    email: string;
-    full_name: string | null;
-  }>;
-}
-
-const AdminPointsManagement = ({ users }: AdminPointsManagementProps) => {
+const AdminPointsManagement = () => {
   const [selectedUserId, setSelectedUserId] = useState('');
   const [pointsAmount, setPointsAmount] = useState('');
   const [operation, setOperation] = useState<'grant' | 'deduct'>('grant');
@@ -27,6 +20,7 @@ const AdminPointsManagement = ({ users }: AdminPointsManagementProps) => {
   const [transactions, setTransactions] = useState<PointsTransaction[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const { toast } = useToast();
+  const { users } = useUserManagement();
 
   const selectedUser = users.find(u => u.id === selectedUserId);
 
