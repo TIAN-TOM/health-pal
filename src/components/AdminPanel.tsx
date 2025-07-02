@@ -10,7 +10,8 @@ import AdminEducationManagement from '@/components/AdminEducationManagement';
 import AdminNotifications from '@/components/AdminNotifications';
 import AnnouncementManagement from '@/components/AnnouncementManagement';
 import EnglishContentManagement from '@/components/admin/EnglishContentManagement';
-import { ArrowLeft, Users, BookOpen, Bell, Megaphone, Globe, Headphones } from 'lucide-react';
+import AdminPointsManagement from '@/components/admin/AdminPointsManagement';
+import { ArrowLeft, Users, BookOpen, Bell, Megaphone, Globe, Coins } from 'lucide-react';
 
 interface AdminPanelProps {
   onBack: () => void;
@@ -19,6 +20,11 @@ interface AdminPanelProps {
 const AdminPanel = ({ onBack }: AdminPanelProps) => {
   const { userRole } = useAuth();
   const [activeTab, setActiveTab] = useState('users');
+  const [users, setUsers] = useState<Array<{
+    id: string;
+    email: string;
+    full_name: string | null;
+  }>>([]);
 
   if (userRole !== 'admin') {
     return (
@@ -63,10 +69,14 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="users" className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   用户管理
+                </TabsTrigger>
+                <TabsTrigger value="points" className="flex items-center gap-2">
+                  <Coins className="h-4 w-4" />
+                  积分管理
                 </TabsTrigger>
                 <TabsTrigger value="education" className="flex items-center gap-2">
                   <BookOpen className="h-4 w-4" />
@@ -87,7 +97,11 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
               </TabsList>
 
               <TabsContent value="users" className="mt-6">
-                <AdminUserManagement />
+                <AdminUserManagement onUsersLoad={setUsers} />
+              </TabsContent>
+
+              <TabsContent value="points" className="mt-6">
+                <AdminPointsManagement users={users} />
               </TabsContent>
 
               <TabsContent value="education" className="mt-6">

@@ -2,6 +2,16 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { getBeijingDateString } from '@/utils/beijingTime';
+import { 
+  beginnerQuotes, 
+  intermediateQuotes, 
+  beginnerWords, 
+  intermediateWords,
+  beginnerPhrases,
+  intermediatePhrases,
+  beginnerListening,
+  intermediateListening
+} from '@/data/englishContent';
 
 type EnglishQuote = Tables<'english_quotes'>;
 type EnglishWord = Tables<'english_words'>;
@@ -52,6 +62,11 @@ class SeededRandom {
   }
 }
 
+// 合并数据库内容和预定义内容
+const combineContent = <T>(dbContent: T[], predefinedContent: T[]): T[] => {
+  return [...dbContent, ...predefinedContent];
+};
+
 export const getRandomQuote = async (date?: string): Promise<EnglishQuote | null> => {
   const { data, error } = await supabase
     .from('english_quotes')
@@ -62,11 +77,14 @@ export const getRandomQuote = async (date?: string): Promise<EnglishQuote | null
     return null;
   }
 
-  if (!data || data.length === 0) return null;
+  // 合并数据库内容和预定义内容
+  const allQuotes = combineContent(data || [], [...beginnerQuotes, ...intermediateQuotes]);
+  
+  if (allQuotes.length === 0) return null;
 
   const seed = getDaySeed(date);
   const random = new SeededRandom(seed);
-  return random.selectOne(data);
+  return random.selectOne(allQuotes);
 };
 
 export const getRandomWords = async (limit: number = 3, date?: string): Promise<EnglishWord[]> => {
@@ -79,11 +97,14 @@ export const getRandomWords = async (limit: number = 3, date?: string): Promise<
     return [];
   }
 
-  if (!data || data.length === 0) return [];
+  // 合并数据库内容和预定义内容
+  const allWords = combineContent(data || [], [...beginnerWords, ...intermediateWords]);
+  
+  if (allWords.length === 0) return [];
 
   const seed = getDaySeed(date);
   const random = new SeededRandom(seed + 1); // 不同的种子确保和名言不同
-  return random.selectItems(data, limit);
+  return random.selectItems(allWords, limit);
 };
 
 export const getRandomPhrases = async (limit: number = 3, date?: string): Promise<EnglishPhrase[]> => {
@@ -96,11 +117,14 @@ export const getRandomPhrases = async (limit: number = 3, date?: string): Promis
     return [];
   }
 
-  if (!data || data.length === 0) return [];
+  // 合并数据库内容和预定义内容
+  const allPhrases = combineContent(data || [], [...beginnerPhrases, ...intermediatePhrases]);
+  
+  if (allPhrases.length === 0) return [];
 
   const seed = getDaySeed(date);
   const random = new SeededRandom(seed + 2); // 不同的种子
-  return random.selectItems(data, limit);
+  return random.selectItems(allPhrases, limit);
 };
 
 export const getListeningTexts = async (limit: number = 2, date?: string): Promise<EnglishListening[]> => {
@@ -113,11 +137,14 @@ export const getListeningTexts = async (limit: number = 2, date?: string): Promi
     return [];
   }
 
-  if (!data || data.length === 0) return [];
+  // 合并数据库内容和预定义内容
+  const allListening = combineContent(data || [], [...beginnerListening, ...intermediateListening]);
+  
+  if (allListening.length === 0) return [];
 
   const seed = getDaySeed(date);
   const random = new SeededRandom(seed + 3); // 不同的种子
-  return random.selectItems(data, limit);
+  return random.selectItems(allListening, limit);
 };
 
 // 获取指定日期的每日英语内容（用于测试和预览）
