@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Book, Volume2, VolumeX, Award, Lightbulb, Globe, Calendar, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { getRandomQuote, getRandomWords, getRandomPhrases, getListeningTexts, getDailyEnglishContent } from '@/services/englishService';
+import { getRandomQuote, getRandomWords, getRandomPhrases, getListeningTexts } from '@/services/englishService';
 import { getBeijingDateString } from '@/utils/beijingTime';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -31,6 +32,13 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
   const [currentDate, setCurrentDate] = useState(getBeijingDateString());
   const [lastLoadedDate, setLastLoadedDate] = useState<string>('');
 
+  // 停止所有朗读的函数
+  const stopAllSpeech = () => {
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
+    }
+  };
+
   useEffect(() => {
     loadEnglishContent();
     
@@ -43,8 +51,26 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
       }
     }, 10000);
 
-    return () => clearInterval(interval);
+    // 页面卸载时停止朗读
+    const handleBeforeUnload = () => {
+      stopAllSpeech();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      clearInterval(interval);
+      stopAllSpeech();
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, [currentDate]);
+
+  // 组件卸载时也要停止朗读
+  useEffect(() => {
+    return () => {
+      stopAllSpeech();
+    };
+  }, []);
 
   const loadEnglishContent = async () => {
     // 如果今天的内容已经加载过，不重复加载
@@ -83,32 +109,11 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
     loadEnglishContent();
   };
 
-  // 预览其他日期内容（测试功能）
-  const previewDate = async (dateOffset: number) => {
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + dateOffset);
-    const dateStr = targetDate.getFullYear() + '-' + 
-      String(targetDate.getMonth() + 1).padStart(2, '0') + '-' + 
-      String(targetDate.getDate()).padStart(2, '0');
-    
-    try {
-      setLoading(true);
-      const content = await getDailyEnglishContent(dateStr);
-      setDailyQuote(content.quote);
-      setDailyWords(content.words);
-      setPhrases(content.phrases);
-      setListeningTexts(content.listening);
-      setCurrentDate(dateStr);
-      setLastLoadedDate(dateStr);
-    } catch (error) {
-      console.error('预览日期内容失败:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const playSound = (text: string) => {
     if (!soundEnabled) return;
+    
+    // 先停止当前播放的语音
+    stopAllSpeech();
     
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
@@ -121,6 +126,15 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
   const handleSoundToggle = (enabled: boolean) => {
     setSoundEnabled(enabled);
     localStorage.setItem('english-sound-enabled', JSON.stringify(enabled));
+    if (!enabled) {
+      stopAllSpeech();
+    }
+  };
+
+  // 返回按钮处理，确保停止朗读
+  const handleBack = () => {
+    stopAllSpeech();
+    onBack();
   };
 
   const getDifficultyColor = (level: string) => {
@@ -158,7 +172,7 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <div className="container mx-auto px-4 py-6 max-w-md">
         <div className="flex items-center justify-between mb-6">
-          <Button variant="ghost" size="sm" onClick={onBack}>
+          <Button variant="ghost" size="sm" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             返回
           </Button>
@@ -180,19 +194,6 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
               onCheckedChange={handleSoundToggle}
             />
           </div>
-        </div>
-
-        {/* 开发测试按钮 - 生产环境可以移除 */}
-        <div className="mb-4 flex justify-center space-x-2">
-          <Button variant="outline" size="sm" onClick={() => previewDate(-1)}>
-            昨天
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => previewDate(0)}>
-            今天
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => previewDate(1)}>
-            明天
-          </Button>
         </div>
 
         <Tabs defaultValue="quotes" className="space-y-4">
@@ -323,6 +324,15 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
                         {phrase.example_translation && (
                           <p className="text-sm text-gray-700">{phrase.example_translation}</p>
                         )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-2"
+                          onClick={() => playSound(phrase.example_sentence)}
+                        >
+                          <Volume2 className="h-3 w-3 mr-1" />
+                          朗读例句
+                        </Button>
                       </div>
                     )}
                   </div>

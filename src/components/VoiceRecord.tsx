@@ -35,6 +35,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
   const [showHistory, setShowHistory] = useState(false);
   const [voiceRecords, setVoiceRecords] = useState<VoiceRecord[]>([]);
   const [note, setNote] = useState('');
+  const [playingRecordId, setPlayingRecordId] = useState<string | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -63,7 +64,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
   const getRecordingOptions = (): MediaRecorderOptions => {
     const options: MediaRecorderOptions = {
       mimeType: 'audio/webm;codecs=opus',
-      audioBitsPerSecond: 128000 // 固定高质量
+      audioBitsPerSecond: 128000
     };
     
     if (!MediaRecorder.isTypeSupported(options.mimeType!)) {
@@ -86,7 +87,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 48000 // 固定高质量采样率
+          sampleRate: 48000
         } 
       });
       
@@ -138,7 +139,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
 
       toast({
         title: "开始录音",
-        description: "正在录制高质量语音记录...",
+        description: "正在录制语音记录...",
       });
     } catch (error) {
       console.error('录音失败:', error);
@@ -328,7 +329,76 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
     }
   };
 
+  const playHistoryRecord = async (record: VoiceRecord) => {
+    try {
+      if (!record.file_path) {
+        toast({
+          title: "播放失败",
+          description: "语音文件路径不存在",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // 如果当前正在播放这个记录，则暂停
+      if (playingRecordId === record.id && isPlaying) {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          setIsPlaying(false);
+          setPlayingRecordId(null);
+        }
+        return;
+      }
+
+      // 停止其他正在播放的音频
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+
+      const signedUrl = await getVoiceFileUrl(record.file_path);
+      
+      if (audioRef.current) {
+        audioRef.current.src = signedUrl;
+        audioRef.current.volume = volume;
+        audioRef.current.currentTime = 0;
+        
+        audioRef.current.onloadeddata = () => {
+          if (audioRef.current) {
+            audioRef.current.play();
+            setIsPlaying(true);
+            setPlayingRecordId(record.id);
+          }
+        };
+        
+        audioRef.current.onended = () => {
+          setIsPlaying(false);
+          setPlayingRecordId(null);
+        };
+        
+        audioRef.current.onerror = () => {
+          toast({
+            title: "播放失败",
+            description: "无法加载语音文件",
+            variant: "destructive"
+          });
+          setIsPlaying(false);
+          setPlayingRecordId(null);
+        };
+      }
+    } catch (error) {
+      console.error('播放历史记录失败:', error);
+      toast({
+        title: "播放失败",
+        description: "请稍后重试",
+        variant: "destructive"
+      });
+    }
+  };
+
   const formatTime = (seconds: number) => {
+    if (!isFinite(seconds) || isNaN(seconds)) {
+      return '00:00';
+    }
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -341,6 +411,8 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
   if (showHistory) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
+        <audio ref={audioRef} style={{ display: 'none' }} />
+        
         <div className="mb-6">
           <Button
             onClick={() => setShowHistory(false)}
@@ -378,14 +450,24 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                             <p className="text-sm text-gray-500 mt-1">{record.note}</p>
                           )}
                         </div>
-                        <Button
-                          onClick={() => handleDeleteSavedRecord(record)}
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600 border-red-300 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => playHistoryRecord(record)}
+                            variant="outline"
+                            size="sm"
+                            className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                          >
+                            {playingRecordId === record.id && isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteSavedRecord(record)}
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 border-red-300 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </Card>
                   ))}
@@ -426,7 +508,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl text-center text-gray-800">
-              高质量语音记录
+              语音记录
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -440,7 +522,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
               {isRecording && (
                 <div className="flex items-center justify-center space-x-2 text-red-500">
                   <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm">高质量录音中...</span>
+                  <span className="text-sm">录音中...</span>
                 </div>
               )}
             </div>
@@ -471,7 +553,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                   <input
                     type="range"
                     min="0"
-                    max={duration}
+                    max={duration || 0}
                     value={playbackTime}
                     onChange={(e) => {
                       const time = parseFloat(e.target.value);
@@ -544,7 +626,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h4 className="font-medium text-blue-800 mb-2">💡 功能说明</h4>
               <ul className="text-sm text-blue-700 space-y-1">
-                <li>• 自动使用最高质量录音设置</li>
+                <li>• 自动使用最佳录音设置</li>
                 <li>• 录音完成后可以播放、暂停、调节音量和进度</li>
                 <li>• 支持下载录音文件到本地设备</li>
                 <li>• 保存后的语音记录将在数据库中保留30天</li>
