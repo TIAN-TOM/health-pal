@@ -50,18 +50,18 @@ const EnglishContentManagement = () => {
     }
   };
 
-  const handleSave = async (table: string, data: any, isNew = false) => {
+  const handleSaveQuote = async (data: any, isNew = false) => {
     try {
       if (isNew) {
-        const { error } = await supabase.from(table).insert(data);
+        const { error } = await supabase.from('english_quotes').insert(data);
         if (error) throw error;
-        toast({ title: '添加成功', description: '新内容已添加' });
+        toast({ title: '添加成功', description: '新名言已添加' });
         setShowNewForm(null);
         setNewItemForm({});
       } else {
-        const { error } = await supabase.from(table).update(data).eq('id', editingItem);
+        const { error } = await supabase.from('english_quotes').update(data).eq('id', editingItem);
         if (error) throw error;
-        toast({ title: '更新成功', description: '内容已更新' });
+        toast({ title: '更新成功', description: '名言已更新' });
         setEditingItem(null);
         setEditForm({});
       }
@@ -72,13 +72,121 @@ const EnglishContentManagement = () => {
     }
   };
 
-  const handleDelete = async (table: string, id: string) => {
-    if (!window.confirm('确定要删除这个内容吗？')) return;
+  const handleSaveWord = async (data: any, isNew = false) => {
+    try {
+      if (isNew) {
+        const { error } = await supabase.from('english_words').insert(data);
+        if (error) throw error;
+        toast({ title: '添加成功', description: '新单词已添加' });
+        setShowNewForm(null);
+        setNewItemForm({});
+      } else {
+        const { error } = await supabase.from('english_words').update(data).eq('id', editingItem);
+        if (error) throw error;
+        toast({ title: '更新成功', description: '单词已更新' });
+        setEditingItem(null);
+        setEditForm({});
+      }
+      loadAllContent();
+    } catch (error) {
+      console.error('保存失败:', error);
+      toast({ title: '保存失败', description: '请检查输入内容', variant: 'destructive' });
+    }
+  };
+
+  const handleSavePhrase = async (data: any, isNew = false) => {
+    try {
+      if (isNew) {
+        const { error } = await supabase.from('english_phrases').insert(data);
+        if (error) throw error;
+        toast({ title: '添加成功', description: '新短语已添加' });
+        setShowNewForm(null);
+        setNewItemForm({});
+      } else {
+        const { error } = await supabase.from('english_phrases').update(data).eq('id', editingItem);
+        if (error) throw error;
+        toast({ title: '更新成功', description: '短语已更新' });
+        setEditingItem(null);
+        setEditForm({});
+      }
+      loadAllContent();
+    } catch (error) {
+      console.error('保存失败:', error);
+      toast({ title: '保存失败', description: '请检查输入内容', variant: 'destructive' });
+    }
+  };
+
+  const handleSaveListening = async (data: any, isNew = false) => {
+    try {
+      if (isNew) {
+        const { error } = await supabase.from('english_listening').insert(data);
+        if (error) throw error;
+        toast({ title: '添加成功', description: '新听力内容已添加' });
+        setShowNewForm(null);
+        setNewItemForm({});
+      } else {
+        const { error } = await supabase.from('english_listening').update(data).eq('id', editingItem);
+        if (error) throw error;
+        toast({ title: '更新成功', description: '听力内容已更新' });
+        setEditingItem(null);
+        setEditForm({});
+      }
+      loadAllContent();
+    } catch (error) {
+      console.error('保存失败:', error);
+      toast({ title: '保存失败', description: '请检查输入内容', variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteQuote = async (id: string) => {
+    if (!window.confirm('确定要删除这个名言吗？')) return;
     
     try {
-      const { error } = await supabase.from(table).delete().eq('id', id);
+      const { error } = await supabase.from('english_quotes').delete().eq('id', id);
       if (error) throw error;
-      toast({ title: '删除成功', description: '内容已删除' });
+      toast({ title: '删除成功', description: '名言已删除' });
+      loadAllContent();
+    } catch (error) {
+      console.error('删除失败:', error);
+      toast({ title: '删除失败', description: '请稍后重试', variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteWord = async (id: string) => {
+    if (!window.confirm('确定要删除这个单词吗？')) return;
+    
+    try {
+      const { error } = await supabase.from('english_words').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: '删除成功', description: '单词已删除' });
+      loadAllContent();
+    } catch (error) {
+      console.error('删除失败:', error);
+      toast({ title: '删除失败', description: '请稍后重试', variant: 'destructive' });
+    }
+  };
+
+  const handleDeletePhrase = async (id: string) => {
+    if (!window.confirm('确定要删除这个短语吗？')) return;
+    
+    try {
+      const { error } = await supabase.from('english_phrases').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: '删除成功', description: '短语已删除' });
+      loadAllContent();
+    } catch (error) {
+      console.error('删除失败:', error);
+      toast({ title: '删除失败', description: '请稍后重试', variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteListening = async (id: string) => {
+    if (!window.confirm('确定要删除这个听力内容吗？')) return;
+    
+    try {
+      const { error } = await supabase.from('english_listening').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: '删除成功', description: '听力内容已删除' });
       loadAllContent();
     } catch (error) {
       console.error('删除失败:', error);
@@ -121,7 +229,7 @@ const EnglishContentManagement = () => {
           </SelectContent>
         </Select>
         <div className="flex gap-2">
-          <Button onClick={() => handleSave('english_quotes', formData, isNew)}>
+          <Button onClick={() => handleSaveQuote(formData, isNew)}>
             <Save className="h-4 w-4 mr-2" />保存
           </Button>
           <Button variant="outline" onClick={() => isNew ? setShowNewForm(null) : setEditingItem(null)}>
@@ -174,7 +282,7 @@ const EnglishContentManagement = () => {
           </SelectContent>
         </Select>
         <div className="flex gap-2">
-          <Button onClick={() => handleSave('english_words', formData, isNew)}>
+          <Button onClick={() => handleSaveWord(formData, isNew)}>
             <Save className="h-4 w-4 mr-2" />保存
           </Button>
           <Button variant="outline" onClick={() => isNew ? setShowNewForm(null) : setEditingItem(null)}>
@@ -212,7 +320,7 @@ const EnglishContentManagement = () => {
           onChange={(e) => setFormData({ ...formData, example_sentence: e.target.value })}
         />
         <div className="flex gap-2">
-          <Button onClick={() => handleSave('english_phrases', formData, isNew)}>
+          <Button onClick={() => handleSavePhrase(formData, isNew)}>
             <Save className="h-4 w-4 mr-2" />保存
           </Button>
           <Button variant="outline" onClick={() => isNew ? setShowNewForm(null) : setEditingItem(null)}>
@@ -252,7 +360,7 @@ const EnglishContentManagement = () => {
           onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
         />
         <div className="flex gap-2">
-          <Button onClick={() => handleSave('english_listening', formData, isNew)}>
+          <Button onClick={() => handleSaveListening(formData, isNew)}>
             <Save className="h-4 w-4 mr-2" />保存
           </Button>
           <Button variant="outline" onClick={() => isNew ? setShowNewForm(null) : setEditingItem(null)}>
@@ -319,7 +427,7 @@ const EnglishContentManagement = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDelete('english_quotes', quote.id)}
+                            onClick={() => handleDeleteQuote(quote.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -372,7 +480,7 @@ const EnglishContentManagement = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDelete('english_words', word.id)}
+                            onClick={() => handleDeleteWord(word.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -425,7 +533,7 @@ const EnglishContentManagement = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDelete('english_phrases', phrase.id)}
+                            onClick={() => handleDeletePhrase(phrase.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -478,7 +586,7 @@ const EnglishContentManagement = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDelete('english_listening', item.id)}
+                            onClick={() => handleDeleteListening(item.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
