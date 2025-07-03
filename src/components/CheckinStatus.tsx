@@ -5,11 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getTodayCheckin } from '@/services/dailyCheckinService';
 
-interface CheckinStatusProps {
-  onCheckinClick: () => void;
-}
-
-const CheckinStatus = ({ onCheckinClick }: CheckinStatusProps) => {
+const CheckinStatus = () => {
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -58,16 +54,15 @@ const CheckinStatus = ({ onCheckinClick }: CheckinStatusProps) => {
             </div>
           </div>
         ) : (
-          <Button 
-            onClick={onCheckinClick}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-4 rounded-lg"
-          >
-            <Smile className="h-5 w-5 mr-2" />
-            <div className="text-center">
-              <div className="font-medium">今天你微笑了吗？</div>
-              <div className="text-sm opacity-90">点击每日打卡</div>
+          <div className="flex items-center">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+              <Calendar className="h-5 w-5 text-blue-600" />
             </div>
-          </Button>
+            <div className="flex-1">
+              <div className="font-medium text-blue-700">尚未打卡</div>
+              <div className="text-sm text-blue-600">今天你微笑了吗？</div>
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>
