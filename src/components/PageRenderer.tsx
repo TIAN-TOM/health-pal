@@ -27,6 +27,7 @@ import BreathingExercise from '@/components/BreathingExercise';
 import PersonalProfile from '@/components/PersonalProfile';
 import UpdateLog from '@/components/UpdateLog';
 import DailyEnglish from '@/components/DailyEnglish';
+import BadgeSystem from '@/components/BadgeSystem';
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
@@ -57,9 +58,11 @@ const PageRenderer = ({
         />
       );
     case "checkin":
-      return <DailyCheckin onBack={() => onBack("home")} />;
+      return <DailyCheckin />;
     case "daily-english":
       return <DailyEnglish onBack={() => onBack("home")} />;
+    case "badges":
+      return <BadgeSystem onBack={() => onBack("home")} />;
     case "record-hub":
       return <RecordHub onBack={() => onBack("home")} onNavigate={onNavigation} />;
     case "dizziness":

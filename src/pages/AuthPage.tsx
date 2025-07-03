@@ -252,7 +252,7 @@ export default function AuthPage() {
                   <Input
                     id="resetEmail"
                     type="email"
-                    placeholder="example@email.com"
+                    placeholder=""
                     value={resetEmail}
                     onChange={(e) => {
                       setResetEmail(e.target.value);
@@ -337,7 +337,7 @@ export default function AuthPage() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="example@email.com"
+                      placeholder=""
                       value={email}
                       onChange={handleEmailChange}
                       className="pl-10 transition-all duration-200 focus:scale-105"
@@ -366,7 +366,7 @@ export default function AuthPage() {
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="请输入密码"
+                      placeholder=""
                       value={password}
                       onChange={handlePasswordChange}
                       className="pl-10 pr-10 transition-all duration-200 focus:scale-105"
@@ -420,7 +420,7 @@ export default function AuthPage() {
                     <Input
                       id="fullName"
                       type="text"
-                      placeholder="请输入您的姓名"
+                      placeholder=""
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       className="pl-10 transition-all duration-200 focus:scale-105"
@@ -440,7 +440,7 @@ export default function AuthPage() {
                     <Input
                       id="signupEmail"
                       type="email"
-                      placeholder="example@email.com"
+                      placeholder=""
                       value={email}
                       onChange={handleEmailChange}
                       className="pl-10 transition-all duration-200 focus:scale-105"
@@ -469,7 +469,7 @@ export default function AuthPage() {
                     <Input
                       id="signupPassword"
                       type={showPassword ? "text" : "password"}
-                      placeholder="请设置密码（至少8位）"
+                      placeholder=""
                       value={password}
                       onChange={handlePasswordChange}
                       className="pl-10 pr-10 transition-all duration-200 focus:scale-105"
