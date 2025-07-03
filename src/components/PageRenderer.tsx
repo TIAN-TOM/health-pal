@@ -1,3 +1,4 @@
+
 import React from 'react';
 import DailyCheckin from '@/components/DailyCheckin';
 import DizzinessRecord from '@/components/DizzinessRecord';
@@ -56,7 +57,7 @@ const PageRenderer = ({
         />
       );
     case "checkin":
-      return <DailyCheckin />;
+      return <DailyCheckin onBack={() => onBack("home")} />;
     case "daily-english":
       return <DailyEnglish onBack={() => onBack("home")} />;
     case "record-hub":

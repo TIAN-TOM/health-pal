@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getCheckinHistory } from '@/services/dailyCheckinService';
@@ -7,9 +9,10 @@ import { format } from 'date-fns';
 
 interface CheckinCalendarProps {
   onDateSelect?: (date: Date) => void;
+  onBack: () => void;
 }
 
-const CheckinCalendar = ({ onDateSelect }: CheckinCalendarProps) => {
+const CheckinCalendar = ({ onDateSelect, onBack }: CheckinCalendarProps) => {
   const [checkinDates, setCheckinDates] = useState<Date[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
@@ -43,43 +46,61 @@ const CheckinCalendar = ({ onDateSelect }: CheckinCalendarProps) => {
   };
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="text-lg">打卡日历</CardTitle>
-        <p className="text-sm text-gray-600">绿色日期表示已打卡的日子</p>
-      </CardHeader>
-      <CardContent>
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={handleDateSelect}
-          className="rounded-md border"
-          modifiers={{
-            checkin: checkinDates,
-          }}
-          modifiersStyles={{
-            checkin: {
-              backgroundColor: '#22c55e',
-              color: 'white',
-              fontWeight: 'bold',
-            },
-          }}
-          disabled={(date) => date > new Date()}
-        />
-        <div className="mt-4 text-sm text-gray-600">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-green-500 rounded mr-2"></div>
-              <span>已打卡</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-gray-200 rounded mr-2"></div>
-              <span>未打卡</span>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <div className="container mx-auto px-4 py-6 max-w-md">
+        {/* 返回按钮 */}
+        <div className="flex items-center mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="mr-2"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            返回
+          </Button>
+          <h1 className="text-xl font-bold text-gray-800">打卡日历</h1>
         </div>
-      </CardContent>
-    </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">打卡日历</CardTitle>
+            <p className="text-sm text-gray-600">绿色日期表示已打卡的日子</p>
+          </CardHeader>
+          <CardContent>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={handleDateSelect}
+              className="rounded-md border"
+              modifiers={{
+                checkin: checkinDates,
+              }}
+              modifiersStyles={{
+                checkin: {
+                  backgroundColor: '#22c55e',
+                  color: 'white',
+                  fontWeight: 'bold',
+                },
+              }}
+              disabled={(date) => date > new Date()}
+            />
+            <div className="mt-4 text-sm text-gray-600">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-green-500 rounded mr-2"></div>
+                  <span>已打卡</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-gray-200 rounded mr-2"></div>
+                  <span>未打卡</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 
