@@ -58,7 +58,7 @@ const PageRenderer = ({
         />
       );
     case "checkin":
-      return <DailyCheckin />;
+      return <DailyCheckin onBack={() => onBack("home")} />;
     case "daily-english":
       return <DailyEnglish onBack={() => onBack("home")} />;
     case "badges":
