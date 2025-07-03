@@ -12,20 +12,6 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack }: UpdateLogProps) => {
   const updates = [
     {
-      version: "v2.5.0",
-      date: "2025-07-03",
-      type: "major",
-      title: "徽章系统与用户体验优化",
-      items: [
-        "🏆 全新徽章系统上线，支持多种成就徽章：连续打卡、积分累计、健康记录等",
-        "🎯 徽章自动检测和颁发机制，实时更新用户成就",
-        "📱 优化登录页面用户体验，移除容易误导的占位符文本",
-        "✨ 新增徽章展示页面，查看已获得和未获得的所有徽章",
-        "🎨 改进首页功能卡片布局，新增徽章入口",
-        "⚡ 提升页面加载性能和用户交互体验"
-      ]
-    },
-    {
       version: "v2.4.1",
       date: "2025-07-02",
       type: "patch",
