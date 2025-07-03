@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +10,22 @@ interface UpdateLogProps {
 
 const UpdateLog = ({ onBack }: UpdateLogProps) => {
   const updates = [
+    {
+      version: "v2.5.0",
+      date: "2025-07-03",
+      type: "major",
+      title: "积分商城功能完善与徽章系统",
+      items: [
+        "✨ 新增补签功能：使用补签卡可以补签过去错过的打卡日期",
+        "🏆 全新徽章系统：根据打卡天数、积分数量等条件解锁各种徽章",
+        "🎯 完善积分商城道具功能：补签卡、虚拟徽章等道具现在拥有完整功能",
+        "📅 改进打卡界面：新增补签模块和徽章显示",
+        "🔧 优化积分商城：更好的道具分类和功能说明",
+        "🎨 徽章收集系统：包含普通、稀有、史诗、传奇四个等级",
+        "⚡ 成就系统：连续打卡、积分收集等成就自动解锁对应徽章",
+        "🎁 购买徽章：通过积分商城购买的虚拟徽章会自动显示在徽章系统中"
+      ]
+    },
     {
       version: "v2.4.1",
       date: "2025-07-02",
