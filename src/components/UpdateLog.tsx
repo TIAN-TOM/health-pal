@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,9 +11,27 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack }: UpdateLogProps) => {
   const updates = [
     {
+      version: "v2.5.1",
+      date: "2025-07-08", 
+      type: "major",
+      title: "每日英语模块重大优化",
+      items: [
+        "🔧 修复每日英语内容重复问题，确保每天内容都不一样",
+        "📅 基于北京时间的精确日期切换，确保0点准时更新内容",
+        "📚 大幅扩充英语学习内容库：名言增至70条、单词增至80个、短语增至40个、听力增至20个",
+        "🎯 改进内容分发算法，确保至少30天内不重样",
+        "⚡ 新增内容缓存机制，提升加载速度和用户体验",
+        "🔄 优化时间检测机制，每分钟检查日期变化确保及时更新",
+        "📊 增加内容唯一性测试功能，确保质量稳定",
+        "🎵 保持原有语音朗读和学习功能，体验更流畅",
+        "🌟 显示北京时间和内容更新提示，用户体验更友好",
+        "📝 完善日志记录，便于监控和调试内容分发情况"
+      ]
+    },
+    {
       version: "v2.4.1",
       date: "2025-07-02",
-      type: "patch",
+      type: "patch", 
       title: "语音记录功能修复",
       items: [
         "🔧 修复语音记录进度条显示问题，进度条右侧现在正确显示录音总时长",

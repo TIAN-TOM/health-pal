@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Book, Volume2, VolumeX, Award, Lightbulb, Globe, Calendar, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { getRandomQuote, getRandomWords, getRandomPhrases, getListeningTexts } from '@/services/englishService';
-import { getBeijingDateString } from '@/utils/beijingTime';
+import { getRandomQuote, getRandomWords, getRandomPhrases, getListeningTexts, getDailyEnglishContent } from '@/services/englishService';
+import { getBeijingDateString, getBeijingTime } from '@/utils/beijingTime';
 import type { Tables } from '@/integrations/supabase/types';
 
 interface DailyEnglishProps {
@@ -31,6 +30,7 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(getBeijingDateString());
   const [lastLoadedDate, setLastLoadedDate] = useState<string>('');
+  const [contentCache, setContentCache] = useState<Map<string, any>>(new Map());
 
   // 停止所有朗读的函数
   const stopAllSpeech = () => {
@@ -42,14 +42,15 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
   useEffect(() => {
     loadEnglishContent();
     
-    // 设置定时检查，每10秒检查一次是否需要更新
+    // 设置更精确的时间检查 - 每分钟检查一次是否跨天
     const interval = setInterval(() => {
       const now = getBeijingDateString();
       if (now !== currentDate) {
+        console.log(`检测到日期变化: ${currentDate} -> ${now}`);
         setCurrentDate(now);
-        loadEnglishContent();
+        setLastLoadedDate(''); // 清除缓存，强制重新加载
       }
-    }, 10000);
+    }, 60000); // 每分钟检查一次
 
     // 页面卸载时停止朗读
     const handleBeforeUnload = () => {
@@ -72,32 +73,57 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
     };
   }, []);
 
-  const loadEnglishContent = async () => {
-    // 如果今天的内容已经加载过，不重复加载
-    if (lastLoadedDate === currentDate && dailyQuote) {
+  const loadEnglishContent = async (forceReload: boolean = false) => {
+    const targetDate = currentDate;
+    
+    // 检查缓存，避免重复加载同一天的内容
+    if (!forceReload && lastLoadedDate === targetDate && contentCache.has(targetDate)) {
+      const cachedContent = contentCache.get(targetDate);
+      setDailyQuote(cachedContent.quote);
+      setDailyWords(cachedContent.words);
+      setPhrases(cachedContent.phrases);
+      setListeningTexts(cachedContent.listening);
       setLoading(false);
+      console.log(`使用缓存的 ${targetDate} 内容`);
       return;
     }
 
     try {
       setLoading(true);
+      console.log(`开始加载 ${targetDate} 的英语内容`);
       
-      const [quote, words, phrasesList, listening] = await Promise.all([
-        getRandomQuote(currentDate),
-        getRandomWords(3, currentDate),
-        getRandomPhrases(3, currentDate),
-        getListeningTexts(2, currentDate)
-      ]);
+      // 使用改进的服务获取内容
+      const content = await getDailyEnglishContent(targetDate);
 
-      setDailyQuote(quote);
-      setDailyWords(words);
-      setPhrases(phrasesList);
-      setListeningTexts(listening);
-      setLastLoadedDate(currentDate);
+      // 更新状态
+      setDailyQuote(content.quote);
+      setDailyWords(content.words);
+      setPhrases(content.phrases);
+      setListeningTexts(content.listening);
       
-      console.log(`加载 ${currentDate} 的英语内容完成`);
+      // 缓存内容
+      setContentCache(prev => {
+        const newCache = new Map(prev);
+        newCache.set(targetDate, content);
+        // 只保留最近7天的缓存
+        if (newCache.size > 7) {
+          const oldestKey = Array.from(newCache.keys())[0];
+          newCache.delete(oldestKey);
+        }
+        return newCache;
+      });
+      
+      setLastLoadedDate(targetDate);
+      
+      console.log(`成功加载 ${targetDate} 的英语内容:`, {
+        quote: content.quote?.quote_text?.substring(0, 30) + '...',
+        wordsCount: content.words.length,
+        phrasesCount: content.phrases.length,
+        listeningCount: content.listening.length
+      });
+      
     } catch (error) {
-      console.error('加载英语内容失败:', error);
+      console.error(`加载 ${targetDate} 英语内容失败:`, error);
     } finally {
       setLoading(false);
     }
@@ -105,8 +131,10 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
 
   // 手动刷新内容
   const refreshContent = () => {
-    setLastLoadedDate(''); // 清除缓存标记
-    loadEnglishContent();
+    console.log('手动刷新内容');
+    setContentCache(new Map()); // 清除所有缓存
+    setLastLoadedDate(''); 
+    loadEnglishContent(true);
   };
 
   const playSound = (text: string) => {
@@ -160,13 +188,15 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">加载中...</p>
+          <p className="text-gray-600">正在加载今日英语内容...</p>
+          <p className="text-sm text-gray-500 mt-2">确保每天内容都不重样</p>
         </div>
       </div>
     );
   }
 
   const isToday = currentDate === getBeijingDateString();
+  const beijingTime = getBeijingTime();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -183,9 +213,12 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
               {currentDate}
               {isToday && <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">今日</span>}
             </div>
+            <div className="text-xs text-gray-500 mt-1">
+              北京时间: {beijingTime.toLocaleTimeString('zh-CN', { hour12: false })}
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={refreshContent}>
+            <Button variant="ghost" size="sm" onClick={refreshContent} title="刷新内容">
               <RefreshCw className="h-4 w-4" />
             </Button>
             {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
@@ -209,7 +242,8 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Book className="h-5 w-5 mr-2 text-blue-600" />
-                  每日名言
+                  每日名言 
+                  <span className="text-sm text-gray-500 ml-2">(每日更新)</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -249,9 +283,11 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
             </Card>
           </TabsContent>
 
+          
+
           <TabsContent value="words" className="space-y-4">
             {dailyWords.map((word, index) => (
-              <Card key={word.id}>
+              <Card key={`${word.id}-${currentDate}`}>
                 <CardContent className="p-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -295,7 +331,7 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
 
           <TabsContent value="phrases" className="space-y-4">
             {phrases.map((phrase, index) => (
-              <Card key={phrase.id}>
+              <Card key={`${phrase.id}-${currentDate}`}>
                 <CardContent className="p-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -346,7 +382,7 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
 
           <TabsContent value="listening" className="space-y-4">
             {listeningTexts.map((text, index) => (
-              <Card key={text.id}>
+              <Card key={`${text.id}-${currentDate}`}>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span className="text-lg">{text.title}</span>
@@ -393,7 +429,10 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
             <div>
               <h3 className="font-medium text-blue-800 mb-1">学习提示</h3>
               <p className="text-blue-700 text-sm">
-                每天学习内容精心安排，涵盖名言、单词、短语和听力训练。坚持每日学习，积少成多！
+                每天学习内容根据北京时间精心安排，确保30天内不重样。涵盖名言、单词、短语和听力训练，坚持每日学习，积少成多！
+              </p>
+              <p className="text-blue-600 text-xs mt-2">
+                内容会在每天0点（北京时间）自动更新
               </p>
             </div>
           </div>
