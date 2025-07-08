@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Heart, MessageCircle, Check, Award } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Calendar, Heart, MessageCircle, Check, Award, Activity } from 'lucide-react';
 import { createCheckin } from '@/services/dailyCheckinService';
 import { updatePointsForCheckin, getUserPoints, type UserPoints } from '@/services/pointsService';
 import { useToast } from '@/hooks/use-toast';
@@ -14,14 +15,16 @@ interface CheckinSectionProps {
   todayCheckin: DailyCheckin | null;
   onCheckinSuccess: (checkin: DailyCheckin) => void;
   onReloadHistory: () => void;
+  onNavigateToRecords?: () => void;
 }
 
-const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory }: CheckinSectionProps) => {
+const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNavigateToRecords }: CheckinSectionProps) => {
   const [moodScore, setMoodScore] = useState(3);
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [userPoints, setUserPoints] = useState<UserPoints | null>(null);
   const [earnedPoints, setEarnedPoints] = useState<{ points: number; streak: number } | null>(null);
+  const [showRecordDialog, setShowRecordDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -57,6 +60,9 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory }: Che
           ? `获得 ${pointsResult.points} 积分，连续打卡 ${pointsResult.streak} 天！` 
           : "今日打卡已完成，继续保持好习惯！",
       });
+
+      // 打卡成功后显示记录询问弹窗
+      setShowRecordDialog(true);
     } catch (error: any) {
       toast({
         title: "打卡失败",
@@ -206,6 +212,36 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory }: Che
       
       {/* 积分商城 */}
       <PointsStore />
+
+      {/* 记录询问弹窗 */}
+      <Dialog open={showRecordDialog} onOpenChange={setShowRecordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Activity className="h-5 w-5 mr-2 text-green-600" />
+              打卡完成！
+            </DialogTitle>
+            <DialogDescription>
+              是否要继续进行健康记录？记录今日的症状、药物或生活方式数据。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="space-x-2">
+            <Button variant="outline" onClick={() => setShowRecordDialog(false)}>
+              暂不记录
+            </Button>
+            <Button 
+              onClick={() => {
+                setShowRecordDialog(false);
+                onNavigateToRecords?.();
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Activity className="h-4 w-4 mr-2" />
+              去记录
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

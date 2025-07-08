@@ -252,7 +252,6 @@ export default function AuthPage() {
                   <Input
                     id="resetEmail"
                     type="email"
-                    placeholder="example@email.com"
                     value={resetEmail}
                     onChange={(e) => {
                       setResetEmail(e.target.value);
@@ -337,7 +336,6 @@ export default function AuthPage() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="example@email.com"
                       value={email}
                       onChange={handleEmailChange}
                       className="pl-10 transition-all duration-200 focus:scale-105"
@@ -366,7 +364,6 @@ export default function AuthPage() {
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="请输入密码"
                       value={password}
                       onChange={handlePasswordChange}
                       className="pl-10 pr-10 transition-all duration-200 focus:scale-105"
@@ -440,7 +437,6 @@ export default function AuthPage() {
                     <Input
                       id="signupEmail"
                       type="email"
-                      placeholder="example@email.com"
                       value={email}
                       onChange={handleEmailChange}
                       className="pl-10 transition-all duration-200 focus:scale-105"

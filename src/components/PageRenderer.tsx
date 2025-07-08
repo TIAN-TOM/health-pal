@@ -57,7 +57,7 @@ const PageRenderer = ({
         />
       );
     case "checkin":
-      return <DailyCheckin onBack={() => onBack("home")} />;
+      return <DailyCheckin onBack={() => onBack("home")} onNavigateToRecords={() => onNavigation("record-hub", "checkin")} />;
     case "daily-english":
       return <DailyEnglish onBack={() => onBack("home")} />;
     case "record-hub":

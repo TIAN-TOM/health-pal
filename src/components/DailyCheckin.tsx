@@ -8,9 +8,10 @@ import { useDailyCheckinData } from '@/hooks/useDailyCheckinData';
 
 interface DailyCheckinProps {
   onBack: () => void;
+  onNavigateToRecords?: () => void;
 }
 
-const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
+const DailyCheckin = ({ onBack, onNavigateToRecords }: DailyCheckinProps) => {
   const {
     todayCheckin,
     setTodayCheckin,
@@ -43,6 +44,7 @@ const DailyCheckin = ({ onBack }: DailyCheckinProps) => {
             todayCheckin={todayCheckin}
             onCheckinSuccess={setTodayCheckin}
             onReloadHistory={loadCheckinHistory}
+            onNavigateToRecords={onNavigateToRecords}
           />
         </div>
 
