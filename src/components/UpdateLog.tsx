@@ -11,9 +11,27 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack }: UpdateLogProps) => {
   const updates = [
     {
+      version: "v2.5.5",
+      date: "2025-07-10", 
+      type: "major",
+      title: "语音记录模块UI全面重设计",
+      items: [
+        "🎨 全新沉浸式设计，采用渐变背景和毛玻璃效果",
+        "✨ 现代化卡片布局，增强视觉层次感",
+        "🎯 优化录音界面，大号时间显示和状态指示",
+        "🎮 重新设计控制按钮，支持渐变色和悬浮动画",
+        "📊 美化进度条和音量控制，支持自定义样式",
+        "🎪 优化历史记录页面，网格布局更直观",
+        "🌈 统一色彩方案，violet-blue渐变主题",
+        "💫 增强交互反馈，按钮缩放和颜色变化",
+        "🎭 改进备注输入区域，圆角设计更友好",
+        "✨ 背景装饰元素，营造专业录音氛围"
+      ]
+    },
+    {
       version: "v2.5.4",
       date: "2025-07-10",
-      type: "major",
+      type: "major", 
       title: "呼吸训练模块UI全面重设计",
       items: [
         "🎨 全新沉浸式设计，采用渐变背景和毛玻璃效果",
@@ -61,7 +79,7 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
       ]
     },
     {
-      version: "v2.5.1", 
+      version: "v2.5.1",
       date: "2025-07-08",
       type: "major",
       title: "每日英语模块重大优化",
@@ -81,7 +99,7 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
     {
       version: "v2.4.1",
       date: "2025-07-02",
-      type: "patch", 
+      type: "patch",
       title: "语音记录功能修复",
       items: [
         "🔧 修复语音记录进度条显示问题，进度条右侧现在正确显示录音总时长",
