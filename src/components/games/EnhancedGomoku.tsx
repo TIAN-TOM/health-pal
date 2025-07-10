@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RotateCcw, User, Bot, Palette } from 'lucide-react';
+import { RotateCcw, User, Bot, Palette, Undo } from 'lucide-react';
 import { checkGomokuSkinUnlocked, getSkinPreference, setSkinPreference } from '@/services/skinService';
 
 interface EnhancedGomokuProps {
@@ -12,7 +12,7 @@ interface EnhancedGomokuProps {
 
 type Player = 'human' | 'ai' | null;
 type Difficulty = 'easy' | 'medium' | 'hard';
-type SkinType = 'default' | 'classic';
+type SkinType = 'default' | 'classic' | 'modern' | 'retro';
 
 const BOARD_SIZE = 15;
 
@@ -28,6 +28,7 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
   const [lastMove, setLastMove] = useState<{row: number, col: number} | null>(null);
   const [skinUnlocked, setSkinUnlocked] = useState(false);
   const [currentSkin, setCurrentSkin] = useState<SkinType>('default');
+  const [moveHistory, setMoveHistory] = useState<Array<{row: number, col: number, player: Player, board: Player[][]}>>([]);
 
   useEffect(() => {
     const loadSkinStatus = async () => {
@@ -50,25 +51,44 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
   };
 
   const getSkinStyles = () => {
-    if (currentSkin === 'classic') {
-      return {
-        boardBg: 'bg-amber-100',
-        boardBorder: 'border-amber-300',
-        innerBg: 'bg-gradient-to-br from-amber-50 to-yellow-100',
-        lineColor: '#8B4513',
-        containerBg: 'bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-100',
-        containerBorder: 'border-amber-400'
-      };
+    switch (currentSkin) {
+      case 'classic':
+        return {
+          boardBg: 'bg-amber-100',
+          boardBorder: 'border-amber-300',
+          innerBg: 'bg-gradient-to-br from-amber-50 to-yellow-100',
+          lineColor: '#8B4513',
+          containerBg: 'bg-gradient-to-br from-amber-200 via-yellow-100 to-amber-100',
+          containerBorder: 'border-amber-400'
+        };
+      case 'modern':
+        return {
+          boardBg: 'bg-slate-100',
+          boardBorder: 'border-slate-300',
+          innerBg: 'bg-gradient-to-br from-slate-50 to-gray-100',
+          lineColor: '#334155',
+          containerBg: 'bg-gradient-to-br from-slate-200 via-gray-100 to-slate-100',
+          containerBorder: 'border-slate-400'
+        };
+      case 'retro':
+        return {
+          boardBg: 'bg-emerald-100',
+          boardBorder: 'border-emerald-300',
+          innerBg: 'bg-gradient-to-br from-emerald-50 to-green-100',
+          lineColor: '#065f46',
+          containerBg: 'bg-gradient-to-br from-emerald-200 via-green-100 to-emerald-100',
+          containerBorder: 'border-emerald-400'
+        };
+      default:
+        return {
+          boardBg: 'bg-amber-100',
+          boardBorder: 'border-amber-200',
+          innerBg: 'bg-amber-50',
+          lineColor: '#8B4513',
+          containerBg: 'bg-amber-100',
+          containerBorder: 'border-amber-200'
+        };
     }
-    
-    return {
-      boardBg: 'bg-amber-100',
-      boardBorder: 'border-amber-200',
-      innerBg: 'bg-amber-50',
-      lineColor: '#8B4513',
-      containerBg: 'bg-amber-100',
-      containerBorder: 'border-amber-200'
-    };
   };
 
   // 音效函数
@@ -248,9 +268,27 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
     return moves.length > 0 ? [moves[moveIndex].row, moves[moveIndex].col] : [7, 7];
   }, [checkWinner, evaluatePosition, difficulty]);
 
+  // 悔棋功能
+  const undoMove = useCallback(() => {
+    if (moveHistory.length === 0 || winner) return;
+    
+    const lastHistory = moveHistory[moveHistory.length - 1];
+    setBoard(lastHistory.board);
+    setMoveHistory(prev => prev.slice(0, -1));
+    setCurrentPlayer('human');
+    setLastMove(moveHistory.length > 1 ? moveHistory[moveHistory.length - 2] : null);
+    setWinner(null);
+    setWinningLine([]);
+    
+    playSound(330, 0.1);
+  }, [moveHistory, winner, playSound]);
+
   // 处理人类下棋
   const handleCellClick = useCallback((row: number, col: number) => {
     if (board[row][col] !== null || winner || currentPlayer !== 'human') return;
+
+    // 保存当前状态到历史记录
+    setMoveHistory(prev => [...prev, {row, col, player: 'human', board: board.map(r => [...r])}]);
 
     const newBoard = board.map(r => [...r]);
     newBoard[row][col] = 'human';
@@ -308,6 +346,7 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
     setGameStarted(false);
     setWinningLine([]);
     setLastMove(null);
+    setMoveHistory([]);
   };
 
   const skinStyles = getSkinStyles();
@@ -345,10 +384,12 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="default">默认皮肤</SelectItem>
+                  <SelectItem value="default">默认木质皮肤</SelectItem>
                   <SelectItem value="classic" disabled={!skinUnlocked}>
                     经典木质皮肤 {!skinUnlocked && '(需要积分商城解锁)'}
                   </SelectItem>
+                  <SelectItem value="modern">现代灰调皮肤</SelectItem>
+                  <SelectItem value="retro">复古绿调皮肤</SelectItem>
                 </SelectContent>
               </Select>
               {!skinUnlocked && (
@@ -405,7 +446,9 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
               <p className="text-sm text-gray-600">
                 {difficulty === 'easy' ? '简单' : 
                  difficulty === 'medium' ? '中等' : '困难'} | 
-                {currentSkin === 'classic' ? '经典皮肤' : '默认皮肤'}
+                {currentSkin === 'classic' ? '经典皮肤' : 
+                 currentSkin === 'modern' ? '现代皮肤' :
+                 currentSkin === 'retro' ? '复古皮肤' : '默认皮肤'}
               </p>
             </div>
             
@@ -541,6 +584,14 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
           </div>
 
           <div className="flex gap-2 justify-center">
+            <Button 
+              onClick={undoMove} 
+              variant="outline" 
+              disabled={moveHistory.length === 0 || winner !== null || currentPlayer !== 'human'}
+            >
+              <Undo className="h-4 w-4 mr-2" />
+              悔棋
+            </Button>
             <Button onClick={resetGame} variant="outline">
               <RotateCcw className="h-4 w-4 mr-2" />
               重新开始

@@ -11,6 +11,22 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack }: UpdateLogProps) => {
   const updates = [
     {
+      version: "v2.5.3",
+      date: "2025-07-10",
+      type: "major",
+      title: "五子棋游戏功能大幅增强",
+      items: [
+        "🎯 新增悔棋功能，支持撤销上一步移动",
+        "🎨 新增现代灰调皮肤和复古绿调皮肤",
+        "📋 历史记录系统，完整记录游戏过程",
+        "🔒 智能悔棋限制，只在玩家回合且游戏进行中可用",
+        "🎮 改进游戏状态管理，确保操作准确性",
+        "💎 皮肤选择更加丰富，满足不同视觉偏好",
+        "⚡ 优化用户交互体验，按钮状态智能显示",
+        "🎵 保持原有音效和AI智能对战功能"
+      ]
+    },
+    {
       version: "v2.5.2",
       date: "2025-07-09",
       type: "major",
