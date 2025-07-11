@@ -7,6 +7,9 @@ import EnhancedFlappyBird from '@/components/games/EnhancedFlappyBird';
 import EnhancedGomoku from '@/components/games/EnhancedGomoku';
 import BreakoutGame from '@/components/games/BreakoutGame';
 import MemoryCardGame from '@/components/games/MemoryCardGame';
+import SnakeGame from '@/components/games/SnakeGame';
+import Game2048 from '@/components/games/Game2048';
+import BubblePopGame from '@/components/games/BubblePopGame';
 
 interface GamesProps {
   onBack: () => void;
@@ -47,6 +50,27 @@ const Games = ({ onBack }: GamesProps) => {
       description: '控制挡板弹球击碎彩色砖块，关卡不断升级',
       icon: '🧱',
       component: BreakoutGame
+    },
+    {
+      id: 'snake',
+      name: '贪吃蛇',
+      description: '经典贪吃蛇游戏，吃食物长大，避免撞墙',
+      icon: '🐍',
+      component: SnakeGame
+    },
+    {
+      id: '2048',
+      name: '2048',
+      description: '滑动数字方块，合并相同数字，挑战2048',
+      icon: '🎯',
+      component: Game2048
+    },
+    {
+      id: 'bubble-pop',
+      name: '泡泡消消乐',
+      description: '快速点击彩色气泡，连击获得更高分数',
+      icon: '🫧',
+      component: BubblePopGame
     }
   ];
 
