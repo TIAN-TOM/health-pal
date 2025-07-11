@@ -169,6 +169,13 @@ export const useUserManagement = () => {
     try {
       setLoading(true);
       
+      // 首先删除用户角色记录
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+      
+      // 然后删除用户档案
       const { error } = await supabase
         .from('profiles')
         .delete()
