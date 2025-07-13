@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
+import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
 
 type VoiceRecord = Tables<'voice_records'>;
 type VoiceRecordInsert = TablesInsert<'voice_records'>;
@@ -19,6 +20,13 @@ export const createVoiceRecord = async (data: Omit<VoiceRecordInsert, 'user_id'>
     console.error('创建语音记录失败:', error);
     throw error;
   }
+
+  // 通知管理员
+  await notifyAdminActivity({
+    activity_type: ACTIVITY_TYPES.CREATE,
+    activity_description: `创建了语音记录 "${data.title}"`,
+    module_name: MODULE_NAMES.VOICE_RECORDS
+  });
 
   return record;
 };
@@ -63,6 +71,13 @@ export const deleteVoiceRecord = async (id: string): Promise<void> => {
     console.error('删除语音记录失败:', error);
     throw error;
   }
+
+  // 通知管理员
+  await notifyAdminActivity({
+    activity_type: ACTIVITY_TYPES.DELETE,
+    activity_description: '删除了语音记录',
+    module_name: MODULE_NAMES.VOICE_RECORDS
+  });
 };
 
 export const uploadVoiceFile = async (audioBlob: Blob, fileName: string): Promise<string> => {

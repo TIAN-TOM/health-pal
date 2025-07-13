@@ -3,6 +3,7 @@ import { ArrowLeft, Gamepad2, Play, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
 import EnhancedFlappyBird from '@/components/games/EnhancedFlappyBird';
 import EnhancedGomoku from '@/components/games/EnhancedGomoku';
 import BreakoutGame from '@/components/games/BreakoutGame';
@@ -78,6 +79,19 @@ const Games = ({ onBack }: GamesProps) => {
     setCurrentGame(null);
   };
 
+  const handleStartGame = async (gameId: string) => {
+    const game = games.find(g => g.id === gameId);
+    if (game) {
+      // 通知管理员用户开始游戏
+      await notifyAdminActivity({
+        activity_type: ACTIVITY_TYPES.GAME,
+        activity_description: `开始玩游戏 "${game.name}"`,
+        module_name: MODULE_NAMES.GAMES
+      });
+      setCurrentGame(gameId);
+    }
+  };
+
   const handleSoundToggle = (enabled: boolean) => {
     setSoundEnabled(enabled);
     localStorage.setItem('games-sound-enabled', JSON.stringify(enabled));
@@ -149,7 +163,7 @@ const Games = ({ onBack }: GamesProps) => {
               <CardContent>
                 <p className="text-gray-600 mb-4">{game.description}</p>
                 <Button
-                  onClick={() => setCurrentGame(game.id)}
+                  onClick={() => handleStartGame(game.id)}
                   className="w-full bg-blue-500 hover:bg-blue-600"
                 >
                   <Play className="h-4 w-4 mr-2" />

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { getRecordsByDateRange, generateTextFormat } from '@/services/dataExportService';
 import { getBeijingTime } from '@/utils/beijingTime';
+import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
 
 export const useDataExport = () => {
   const [loading, setLoading] = useState(false);
@@ -65,6 +66,13 @@ export const useDataExport = () => {
         toast({
           title: "导出成功",
           description: "数据已复制到剪贴板",
+        });
+
+        // 通知管理员用户进行了数据导出
+        await notifyAdminActivity({
+          activity_type: ACTIVITY_TYPES.EXPORT,
+          activity_description: `导出了${period}时间段的数据`,
+          module_name: MODULE_NAMES.DATA_EXPORT
         });
 
         // 保存数据以供模态框显示
@@ -136,6 +144,13 @@ export const useDataExport = () => {
         toast({
           title: "导出成功",
           description: "数据已复制到剪贴板",
+        });
+
+        // 通知管理员用户进行了自定义数据导出
+        await notifyAdminActivity({
+          activity_type: ACTIVITY_TYPES.EXPORT,
+          activity_description: `导出了自定义时间段(${startDate}到${endDate})的数据`,
+          module_name: MODULE_NAMES.DATA_EXPORT
         });
 
         // 保存数据以供模态框显示

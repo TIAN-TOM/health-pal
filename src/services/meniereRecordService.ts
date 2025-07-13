@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { getBeijingTimeISO } from '@/utils/beijingTime';
+import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
 
 export interface MeniereRecord {
   id?: string;
@@ -51,6 +52,23 @@ export const saveMeniereRecord = async (record: MeniereRecord) => {
     });
 
   if (error) throw error;
+  
+  // 通知管理员
+  const typeMap = {
+    'dizziness': '眩晕',
+    'lifestyle': '生活方式',
+    'medication': '用药',
+    'voice': '语音',
+    'checkin': '打卡',
+    'medical': '医疗'
+  };
+  
+  await notifyAdminActivity({
+    activity_type: ACTIVITY_TYPES.CREATE,
+    activity_description: `记录了${typeMap[record.type] || record.type}信息`,
+    module_name: MODULE_NAMES.MENIERE_RECORDS
+  });
+  
   return data;
 };
 

@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { spendPoints, getEffectiveUserPoints } from '@/services/pointsService';
 import type { Tables } from '@/integrations/supabase/types';
+import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
 
 type StoreItem = Tables<'points_store_items'>;
 type UserPurchase = Tables<'user_purchases'> & {
@@ -173,6 +174,13 @@ export const purchaseItem = async (itemId: string, itemPrice: number): Promise<b
 
   // 应用道具效果到用户游戏状态
   await applyItemEffect(item, user.id);
+
+  // 通知管理员
+  await notifyAdminActivity({
+    activity_type: ACTIVITY_TYPES.PURCHASE,
+    activity_description: `购买了商品 "${item.item_name}" (${itemPrice}积分)`,
+    module_name: MODULE_NAMES.POINTS_STORE
+  });
 
   return true;
 };

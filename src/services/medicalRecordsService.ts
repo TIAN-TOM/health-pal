@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
 
 export interface MedicalRecord {
   id?: string;
@@ -29,6 +30,14 @@ export const saveMedicalRecord = async (record: Omit<MedicalRecord, 'id'>) => {
     .single();
 
   if (error) throw error;
+  
+  // 通知管理员
+  await notifyAdminActivity({
+    activity_type: ACTIVITY_TYPES.CREATE,
+    activity_description: `创建了新的${record.record_type === 'visit' ? '就诊' : record.record_type === 'diagnosis' ? '诊断' : '处方'}记录`,
+    module_name: MODULE_NAMES.MEDICAL_RECORDS
+  });
+  
   return data;
 };
 
@@ -55,6 +64,14 @@ export const updateMedicalRecord = async (id: string, updates: Partial<MedicalRe
     .single();
 
   if (error) throw error;
+  
+  // 通知管理员
+  await notifyAdminActivity({
+    activity_type: ACTIVITY_TYPES.UPDATE,
+    activity_description: '更新了医疗记录',
+    module_name: MODULE_NAMES.MEDICAL_RECORDS
+  });
+  
   return data;
 };
 
@@ -65,4 +82,11 @@ export const deleteMedicalRecord = async (id: string) => {
     .eq('id', id);
 
   if (error) throw error;
+  
+  // 通知管理员
+  await notifyAdminActivity({
+    activity_type: ACTIVITY_TYPES.DELETE,
+    activity_description: '删除了医疗记录',
+    module_name: MODULE_NAMES.MEDICAL_RECORDS
+  });
 };

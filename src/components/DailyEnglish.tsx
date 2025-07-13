@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
+import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
 import { getRandomQuote, getRandomWords, getRandomPhrases, getListeningTexts, getDailyEnglishContent } from '@/services/englishService';
 import { getBeijingDateString, getBeijingTime } from '@/utils/beijingTime';
 import type { Tables } from '@/integrations/supabase/types';
@@ -41,6 +42,13 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
 
   useEffect(() => {
     loadEnglishContent();
+    
+    // 通知管理员用户开始学习英语
+    notifyAdminActivity({
+      activity_type: ACTIVITY_TYPES.LEARNING,
+      activity_description: '开始学习每日英语',
+      module_name: MODULE_NAMES.ENGLISH_LEARNING
+    });
     
     // 设置更精确的时间检查 - 每分钟检查一次是否跨天
     const interval = setInterval(() => {
@@ -148,6 +156,13 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
       utterance.lang = 'en-US';
       utterance.rate = 0.8;
       speechSynthesis.speak(utterance);
+      
+      // 通知管理员用户进行语音学习
+      notifyAdminActivity({
+        activity_type: ACTIVITY_TYPES.LEARNING,
+        activity_description: '使用语音朗读功能学习英语',
+        module_name: MODULE_NAMES.ENGLISH_LEARNING
+      });
     }
   };
 

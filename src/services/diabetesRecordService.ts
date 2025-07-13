@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { getBeijingTimeISO } from '@/utils/beijingTime';
+import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
 
 export interface DiabetesRecord {
   id?: string;
@@ -42,6 +43,14 @@ export const saveDiabetesRecord = async (record: Omit<DiabetesRecord, 'id' | 'ti
     .single();
 
   if (error) throw error;
+  
+  // 通知管理员
+  await notifyAdminActivity({
+    activity_type: ACTIVITY_TYPES.CREATE,
+    activity_description: `记录了血糖值 ${record.blood_sugar} ${record.measurement_time}`,
+    module_name: MODULE_NAMES.DIABETES_RECORDS
+  });
+  
   return data;
 };
 
