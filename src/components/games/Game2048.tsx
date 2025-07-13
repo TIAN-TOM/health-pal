@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, RotateCcw, Trophy } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Game2048Props {
   onBack: () => void;
@@ -20,6 +22,9 @@ const Game2048 = ({ onBack, soundEnabled }: Game2048Props) => {
   });
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
+  
+  const isMobile = useIsMobile();
 
   function initializeBoard(): Board {
     const newBoard = Array(4).fill(null).map(() => Array(4).fill(0));
@@ -164,6 +169,37 @@ const Game2048 = ({ onBack, soundEnabled }: Game2048Props) => {
     return false;
   }
 
+  // 触屏滑动控制
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    setTouchStart({ x: touch.clientX, y: touch.clientY });
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart) return;
+    
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStart.x;
+    const deltaY = touch.clientY - touchStart.y;
+    
+    const minSwipeDistance = 50; // 增加最小滑动距离以避免误触
+    
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      // 水平滑动
+      if (Math.abs(deltaX) > minSwipeDistance) {
+        move(deltaX > 0 ? 'right' : 'left');
+      }
+    } else {
+      // 垂直滑动
+      if (Math.abs(deltaY) > minSwipeDistance) {
+        move(deltaY > 0 ? 'down' : 'up');
+      }
+    }
+    
+    setTouchStart(null);
+  };
+
+  // 键盘控制（桌面端辅助）
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       switch (e.key) {
@@ -223,32 +259,40 @@ const Game2048 = ({ onBack, soundEnabled }: Game2048Props) => {
     return colors[value] || 'bg-purple-500 text-white text-xs';
   };
 
+  const tileSize = isMobile ? 'w-16 h-16' : 'w-20 h-20';
+  const fontSize = isMobile ? 'text-sm' : 'text-base';
+
   return (
     <div className="max-w-md mx-auto p-4">
       <Card className="bg-gradient-to-br from-amber-50 to-orange-50">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl">🎯 2048</CardTitle>
-          <div className="flex justify-between items-center">
-            <div className="text-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-center text-xl md:text-2xl">🎯 2048</CardTitle>
+          <div className="flex justify-between items-center text-sm">
+            <div>
               <div className="font-semibold">得分: {score}</div>
               <div className="text-gray-600">最佳: {bestScore}</div>
             </div>
             <Button variant="outline" size="sm" onClick={resetGame}>
               <RotateCcw className="h-4 w-4 mr-1" />
-              重新开始
+              <span className="hidden sm:inline">重新开始</span>
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="relative">
-            <div className="grid grid-cols-4 gap-2 bg-gray-300 p-3 rounded-lg">
+            <div 
+              className="grid grid-cols-4 gap-2 bg-gray-300 p-3 rounded-lg mx-auto touch-none select-none"
+              style={{ width: 'fit-content' }}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
               {board.flat().map((value, index) => (
                 <div
                   key={index}
                   className={`
-                    w-16 h-16 rounded flex items-center justify-center font-bold
-                    transition-all duration-150 transform
-                    ${getTileColor(value)}
+                    ${tileSize} rounded flex items-center justify-center font-bold
+                    transition-all duration-200 transform
+                    ${getTileColor(value)} ${fontSize}
                     ${value !== 0 ? 'scale-100' : 'scale-95'}
                   `}
                 >
@@ -259,15 +303,15 @@ const Game2048 = ({ onBack, soundEnabled }: Game2048Props) => {
 
             {won && !gameOver && (
               <div className="absolute inset-0 bg-yellow-500 bg-opacity-90 flex items-center justify-center rounded-lg">
-                <div className="text-center text-white">
-                  <Trophy className="w-16 h-16 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold mb-2">恭喜!</h3>
+                <div className="text-center text-white p-4">
+                  <Trophy className="w-12 h-12 mx-auto mb-3" />
+                  <h3 className="text-xl font-bold mb-2">恭喜!</h3>
                   <p className="mb-4">你达到了 2048!</p>
-                  <div className="space-x-2">
-                    <Button onClick={() => setWon(false)} variant="secondary">
+                  <div className="space-y-2">
+                    <Button onClick={() => setWon(false)} variant="secondary" className="w-full">
                       继续游戏
                     </Button>
-                    <Button onClick={resetGame} className="bg-yellow-600 hover:bg-yellow-700">
+                    <Button onClick={resetGame} className="bg-yellow-600 hover:bg-yellow-700 w-full">
                       重新开始
                     </Button>
                   </div>
@@ -277,10 +321,10 @@ const Game2048 = ({ onBack, soundEnabled }: Game2048Props) => {
 
             {gameOver && (
               <div className="absolute inset-0 bg-red-500 bg-opacity-90 flex items-center justify-center rounded-lg">
-                <div className="text-center text-white">
-                  <h3 className="text-2xl font-bold mb-2">游戏结束!</h3>
+                <div className="text-center text-white p-4">
+                  <h3 className="text-xl font-bold mb-2">游戏结束!</h3>
                   <p className="mb-4">最终得分: {score}</p>
-                  <Button onClick={resetGame} className="bg-red-600 hover:bg-red-700">
+                  <Button onClick={resetGame} className="bg-red-600 hover:bg-red-700 w-full">
                     再来一局
                   </Button>
                 </div>
@@ -288,50 +332,65 @@ const Game2048 = ({ onBack, soundEnabled }: Game2048Props) => {
             )}
           </div>
 
-          <div className="mt-4 text-center text-sm text-gray-600">
-            <p>使用方向键或WASD移动数字块</p>
-            <p>相同数字合并，目标是达到2048!</p>
-          </div>
+          {/* 移动端方向控制按钮 */}
+          {isMobile && (
+            <div className="grid grid-cols-3 gap-2 max-w-40 mx-auto">
+              <div></div>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => move('up')}
+                className="h-12 w-12 p-0 text-lg"
+                disabled={gameOver}
+              >
+                ↑
+              </Button>
+              <div></div>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => move('left')}
+                className="h-12 w-12 p-0 text-lg"
+                disabled={gameOver}
+              >
+                ←
+              </Button>
+              <div></div>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => move('right')}
+                className="h-12 w-12 p-0 text-lg"
+                disabled={gameOver}
+              >
+                →
+              </Button>
+              <div></div>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => move('down')}
+                className="h-12 w-12 p-0 text-lg"
+                disabled={gameOver}
+              >
+                ↓
+              </Button>
+              <div></div>
+            </div>
+          )}
 
-          {/* 移动端控制按钮 */}
-          <div className="mt-4 grid grid-cols-3 gap-2 max-w-32 mx-auto">
-            <div></div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => move('up')}
-              className="h-8 w-8 p-0"
-            >
-              ↑
-            </Button>
-            <div></div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => move('left')}
-              className="h-8 w-8 p-0"
-            >
-              ←
-            </Button>
-            <div></div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => move('right')}
-              className="h-8 w-8 p-0"
-            >
-              →
-            </Button>
-            <div></div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => move('down')}
-              className="h-8 w-8 p-0"
-            >
-              ↓
-            </Button>
-            <div></div>
+          <div className="text-center text-sm text-gray-600 space-y-1">
+            {isMobile ? (
+              <>
+                <p>在游戏区域滑动或使用方向按钮移动数字块</p>
+                <p>相同数字合并，目标是达到2048!</p>
+              </>
+            ) : (
+              <>
+                <p>使用方向键、WASD或在游戏区域滑动移动数字块</p>
+                <p>相同数字合并，目标是达到2048!</p>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
