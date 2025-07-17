@@ -439,6 +439,39 @@ export type Database = {
         }
         Relationships: []
       }
+      gomoku_rooms: {
+        Row: {
+          created_at: string
+          game_state: Json
+          guest_id: string | null
+          host_id: string
+          id: string
+          room_code: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          game_state?: Json
+          guest_id?: string | null
+          host_id: string
+          id?: string
+          room_code: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          game_state?: Json
+          guest_id?: string | null
+          host_id?: string
+          id?: string
+          room_code?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       medical_records: {
         Row: {
           created_at: string

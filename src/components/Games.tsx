@@ -11,6 +11,7 @@ import MemoryCardGame from '@/components/games/MemoryCardGame';
 import SnakeGame from '@/components/games/SnakeGame';
 import Game2048 from '@/components/games/Game2048';
 import BubblePopGame from '@/components/games/BubblePopGame';
+import MultiplayerGomoku from '@/components/games/MultiplayerGomoku';
 
 interface GamesProps {
   onBack: () => void;
@@ -44,6 +45,13 @@ const Games = ({ onBack }: GamesProps) => {
       description: '与智能电脑对战五子棋，可调节难度等级',
       icon: '⚫',
       component: EnhancedGomoku
+    },
+    {
+      id: 'multiplayer-gomoku',
+      name: '多人五子棋',
+      description: '在线实时对战，邀请好友一起下棋',
+      icon: '👥',
+      component: MultiplayerGomoku
     },
     {
       id: 'breakout',
