@@ -57,15 +57,17 @@ export const createInitialGameState = (): GomokuGameState => {
 };
 
 // 创建游戏房间
-export const createGomokuRoom = async (): Promise<{ room: GomokuRoom; error?: string }> => {
+export const createGomokuRoom = async (): Promise<{ room: GomokuRoom | null; error?: string }> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return { room: null as any, error: '用户未登录' };
+      return { room: null, error: '用户未登录' };
     }
 
     const roomCode = generateRoomCode();
     const gameState = createInitialGameState();
+
+    console.log('创建房间，用户ID:', user.id, '房间码:', roomCode);
 
     const { data, error } = await supabase
       .from('gomoku_rooms')
@@ -80,7 +82,7 @@ export const createGomokuRoom = async (): Promise<{ room: GomokuRoom; error?: st
 
     if (error) {
       console.error('创建房间失败:', error);
-      return { room: null as any, error: '创建房间失败' };
+      return { room: null, error: '创建房间失败: ' + error.message };
     }
 
     const room: GomokuRoom = {
@@ -89,39 +91,65 @@ export const createGomokuRoom = async (): Promise<{ room: GomokuRoom; error?: st
       status: data.status as 'waiting' | 'playing' | 'finished' | 'abandoned'
     };
 
+    console.log('房间创建成功:', room);
     return { room };
   } catch (err) {
     console.error('创建房间错误:', err);
-    return { room: null as any, error: '创建房间失败' };
+    return { room: null, error: '创建房间失败' };
   }
 };
 
 // 加入游戏房间
-export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRoom; error?: string }> => {
+export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRoom | null; error?: string }> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return { room: null as any, error: '用户未登录' };
+      return { room: null, error: '用户未登录' };
     }
 
-    // 先查找房间
-    const { data: room, error: findError } = await supabase
+    console.log('尝试加入房间，用户ID:', user.id, '房间码:', roomCode);
+
+    // 先查找房间，放宽查找条件
+    const { data: rooms, error: findError } = await supabase
       .from('gomoku_rooms')
       .select()
       .eq('room_code', roomCode.toUpperCase())
-      .eq('status', 'waiting')
-      .single();
+      .order('created_at', { ascending: false });
 
-    if (findError || !room) {
-      return { room: null as any, error: '房间不存在或已开始游戏' };
+    console.log('查找房间结果:', rooms, '错误:', findError);
+
+    if (findError) {
+      console.error('查找房间失败:', findError);
+      return { room: null, error: '查找房间失败: ' + findError.message };
+    }
+
+    if (!rooms || rooms.length === 0) {
+      return { room: null, error: '房间不存在' };
+    }
+
+    // 找到第一个可用房间
+    const room = rooms.find(r => r.status === 'waiting' && !r.guest_id) || rooms[0];
+
+    if (!room) {
+      return { room: null, error: '没有找到可用房间' };
     }
 
     if (room.host_id === user.id) {
-      return { room: null as any, error: '不能加入自己创建的房间' };
+      return { room: null, error: '不能加入自己创建的房间' };
     }
 
-    if (room.guest_id) {
-      return { room: null as any, error: '房间已满' };
+    if (room.guest_id && room.guest_id !== user.id) {
+      return { room: null, error: '房间已满' };
+    }
+
+    // 如果已经是房间成员，直接返回房间信息
+    if (room.guest_id === user.id) {
+      const finalRoom: GomokuRoom = {
+        ...room,
+        game_state: room.game_state as unknown as GomokuGameState,
+        status: room.status as 'waiting' | 'playing' | 'finished' | 'abandoned'
+      };
+      return { room: finalRoom };
     }
 
     // 更新房间，添加客人并开始游戏
@@ -130,6 +158,8 @@ export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRo
       ...existingGameState,
       status: 'playing'
     };
+
+    console.log('更新房间状态，添加客人:', user.id);
 
     const { data: updatedRoom, error: updateError } = await supabase
       .from('gomoku_rooms')
@@ -144,7 +174,7 @@ export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRo
 
     if (updateError) {
       console.error('加入房间失败:', updateError);
-      return { room: null as any, error: '加入房间失败' };
+      return { room: null, error: '加入房间失败: ' + updateError.message };
     }
 
     const finalRoom: GomokuRoom = {
@@ -153,15 +183,16 @@ export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRo
       status: updatedRoom.status as 'waiting' | 'playing' | 'finished' | 'abandoned'
     };
 
+    console.log('成功加入房间:', finalRoom);
     return { room: finalRoom };
   } catch (err) {
     console.error('加入房间错误:', err);
-    return { room: null as any, error: '加入房间失败' };
+    return { room: null, error: '加入房间失败' };
   }
 };
 
 // 获取房间信息
-export const getGomokuRoom = async (roomId: string): Promise<{ room: GomokuRoom; error?: string }> => {
+export const getGomokuRoom = async (roomId: string): Promise<{ room: GomokuRoom | null; error?: string }> => {
   try {
     const { data, error } = await supabase
       .from('gomoku_rooms')
@@ -170,7 +201,8 @@ export const getGomokuRoom = async (roomId: string): Promise<{ room: GomokuRoom;
       .single();
 
     if (error) {
-      return { room: null as any, error: '获取房间信息失败' };
+      console.error('获取房间信息失败:', error);
+      return { room: null, error: '获取房间信息失败: ' + error.message };
     }
 
     const room: GomokuRoom = {
@@ -182,7 +214,36 @@ export const getGomokuRoom = async (roomId: string): Promise<{ room: GomokuRoom;
     return { room };
   } catch (err) {
     console.error('获取房间错误:', err);
-    return { room: null as any, error: '获取房间信息失败' };
+    return { room: null, error: '获取房间信息失败' };
+  }
+};
+
+// 通过房间码获取房间信息
+export const getRoomByCode = async (roomCode: string): Promise<{ room: GomokuRoom | null; error?: string }> => {
+  try {
+    const { data, error } = await supabase
+      .from('gomoku_rooms')
+      .select()
+      .eq('room_code', roomCode.toUpperCase())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      console.error('获取房间信息失败:', error);
+      return { room: null, error: '房间不存在' };
+    }
+
+    const room: GomokuRoom = {
+      ...data,
+      game_state: data.game_state as unknown as GomokuGameState,
+      status: data.status as 'waiting' | 'playing' | 'finished' | 'abandoned'
+    };
+
+    return { room };
+  } catch (err) {
+    console.error('获取房间错误:', err);
+    return { room: null, error: '获取房间信息失败' };
   }
 };
 

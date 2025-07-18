@@ -11,6 +11,7 @@ import {
   joinGomokuRoom, 
   makeMove, 
   leaveRoom,
+  getRoomByCode,
   GomokuRoom, 
   GomokuGameState 
 } from '@/services/gomokuRoomService';
@@ -32,6 +33,7 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [playerRole, setPlayerRole] = useState<'host' | 'guest'>('host');
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   // 获取当前用户
@@ -40,10 +42,17 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUserId(user.id);
+        console.log('当前用户ID:', user.id);
+      } else {
+        toast({
+          title: "需要登录",
+          description: "请先登录后再进行游戏",
+          variant: "destructive",
+        });
       }
     };
     getCurrentUser();
-  }, []);
+  }, [toast]);
 
   // 音效函数
   const playSound = useCallback((frequency: number, duration: number) => {
@@ -72,8 +81,9 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
 
   // 实时订阅房间更新
   useEffect(() => {
-    if (!room) return;
+    if (!room || !currentUserId) return;
 
+    console.log('订阅房间更新:', room.id);
     setConnectionStatus('connecting');
     
     const channel = supabase
@@ -87,6 +97,7 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
           filter: `id=eq.${room.id}`
         },
         (payload) => {
+          console.log('收到房间更新:', payload);
           const updatedRoom = payload.new as GomokuRoom;
           setRoom(updatedRoom);
           
@@ -103,7 +114,7 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
           // 检查游戏结束
           if (updatedRoom.game_state.status === 'finished') {
             if (updatedRoom.game_state.winner === role) {
-              playSound(523, 0.5); // 胜利音效
+              playSound(523, 0.5);
               toast({
                 title: "🎉 恭喜获胜！",
                 description: "你在多人对战中获得了胜利！",
@@ -114,7 +125,7 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
                 description: "这是一场精彩的对局！",
               });
             } else {
-              playSound(196, 0.5); // 失败音效
+              playSound(196, 0.5);
               toast({
                 title: "😔 游戏结束",
                 description: "对手获得了胜利，再试一次吧！",
@@ -124,6 +135,7 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
         }
       )
       .subscribe((status) => {
+        console.log('订阅状态:', status);
         if (status === 'SUBSCRIBED') {
           setConnectionStatus('connected');
         } else if (status === 'CLOSED') {
@@ -132,6 +144,7 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
       });
 
     return () => {
+      console.log('取消订阅房间:', room.id);
       supabase.removeChannel(channel);
       setConnectionStatus('disconnected');
     };
@@ -139,11 +152,26 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
 
   // 创建房间
   const handleCreateRoom = async () => {
+    if (!currentUserId) {
+      toast({
+        title: "需要登录",
+        description: "请先登录后再创建房间",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    console.log('开始创建房间...');
+    
     const { room: newRoom, error } = await createGomokuRoom();
-    if (error) {
+    
+    setIsLoading(false);
+    
+    if (error || !newRoom) {
       toast({
         title: "创建房间失败",
-        description: error,
+        description: error || '未知错误',
         variant: "destructive",
       });
       return;
@@ -152,6 +180,7 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
     setRoom(newRoom);
     setPlayerRole('host');
     setGameMode('lobby');
+    console.log('房间创建成功:', newRoom);
     toast({
       title: "房间创建成功！",
       description: `房间码: ${newRoom.room_code}`,
@@ -160,6 +189,15 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
 
   // 加入房间
   const handleJoinRoom = async () => {
+    if (!currentUserId) {
+      toast({
+        title: "需要登录",
+        description: "请先登录后再加入房间",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!roomCodeInput.trim()) {
       toast({
         title: "请输入房间码",
@@ -168,11 +206,32 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
       return;
     }
 
+    setIsLoading(true);
+    console.log('尝试加入房间:', roomCodeInput.trim());
+
+    // 首先检查房间是否存在
+    const { room: existingRoom, error: checkError } = await getRoomByCode(roomCodeInput.trim());
+    
+    if (checkError || !existingRoom) {
+      setIsLoading(false);
+      toast({
+        title: "房间不存在",
+        description: "请检查房间码是否正确",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('找到房间:', existingRoom);
+
     const { room: joinedRoom, error } = await joinGomokuRoom(roomCodeInput.trim());
-    if (error) {
+    
+    setIsLoading(false);
+    
+    if (error || !joinedRoom) {
       toast({
         title: "加入房间失败",
-        description: error,
+        description: error || '未知错误',
         variant: "destructive",
       });
       return;
@@ -180,10 +239,21 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
 
     setRoom(joinedRoom);
     setPlayerRole('guest');
-    setGameMode('game');
+    
+    // 根据游戏状态设置模式
+    if (joinedRoom.game_state.status === 'playing') {
+      setGameMode('game');
+      const role = joinedRoom.host_id === currentUserId ? 'host' : 'guest';
+      setPlayerRole(role);
+      setIsMyTurn(joinedRoom.game_state.currentPlayer === role);
+    } else {
+      setGameMode('lobby');
+    }
+    
+    console.log('成功加入房间:', joinedRoom);
     toast({
       title: "成功加入房间！",
-      description: "游戏即将开始",
+      description: joinedRoom.game_state.status === 'playing' ? "游戏进行中" : "等待游戏开始",
     });
   };
 
@@ -218,6 +288,7 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
     if (!room || !isMyTurn || room.game_state.status !== 'playing') return;
     if (room.game_state.board[row][col] !== null) return;
 
+    console.log('尝试下棋:', row, col, playerRole);
     const { success, error } = await makeMove(room.id, row, col, playerRole);
     if (!success) {
       toast({
@@ -274,8 +345,9 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
             <Button 
               onClick={handleCreateRoom} 
               className="w-full bg-blue-500 hover:bg-blue-600"
+              disabled={isLoading || !currentUserId}
             >
-              创建房间
+              {isLoading ? '创建中...' : '创建房间'}
             </Button>
             
             <div className="space-y-2">
@@ -285,16 +357,23 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
                 onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
                 maxLength={6}
                 className="text-center text-lg tracking-wider"
+                disabled={isLoading}
               />
               <Button 
                 onClick={handleJoinRoom} 
                 variant="outline" 
                 className="w-full"
-                disabled={!roomCodeInput.trim()}
+                disabled={!roomCodeInput.trim() || isLoading || !currentUserId}
               >
-                加入房间
+                {isLoading ? '加入中...' : '加入房间'}
               </Button>
             </div>
+
+            {!currentUserId && (
+              <div className="text-center text-sm text-red-600 p-2 bg-red-50 rounded">
+                请先登录账号才能进行多人游戏
+              </div>
+            )}
 
             <div className="text-center text-sm text-gray-600 space-y-1">
               <p>• 创建房间后分享房间码给朋友</p>
