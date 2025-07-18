@@ -221,6 +221,8 @@ export const getGomokuRoom = async (roomId: string): Promise<{ room: GomokuRoom 
 // 通过房间码获取房间信息
 export const getRoomByCode = async (roomCode: string): Promise<{ room: GomokuRoom | null; error?: string }> => {
   try {
+    console.log('开始查找房间，房间码:', roomCode.toUpperCase());
+
     const { data, error } = await supabase
       .from('gomoku_rooms')
       .select()
@@ -228,22 +230,28 @@ export const getRoomByCode = async (roomCode: string): Promise<{ room: GomokuRoo
       .order('created_at', { ascending: false })
       .limit(1);
 
+    console.log('查找房间结果 - data:', data, 'error:', error);
+
     if (error) {
       console.error('获取房间信息失败:', error);
-      return { room: null, error: '房间不存在' };
+      return { room: null, error: '查找房间失败: ' + error.message };
     }
 
     if (!data || data.length === 0) {
+      console.log('没有找到房间，房间码:', roomCode.toUpperCase());
       return { room: null, error: '房间不存在' };
     }
 
     const roomData = data[0];
+    console.log('找到房间数据:', roomData);
+    
     const room: GomokuRoom = {
       ...roomData,
       game_state: roomData.game_state as unknown as GomokuGameState,
       status: roomData.status as 'waiting' | 'playing' | 'finished' | 'abandoned'
     };
 
+    console.log('转换后的房间对象:', room);
     return { room };
   } catch (err) {
     console.error('获取房间错误:', err);
