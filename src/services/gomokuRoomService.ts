@@ -226,18 +226,22 @@ export const getRoomByCode = async (roomCode: string): Promise<{ room: GomokuRoo
       .select()
       .eq('room_code', roomCode.toUpperCase())
       .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      .limit(1);
 
     if (error) {
       console.error('获取房间信息失败:', error);
       return { room: null, error: '房间不存在' };
     }
 
+    if (!data || data.length === 0) {
+      return { room: null, error: '房间不存在' };
+    }
+
+    const roomData = data[0];
     const room: GomokuRoom = {
-      ...data,
-      game_state: data.game_state as unknown as GomokuGameState,
-      status: data.status as 'waiting' | 'playing' | 'finished' | 'abandoned'
+      ...roomData,
+      game_state: roomData.game_state as unknown as GomokuGameState,
+      status: roomData.status as 'waiting' | 'playing' | 'finished' | 'abandoned'
     };
 
     return { room };
