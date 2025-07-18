@@ -161,7 +161,7 @@ export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRo
 
     console.log('更新房间状态，添加客人:', user.id);
 
-    const { data: updatedRoom, error: updateError } = await supabase
+    const { data: updatedRooms, error: updateError } = await supabase
       .from('gomoku_rooms')
       .update({
         guest_id: user.id,
@@ -169,13 +169,18 @@ export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRo
         status: 'playing'
       })
       .eq('id', room.id)
-      .select()
-      .single();
+      .select();
 
     if (updateError) {
       console.error('加入房间失败:', updateError);
       return { room: null, error: '加入房间失败: ' + updateError.message };
     }
+
+    if (!updatedRooms || updatedRooms.length === 0) {
+      return { room: null, error: '更新房间失败' };
+    }
+
+    const updatedRoom = updatedRooms[0];
 
     const finalRoom: GomokuRoom = {
       ...updatedRoom,
@@ -198,17 +203,22 @@ export const getGomokuRoom = async (roomId: string): Promise<{ room: GomokuRoom 
       .from('gomoku_rooms')
       .select()
       .eq('id', roomId)
-      .single();
+      .limit(1);
 
     if (error) {
       console.error('获取房间信息失败:', error);
       return { room: null, error: '获取房间信息失败: ' + error.message };
     }
 
+    if (!data || data.length === 0) {
+      return { room: null, error: '房间不存在' };
+    }
+
+    const roomData = data[0];
     const room: GomokuRoom = {
-      ...data,
-      game_state: data.game_state as unknown as GomokuGameState,
-      status: data.status as 'waiting' | 'playing' | 'finished' | 'abandoned'
+      ...roomData,
+      game_state: roomData.game_state as unknown as GomokuGameState,
+      status: roomData.status as 'waiting' | 'playing' | 'finished' | 'abandoned'
     };
 
     return { room };
