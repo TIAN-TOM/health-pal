@@ -106,6 +106,15 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
           setPlayerRole(role);
           setIsMyTurn(updatedRoom.game_state.currentPlayer === role);
           
+          // 如果游戏状态从waiting变为playing，切换到游戏界面
+          if (room.game_state.status === 'waiting' && updatedRoom.game_state.status === 'playing') {
+            setGameMode('game');
+            toast({
+              title: "🎮 游戏开始！",
+              description: "对手已加入，开始对战！",
+            });
+          }
+          
           // 播放下棋音效
           if (updatedRoom.game_state.moveHistory.length > room.game_state.moveHistory.length) {
             playSound(440, 0.1);
