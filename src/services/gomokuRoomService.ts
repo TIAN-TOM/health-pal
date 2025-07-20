@@ -135,7 +135,13 @@ export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRo
     }
 
     if (room.host_id === user.id) {
-      return { room: null, error: '不能加入自己创建的房间' };
+      // 房主直接返回房间信息，不需要加入
+      const finalRoom: GomokuRoom = {
+        ...room,
+        game_state: room.game_state as unknown as GomokuGameState,
+        status: room.status as 'waiting' | 'playing' | 'finished' | 'abandoned'
+      };
+      return { room: finalRoom };
     }
 
     if (room.guest_id && room.guest_id !== user.id) {
