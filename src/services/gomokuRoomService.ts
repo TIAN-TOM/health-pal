@@ -177,8 +177,10 @@ export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRo
       .eq('id', room.id)
       .select();
 
+    console.log('更新房间操作结果:', { updatedRooms, updateError });
+
     if (updateError) {
-      console.error('加入房间失败:', updateError);
+      console.error('加入房间失败 - 更新错误:', updateError);
       return { room: null, error: '加入房间失败: ' + updateError.message };
     }
 
