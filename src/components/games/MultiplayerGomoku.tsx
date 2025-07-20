@@ -109,9 +109,12 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
           // 如果游戏状态从waiting变为playing，切换到游戏界面
           if (room.game_state.status === 'waiting' && updatedRoom.game_state.status === 'playing') {
             setGameMode('game');
+            
+            // 根据用户角色显示不同的消息
+            const isHost = updatedRoom.host_id === currentUserId;
             toast({
               title: "🎮 游戏开始！",
-              description: "对手已加入，开始对战！",
+              description: isHost ? "对手已加入，开始对战！" : "成功加入房间，开始对战！",
             });
           }
           
