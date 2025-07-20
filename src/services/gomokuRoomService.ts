@@ -283,6 +283,8 @@ export const updateGameState = async (
   gameState: GomokuGameState
 ): Promise<{ success: boolean; error?: string }> => {
   try {
+    console.log('开始更新游戏状态:', { roomId, gameState });
+    
     const { error } = await supabase
       .from('gomoku_rooms')
       .update({
@@ -292,10 +294,11 @@ export const updateGameState = async (
       .eq('id', roomId);
 
     if (error) {
-      console.error('更新游戏状态失败:', error);
-      return { success: false, error: '更新游戏状态失败' };
+      console.error('更新游戏状态失败 - 数据库错误:', error);
+      return { success: false, error: '更新游戏状态失败: ' + error.message };
     }
 
+    console.log('游戏状态更新成功');
     return { success: true };
   } catch (err) {
     console.error('更新游戏状态错误:', err);
@@ -311,24 +314,31 @@ export const makeMove = async (
   player: 'host' | 'guest'
 ): Promise<{ success: boolean; newGameState?: GomokuGameState; error?: string }> => {
   try {
+    console.log('开始下棋操作:', { roomId, row, col, player });
+    
     // 获取当前游戏状态
     const { room, error: getRoomError } = await getGomokuRoom(roomId);
     if (getRoomError || !room) {
+      console.error('获取房间信息失败:', getRoomError);
       return { success: false, error: '获取房间信息失败' };
     }
 
+    console.log('当前房间状态:', room.game_state);
     const gameState = room.game_state;
 
     // 验证游戏状态
     if (gameState.status !== 'playing') {
+      console.error('游戏状态错误:', gameState.status);
       return { success: false, error: '游戏未开始或已结束' };
     }
 
     if (gameState.currentPlayer !== player) {
+      console.error('轮次错误:', { current: gameState.currentPlayer, player });
       return { success: false, error: '不是你的回合' };
     }
 
     if (gameState.board[row][col] !== null) {
+      console.error('位置已占用:', { row, col, current: gameState.board[row][col] });
       return { success: false, error: '该位置已有棋子' };
     }
 
@@ -358,11 +368,15 @@ export const makeMove = async (
       ]
     };
 
+    console.log('准备更新游戏状态:', newGameState);
+
     const { success, error } = await updateGameState(roomId, newGameState);
     if (!success) {
+      console.error('更新游戏状态失败:', error);
       return { success: false, error };
     }
 
+    console.log('下棋操作完成');
     return { success: true, newGameState };
   } catch (err) {
     console.error('下棋错误:', err);
