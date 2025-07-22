@@ -302,14 +302,35 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
     if (!room || !isMyTurn || room.game_state.status !== 'playing') return;
     if (room.game_state.board[row][col] !== null) return;
 
-    console.log('尝试下棋:', row, col, playerRole);
-    const { success, error } = await makeMove(room.id, row, col, playerRole);
+    console.log('尝试下棋:', row, col, playerRole, '当前轮次:', room.game_state.currentPlayer);
+    
+    // 立即更新本地状态（乐观更新）
+    setIsMyTurn(false);
+    
+    const { success, error, newGameState } = await makeMove(room.id, row, col, playerRole);
     if (!success) {
+      // 如果失败，恢复本地状态
+      const role = room.host_id === currentUserId ? 'host' : 'guest';
+      setIsMyTurn(room.game_state.currentPlayer === role);
+      
       toast({
         title: "下棋失败",
         description: error,
         variant: "destructive",
       });
+      return;
+    }
+
+    // 成功时，播放音效
+    playSound(440, 0.1);
+    
+    // 如果返回了新的游戏状态，立即更新本地状态
+    if (newGameState) {
+      const updatedRoom = { ...room, game_state: newGameState };
+      setRoom(updatedRoom);
+      
+      const role = room.host_id === currentUserId ? 'host' : 'guest';
+      setIsMyTurn(newGameState.currentPlayer === role);
     }
   };
 

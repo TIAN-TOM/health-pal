@@ -332,8 +332,13 @@ export const makeMove = async (
       return { success: false, error: '游戏未开始或已结束' };
     }
 
+    // 验证是否是当前玩家的回合
     if (gameState.currentPlayer !== player) {
-      console.error('轮次错误:', { current: gameState.currentPlayer, player });
+      console.error('轮次验证失败:', { 
+        expected: gameState.currentPlayer, 
+        actual: player,
+        moveHistory: gameState.moveHistory.slice(-2)
+      });
       return { success: false, error: '不是你的回合' };
     }
 
