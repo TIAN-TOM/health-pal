@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ClipboardList, Activity, Heart, Mic, Gamepad2, Wind, Home, Globe } from 'lucide-react';
+import { ClipboardList, Activity, Heart, Mic, Gamepad2, Wind, Home, DollarSign, BookOpen } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface FunctionCardsProps {
@@ -46,8 +46,8 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       title: '家庭管理',
       description: '温馨的家庭管理系统',
       icon: Home,
-      color: 'from-rose-500 to-rose-600',
-      textColor: 'text-rose-600'
+      color: 'from-red-500 to-red-600',
+      textColor: 'text-red-600'
     },
     {
       id: 'games',
@@ -61,9 +61,17 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       id: 'exchange-rate',
       title: '实时汇率',
       description: '澳币汇率查询',
-      icon: Globe,
-      color: 'from-indigo-500 to-indigo-600',
-      textColor: 'text-indigo-600'
+      icon: DollarSign,
+      color: 'from-blue-500 to-blue-600',
+      textColor: 'text-blue-600'
+    },
+    {
+      id: 'english',
+      title: '每日英语',
+      description: '名言·单词·听力',
+      icon: BookOpen,
+      color: 'from-violet-500 to-violet-600',
+      textColor: 'text-violet-600'
     }
   ];
 

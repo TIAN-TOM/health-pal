@@ -1,9 +1,11 @@
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, RefreshCw, TrendingUp, TrendingDown, Globe } from 'lucide-react';
+import { ArrowLeft, RefreshCw, TrendingUp, TrendingDown, Calculator, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { exchangeRateService } from '@/services/exchangeRateService';
 
 interface ExchangeRateProps {
@@ -21,6 +23,9 @@ const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [calculatorAmount, setCalculatorAmount] = useState<string>('100');
+  const [calculatorFrom, setCalculatorFrom] = useState<string>('AUD');
+  const [calculatorTo, setCalculatorTo] = useState<string>('CNY');
 
   const fetchExchangeRate = async () => {
     setLoading(true);
@@ -68,16 +73,38 @@ const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
     if (!data?.change) return null;
 
     if (data.change > 0) {
-      return <TrendingUp className="h-3 w-3" />;
+      return <TrendingUp className="h-3 w-3 text-green-600" />;
     } else if (data.change < 0) {
-      return <TrendingDown className="h-3 w-3" />;
+      return <TrendingDown className="h-3 w-3 text-red-600" />;
     }
     return null;
   };
 
   const getTrendColor = () => {
     if (!data?.change) return 'secondary';
-    return data.change > 0 ? 'default' : 'destructive';
+    return data.change > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+  };
+
+  const calculateResult = () => {
+    if (!data || !calculatorAmount) return '0.00';
+    
+    const amount = parseFloat(calculatorAmount);
+    if (isNaN(amount)) return '0.00';
+
+    if (calculatorFrom === 'AUD' && calculatorTo === 'CNY') {
+      return (amount * data.rate).toFixed(2);
+    } else if (calculatorFrom === 'CNY' && calculatorTo === 'AUD') {
+      return (amount / data.rate).toFixed(2);
+    }
+    return '0.00';
+  };
+
+  const currencySymbols = {
+    AUD: 'A$',
+    CNY: '¥',
+    USD: '$',
+    EUR: '€',
+    GBP: '£'
   };
 
   return (
@@ -110,7 +137,7 @@ const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center text-lg">
-              <Globe className="h-5 w-5 mr-2 text-blue-600" />
+              <DollarSign className="h-5 w-5 mr-2 text-blue-600" />
               澳币 → 人民币
             </CardTitle>
           </CardHeader>
@@ -135,7 +162,7 @@ const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
                 
                 {data.change !== undefined && (
                   <div className="flex justify-center mb-4">
-                    <Badge variant={getTrendColor()} className="flex items-center gap-1">
+                    <Badge className={`flex items-center gap-1 ${getTrendColor()}`}>
                       {getTrendIcon()}
                       {data.change > 0 ? '+' : ''}{data.change.toFixed(2)}%
                     </Badge>
@@ -150,35 +177,117 @@ const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
           </CardContent>
         </Card>
 
-        {/* 计算器卡片 */}
+        {/* 增强版计算器 */}
         {data && (
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle className="text-lg">汇率计算器</CardTitle>
+              <CardTitle className="flex items-center text-lg">
+                <Calculator className="h-5 w-5 mr-2 text-green-600" />
+                汇率计算器
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">金额</label>
+                  <Input
+                    type="number"
+                    value={calculatorAmount}
+                    onChange={(e) => setCalculatorAmount(e.target.value)}
+                    placeholder="输入金额"
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">从</label>
+                  <Select value={calculatorFrom} onValueChange={setCalculatorFrom}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AUD">澳币 (AUD)</SelectItem>
+                      <SelectItem value="CNY">人民币 (CNY)</SelectItem>
+                      <SelectItem value="USD">美元 (USD)</SelectItem>
+                      <SelectItem value="EUR">欧元 (EUR)</SelectItem>
+                      <SelectItem value="GBP">英镑 (GBP)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">到</label>
+                  <Select value={calculatorTo} onValueChange={setCalculatorTo}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CNY">人民币 (CNY)</SelectItem>
+                      <SelectItem value="AUD">澳币 (AUD)</SelectItem>
+                      <SelectItem value="USD">美元 (USD)</SelectItem>
+                      <SelectItem value="EUR">欧元 (EUR)</SelectItem>
+                      <SelectItem value="GBP">英镑 (GBP)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">结果</label>
+                  <div className="p-2 bg-gray-50 rounded border text-lg font-semibold">
+                    {currencySymbols[calculatorTo as keyof typeof currencySymbols] || ''}{calculateResult()}
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center text-sm text-gray-500">
+                {calculatorAmount} {calculatorFrom} = {calculateResult()} {calculatorTo}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 快速换算 */}
+        {data && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg">快速换算</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 mb-1">澳币</p>
-                  <div className="text-2xl font-bold text-blue-600">100</div>
+                  <div className="text-2xl font-bold text-blue-600">A$100</div>
                 </div>
                 <div className="text-center">
                   <p className="text-sm text-gray-600 mb-1">人民币</p>
                   <div className="text-2xl font-bold text-green-600">
-                    {(100 * data.rate).toFixed(2)}
+                    ¥{(100 * data.rate).toFixed(2)}
                   </div>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 mb-1">澳币</p>
-                  <div className="text-xl font-semibold text-blue-600">1,000</div>
+                  <div className="text-xl font-semibold text-blue-600">A$1,000</div>
                 </div>
                 <div className="text-center">
                   <p className="text-sm text-gray-600 mb-1">人民币</p>
                   <div className="text-xl font-semibold text-green-600">
-                    {(1000 * data.rate).toFixed(2)}
+                    ¥{(1000 * data.rate).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-1">澳币</p>
+                  <div className="text-lg font-medium text-blue-600">A$10,000</div>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-1">人民币</p>
+                  <div className="text-lg font-medium text-green-600">
+                    ¥{(10000 * data.rate).toFixed(2)}
                   </div>
                 </div>
               </div>
