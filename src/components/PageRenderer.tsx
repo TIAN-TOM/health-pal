@@ -3,6 +3,8 @@ import React from 'react';
 import DailyCheckin from '@/components/DailyCheckin';
 import DizzinessRecord from '@/components/DizzinessRecord';
 import DiabetesRecord from '@/components/DiabetesRecord';
+import FamilyDashboard from '@/components/family/FamilyDashboard';
+import FamilyMembers from '@/components/family/FamilyMembers';
 import LifestyleRecord from '@/components/LifestyleRecord';
 import MedicationRecord from '@/components/MedicationRecord';
 import VoiceRecord from '@/components/VoiceRecord';
@@ -49,6 +51,26 @@ const PageRenderer = ({
   onRecordClick 
 }: PageRendererProps) => {
   switch (currentPage) {
+    case 'familyDashboard':
+      return (
+        <FamilyDashboard 
+          onBack={() => onBack("home")}
+          onNavigateToMembers={() => onNavigation('familyMembers')}
+          onNavigateToExpenses={() => onNavigation('familyExpenses')}
+          onNavigateToReminders={() => onNavigation('familyReminders')}
+          onNavigateToCalendar={() => onNavigation('familyCalendar')}
+          onNavigateToMessages={() => onNavigation('familyMessages')}
+          onNavigateToStats={() => onNavigation('familyStats')}
+        />
+      );
+
+    case 'familyMembers':
+      return (
+        <FamilyMembers 
+          onBack={() => onBack('familyDashboard')}
+        />
+      );
+
     case "emergency":
       return (
         <EmergencyMode 

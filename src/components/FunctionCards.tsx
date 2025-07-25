@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ClipboardList, Activity, Heart, Mic, Gamepad2, Wind } from 'lucide-react';
+import { ClipboardList, Activity, Heart, Mic, Gamepad2, Wind, Home } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface FunctionCardsProps {
@@ -40,6 +40,14 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       icon: Mic,
       color: 'from-orange-500 to-orange-600',
       textColor: 'text-orange-600'
+    },
+    {
+      id: 'familyDashboard',
+      title: '家庭管理',
+      description: '温馨的家庭管理系统',
+      icon: Home,
+      color: 'from-rose-500 to-rose-600',
+      textColor: 'text-rose-600'
     },
     {
       id: 'games',
