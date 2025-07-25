@@ -51,7 +51,10 @@ const PageRenderer = ({
       return <DailyCheckin {...commonProps} />;
     
     case 'record-hub':
-      return <RecordHub {...commonProps} />;
+      return <RecordHub 
+        onBack={() => onBack()}
+        onNavigate={onNavigation}
+      />;
     
     case 'breathing':
       return <BreathingExercise {...commonProps} />;
@@ -74,7 +77,7 @@ const PageRenderer = ({
       return (
         <Settings
           onBack={() => onBack()}
-          onProfileEdit={() => onNavigation('profile')}
+          onPersonalProfile={() => onNavigation('profile')}
           onEmergencyContacts={() => onNavigation('emergency-contacts')}
           onMedicalRecords={() => onNavigation('medical-records')}
           onEducation={() => onNavigation('education')}
@@ -117,7 +120,10 @@ const PageRenderer = ({
       return <AdminPanel {...commonProps} />;
     
     case 'familyDashboard':
-      return <FamilyDashboard {...commonProps} />;
+      return <FamilyDashboard 
+        onBack={() => onBack()}
+        onNavigate={onNavigation}
+      />;
     
     case 'exchange-rate':
       return <ExchangeRate {...commonProps} />;
