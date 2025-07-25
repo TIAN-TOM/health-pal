@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface FamilyExpense {
@@ -55,6 +56,23 @@ export const familyExpensesService = {
 
     if (error) {
       console.error('添加家庭支出失败:', error);
+      throw error;
+    }
+
+    return data;
+  },
+
+  // 更新支出记录
+  async updateFamilyExpense(id: string, updates: Partial<FamilyExpense>): Promise<FamilyExpense> {
+    const { data, error } = await supabase
+      .from('family_expenses')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('更新家庭支出失败:', error);
       throw error;
     }
 

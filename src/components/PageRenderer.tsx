@@ -59,16 +59,12 @@ const PageRenderer = ({
       return (
         <FamilyDashboard 
           onBack={() => onBack("home")}
-          onNavigateToMembers={() => onNavigation('familyMembers', 'familyDashboard')}
-          onNavigateToExpenses={() => onNavigation('familyExpenses', 'familyDashboard')}
-          onNavigateToReminders={() => onNavigation('familyReminders', 'familyDashboard')}
-          onNavigateToCalendar={() => onNavigation('familyCalendar', 'familyDashboard')}
-          onNavigateToMessages={() => onNavigation('familyMessages', 'familyDashboard')}
-          onNavigateToStats={() => onNavigation('familyStats', 'familyDashboard')}
+          onNavigate={onNavigation}
         />
       );
 
     case 'familyMembers':
+    case 'family-members':
       return (
         <FamilyMembers 
           onBack={() => onBack('familyDashboard')}
@@ -76,6 +72,7 @@ const PageRenderer = ({
       );
 
     case 'familyExpenses':
+    case 'family-expenses':
       return (
         <FamilyExpenses 
           onBack={() => onBack('familyDashboard')}
@@ -83,6 +80,7 @@ const PageRenderer = ({
       );
 
     case 'familyReminders':
+    case 'family-reminders':
       return (
         <FamilyReminders 
           onBack={() => onBack('familyDashboard')}
@@ -90,6 +88,7 @@ const PageRenderer = ({
       );
 
     case 'familyCalendar':
+    case 'family-calendar':
       return (
         <FamilyCalendar 
           onBack={() => onBack('familyDashboard')}
@@ -97,6 +96,7 @@ const PageRenderer = ({
       );
 
     case 'familyMessages':
+    case 'family-messages':
       return (
         <FamilyMessages 
           onBack={() => onBack('familyDashboard')}
@@ -104,6 +104,7 @@ const PageRenderer = ({
       );
 
     case 'familyStats':
+    case 'family-stats':
       return (
         <FamilyStats 
           onBack={() => onBack('familyDashboard')}
