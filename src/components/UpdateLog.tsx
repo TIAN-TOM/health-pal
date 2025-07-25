@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,24 @@ interface UpdateLogProps {
 
 const UpdateLog = ({ onBack }: UpdateLogProps) => {
   const updates = [
+    {
+      version: "v2.6.0",
+      date: "2025-07-25",
+      type: "major",
+      title: "界面优化与功能完善",
+      items: [
+        "🎨 修复主页重复的每日英语入口问题",
+        "📚 大幅更新使用手册，新增家庭管理、实时汇率、积分系统等功能介绍",
+        "🔧 完善管理员功能说明，包括实时通知系统介绍",
+        "📖 优化使用手册内容结构，按功能模块分类更清晰",
+        "✨ 改进入门指南，反映当前应用的丰富功能",
+        "🎯 更新基础功能介绍，包含最新的语音记录和呼吸训练功能",
+        "🏆 新增积分系统专门章节，详细介绍积分获取和使用",
+        "🔍 优化症状管理和生活管理章节内容",
+        "💎 完善数据管理功能介绍，包括历史记录和导出功能",
+        "🛡️ 新增管理员功能章节，介绍管理员权限和通知系统"
+      ]
+    },
     {
       version: "v2.5.8",
       date: "2025-07-17",

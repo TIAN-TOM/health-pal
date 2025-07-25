@@ -6,8 +6,7 @@ import EmergencyBanner from '@/components/EmergencyBanner';
 import FunctionCards from '@/components/FunctionCards';
 import AnnouncementDisplay from '@/components/AnnouncementDisplay';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { BookOpen, Globe, History } from 'lucide-react';
+import { BookOpen, History } from 'lucide-react';
 
 interface HomePageProps {
   userDisplayName: string;
@@ -39,20 +38,6 @@ const HomePage = ({
         
         <div className="grid grid-cols-2 gap-3">
           <FunctionCards onNavigate={onNavigate} />
-          
-          {/* 每日英语模块 */}
-          <Card 
-            className="hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:scale-105"
-            onClick={() => onNavigate('daily-english', 'home')}
-          >
-            <CardContent className="p-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center mx-auto mb-3">
-                <Globe className="h-6 w-6 text-white" />
-              </div>
-              <h3 className="font-medium text-purple-600 mb-1">每日英语</h3>
-              <p className="text-xs text-gray-600">名言·单词·听力</p>
-            </CardContent>
-          </Card>
         </div>
         
         {/* 使用手册和更新日志快速入口 */}
