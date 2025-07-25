@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Users } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Calendar, Clock, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { familyCalendarService, type FamilyCalendarEvent, EVENT_COLORS } from '@/services/familyCalendarService';
+import { familyCalendarService, type FamilyCalendarEvent, EVENT_COLORS, TRADITIONAL_FESTIVALS } from '@/services/familyCalendarService';
+import { familyMembersService, type FamilyMember } from '@/services/familyMembersService';
 
 interface FamilyCalendarProps {
   onBack: () => void;
@@ -16,6 +17,8 @@ interface FamilyCalendarProps {
 
 const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
   const [events, setEvents] = useState<FamilyCalendarEvent[]>([]);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<FamilyCalendarEvent | null>(null);
   const [formData, setFormData] = useState({
@@ -32,18 +35,26 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadEvents();
-  }, []);
+    loadData();
+  }, [currentDate]);
 
-  const loadEvents = async () => {
+  const loadData = async () => {
     try {
-      const data = await familyCalendarService.getFamilyCalendarEvents();
-      setEvents(data);
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      
+      const [eventsData, membersData] = await Promise.all([
+        familyCalendarService.getMonthEvents(year, month),
+        familyMembersService.getFamilyMembers()
+      ]);
+      
+      setEvents(eventsData);
+      setMembers(membersData);
     } catch (error) {
-      console.error('加载日历事件失败:', error);
+      console.error('加载数据失败:', error);
       toast({
         title: "加载失败",
-        description: "无法加载日历事件",
+        description: "无法加载日历数据",
         variant: "destructive",
       });
     } finally {
@@ -80,7 +91,7 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
       }
 
       resetForm();
-      loadEvents();
+      loadData();
     } catch (error) {
       console.error('保存日历事件失败:', error);
       toast({
@@ -98,7 +109,7 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
         title: "删除成功",
         description: "日历事件已删除",
       });
-      loadEvents();
+      loadData();
     } catch (error) {
       console.error('删除日历事件失败:', error);
       toast({
@@ -139,19 +150,80 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
     setShowAddForm(true);
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('zh-CN');
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentDate);
+    if (direction === 'prev') {
+      newDate.setMonth(newDate.getMonth() - 1);
+    } else {
+      newDate.setMonth(newDate.getMonth() + 1);
+    }
+    setCurrentDate(newDate);
   };
 
-  const formatTimeRange = (startTime?: string, endTime?: string) => {
-    if (!startTime) return '';
-    return endTime ? `${startTime} - ${endTime}` : startTime;
+  const goToToday = () => {
+    setCurrentDate(new Date());
   };
 
-  const colorOptions = EVENT_COLORS.map((color, index) => ({
-    value: color,
-    label: `颜色 ${index + 1}`
-  }));
+  const getDaysInMonth = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    
+    const days = [];
+    
+    // 添加上个月的日期
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    
+    // 添加当月的日期
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(day);
+    }
+    
+    return days;
+  };
+
+  const getEventsForDate = (day: number) => {
+    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return events.filter(event => event.event_date === dateStr);
+  };
+
+  const getBirthdaysForDate = (day: number) => {
+    if (!members) return [];
+    
+    const monthDay = `${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    
+    return members.filter(member => {
+      if (!member.birthday) return false;
+      const birthday = new Date(member.birthday);
+      const birthdayMonthDay = `${String(birthday.getMonth() + 1).padStart(2, '0')}-${String(birthday.getDate()).padStart(2, '0')}`;
+      return birthdayMonthDay === monthDay;
+    });
+  };
+
+  const getTraditionalFestivalForDate = (day: number) => {
+    const monthDay = `${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return TRADITIONAL_FESTIVALS.find(festival => festival.date === monthDay);
+  };
+
+  const isToday = (day: number) => {
+    const today = new Date();
+    return (
+      today.getDate() === day &&
+      today.getMonth() === currentDate.getMonth() &&
+      today.getFullYear() === currentDate.getFullYear()
+    );
+  };
+
+  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+  const monthNames = [
+    '一月', '二月', '三月', '四月', '五月', '六月',
+    '七月', '八月', '九月', '十月', '十一月', '十二月'
+  ];
 
   if (loading) {
     return (
@@ -166,7 +238,7 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <div className="container mx-auto px-4 py-6 max-w-md">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
         {/* 头部 */}
         <div className="flex items-center justify-between mb-6">
           <Button
@@ -179,15 +251,124 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
             返回
           </Button>
           <h1 className="text-xl font-bold text-gray-800">家庭日历</h1>
+          <div className="flex space-x-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={goToToday}
+            >
+              今天
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setShowAddForm(true)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              添加事件
+            </Button>
+          </div>
+        </div>
+
+        {/* 月份导航 */}
+        <div className="flex items-center justify-between mb-6">
           <Button
+            variant="outline"
             size="sm"
-            onClick={() => setShowAddForm(true)}
-            className="bg-green-600 hover:bg-green-700"
+            onClick={() => navigateMonth('prev')}
           >
-            <Plus className="h-4 w-4 mr-1" />
-            添加
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="text-lg font-semibold">
+            {currentDate.getFullYear()}年 {monthNames[currentDate.getMonth()]}
+          </h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigateMonth('next')}
+          >
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
+
+        {/* 日历网格 */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            {/* 星期标题 */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {weekDays.map((day) => (
+                <div key={day} className="p-2 text-center text-sm font-medium text-gray-600">
+                  {day}
+                </div>
+              ))}
+            </div>
+            
+            {/* 日期网格 */}
+            <div className="grid grid-cols-7 gap-1">
+              {getDaysInMonth().map((day, index) => {
+                if (!day) {
+                  return <div key={index} className="h-24 p-1"></div>;
+                }
+                
+                const dayEvents = getEventsForDate(day);
+                const birthdays = getBirthdaysForDate(day);
+                const festival = getTraditionalFestivalForDate(day);
+                const today = isToday(day);
+                
+                return (
+                  <div
+                    key={day}
+                    className={`h-24 p-1 border rounded-lg ${
+                      today ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className={`text-sm font-medium ${today ? 'text-blue-600' : 'text-gray-800'}`}>
+                      {day}
+                    </div>
+                    
+                    {/* 事件显示 */}
+                    <div className="space-y-1 mt-1">
+                      {dayEvents.slice(0, 2).map((event) => (
+                        <div
+                          key={event.id}
+                          className="text-xs px-1 py-0.5 rounded truncate cursor-pointer"
+                          style={{ backgroundColor: event.color + '20', color: event.color }}
+                          onClick={() => handleEdit(event)}
+                        >
+                          {event.title}
+                        </div>
+                      ))}
+                      
+                      {/* 生日显示 */}
+                      {birthdays.slice(0, 1).map((member) => (
+                        <div
+                          key={member.id}
+                          className="text-xs px-1 py-0.5 rounded truncate bg-pink-100 text-pink-600"
+                        >
+                          🎂 {member.name}
+                        </div>
+                      ))}
+                      
+                      {/* 传统节日显示 */}
+                      {festival && (
+                        <div className="text-xs px-1 py-0.5 rounded truncate bg-red-100 text-red-600">
+                          🎉 {festival.name}
+                        </div>
+                      )}
+                      
+                      {/* 更多事件指示 */}
+                      {(dayEvents.length + birthdays.length > 2) && (
+                        <div className="text-xs text-gray-500">
+                          +{dayEvents.length + birthdays.length - 2} 更多
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* 添加/编辑表单 */}
         {showAddForm && (
@@ -207,6 +388,7 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
                     required
                   />
                 </div>
+                
                 <div>
                   <Label htmlFor="description">描述</Label>
                   <Textarea
@@ -217,6 +399,7 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
                     rows={3}
                   />
                 </div>
+                
                 <div>
                   <Label htmlFor="event_date">日期</Label>
                   <Input
@@ -227,6 +410,7 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
                     required
                   />
                 </div>
+                
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="is_all_day"
@@ -235,6 +419,7 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
                   />
                   <Label htmlFor="is_all_day">全天事件</Label>
                 </div>
+                
                 {!formData.is_all_day && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -257,6 +442,7 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
                     </div>
                   </div>
                 )}
+                
                 <div>
                   <Label htmlFor="participants">参与者</Label>
                   <Input
@@ -266,23 +452,24 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
                     placeholder="请输入参与者，用逗号分隔（可选）"
                   />
                 </div>
+                
                 <div>
                   <Label htmlFor="color">颜色</Label>
                   <div className="flex space-x-2 mt-2">
-                    {colorOptions.map(option => (
+                    {EVENT_COLORS.map(color => (
                       <button
-                        key={option.value}
+                        key={color}
                         type="button"
-                        onClick={() => setFormData({ ...formData, color: option.value })}
+                        onClick={() => setFormData({ ...formData, color })}
                         className={`w-8 h-8 rounded-full border-2 ${
-                          formData.color === option.value ? 'border-gray-800' : 'border-gray-300'
+                          formData.color === color ? 'border-gray-800' : 'border-gray-300'
                         }`}
-                        style={{ backgroundColor: option.value }}
-                        title={option.label}
+                        style={{ backgroundColor: color }}
                       />
                     ))}
                   </div>
                 </div>
+                
                 <div className="flex space-x-2">
                   <Button type="submit" className="flex-1">
                     {editingEvent ? '更新' : '添加'}
@@ -297,44 +484,42 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
         )}
 
         {/* 事件列表 */}
-        <div className="space-y-4">
-          {events.map((event) => (
-            <Card key={event.id}>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: event.color }}
-                      />
-                      <span className="font-medium">{event.title}</span>
-                      {event.is_all_day && (
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                          全天
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      {event.description && (
-                        <div>{event.description}</div>
-                      )}
-                      <div className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {formatDate(event.event_date)}
+        <Card>
+          <CardHeader>
+            <CardTitle>本月事件</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {events.map((event) => (
+                <div key={event.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: event.color }}
+                    />
+                    <div>
+                      <div className="font-medium">{event.title}</div>
+                      <div className="text-sm text-gray-600 flex items-center space-x-4">
+                        <div className="flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {new Date(event.event_date).toLocaleDateString('zh-CN')}
+                        </div>
+                        {!event.is_all_day && (event.start_time || event.end_time) && (
+                          <div className="flex items-center">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {event.start_time && event.end_time ? 
+                              `${event.start_time} - ${event.end_time}` : 
+                              event.start_time || event.end_time
+                            }
+                          </div>
+                        )}
+                        {event.participants && event.participants.length > 0 && (
+                          <div className="flex items-center">
+                            <Users className="h-3 w-3 mr-1" />
+                            {event.participants.join(', ')}
+                          </div>
+                        )}
                       </div>
-                      {!event.is_all_day && (event.start_time || event.end_time) && (
-                        <div className="flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {formatTimeRange(event.start_time, event.end_time)}
-                        </div>
-                      )}
-                      {event.participants && event.participants.length > 0 && (
-                        <div className="flex items-center">
-                          <Users className="h-3 w-3 mr-1" />
-                          {event.participants.join(', ')}
-                        </div>
-                      )}
                     </div>
                   </div>
                   <div className="flex space-x-2">
@@ -355,15 +540,16 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
                     </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-          {events.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              暂无日历事件
+              ))}
+              
+              {events.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  本月暂无事件
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Plus, Edit2, Trash2, Upload, Phone, MapPin, Calendar } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, Trash2, Upload, Phone, MapPin, Calendar, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -21,6 +22,7 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState<string | null>(null);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -122,6 +124,51 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
     setShowAddDialog(true);
   };
 
+  const handleAvatarUpload = async (file: File, memberId: string) => {
+    if (!file) return;
+
+    // 检查文件类型
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "错误",
+        description: "请选择图片文件",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // 检查文件大小 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "错误",
+        description: "图片大小不能超过5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setUploadingAvatar(memberId);
+      const avatarUrl = await familyMembersService.uploadAvatar(file, memberId);
+      await familyMembersService.updateFamilyMember(memberId, { avatar_url: avatarUrl });
+      
+      toast({
+        title: "成功",
+        description: "头像上传成功",
+      });
+      
+      loadMembers();
+    } catch (error) {
+      toast({
+        title: "错误",
+        description: "头像上传失败",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingAvatar(null);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -157,15 +204,41 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
     return age;
   };
 
+  const getUpcomingBirthdays = () => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    
+    return members
+      .filter(member => member.birthday)
+      .map(member => {
+        const birthday = new Date(member.birthday!);
+        const thisYearBirthday = new Date(currentYear, birthday.getMonth(), birthday.getDate());
+        const nextYearBirthday = new Date(currentYear + 1, birthday.getMonth(), birthday.getDate());
+        
+        const nextBirthday = thisYearBirthday >= today ? thisYearBirthday : nextYearBirthday;
+        const daysUntil = Math.ceil((nextBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        return {
+          ...member,
+          nextBirthday,
+          daysUntil
+        };
+      })
+      .sort((a, b) => a.daysUntil - b.daysUntil)
+      .slice(0, 3);
+  };
+
   const RELATIONSHIPS = [
     '父亲', '母亲', '儿子', '女儿', '丈夫', '妻子', 
     '兄弟', '姐妹', '祖父', '祖母', '外祖父', '外祖母',
     '叔叔', '阿姨', '其他'
   ];
 
+  const upcomingBirthdays = getUpcomingBirthdays();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <div className="container mx-auto px-4 py-6 max-w-md">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
         {/* 头部 */}
         <div className="flex items-center justify-between mb-6">
           <Button
@@ -180,11 +253,12 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
           <h1 className="text-xl font-bold text-gray-800">家庭成员</h1>
           <Dialog open={showAddDialog} onOpenChange={handleDialogClose}>
             <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4" />
+              <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                <Plus className="h-4 w-4 mr-1" />
+                添加成员
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>{editingMember ? '编辑成员' : '添加成员'}</DialogTitle>
                 <DialogDescription>
@@ -274,9 +348,48 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
           </Dialog>
         </div>
 
+        {/* 即将到来的生日提醒 */}
+        {upcomingBirthdays.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Calendar className="h-5 w-5 mr-2" />
+                即将到来的生日
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {upcomingBirthdays.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between p-3 bg-pink-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={member.avatar_url || undefined} />
+                        <AvatarFallback>{getAvatarFallback(member.name)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium">{member.name}</div>
+                        <div className="text-sm text-gray-600">{member.relationship}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-pink-600">
+                        {member.daysUntil === 0 ? '今天' : `${member.daysUntil}天后`}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {member.nextBirthday.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* 成员列表 */}
         {loading ? (
           <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <div className="text-gray-500">加载中...</div>
           </div>
         ) : members.length === 0 ? (
@@ -294,17 +407,39 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {members.map((member) => (
-              <Card key={member.id}>
-                <CardContent className="p-4">
+              <Card key={member.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
                   <div className="flex items-start space-x-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={member.avatar_url || undefined} />
-                      <AvatarFallback className="text-lg">
-                        {getAvatarFallback(member.name)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="relative">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={member.avatar_url || undefined} />
+                        <AvatarFallback className="text-lg">
+                          {getAvatarFallback(member.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <label className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-1 cursor-pointer hover:bg-blue-600 transition-colors">
+                        <Camera className="h-3 w-3" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handleAvatarUpload(file, member.id);
+                            }
+                          }}
+                          disabled={uploadingAvatar === member.id}
+                        />
+                      </label>
+                      {uploadingAvatar === member.id && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        </div>
+                      )}
+                    </div>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
@@ -348,7 +483,9 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
                         {member.phone && (
                           <div className="flex items-center">
                             <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                            {member.phone}
+                            <a href={`tel:${member.phone}`} className="hover:text-blue-600">
+                              {member.phone}
+                            </a>
                           </div>
                         )}
                         
