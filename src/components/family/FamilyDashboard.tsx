@@ -59,42 +59,42 @@ const FamilyDashboard = ({ onBack, onNavigate }: FamilyDashboardProps) => {
       title: '家庭记账',
       icon: DollarSign,
       color: 'bg-blue-500',
-      page: 'family-expenses',
+      page: 'familyExpenses',
       description: '记录家庭收支'
     },
     {
       title: '家庭提醒',
       icon: Bell,
       color: 'bg-orange-500',
-      page: 'family-reminders',
+      page: 'familyReminders',
       description: '管理家庭待办事项'
     },
     {
       title: '家庭日历',
       icon: Calendar,
       color: 'bg-green-500',
-      page: 'family-calendar',
+      page: 'familyCalendar',
       description: '安排家庭活动'
     },
     {
       title: '家庭成员',
       icon: Users,
       color: 'bg-purple-500',
-      page: 'family-members',
+      page: 'familyMembers',
       description: '管理家庭成员信息'
     },
     {
       title: '家庭消息',
       icon: MessageCircle,
       color: 'bg-pink-500',
-      page: 'family-messages',
+      page: 'familyMessages',
       description: '家庭内部沟通'
     },
     {
       title: '统计报表',
       icon: BarChart3,
       color: 'bg-indigo-500',
-      page: 'family-stats',
+      page: 'familyStats',
       description: '查看家庭数据统计'
     }
   ];
