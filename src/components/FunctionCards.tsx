@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ClipboardList, Activity, Heart, Mic, Gamepad2, Wind, Home } from 'lucide-react';
+import { ClipboardList, Activity, Heart, Mic, Gamepad2, Wind, Home, Globe } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface FunctionCardsProps {
@@ -56,6 +56,14 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
       icon: Gamepad2,
       color: 'from-pink-500 to-pink-600',
       textColor: 'text-pink-600'
+    },
+    {
+      id: 'exchange-rate',
+      title: '实时汇率',
+      description: '澳币汇率查询',
+      icon: Globe,
+      color: 'from-indigo-500 to-indigo-600',
+      textColor: 'text-indigo-600'
     }
   ];
 
