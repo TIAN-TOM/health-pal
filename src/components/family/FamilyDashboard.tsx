@@ -99,6 +99,11 @@ const FamilyDashboard = ({ onBack, onNavigate }: FamilyDashboardProps) => {
     }
   ];
 
+  const handleCardClick = (page: string) => {
+    console.log('点击功能卡片:', page);
+    onNavigate(page);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
@@ -158,7 +163,7 @@ const FamilyDashboard = ({ onBack, onNavigate }: FamilyDashboardProps) => {
             <Card 
               key={card.page} 
               className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => onNavigate(card.page)}
+              onClick={() => handleCardClick(card.page)}
             >
               <CardContent className="p-4 text-center">
                 <div className={`${card.color} w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3`}>
