@@ -66,7 +66,7 @@ const PageRenderer = ({
         return <DailyDataHub onBack={() => onBack()} onRecordClick={onRecordClick} />;
       
       case 'recordHub':
-        return <RecordHub onBack={() => onBack()} onRecordClick={onRecordClick} />;
+        return <RecordHub onBack={() => onBack()} onNavigate={onNavigation} />;
       
       case 'games':
         return <Games onBack={() => onBack()} />;
@@ -81,7 +81,16 @@ const PageRenderer = ({
         return <DataExport onBack={() => onBack()} />;
       
       case 'settings':
-        return <Settings onBack={() => onBack()} />;
+        return <Settings 
+          onBack={() => onBack()} 
+          onEmergencyContacts={() => onNavigation('emergencyContacts', 'settings')}
+          onMedicalRecords={() => onNavigation('medicalRecords', 'settings')}
+          onEducation={() => onNavigation('educationCenter', 'settings')}
+          onMedicationManagement={() => onNavigation('medicationManagement', 'settings')}
+          onPersonalProfile={() => onNavigation('personalProfile', 'settings')}
+          onUserManual={() => onNavigation('userManual', 'settings')}
+          onUpdateLog={() => onNavigation('updateLog', 'settings')}
+        />;
       
       case 'emergency':
         return <EmergencyMode onBack={() => onBack()} />;
