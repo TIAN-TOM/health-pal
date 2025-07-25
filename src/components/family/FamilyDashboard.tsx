@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Users, Calculator, Calendar, Bell, MessageSquare, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -39,17 +40,47 @@ const FamilyDashboard = ({
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [stats, reminders, events, count] = await Promise.all([
+      
+      // 并行加载数据，并处理可能的错误
+      const [stats, reminders, events, count] = await Promise.allSettled([
         familyExpensesService.getExpenseStats(),
         familyRemindersService.getTodayReminders(),
         familyCalendarService.getTodayEvents(),
         familyRemindersService.getIncompleteCount()
       ]);
 
-      setExpenseStats(stats);
-      setTodayReminders(reminders);
-      setTodayEvents(events);
-      setIncompleteCount(count);
+      // 处理支出统计数据
+      if (stats.status === 'fulfilled') {
+        setExpenseStats(stats.value);
+      } else {
+        console.error('加载支出统计失败:', stats.reason);
+        setExpenseStats(null);
+      }
+
+      // 处理今日提醒数据
+      if (reminders.status === 'fulfilled') {
+        setTodayReminders(reminders.value);
+      } else {
+        console.error('加载今日提醒失败:', reminders.reason);
+        setTodayReminders([]);
+      }
+
+      // 处理今日事件数据
+      if (events.status === 'fulfilled') {
+        setTodayEvents(events.value);
+      } else {
+        console.error('加载今日事件失败:', events.reason);
+        setTodayEvents([]);
+      }
+
+      // 处理未完成提醒数量
+      if (count.status === 'fulfilled') {
+        setIncompleteCount(count.value);
+      } else {
+        console.error('加载未完成提醒数量失败:', count.reason);
+        setIncompleteCount(0);
+      }
+
     } catch (error) {
       console.error('加载仪表板数据失败:', error);
     } finally {
@@ -79,6 +110,17 @@ const FamilyDashboard = ({
 
   const currentDate = getCurrentDate();
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <div className="container mx-auto px-4 py-6 max-w-md">
@@ -94,6 +136,7 @@ const FamilyDashboard = ({
             返回
           </Button>
           <h1 className="text-xl font-bold text-gray-800">温馨的家</h1>
+          <div className="w-16" /> {/* 占位符保持居中 */}
         </div>
 
         {/* 日期显示 */}
@@ -187,7 +230,7 @@ const FamilyDashboard = ({
                       )}
                     </div>
                     <div className="text-xs text-gray-400">
-                      {new Date(reminder.reminder_date).toLocaleTimeString('zh-CN', {
+                      {reminder.reminder_time && new Date(`${reminder.reminder_date}T${reminder.reminder_time}`).toLocaleTimeString('zh-CN', {
                         hour: '2-digit',
                         minute: '2-digit'
                       })}

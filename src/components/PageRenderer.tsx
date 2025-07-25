@@ -1,10 +1,14 @@
-
 import React from 'react';
 import DailyCheckin from '@/components/DailyCheckin';
 import DizzinessRecord from '@/components/DizzinessRecord';
 import DiabetesRecord from '@/components/DiabetesRecord';
 import FamilyDashboard from '@/components/family/FamilyDashboard';
 import FamilyMembers from '@/components/family/FamilyMembers';
+import FamilyExpenses from '@/components/family/FamilyExpenses';
+import FamilyReminders from '@/components/family/FamilyReminders';
+import FamilyCalendar from '@/components/family/FamilyCalendar';
+import FamilyMessages from '@/components/family/FamilyMessages';
+import FamilyStats from '@/components/family/FamilyStats';
 import LifestyleRecord from '@/components/LifestyleRecord';
 import MedicationRecord from '@/components/MedicationRecord';
 import VoiceRecord from '@/components/VoiceRecord';
@@ -55,18 +59,53 @@ const PageRenderer = ({
       return (
         <FamilyDashboard 
           onBack={() => onBack("home")}
-          onNavigateToMembers={() => onNavigation('familyMembers')}
-          onNavigateToExpenses={() => onNavigation('familyExpenses')}
-          onNavigateToReminders={() => onNavigation('familyReminders')}
-          onNavigateToCalendar={() => onNavigation('familyCalendar')}
-          onNavigateToMessages={() => onNavigation('familyMessages')}
-          onNavigateToStats={() => onNavigation('familyStats')}
+          onNavigateToMembers={() => onNavigation('familyMembers', 'familyDashboard')}
+          onNavigateToExpenses={() => onNavigation('familyExpenses', 'familyDashboard')}
+          onNavigateToReminders={() => onNavigation('familyReminders', 'familyDashboard')}
+          onNavigateToCalendar={() => onNavigation('familyCalendar', 'familyDashboard')}
+          onNavigateToMessages={() => onNavigation('familyMessages', 'familyDashboard')}
+          onNavigateToStats={() => onNavigation('familyStats', 'familyDashboard')}
         />
       );
 
     case 'familyMembers':
       return (
         <FamilyMembers 
+          onBack={() => onBack('familyDashboard')}
+        />
+      );
+
+    case 'familyExpenses':
+      return (
+        <FamilyExpenses 
+          onBack={() => onBack('familyDashboard')}
+        />
+      );
+
+    case 'familyReminders':
+      return (
+        <FamilyReminders 
+          onBack={() => onBack('familyDashboard')}
+        />
+      );
+
+    case 'familyCalendar':
+      return (
+        <FamilyCalendar 
+          onBack={() => onBack('familyDashboard')}
+        />
+      );
+
+    case 'familyMessages':
+      return (
+        <FamilyMessages 
+          onBack={() => onBack('familyDashboard')}
+        />
+      );
+
+    case 'familyStats':
+      return (
+        <FamilyStats 
           onBack={() => onBack('familyDashboard')}
         />
       );
