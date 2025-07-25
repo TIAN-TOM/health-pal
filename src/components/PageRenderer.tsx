@@ -1,32 +1,41 @@
-
 import React from 'react';
-import { lazy } from 'react';
+import DailyCheckin from '@/components/DailyCheckin';
+import DizzinessRecord from '@/components/DizzinessRecord';
+import DiabetesRecord from '@/components/DiabetesRecord';
+import FamilyDashboard from '@/components/family/FamilyDashboard';
+import FamilyMembers from '@/components/family/FamilyMembers';
+import FamilyExpenses from '@/components/family/FamilyExpenses';
+import FamilyReminders from '@/components/family/FamilyReminders';
+import FamilyCalendar from '@/components/family/FamilyCalendar';
+import FamilyMessages from '@/components/family/FamilyMessages';
+import FamilyStats from '@/components/family/FamilyStats';
+import LifestyleRecord from '@/components/LifestyleRecord';
+import MedicationRecord from '@/components/MedicationRecord';
+import VoiceRecord from '@/components/VoiceRecord';
+import HistoryView from '@/components/HistoryView';
+import CalendarView from '@/components/CalendarView';
+import DataExport from '@/components/DataExport';
+import Settings from '@/components/Settings';
+import UserPreferences from '@/components/UserPreferences';
+import UserManual from '@/components/UserManual';
+import ProfileEdit from '@/components/ProfileEdit';
+import AdminPanel from '@/components/AdminPanel';
+import EmergencyContacts from '@/components/EmergencyContacts';
+import MedicalRecords from '@/components/MedicalRecords';
+import EducationCenter from '@/components/EducationCenter';
+import MedicationManagement from '@/components/MedicationManagement';
+import EmergencyMode from '@/components/EmergencyMode';
+import DailyDataHub from '@/components/DailyDataHub';
+import RecordDetail from '@/components/RecordDetail';
+import Games from '@/components/Games';
+import RecordHub from '@/components/RecordHub';
+import BreathingExercise from '@/components/BreathingExercise';
+import PersonalProfile from '@/components/PersonalProfile';
+import UpdateLog from '@/components/UpdateLog';
+import DailyEnglish from '@/components/DailyEnglish';
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
-
-// 延迟加载组件
-const DailyDataHub = lazy(() => import('./DailyDataHub'));
-const RecordHub = lazy(() => import('./RecordHub'));
-const Games = lazy(() => import('./Games'));
-const EducationCenter = lazy(() => import('./EducationCenter'));
-const DailyEnglish = lazy(() => import('./DailyEnglish'));
-const DataExport = lazy(() => import('./DataExport'));
-const Settings = lazy(() => import('./Settings'));
-const EmergencyMode = lazy(() => import('./EmergencyMode'));
-const RecordDetail = lazy(() => import('./RecordDetail'));
-
-// 家庭管理相关组件
-const FamilyDashboard = lazy(() => import('./family/FamilyDashboard'));
-const FamilyExpenses = lazy(() => import('./family/FamilyExpenses'));
-const FamilyReminders = lazy(() => import('./family/FamilyReminders'));
-const FamilyCalendar = lazy(() => import('./family/FamilyCalendar'));
-const FamilyMembers = lazy(() => import('./family/FamilyMembers'));
-const FamilyMessages = lazy(() => import('./family/FamilyMessages'));
-const FamilyStats = lazy(() => import('./family/FamilyStats'));
-
-// 新增汇率组件
-const ExchangeRate = lazy(() => import('./ExchangeRate'));
 
 interface PageRendererProps {
   currentPage: string;
@@ -37,123 +46,155 @@ interface PageRendererProps {
   onRecordClick: (record: MeniereRecord) => void;
 }
 
-const PageRenderer = ({
-  currentPage,
-  selectedRecord,
-  navigationSource,
-  onBack,
-  onNavigation,
-  onRecordClick
+const PageRenderer = ({ 
+  currentPage, 
+  selectedRecord, 
+  navigationSource, 
+  onBack, 
+  onNavigation, 
+  onRecordClick 
 }: PageRendererProps) => {
-  const getBackTarget = () => {
-    if (navigationSource === 'dailyDataHub') return 'dailyDataHub';
-    if (navigationSource === 'recordHub') return 'recordHub';
-    if (navigationSource === 'settings') return 'settings';
-    return 'home';
-  };
+  switch (currentPage) {
+    case 'familyDashboard':
+      return (
+        <FamilyDashboard 
+          onBack={() => onBack("home")}
+          onNavigate={onNavigation}
+        />
+      );
 
-  const handleFamilyNavigation = (page: string) => {
-    onNavigation(page, 'familyDashboard');
-  };
+    case 'familyMembers':
+    case 'family-members':
+      return (
+        <FamilyMembers 
+          onBack={() => onBack('familyDashboard')}
+        />
+      );
 
-  const handleFamilyBack = (targetPage?: string) => {
-    onBack(targetPage || 'familyDashboard');
-  };
+    case 'familyExpenses':
+    case 'family-expenses':
+      return (
+        <FamilyExpenses 
+          onBack={() => onBack('familyDashboard')}
+        />
+      );
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'dailyDataHub':
-        return <DailyDataHub onBack={() => onBack()} onRecordClick={onRecordClick} />;
-      
-      case 'recordHub':
-        return <RecordHub onBack={() => onBack()} onNavigate={onNavigation} />;
-      
-      case 'games':
-        return <Games onBack={() => onBack()} />;
-      
-      case 'educationCenter':
-        return <EducationCenter onBack={() => onBack()} />;
-      
-      case 'dailyEnglish':
-        return <DailyEnglish onBack={() => onBack()} />;
-      
-      case 'dataExport':
-        return <DataExport onBack={() => onBack()} />;
-      
-      case 'settings':
-        return <Settings 
-          onBack={() => onBack()} 
-          onEmergencyContacts={() => onNavigation('emergencyContacts', 'settings')}
-          onMedicalRecords={() => onNavigation('medicalRecords', 'settings')}
-          onEducation={() => onNavigation('educationCenter', 'settings')}
-          onMedicationManagement={() => onNavigation('medicationManagement', 'settings')}
-          onPersonalProfile={() => onNavigation('personalProfile', 'settings')}
-          onUserManual={() => onNavigation('userManual', 'settings')}
-          onUpdateLog={() => onNavigation('updateLog', 'settings')}
-        />;
-      
-      case 'emergency':
-        return <EmergencyMode onBack={() => onBack()} />;
-      
-      case 'record-detail':
-        return selectedRecord ? (
-          <RecordDetail 
-            record={selectedRecord} 
-            onBack={() => onBack(getBackTarget())} 
-          />
-        ) : null;
+    case 'familyReminders':
+    case 'family-reminders':
+      return (
+        <FamilyReminders 
+          onBack={() => onBack('familyDashboard')}
+        />
+      );
 
-      // 家庭管理相关页面
-      case 'familyDashboard':
-      case 'family-dashboard':
-        return <FamilyDashboard onBack={() => onBack()} onNavigate={handleFamilyNavigation} />;
-      
-      case 'familyExpenses':
-      case 'family-expenses':
-        return <FamilyExpenses onBack={() => handleFamilyBack()} />;
-      
-      case 'familyReminders':
-      case 'family-reminders':
-        return <FamilyReminders onBack={() => handleFamilyBack()} />;
-      
-      case 'familyCalendar':
-      case 'family-calendar':
-        return <FamilyCalendar onBack={() => handleFamilyBack()} />;
-      
-      case 'familyMembers':
-      case 'family-members':
-        return <FamilyMembers onBack={() => handleFamilyBack()} />;
-      
-      case 'familyMessages':
-      case 'family-messages':
-        return <FamilyMessages onBack={() => handleFamilyBack()} />;
-      
-      case 'familyStats':
-      case 'family-stats':
-        return <FamilyStats onBack={() => handleFamilyBack()} />;
+    case 'familyCalendar':
+    case 'family-calendar':
+      return (
+        <FamilyCalendar 
+          onBack={() => onBack('familyDashboard')}
+        />
+      );
 
-      // 汇率系统
-      case 'exchangeRate':
-      case 'exchange-rate':
-        return <ExchangeRate onBack={() => onBack()} />;
-      
-      default:
-        return <div>页面不存在</div>;
-    }
-  };
+    case 'familyMessages':
+    case 'family-messages':
+      return (
+        <FamilyMessages 
+          onBack={() => onBack('familyDashboard')}
+        />
+      );
 
-  return (
-    <React.Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">加载中...</p>
-        </div>
-      </div>
-    }>
-      {renderPage()}
-    </React.Suspense>
-  );
+    case 'familyStats':
+    case 'family-stats':
+      return (
+        <FamilyStats 
+          onBack={() => onBack('familyDashboard')}
+        />
+      );
+
+    case "emergency":
+      return (
+        <EmergencyMode 
+          onBack={() => onBack("home")} 
+          onNavigateToContacts={() => onNavigation("emergency-contacts", "emergency")}
+        />
+      );
+    case "checkin":
+      return <DailyCheckin onBack={() => onBack("home")} onNavigateToRecords={() => onNavigation("record-hub", "checkin")} />;
+    case "daily-english":
+      return <DailyEnglish onBack={() => onBack("home")} />;
+    case "record-hub":
+      return <RecordHub onBack={() => onBack("home")} onNavigate={onNavigation} />;
+    case "dizziness":
+      return <DizzinessRecord onBack={() => onBack("record-hub")} />;
+    case "diabetes":
+      return <DiabetesRecord onBack={() => onBack("record-hub")} />;
+    case "lifestyle":
+      return <LifestyleRecord onBack={() => onBack("record-hub")} />;
+    case "medication":
+      return (
+        <MedicationRecord 
+          onBack={() => onBack("record-hub")} 
+          onNavigateToMedicationManagement={() => onNavigation("medication-management", "medication")}
+        />
+      );
+    case "voice":
+      return <VoiceRecord onBack={() => onBack("home")} />;
+    case "breathing":
+      return <BreathingExercise onBack={() => onBack("home")} />;
+    case "games":
+      return <Games onBack={() => onBack("home")} />;
+    case "history":
+      return <HistoryView onRecordClick={onRecordClick} showEnhancedFeatures={true} onBack={() => onBack("daily-data")} />;
+    case "calendar":
+      return <CalendarView />;
+    case "export":
+      return <DataExport onBack={() => onBack("home")} />;
+    case "daily-data":
+      return <DailyDataHub onBack={() => onBack("home")} onRecordClick={onRecordClick} />;
+    case "record-detail":
+      return selectedRecord ? (
+        <RecordDetail 
+          record={selectedRecord} 
+          onBack={() => onBack("history")} 
+        />
+      ) : null;
+    case "settings":
+      return (
+        <Settings
+          onBack={() => onBack("home")}
+          onAdminPanel={() => onNavigation("admin", "settings")}
+          onEmergencyContacts={() => onNavigation("emergency-contacts", "settings")}
+          onMedicalRecords={() => onNavigation("medical-records", "settings")}
+          onEducation={() => onNavigation("education", "settings")}
+          onMedicationManagement={() => onNavigation("medication-management", "settings")}
+          onPersonalProfile={() => onNavigation("personal-profile", "settings")}
+          onUserManual={() => onNavigation("user-manual", "settings")}
+          onUpdateLog={() => onNavigation("update-log", "settings")}
+        />
+      );
+    case "update-log":
+      return <UpdateLog onBack={() => onBack(navigationSource)} />;
+    case "personal-profile":
+      return <PersonalProfile onBack={() => onBack(navigationSource)} />;
+    case "user-preferences":
+      return <UserPreferences onBack={() => onBack(navigationSource)} />;
+    case "user-manual":
+      return <UserManual onBack={() => onBack(navigationSource)} />;
+    case "profile-edit":
+      return <ProfileEdit onBack={() => onBack(navigationSource)} />;
+    case "admin":
+      return <AdminPanel onBack={() => onBack(navigationSource)} />;
+    case "emergency-contacts":
+      return <EmergencyContacts onBack={() => onBack(navigationSource)} />;
+    case "medical-records":
+      return <MedicalRecords onBack={() => onBack(navigationSource === "home" ? "home" : navigationSource)} />;
+    case "education":
+      return <EducationCenter onBack={() => onBack(navigationSource === "home" ? "home" : navigationSource)} />;
+    case "medication-management":
+      return <MedicationManagement onBack={() => onBack(navigationSource)} />;
+    default:
+      return null;
+  }
 };
 
 export default PageRenderer;

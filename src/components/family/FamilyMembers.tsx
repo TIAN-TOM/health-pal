@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Plus, Edit2, Trash2, Phone, MapPin, Calendar, Camera } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, Trash2, Upload, Phone, MapPin, Calendar, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,7 +23,6 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -45,7 +44,6 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
       const data = await familyMembersService.getFamilyMembers();
       setMembers(data);
     } catch (error) {
-      console.error('加载家庭成员失败:', error);
       toast({
         title: "错误",
         description: "加载家庭成员失败",
@@ -69,8 +67,6 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
     }
 
     try {
-      setSubmitting(true);
-      
       if (editingMember) {
         await familyMembersService.updateFamilyMember(editingMember.id, formData);
         toast({
@@ -85,17 +81,16 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
         });
       }
       
-      handleDialogClose();
-      await loadMembers();
+      setShowAddDialog(false);
+      setEditingMember(null);
+      resetForm();
+      loadMembers();
     } catch (error) {
-      console.error('保存家庭成员失败:', error);
       toast({
         title: "错误",
         description: editingMember ? "更新家庭成员失败" : "添加家庭成员失败",
         variant: "destructive",
       });
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -106,9 +101,8 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
         title: "成功",
         description: "删除家庭成员成功",
       });
-      await loadMembers();
+      loadMembers();
     } catch (error) {
-      console.error('删除家庭成员失败:', error);
       toast({
         title: "错误",
         description: "删除家庭成员失败",
@@ -163,9 +157,8 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
         description: "头像上传成功",
       });
       
-      await loadMembers();
+      loadMembers();
     } catch (error) {
-      console.error('头像上传失败:', error);
       toast({
         title: "错误",
         description: "头像上传失败",
@@ -258,14 +251,101 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
             返回
           </Button>
           <h1 className="text-xl font-bold text-gray-800">家庭成员</h1>
-          <Button 
-            size="sm" 
-            className="bg-green-600 hover:bg-green-700"
-            onClick={() => setShowAddDialog(true)}
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            添加成员
-          </Button>
+          <Dialog open={showAddDialog} onOpenChange={handleDialogClose}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                <Plus className="h-4 w-4 mr-1" />
+                添加成员
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>{editingMember ? '编辑成员' : '添加成员'}</DialogTitle>
+                <DialogDescription>
+                  {editingMember ? '修改家庭成员信息' : '添加新的家庭成员'}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="name">姓名 *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="请输入姓名"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="relationship">关系 *</Label>
+                  <Select
+                    value={formData.relationship}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, relationship: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="请选择关系" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {RELATIONSHIPS.map((rel) => (
+                        <SelectItem key={rel} value={rel}>{rel}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="phone">手机号</Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="请输入手机号"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="birthday">生日</Label>
+                  <Input
+                    id="birthday"
+                    type="date"
+                    value={formData.birthday}
+                    onChange={(e) => setFormData(prev => ({ ...prev, birthday: e.target.value }))}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="address">地址</Label>
+                  <Input
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder="请输入地址"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="notes">备注</Label>
+                  <Textarea
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="请输入备注信息"
+                    rows={3}
+                  />
+                </div>
+                
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button type="button" variant="outline" onClick={handleDialogClose}>
+                    取消
+                  </Button>
+                  <Button type="submit">
+                    {editingMember ? '更新' : '添加'}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* 即将到来的生日提醒 */}
@@ -316,10 +396,14 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
           <Card>
             <CardContent className="p-8 text-center">
               <div className="text-gray-400 mb-4">暂无家庭成员</div>
-              <Button onClick={() => setShowAddDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                添加第一个成员
-              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    添加第一个成员
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
             </CardContent>
           </Card>
         ) : (
@@ -437,97 +521,6 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
             ))}
           </div>
         )}
-
-        {/* 添加/编辑弹窗 */}
-        <Dialog open={showAddDialog} onOpenChange={handleDialogClose}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>{editingMember ? '编辑成员' : '添加成员'}</DialogTitle>
-              <DialogDescription>
-                {editingMember ? '修改家庭成员信息' : '添加新的家庭成员'}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">姓名 *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="请输入姓名"
-                  required
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="relationship">关系 *</Label>
-                <Select
-                  value={formData.relationship}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, relationship: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="请选择关系" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {RELATIONSHIPS.map((rel) => (
-                      <SelectItem key={rel} value={rel}>{rel}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="phone">手机号</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="请输入手机号"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="birthday">生日</Label>
-                <Input
-                  id="birthday"
-                  type="date"
-                  value={formData.birthday}
-                  onChange={(e) => setFormData(prev => ({ ...prev, birthday: e.target.value }))}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="address">地址</Label>
-                <Input
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                  placeholder="请输入地址"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="notes">备注</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="请输入备注信息"
-                  rows={3}
-                />
-              </div>
-              
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={handleDialogClose}>
-                  取消
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? '保存中...' : (editingMember ? '更新' : '添加')}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );
