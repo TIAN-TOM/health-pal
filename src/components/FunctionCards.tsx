@@ -1,82 +1,117 @@
 
 import React from 'react';
-import { ClipboardList, Activity, Heart, Mic, Gamepad2, Wind, Home } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { 
+  Calendar, 
+  BookOpen, 
+  Brain, 
+  Heart, 
+  Gamepad2,
+  TrendingUp,
+  Bell,
+  Users,
+  DollarSign
+} from 'lucide-react';
+
+interface FunctionCard {
+  id: string;
+  title: string;
+  icon: React.ElementType;
+  color: string;
+  description: string;
+  onClick: () => void;
+}
 
 interface FunctionCardsProps {
-  onNavigate: (page: string, source?: string) => void;
+  onNavigate: (page: string) => void;
 }
 
 const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
-  const functions = [
+  const functionCards: FunctionCard[] = [
     {
-      id: 'checkin',
-      title: '每日签到',
-      description: '记录今日状态',
-      icon: ClipboardList,
-      color: 'from-blue-500 to-blue-600',
-      textColor: 'text-blue-600'
+      id: 'dailyDataHub',
+      title: '每日数据',
+      icon: Calendar,
+      color: 'bg-blue-500',
+      description: '记录症状和健康数据',
+      onClick: () => onNavigate('dailyDataHub')
     },
     {
-      id: 'record-hub',
-      title: '健康记录',
-      description: '症状与数据记录',
-      icon: Activity,
-      color: 'from-green-500 to-green-600',
-      textColor: 'text-green-600'
+      id: 'recordHub',
+      title: '记录中心',
+      icon: BookOpen,
+      color: 'bg-green-500',
+      description: '管理各类健康记录',
+      onClick: () => onNavigate('recordHub')
     },
     {
-      id: 'breathing',
-      title: '呼吸训练',
-      description: '深呼吸放松练习',
-      icon: Wind,
-      color: 'from-purple-500 to-purple-600',
-      textColor: 'text-purple-600'
+      id: 'games',
+      title: '休闲游戏',
+      icon: Gamepad2,
+      color: 'bg-purple-500',
+      description: '放松身心的小游戏',
+      onClick: () => onNavigate('games')
     },
     {
-      id: 'voice',
-      title: '语音记录',
-      description: '快速语音输入',
-      icon: Mic,
-      color: 'from-orange-500 to-orange-600',
-      textColor: 'text-orange-600'
+      id: 'educationCenter',
+      title: '健康教育',
+      icon: Brain,
+      color: 'bg-orange-500',
+      description: '学习健康知识',
+      onClick: () => onNavigate('educationCenter')
     },
     {
       id: 'familyDashboard',
       title: '家庭管理',
-      description: '温馨的家庭管理系统',
-      icon: Home,
-      color: 'from-rose-500 to-rose-600',
-      textColor: 'text-rose-600'
+      icon: Users,
+      color: 'bg-pink-500',
+      description: '管理家庭事务',
+      onClick: () => onNavigate('familyDashboard')
     },
     {
-      id: 'games',
-      title: '解压小游戏',
-      description: '放松心情',
-      icon: Gamepad2,
-      color: 'from-pink-500 to-pink-600',
-      textColor: 'text-pink-600'
+      id: 'dailyEnglish',
+      title: '每日英语',
+      icon: Heart,
+      color: 'bg-red-500',
+      description: '学习英语提升自己',
+      onClick: () => onNavigate('dailyEnglish')
+    },
+    {
+      id: 'dataExport',
+      title: '数据导出',
+      icon: TrendingUp,
+      color: 'bg-indigo-500',
+      description: '导出和分析数据',
+      onClick: () => onNavigate('dataExport')
+    },
+    {
+      id: 'exchangeRate',
+      title: '实时汇率',
+      icon: DollarSign,
+      color: 'bg-yellow-500',
+      description: '澳币兑人民币汇率',
+      onClick: () => onNavigate('exchangeRate')
     }
   ];
 
   return (
-    <>
-      {functions.map(func => (
+    <div className="grid grid-cols-2 gap-4 mb-8">
+      {functionCards.map((card) => (
         <Card 
-          key={func.id} 
-          className="hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:scale-105" 
-          onClick={() => onNavigate(func.id, 'home')}
+          key={card.id} 
+          className="cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+          onClick={card.onClick}
         >
           <CardContent className="p-4 text-center">
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${func.color} flex items-center justify-center mx-auto mb-3`}>
-              <func.icon className="h-6 w-6 text-white" />
+            <div className={`${card.color} w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3`}>
+              <card.icon className="h-6 w-6 text-white" />
             </div>
-            <h3 className={`font-medium ${func.textColor} mb-1`}>{func.title}</h3>
-            <p className="text-xs text-gray-600">{func.description}</p>
+            <h3 className="font-semibold text-gray-800 mb-1">{card.title}</h3>
+            <p className="text-xs text-gray-600">{card.description}</p>
           </CardContent>
         </Card>
       ))}
-    </>
+    </div>
   );
 };
 

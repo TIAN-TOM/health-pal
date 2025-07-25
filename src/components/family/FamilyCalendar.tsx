@@ -32,6 +32,7 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
     color: '#3b82f6'
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -40,6 +41,9 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
 
   const loadData = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
       
@@ -52,6 +56,7 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
       setMembers(membersData);
     } catch (error) {
       console.error('加载数据失败:', error);
+      setError('加载日历数据失败，请稍后重试');
       toast({
         title: "加载失败",
         description: "无法加载日历数据",
@@ -231,6 +236,17 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">{error}</div>
+          <Button onClick={() => loadData()}>重试</Button>
         </div>
       </div>
     );
