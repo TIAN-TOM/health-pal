@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { familyExpensesService, type FamilyExpense, type ExpenseStats } from '@/services/familyExpensesService';
+import { familyExpensesService, type FamilyExpense, type ExpenseStats, EXPENSE_CATEGORIES } from '@/services/familyExpensesService';
 
 interface FamilyExpensesProps {
   onBack: () => void;
@@ -23,8 +23,8 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
     amount: '',
     category: '',
     description: '',
-    date: new Date().toISOString().split('T')[0],
-    paid_by: ''
+    expense_date: new Date().toISOString().split('T')[0],
+    payer: ''
   });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -36,7 +36,7 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
 
   const loadExpenses = async () => {
     try {
-      const data = await familyExpensesService.getExpenses();
+      const data = await familyExpensesService.getFamilyExpenses();
       setExpenses(data);
     } catch (error) {
       console.error('加载支出记录失败:', error);
@@ -66,18 +66,18 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
         amount: parseFloat(formData.amount),
         category: formData.category,
         description: formData.description,
-        date: formData.date,
-        paid_by: formData.paid_by
+        expense_date: formData.expense_date,
+        payer: formData.payer
       };
 
       if (editingExpense) {
-        await familyExpensesService.updateExpense(editingExpense.id, expenseData);
+        await familyExpensesService.updateFamilyExpense(editingExpense.id, expenseData);
         toast({
           title: "更新成功",
           description: "支出记录已更新",
         });
       } else {
-        await familyExpensesService.createExpense(expenseData);
+        await familyExpensesService.addFamilyExpense(expenseData);
         toast({
           title: "添加成功",
           description: "支出记录已添加",
@@ -99,7 +99,7 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
 
   const handleDelete = async (id: string) => {
     try {
-      await familyExpensesService.deleteExpense(id);
+      await familyExpensesService.deleteFamilyExpense(id);
       toast({
         title: "删除成功",
         description: "支出记录已删除",
@@ -121,8 +121,8 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
       amount: '',
       category: '',
       description: '',
-      date: new Date().toISOString().split('T')[0],
-      paid_by: ''
+      expense_date: new Date().toISOString().split('T')[0],
+      payer: ''
     });
     setShowAddForm(false);
     setEditingExpense(null);
@@ -133,8 +133,8 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
       amount: expense.amount.toString(),
       category: expense.category,
       description: expense.description || '',
-      date: expense.date,
-      paid_by: expense.paid_by
+      expense_date: expense.expense_date,
+      payer: expense.payer
     });
     setEditingExpense(expense);
     setShowAddForm(true);
@@ -143,10 +143,6 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
   const formatCurrency = (amount: number) => {
     return `¥${amount.toFixed(2)}`;
   };
-
-  const categories = [
-    '餐饮', '交通', '购物', '娱乐', '医疗', '教育', '住房', '水电', '其他'
-  ];
 
   if (loading) {
     return (
@@ -233,7 +229,7 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
                       <SelectValue placeholder="选择分类" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map(category => (
+                      {EXPENSE_CATEGORIES.map(category => (
                         <SelectItem key={category} value={category}>
                           {category}
                         </SelectItem>
@@ -242,22 +238,22 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="paid_by">支付人</Label>
+                  <Label htmlFor="payer">支付人</Label>
                   <Input
-                    id="paid_by"
-                    value={formData.paid_by}
-                    onChange={(e) => setFormData({ ...formData, paid_by: e.target.value })}
+                    id="payer"
+                    value={formData.payer}
+                    onChange={(e) => setFormData({ ...formData, payer: e.target.value })}
                     placeholder="请输入支付人"
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="date">日期</Label>
+                  <Label htmlFor="expense_date">日期</Label>
                   <Input
-                    id="date"
+                    id="expense_date"
                     type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    value={formData.expense_date}
+                    onChange={(e) => setFormData({ ...formData, expense_date: e.target.value })}
                     required
                   />
                 </div>
@@ -299,10 +295,10 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
                       </span>
                     </div>
                     <div className="text-sm text-gray-600 space-y-1">
-                      <div>支付人: {expense.paid_by}</div>
+                      <div>支付人: {expense.payer}</div>
                       <div className="flex items-center">
                         <Calendar className="h-3 w-3 mr-1" />
-                        {expense.date}
+                        {expense.expense_date}
                       </div>
                       {expense.description && (
                         <div>备注: {expense.description}</div>

@@ -39,7 +39,7 @@ const FamilyStats = ({ onBack }: FamilyStatsProps) => {
       setExpenseStats(expenseData);
 
       // 加载提醒统计
-      const reminders = await familyRemindersService.getReminders();
+      const reminders = await familyRemindersService.getFamilyReminders();
       const completed = reminders.filter(r => r.is_completed).length;
       setReminderStats({
         total: reminders.length,
@@ -48,10 +48,10 @@ const FamilyStats = ({ onBack }: FamilyStatsProps) => {
       });
 
       // 加载日历统计
-      const events = await familyCalendarService.getEvents();
+      const events = await familyCalendarService.getFamilyCalendarEvents();
       const today = new Date().toISOString().split('T')[0];
-      const todayEvents = events.filter(e => e.start_date === today).length;
-      const upcomingEvents = events.filter(e => e.start_date > today).length;
+      const todayEvents = events.filter(e => e.event_date === today).length;
+      const upcomingEvents = events.filter(e => e.event_date > today).length;
       
       setCalendarStats({
         totalEvents: events.length,
@@ -136,12 +136,6 @@ const FamilyStats = ({ onBack }: FamilyStatsProps) => {
                         <div className="text-sm text-gray-600">本月支出</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-purple-600">
-                          {formatCurrency(expenseStats.totalLastMonth)}
-                        </div>
-                        <div className="text-sm text-gray-600">上月支出</div>
-                      </div>
-                      <div className="text-center">
                         <div className="text-2xl font-bold text-orange-600">
                           {formatCurrency(expenseStats.totalThisYear)}
                         </div>
@@ -163,9 +157,9 @@ const FamilyStats = ({ onBack }: FamilyStatsProps) => {
                         <div key={category.category} className="flex justify-between items-center">
                           <span className="text-sm font-medium">{category.category}</span>
                           <div className="text-right">
-                            <div className="text-sm font-bold">{formatCurrency(category.total)}</div>
+                            <div className="text-sm font-bold">{formatCurrency(category.amount)}</div>
                             <div className="text-xs text-gray-500">
-                              {formatPercentage(category.total, expenseStats.totalThisMonth)}
+                              {formatPercentage(category.amount, expenseStats.totalThisMonth)}
                             </div>
                           </div>
                         </div>

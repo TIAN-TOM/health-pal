@@ -22,9 +22,9 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
     title: '',
     description: '',
     reminder_date: '',
-    reminder_time: '',
     assigned_to: '',
-    is_recurring: false
+    is_recurring: false,
+    recurring_pattern: ''
   });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -35,7 +35,7 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
 
   const loadReminders = async () => {
     try {
-      const data = await familyRemindersService.getReminders();
+      const data = await familyRemindersService.getFamilyReminders();
       setReminders(data);
     } catch (error) {
       console.error('加载提醒失败:', error);
@@ -56,19 +56,20 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
         title: formData.title,
         description: formData.description,
         reminder_date: formData.reminder_date,
-        reminder_time: formData.reminder_time,
         assigned_to: formData.assigned_to,
-        is_recurring: formData.is_recurring
+        is_recurring: formData.is_recurring,
+        recurring_pattern: formData.is_recurring ? formData.recurring_pattern : null,
+        is_completed: false
       };
 
       if (editingReminder) {
-        await familyRemindersService.updateReminder(editingReminder.id, reminderData);
+        await familyRemindersService.updateFamilyReminder(editingReminder.id, reminderData);
         toast({
           title: "更新成功",
           description: "提醒已更新",
         });
       } else {
-        await familyRemindersService.createReminder(reminderData);
+        await familyRemindersService.addFamilyReminder(reminderData);
         toast({
           title: "添加成功",
           description: "提醒已添加",
@@ -89,7 +90,7 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
 
   const handleDelete = async (id: string) => {
     try {
-      await familyRemindersService.deleteReminder(id);
+      await familyRemindersService.deleteFamilyReminder(id);
       toast({
         title: "删除成功",
         description: "提醒已删除",
@@ -107,7 +108,7 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
 
   const handleToggleComplete = async (id: string, isCompleted: boolean) => {
     try {
-      await familyRemindersService.toggleComplete(id, isCompleted);
+      await familyRemindersService.toggleReminderComplete(id, isCompleted);
       toast({
         title: isCompleted ? "已完成" : "已取消完成",
         description: isCompleted ? "提醒已标记为完成" : "提醒已标记为未完成",
@@ -128,9 +129,9 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
       title: '',
       description: '',
       reminder_date: '',
-      reminder_time: '',
       assigned_to: '',
-      is_recurring: false
+      is_recurring: false,
+      recurring_pattern: ''
     });
     setShowAddForm(false);
     setEditingReminder(null);
@@ -141,18 +142,17 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
       title: reminder.title,
       description: reminder.description || '',
       reminder_date: reminder.reminder_date,
-      reminder_time: reminder.reminder_time || '',
       assigned_to: reminder.assigned_to || '',
-      is_recurring: reminder.is_recurring
+      is_recurring: reminder.is_recurring,
+      recurring_pattern: reminder.recurring_pattern || ''
     });
     setEditingReminder(reminder);
     setShowAddForm(true);
   };
 
-  const formatDateTime = (date: string, time?: string) => {
-    const dateObj = new Date(date);
-    const dateStr = dateObj.toLocaleDateString('zh-CN');
-    return time ? `${dateStr} ${time}` : dateStr;
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('zh-CN');
   };
 
   if (loading) {
@@ -230,16 +230,6 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="reminder_time">时间</Label>
-                  <Input
-                    id="reminder_time"
-                    type="time"
-                    value={formData.reminder_time}
-                    onChange={(e) => setFormData({ ...formData, reminder_time: e.target.value })}
-                    placeholder="请选择时间（可选）"
-                  />
-                </div>
-                <div>
                   <Label htmlFor="assigned_to">负责人</Label>
                   <Input
                     id="assigned_to"
@@ -256,6 +246,17 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
                   />
                   <Label htmlFor="is_recurring">重复提醒</Label>
                 </div>
+                {formData.is_recurring && (
+                  <div>
+                    <Label htmlFor="recurring_pattern">重复模式</Label>
+                    <Input
+                      id="recurring_pattern"
+                      value={formData.recurring_pattern}
+                      onChange={(e) => setFormData({ ...formData, recurring_pattern: e.target.value })}
+                      placeholder="例如：每周、每月"
+                    />
+                  </div>
+                )}
                 <div className="flex space-x-2">
                   <Button type="submit" className="flex-1">
                     {editingReminder ? '更新' : '添加'}
@@ -300,7 +301,7 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
                       )}
                       <div className="flex items-center">
                         <Clock className="h-3 w-3 mr-1" />
-                        {formatDateTime(reminder.reminder_date, reminder.reminder_time)}
+                        {formatDate(reminder.reminder_date)}
                       </div>
                       {reminder.assigned_to && (
                         <div className="flex items-center">

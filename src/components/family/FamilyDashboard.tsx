@@ -1,36 +1,21 @@
 
-import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Users, Calculator, Calendar, Bell, MessageSquare, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Plus, DollarSign, Bell, Calendar, BarChart3, Users, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { familyExpensesService, type ExpenseStats } from '@/services/familyExpensesService';
 import { familyRemindersService, type FamilyReminder } from '@/services/familyRemindersService';
 import { familyCalendarService, type FamilyCalendarEvent } from '@/services/familyCalendarService';
 
 interface FamilyDashboardProps {
   onBack: () => void;
-  onNavigateToMembers: () => void;
-  onNavigateToExpenses: () => void;
-  onNavigateToReminders: () => void;
-  onNavigateToCalendar: () => void;
-  onNavigateToMessages: () => void;
-  onNavigateToStats: () => void;
+  onNavigate: (page: string) => void;
 }
 
-const FamilyDashboard = ({
-  onBack,
-  onNavigateToMembers,
-  onNavigateToExpenses,
-  onNavigateToReminders,
-  onNavigateToCalendar,
-  onNavigateToMessages,
-  onNavigateToStats
-}: FamilyDashboardProps) => {
+const FamilyDashboard = ({ onBack, onNavigate }: FamilyDashboardProps) => {
   const [expenseStats, setExpenseStats] = useState<ExpenseStats | null>(null);
   const [todayReminders, setTodayReminders] = useState<FamilyReminder[]>([]);
   const [todayEvents, setTodayEvents] = useState<FamilyCalendarEvent[]>([]);
-  const [incompleteCount, setIncompleteCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,45 +26,17 @@ const FamilyDashboard = ({
     try {
       setLoading(true);
       
-      // 并行加载数据，并处理可能的错误
-      const [stats, reminders, events, count] = await Promise.allSettled([
-        familyExpensesService.getExpenseStats(),
-        familyRemindersService.getTodayReminders(),
-        familyCalendarService.getTodayEvents(),
-        familyRemindersService.getIncompleteCount()
-      ]);
+      // 加载支出统计
+      const expenseData = await familyExpensesService.getExpenseStats();
+      setExpenseStats(expenseData);
 
-      // 处理支出统计数据
-      if (stats.status === 'fulfilled') {
-        setExpenseStats(stats.value);
-      } else {
-        console.error('加载支出统计失败:', stats.reason);
-        setExpenseStats(null);
-      }
+      // 加载今日提醒
+      const reminders = await familyRemindersService.getTodayReminders();
+      setTodayReminders(reminders);
 
-      // 处理今日提醒数据
-      if (reminders.status === 'fulfilled') {
-        setTodayReminders(reminders.value);
-      } else {
-        console.error('加载今日提醒失败:', reminders.reason);
-        setTodayReminders([]);
-      }
-
-      // 处理今日事件数据
-      if (events.status === 'fulfilled') {
-        setTodayEvents(events.value);
-      } else {
-        console.error('加载今日事件失败:', events.reason);
-        setTodayEvents([]);
-      }
-
-      // 处理未完成提醒数量
-      if (count.status === 'fulfilled') {
-        setIncompleteCount(count.value);
-      } else {
-        console.error('加载未完成提醒数量失败:', count.reason);
-        setIncompleteCount(0);
-      }
+      // 加载今日事件
+      const events = await familyCalendarService.getTodayEvents();
+      setTodayEvents(events);
 
     } catch (error) {
       console.error('加载仪表板数据失败:', error);
@@ -93,22 +50,54 @@ const FamilyDashboard = ({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('zh-CN', {
-      month: 'short',
-      day: 'numeric'
-    });
+    const date = new Date(dateString);
+    return date.toLocaleDateString('zh-CN');
   };
 
-  const getCurrentDate = () => {
-    const now = new Date();
-    return {
-      date: now.getDate(),
-      month: now.toLocaleDateString('zh-CN', { month: 'long' }),
-      weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
-    };
-  };
-
-  const currentDate = getCurrentDate();
+  const functionCards = [
+    {
+      title: '家庭记账',
+      icon: DollarSign,
+      color: 'bg-blue-500',
+      page: 'family-expenses',
+      description: '记录家庭收支'
+    },
+    {
+      title: '家庭提醒',
+      icon: Bell,
+      color: 'bg-orange-500',
+      page: 'family-reminders',
+      description: '管理家庭待办事项'
+    },
+    {
+      title: '家庭日历',
+      icon: Calendar,
+      color: 'bg-green-500',
+      page: 'family-calendar',
+      description: '安排家庭活动'
+    },
+    {
+      title: '家庭成员',
+      icon: Users,
+      color: 'bg-purple-500',
+      page: 'family-members',
+      description: '管理家庭成员信息'
+    },
+    {
+      title: '家庭消息',
+      icon: MessageCircle,
+      color: 'bg-pink-500',
+      page: 'family-messages',
+      description: '家庭内部沟通'
+    },
+    {
+      title: '统计报表',
+      icon: BarChart3,
+      color: 'bg-indigo-500',
+      page: 'family-stats',
+      description: '查看家庭数据统计'
+    }
+  ];
 
   if (loading) {
     return (
@@ -135,113 +124,80 @@ const FamilyDashboard = ({
             <ArrowLeft className="h-4 w-4 mr-1" />
             返回
           </Button>
-          <h1 className="text-xl font-bold text-gray-800">温馨的家</h1>
+          <h1 className="text-xl font-bold text-gray-800">家庭管理</h1>
           <div className="w-16" /> {/* 占位符保持居中 */}
         </div>
 
-        {/* 日期显示 */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary">{currentDate.date}</div>
-              <div className="text-sm text-gray-600">{currentDate.month} • {currentDate.weekday}</div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 快捷操作网格 */}
+        {/* 快速统计 */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onNavigateToExpenses}>
-            <CardContent className="p-4 text-center">
-              <Calculator className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-              <div className="text-sm font-medium">记账</div>
-              {expenseStats && (
-                <div className="text-xs text-gray-500 mt-1">
-                  今日: {formatCurrency(expenseStats.totalToday)}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onNavigateToReminders}>
-            <CardContent className="p-4 text-center">
-              <Bell className="h-8 w-8 mx-auto mb-2 text-orange-600" />
-              <div className="text-sm font-medium">提醒</div>
-              {incompleteCount > 0 && (
-                <Badge variant="destructive" className="text-xs mt-1">
-                  {incompleteCount}
-                </Badge>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onNavigateToCalendar}>
-            <CardContent className="p-4 text-center">
-              <Calendar className="h-8 w-8 mx-auto mb-2 text-green-600" />
-              <div className="text-sm font-medium">日历</div>
-              {todayEvents.length > 0 && (
-                <div className="text-xs text-gray-500 mt-1">
-                  今日 {todayEvents.length} 个事件
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onNavigateToStats}>
-            <CardContent className="p-4 text-center">
-              <TrendingUp className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-              <div className="text-sm font-medium">统计</div>
-              {expenseStats && (
-                <div className="text-xs text-gray-500 mt-1">
-                  本月: {formatCurrency(expenseStats.totalThisMonth)}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {expenseStats && (
+            <>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {formatCurrency(expenseStats.totalToday)}
+                  </div>
+                  <div className="text-sm text-gray-600">今日支出</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {formatCurrency(expenseStats.totalThisMonth)}
+                  </div>
+                  <div className="text-sm text-gray-600">本月支出</div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
-        {/* 家庭成员管理 */}
-        <Card className="mb-4 cursor-pointer hover:shadow-md transition-shadow" onClick={onNavigateToMembers}>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center">
-              <Users className="h-5 w-5 mr-2 text-blue-600" />
-              家庭成员
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-sm text-gray-600">管理家庭成员信息</p>
-          </CardContent>
-        </Card>
+        {/* 功能卡片 */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {functionCards.map((card) => (
+            <Card 
+              key={card.page} 
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => onNavigate(card.page)}
+            >
+              <CardContent className="p-4 text-center">
+                <div className={`${card.color} w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3`}>
+                  <card.icon className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="font-medium text-gray-800 mb-1">{card.title}</h3>
+                <p className="text-xs text-gray-600">{card.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-        {/* 今日待办 */}
+        {/* 今日提醒 */}
         {todayReminders.length > 0 && (
-          <Card className="mb-4">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">今日待办</CardTitle>
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center">
+                <Bell className="h-5 w-5 mr-2 text-orange-600" />
+                今日提醒
+              </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-2">
+            <CardContent>
+              <div className="space-y-3">
                 {todayReminders.slice(0, 3).map((reminder) => (
-                  <div key={reminder.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div key={reminder.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
                     <div className="flex-1">
-                      <div className="text-sm font-medium">{reminder.title}</div>
-                      {reminder.assigned_to && (
-                        <div className="text-xs text-gray-500">负责人: {reminder.assigned_to}</div>
-                      )}
+                      <div className="font-medium text-gray-800">{reminder.title}</div>
+                      <div className="text-sm text-gray-600">
+                        {formatDate(reminder.reminder_date)}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-400">
-                      {reminder.reminder_time && new Date(`${reminder.reminder_date}T${reminder.reminder_time}`).toLocaleTimeString('zh-CN', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                    <div className="text-orange-600">
+                      <Bell className="h-4 w-4" />
                     </div>
                   </div>
                 ))}
                 {todayReminders.length > 3 && (
-                  <div className="text-center">
-                    <Button variant="ghost" size="sm" onClick={onNavigateToReminders}>
-                      查看全部 {todayReminders.length} 个待办
-                    </Button>
+                  <div className="text-center text-sm text-gray-500">
+                    还有 {todayReminders.length - 3} 个提醒...
                   </div>
                 )}
               </div>
@@ -251,38 +207,32 @@ const FamilyDashboard = ({
 
         {/* 今日事件 */}
         {todayEvents.length > 0 && (
-          <Card className="mb-4">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">今日安排</CardTitle>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center">
+                <Calendar className="h-5 w-5 mr-2 text-green-600" />
+                今日事件
+              </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-2">
+            <CardContent>
+              <div className="space-y-3">
                 {todayEvents.slice(0, 3).map((event) => (
-                  <div key={event.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <div className="flex items-center">
-                      <div 
-                        className="w-3 h-3 rounded-full mr-2" 
-                        style={{ backgroundColor: event.color }}
-                      />
-                      <div>
-                        <div className="text-sm font-medium">{event.title}</div>
-                        {event.participants && event.participants.length > 0 && (
-                          <div className="text-xs text-gray-500">
-                            参与者: {event.participants.join(', ')}
-                          </div>
-                        )}
+                  <div key={event.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-800">{event.title}</div>
+                      <div className="text-sm text-gray-600">
+                        {event.is_all_day ? '全天' : `${event.start_time || ''} - ${event.end_time || ''}`}
                       </div>
                     </div>
-                    {!event.is_all_day && event.start_time && (
-                      <div className="text-xs text-gray-400">{event.start_time}</div>
-                    )}
+                    <div 
+                      className="w-4 h-4 rounded-full" 
+                      style={{ backgroundColor: event.color }}
+                    />
                   </div>
                 ))}
                 {todayEvents.length > 3 && (
-                  <div className="text-center">
-                    <Button variant="ghost" size="sm" onClick={onNavigateToCalendar}>
-                      查看全部 {todayEvents.length} 个事件
-                    </Button>
+                  <div className="text-center text-sm text-gray-500">
+                    还有 {todayEvents.length - 3} 个事件...
                   </div>
                 )}
               </div>
@@ -290,18 +240,18 @@ const FamilyDashboard = ({
           </Card>
         )}
 
-        {/* 消息中心 */}
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onNavigateToMessages}>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center">
-              <MessageSquare className="h-5 w-5 mr-2 text-green-600" />
-              消息中心
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-sm text-gray-600">家庭成员交流沟通</p>
-          </CardContent>
-        </Card>
+        {/* 空状态 */}
+        {todayReminders.length === 0 && todayEvents.length === 0 && (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <div className="text-gray-400 mb-4">
+                <Calendar className="h-12 w-12 mx-auto" />
+              </div>
+              <p className="text-gray-500">今天暂无提醒和事件</p>
+              <p className="text-sm text-gray-400 mt-2">点击上方功能卡片开始管理家庭事务</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

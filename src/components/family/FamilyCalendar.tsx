@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { familyCalendarService, type FamilyCalendarEvent } from '@/services/familyCalendarService';
+import { familyCalendarService, type FamilyCalendarEvent, EVENT_COLORS } from '@/services/familyCalendarService';
 
 interface FamilyCalendarProps {
   onBack: () => void;
@@ -21,11 +21,9 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    start_date: '',
-    end_date: '',
+    event_date: '',
     start_time: '',
     end_time: '',
-    location: '',
     participants: '',
     is_all_day: false,
     color: '#3b82f6'
@@ -39,7 +37,7 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
 
   const loadEvents = async () => {
     try {
-      const data = await familyCalendarService.getEvents();
+      const data = await familyCalendarService.getFamilyCalendarEvents();
       setEvents(data);
     } catch (error) {
       console.error('加载日历事件失败:', error);
@@ -59,24 +57,22 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
       const eventData = {
         title: formData.title,
         description: formData.description,
-        start_date: formData.start_date,
-        end_date: formData.end_date || formData.start_date,
+        event_date: formData.event_date,
         start_time: formData.is_all_day ? null : formData.start_time,
         end_time: formData.is_all_day ? null : formData.end_time,
-        location: formData.location,
         participants: formData.participants ? formData.participants.split(',').map(p => p.trim()) : [],
         is_all_day: formData.is_all_day,
         color: formData.color
       };
 
       if (editingEvent) {
-        await familyCalendarService.updateEvent(editingEvent.id, eventData);
+        await familyCalendarService.updateFamilyCalendarEvent(editingEvent.id, eventData);
         toast({
           title: "更新成功",
           description: "日历事件已更新",
         });
       } else {
-        await familyCalendarService.createEvent(eventData);
+        await familyCalendarService.addFamilyCalendarEvent(eventData);
         toast({
           title: "添加成功",
           description: "日历事件已添加",
@@ -97,7 +93,7 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
 
   const handleDelete = async (id: string) => {
     try {
-      await familyCalendarService.deleteEvent(id);
+      await familyCalendarService.deleteFamilyCalendarEvent(id);
       toast({
         title: "删除成功",
         description: "日历事件已删除",
@@ -117,11 +113,9 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
     setFormData({
       title: '',
       description: '',
-      start_date: '',
-      end_date: '',
+      event_date: '',
       start_time: '',
       end_time: '',
-      location: '',
       participants: '',
       is_all_day: false,
       color: '#3b82f6'
@@ -134,11 +128,9 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
     setFormData({
       title: event.title,
       description: event.description || '',
-      start_date: event.start_date,
-      end_date: event.end_date,
+      event_date: event.event_date,
       start_time: event.start_time || '',
       end_time: event.end_time || '',
-      location: event.location || '',
       participants: event.participants ? event.participants.join(', ') : '',
       is_all_day: event.is_all_day,
       color: event.color
@@ -156,14 +148,10 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
     return endTime ? `${startTime} - ${endTime}` : startTime;
   };
 
-  const colorOptions = [
-    { value: '#3b82f6', label: '蓝色' },
-    { value: '#10b981', label: '绿色' },
-    { value: '#f59e0b', label: '橙色' },
-    { value: '#ef4444', label: '红色' },
-    { value: '#8b5cf6', label: '紫色' },
-    { value: '#06b6d4', label: '青色' }
-  ];
+  const colorOptions = EVENT_COLORS.map((color, index) => ({
+    value: color,
+    label: `颜色 ${index + 1}`
+  }));
 
   if (loading) {
     return (
@@ -230,23 +218,13 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="start_date">开始日期</Label>
+                  <Label htmlFor="event_date">日期</Label>
                   <Input
-                    id="start_date"
+                    id="event_date"
                     type="date"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                    value={formData.event_date}
+                    onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
                     required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="end_date">结束日期</Label>
-                  <Input
-                    id="end_date"
-                    type="date"
-                    value={formData.end_date}
-                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                    placeholder="如果是单日事件可留空"
                   />
                 </div>
                 <div className="flex items-center space-x-2">
@@ -279,15 +257,6 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
                     </div>
                   </div>
                 )}
-                <div>
-                  <Label htmlFor="location">地点</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="请输入事件地点（可选）"
-                  />
-                </div>
                 <div>
                   <Label htmlFor="participants">参与者</Label>
                   <Input
@@ -352,19 +321,13 @@ const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
                       )}
                       <div className="flex items-center">
                         <Calendar className="h-3 w-3 mr-1" />
-                        {formatDate(event.start_date)}
-                        {event.end_date && event.end_date !== event.start_date && (
-                          <span> - {formatDate(event.end_date)}</span>
-                        )}
+                        {formatDate(event.event_date)}
                       </div>
                       {!event.is_all_day && (event.start_time || event.end_time) && (
                         <div className="flex items-center">
                           <Clock className="h-3 w-3 mr-1" />
                           {formatTimeRange(event.start_time, event.end_time)}
                         </div>
-                      )}
-                      {event.location && (
-                        <div>地点: {event.location}</div>
                       )}
                       {event.participants && event.participants.length > 0 && (
                         <div className="flex items-center">
