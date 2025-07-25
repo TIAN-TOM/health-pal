@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Settings as SettingsIcon, Book, HelpCircle, Shield, History } from 'lucide-react';
+import { Settings as SettingsIcon, Book, HelpCircle, Shield, History, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -8,10 +8,11 @@ interface SystemSettingsProps {
   onEducation: () => void;
   onUserManual: () => void;
   onUpdateLog: () => void;
+  onUserPreferences: () => void;
   onAdminPanel?: () => void;
 }
 
-const SystemSettings = ({ onEducation, onUserManual, onUpdateLog, onAdminPanel }: SystemSettingsProps) => {
+const SystemSettings = ({ onEducation, onUserManual, onUpdateLog, onUserPreferences, onAdminPanel }: SystemSettingsProps) => {
   return (
     <Card>
       <CardHeader>
@@ -46,6 +47,15 @@ const SystemSettings = ({ onEducation, onUserManual, onUpdateLog, onAdminPanel }
         >
           <History className="h-4 w-4 mr-2" />
           更新日志
+        </Button>
+
+        <Button
+          onClick={onUserPreferences}
+          variant="outline"
+          className="w-full justify-start"
+        >
+          <User className="h-4 w-4 mr-2" />
+          个人偏好设置
         </Button>
         
         {onAdminPanel && (
