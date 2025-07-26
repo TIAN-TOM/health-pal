@@ -13,6 +13,7 @@ import { familyMembersService, type FamilyMember } from '@/services/familyMember
 
 interface FamilyCalendarProps {
   onBack: () => void;
+  onNavigate?: (page: string, source?: string) => void;
 }
 
 const FamilyCalendar = ({ onBack }: FamilyCalendarProps) => {
