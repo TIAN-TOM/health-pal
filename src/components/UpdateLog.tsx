@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ArrowLeft, Calendar, Zap, Bug, Sparkles, Home, Navigation, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,30 +10,6 @@ interface UpdateLogProps {
 
 const UpdateLog = ({ onBack }: UpdateLogProps) => {
   const updates = [
-    {
-      version: '2.2.0',
-      date: '2025-01-26',
-      type: '功能优化',
-      icon: Bug,
-      color: 'bg-red-50 text-red-600 border-red-200',
-      items: [
-        {
-          title: '🔧 修复症状记录页面导航问题',
-          description: '修复眩晕症状、血糖情况、饮食作息、用药情况记录页面无法正常访问的问题',
-          type: 'fix'
-        },
-        {
-          title: '📅 优化家庭日历模块',
-          description: '移除旧版家庭日历，统一使用增强版日历，扩大年限范围，减少加载错误',
-          type: 'improvement'
-        },
-        {
-          title: '🔧 完善更新日志',
-          description: '修正更新日志中的日期和版本顺序，确保与实际开发进度一致',
-          type: 'fix'
-        }
-      ]
-    },
     {
       version: '2.1.0',
       date: '2025-01-26',
@@ -61,7 +36,7 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
     },
     {
       version: '2.0.0',
-      date: '2025-01-26',
+      date: '2025-01-25',
       type: '重大更新',
       icon: Sparkles,
       color: 'bg-purple-50 text-purple-600 border-purple-200',
@@ -85,7 +60,7 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
     },
     {
       version: '1.9.0',
-      date: '2025-01-25',
+      date: '2025-01-20',
       type: '功能增强',
       icon: Home,
       color: 'bg-blue-50 text-blue-600 border-blue-200',
@@ -109,7 +84,7 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
     },
     {
       version: '1.8.0',
-      date: '2025-01-24',
+      date: '2025-01-15',
       type: '功能扩展',
       icon: Zap,
       color: 'bg-green-50 text-green-600 border-green-200',
@@ -133,7 +108,7 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
     },
     {
       version: '1.7.0',
-      date: '2025-01-23',
+      date: '2025-01-10',
       type: '用户体验',
       icon: Calendar,
       color: 'bg-orange-50 text-orange-600 border-orange-200',
@@ -157,7 +132,7 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
     },
     {
       version: '1.6.0',
-      date: '2025-01-22',
+      date: '2025-01-05',
       type: '健康管理',
       icon: Calendar,
       color: 'bg-teal-50 text-teal-600 border-teal-200',

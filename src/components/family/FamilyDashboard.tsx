@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowLeft, Calendar, DollarSign, Bell, Users, MessageSquare, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Calendar, DollarSign, Bell, Users, MessageSquare, BarChart3, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -14,10 +14,18 @@ const FamilyDashboard = ({ onBack, onNavigate }: FamilyDashboardProps) => {
     {
       id: 'family-calendar',
       title: '家庭日历',
-      description: '42格网格布局，支持农历、节日、生日提醒',
+      description: '管理家庭日程和重要事件',
       icon: Calendar,
       color: 'from-blue-500 to-blue-600',
       route: 'family-calendar'
+    },
+    {
+      id: 'enhanced-family-calendar',
+      title: '✨ 增强版日历',
+      description: '42格网格布局，支持农历、节日、生日提醒',
+      icon: Sparkles,
+      color: 'from-purple-500 to-purple-600',
+      route: 'enhanced-family-calendar'
     },
     {
       id: 'family-expenses',
@@ -115,9 +123,9 @@ const FamilyDashboard = ({ onBack, onNavigate }: FamilyDashboardProps) => {
         {/* 底部提示 */}
         <div className="mt-12 text-center">
           <div className="inline-flex items-center px-4 py-2 bg-white rounded-full shadow-sm border">
-            <Calendar className="h-4 w-4 text-blue-500 mr-2" />
+            <Sparkles className="h-4 w-4 text-purple-500 mr-2" />
             <span className="text-sm text-gray-600">
-              全新的家庭日历，功能更强大！
+              体验全新的增强版家庭日历，功能更强大！
             </span>
           </div>
         </div>

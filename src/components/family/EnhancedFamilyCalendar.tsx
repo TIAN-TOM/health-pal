@@ -17,7 +17,7 @@ interface EnhancedFamilyCalendarProps {
   onNavigate?: (page: string, source?: string) => void;
 }
 
-const EnhancedFamilyCalendar = ({ onBack, onNavigate }: EnhancedFamilyCalendarProps) => {
+const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
   const [events, setEvents] = useState<FamilyCalendarEvent[]>([]);
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -43,35 +43,23 @@ const EnhancedFamilyCalendar = ({ onBack, onNavigate }: EnhancedFamilyCalendarPr
 
   const loadData = async () => {
     try {
-      setLoading(true);
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
       
-      // 扩大年限范围，支持更广的时间范围
-      if (year < 1900 || year > 2100) {
-        console.warn('年份超出支持范围，使用当前年份');
-        setCurrentDate(new Date());
-        return;
-      }
-      
       const [eventsData, membersData] = await Promise.all([
-        familyCalendarService.getMonthEvents(year, month).catch(err => {
-          console.warn('获取日历事件失败，使用空数组:', err);
-          return [];
-        }),
-        familyMembersService.getFamilyMembers().catch(err => {
-          console.warn('获取家庭成员失败，使用空数组:', err);
-          return [];
-        })
+        familyCalendarService.getMonthEvents(year, month),
+        familyMembersService.getFamilyMembers()
       ]);
       
       setEvents(eventsData);
       setMembers(membersData);
     } catch (error) {
-      console.error('加载数据时发生错误:', error);
-      // 设置默认空数据，避免页面崩溃
-      setEvents([]);
-      setMembers([]);
+      console.error('加载数据失败:', error);
+      toast({
+        title: "加载失败",
+        description: "无法加载日历数据",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
