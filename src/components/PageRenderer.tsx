@@ -17,6 +17,11 @@ import EmergencyMode from './EmergencyMode';
 import UserManual from './UserManual';
 import UpdateLog from './UpdateLog';
 import AdminPanel from './AdminPanel';
+// 症状记录相关组件
+import DizzinessRecord from './DizzinessRecord';
+import DiabetesRecord from './DiabetesRecord';
+import LifestyleRecord from './LifestyleRecord';
+import MedicationRecord from './MedicationRecord';
 import FamilyDashboard from './family/FamilyDashboard';
 import FamilyExpenses from './family/FamilyExpenses';
 import FamilyReminders from './family/FamilyReminders';
@@ -184,6 +189,22 @@ const PageRenderer = ({
     
     case 'export':
       return <DataExport onBack={() => onBack()} />;
+    
+    // 症状记录页面
+    case 'dizziness-record':
+      return <DizzinessRecord onBack={() => onBack()} />;
+    
+    case 'diabetes-record':
+      return <DiabetesRecord onBack={() => onBack()} />;
+    
+    case 'lifestyle-record':
+      return <LifestyleRecord onBack={() => onBack()} />;
+    
+    case 'medication-record':
+      return <MedicationRecord 
+        onBack={() => onBack()} 
+        onNavigateToMedicationManagement={() => onNavigation('medications')}
+      />;
     
     default:
       return null;

@@ -11,25 +11,25 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack }: UpdateLogProps) => {
   const updates = [
     {
-      version: '2.1.0',
+      version: '2.2.0',
       date: '2025-01-26',
       type: '功能优化',
       icon: Bug,
       color: 'bg-red-50 text-red-600 border-red-200',
       items: [
         {
-          title: '🔧 修复家庭管理模块导航问题',
-          description: '修复从家庭管理子模块返回时直接跳转到首页的问题，现在正确返回到家庭管理中心',
+          title: '🔧 修复症状记录页面导航问题',
+          description: '修复眩晕、血糖、生活方式、用药记录页面白屏崩溃问题，完善路由配置',
           type: 'fix'
         },
         {
-          title: '🔧 修复页面跳转白屏问题',
-          description: '修复"每日数据中心"和"整理记录给医生/AI"按钮导致的页面崩溃问题',
-          type: 'fix'
+          title: '📅 优化家庭日历功能',
+          description: '移除旧版家庭日历，增强版日历重命名为"家庭日历"，扩大年限范围至2000-2050年',
+          type: 'improvement'
         },
         {
-          title: '🔧 完善路由配置',
-          description: '补充缺失的页面路由配置，确保所有导航功能正常工作',
+          title: '🔧 完善页面路由配置',
+          description: '补充缺失的症状记录页面路由，确保所有导航功能正常工作',
           type: 'fix'
         }
       ]

@@ -68,7 +68,7 @@ const RecordHub = ({ onBack, onNavigate }: RecordHubProps) => {
               <Card key={type.id} className="hover:shadow-lg transition-shadow duration-200">
                 <CardContent className="p-6">
                   <Button
-                    onClick={() => onNavigate(type.id)}
+                    onClick={() => onNavigate(`${type.id}-record`)}
                     className={`w-full ${type.color} text-white text-lg font-medium py-8 rounded-lg min-h-[120px]`}
                   >
                     <div className="flex flex-col items-center">

@@ -266,7 +266,7 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
             <ArrowLeft className="h-4 w-4 mr-1" />
             返回
           </Button>
-          <h1 className="text-2xl font-bold text-gray-800">✨ 增强版家庭日历</h1>
+          <h1 className="text-2xl font-bold text-gray-800">📅 家庭日历</h1>
           <div className="flex space-x-2">
             <Button
               size="sm"
@@ -452,6 +452,8 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
                     type="date"
                     value={formData.event_date}
                     onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
+                    min="2000-01-01"
+                    max="2050-12-31"
                     required
                   />
                 </div>
