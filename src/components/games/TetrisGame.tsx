@@ -200,14 +200,37 @@ const TetrisGame = ({ onBack, soundEnabled = true }: TetrisGameProps) => {
     }
   }, [currentPiece, board, gameOver, isPaused, canPlacePiece, placePiece, clearLines, nextPiece, level, lines, createPiece]);
 
-  // 旋转当前方块
+  // 旋转当前方块（增加墙踢机制）
   const handleRotate = useCallback(() => {
     if (!currentPiece || gameOver || isPaused) return;
     
     const rotated = rotatePiece(currentPiece);
+    
+    // 尝试基本旋转
     if (canPlacePiece(rotated, board)) {
       setCurrentPiece(rotated);
+      return;
     }
+    
+    // 墙踢尝试：向左移动一格
+    if (canPlacePiece(rotated, board, -1, 0)) {
+      setCurrentPiece(prev => prev ? { ...rotated, x: prev.x - 1 } : null);
+      return;
+    }
+    
+    // 墙踢尝试：向右移动一格
+    if (canPlacePiece(rotated, board, 1, 0)) {
+      setCurrentPiece(prev => prev ? { ...rotated, x: prev.x + 1 } : null);
+      return;
+    }
+    
+    // 墙踢尝试：向上移动一格（特殊情况）
+    if (canPlacePiece(rotated, board, 0, -1)) {
+      setCurrentPiece(prev => prev ? { ...rotated, y: prev.y - 1 } : null);
+      return;
+    }
+    
+    // 如果所有墙踢都失败，则旋转失败
   }, [currentPiece, gameOver, isPaused, rotatePiece, canPlacePiece, board]);
 
   // 硬降（直接落到底部）
@@ -468,49 +491,59 @@ const TetrisGame = ({ onBack, soundEnabled = true }: TetrisGameProps) => {
                 <CardTitle className="text-lg">触屏控制</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className="col-span-3 text-center">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={handleRotate}
+                      disabled={!isPlaying || isPaused || gameOver}
+                      className="w-full h-12"
+                    >
+                      <RotateCw className="h-5 w-5 mr-2" />
+                      旋转
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 mb-4">
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="lg"
                     onClick={() => movePiece(-1, 0)}
                     disabled={!isPlaying || isPaused || gameOver}
+                    className="h-12 text-lg"
                   >
                     ←
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
-                    onClick={handleRotate}
+                    size="lg"
+                    onClick={() => movePiece(0, 1)}
                     disabled={!isPlaying || isPaused || gameOver}
+                    className="h-12"
                   >
-                    <RotateCw className="h-4 w-4" />
+                    <ArrowDown className="h-5 w-5" />
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="lg"
                     onClick={() => movePiece(1, 0)}
                     disabled={!isPlaying || isPaused || gameOver}
+                    className="h-12 text-lg"
                   >
                     →
                   </Button>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
                   <Button
                     variant="outline"
-                    size="sm"
-                    onClick={() => movePiece(0, 1)}
-                    disabled={!isPlaying || isPaused || gameOver}
-                    className="col-span-1"
-                  >
-                    <ArrowDown className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
+                    size="lg"
                     onClick={hardDrop}
                     disabled={!isPlaying || isPaused || gameOver}
-                    className="col-span-2"
+                    className="h-12"
                   >
-                    <ArrowUp className="h-4 w-4 mr-1" />
-                    硬降
+                    <ArrowUp className="h-5 w-5 mr-2" />
+                    瞬间下降
                   </Button>
                 </div>
               </CardContent>

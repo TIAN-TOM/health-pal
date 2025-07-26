@@ -177,8 +177,13 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
     const days = [];
     
     // 添加上个月的日期（灰色显示）
+    const prevMonth = month === 0 ? 11 : month - 1;
+    const prevYear = month === 0 ? year - 1 : year;
+    const prevMonthLastDay = new Date(prevYear, prevMonth + 1, 0).getDate();
+    
     for (let i = 0; i < startingDayOfWeek; i++) {
-      const prevMonthDate = new Date(year, month - 1, lastDay.getDate() - startingDayOfWeek + i + 1);
+      const day = prevMonthLastDay - startingDayOfWeek + i + 1;
+      const prevMonthDate = new Date(prevYear, prevMonth, day);
       days.push({ date: prevMonthDate, isCurrentMonth: false });
     }
     
@@ -190,8 +195,11 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
     
     // 添加下个月的日期补齐42格（6行7列）
     const remainingDays = 42 - days.length;
+    const nextMonth = month === 11 ? 0 : month + 1;
+    const nextYear = month === 11 ? year + 1 : year;
+    
     for (let day = 1; day <= remainingDays; day++) {
-      const nextMonthDate = new Date(year, month + 1, day);
+      const nextMonthDate = new Date(nextYear, nextMonth, day);
       days.push({ date: nextMonthDate, isCurrentMonth: false });
     }
     
