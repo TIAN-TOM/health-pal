@@ -20,7 +20,6 @@ import AdminPanel from './AdminPanel';
 import FamilyDashboard from './family/FamilyDashboard';
 import FamilyExpenses from './family/FamilyExpenses';
 import FamilyReminders from './family/FamilyReminders';
-import FamilyCalendar from './family/FamilyCalendar';
 import EnhancedFamilyCalendar from './family/EnhancedFamilyCalendar';
 import FamilyMembers from './family/FamilyMembers';
 import FamilyMessages from './family/FamilyMessages';
@@ -29,6 +28,10 @@ import ExchangeRate from './ExchangeRate';
 import DailyEnglish from './DailyEnglish';
 import DailyDataHub from './DailyDataHub';
 import DataExport from './DataExport';
+import DizzinessRecord from './DizzinessRecord';
+import DiabetesRecord from './DiabetesRecord';
+import LifestyleRecord from './LifestyleRecord';
+import MedicationRecord from './MedicationRecord';
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
@@ -86,6 +89,19 @@ const PageRenderer = ({
           onBack={() => onBack('record-hub')}
         />
       ) : null;
+    
+    // 添加症状记录相关页面
+    case 'dizziness-record':
+      return <DizzinessRecord {...commonProps} />;
+    
+    case 'diabetes-record':
+      return <DiabetesRecord {...commonProps} />;
+    
+    case 'lifestyle-record':
+      return <LifestyleRecord {...commonProps} />;
+    
+    case 'medication-record':
+      return <MedicationRecord {...commonProps} />;
     
     case 'settings':
       return (
@@ -147,14 +163,8 @@ const PageRenderer = ({
     case 'family-reminders':
       return <FamilyReminders onBack={handleFamilyModuleBack} />;
     
+    // 只保留增强版家庭日历，重命名为"家庭日历"
     case 'family-calendar':
-      return <FamilyCalendar 
-        onBack={handleFamilyModuleBack}
-        onNavigate={onNavigation}
-      />;
-    
-    // 增强版家庭日历
-    case 'enhanced-family-calendar':
       return <EnhancedFamilyCalendar 
         onBack={handleFamilyModuleBack}
         onNavigate={onNavigation}
@@ -175,7 +185,6 @@ const PageRenderer = ({
     case 'english':
       return <DailyEnglish {...commonProps} />;
     
-    // 修复 DailyDataHub 的 props - 移除不存在的 onNavigate 属性
     case 'daily-data':
       return <DailyDataHub 
         onBack={() => onBack()}
