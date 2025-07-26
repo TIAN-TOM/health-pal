@@ -1,17 +1,14 @@
 
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Plus, Edit2, Trash2, Upload, Phone, MapPin, Calendar, Camera } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, Trash2, Phone, MapPin, Calendar, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { familyMembersService, type FamilyMember } from '@/services/familyMembersService';
+import FamilyMemberForm from './FamilyMemberForm';
 
 interface FamilyMembersProps {
   onBack: () => void;
@@ -20,30 +17,22 @@ interface FamilyMembersProps {
 const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState({
-    name: '',
-    relationship: '',
-    phone: '',
-    birthday: '',
-    address: '',
-    notes: ''
-  });
-
   useEffect(() => {
-    loadMembers();
+    fetchMembers();
   }, []);
 
-  const loadMembers = async () => {
+  const fetchMembers = async () => {
     try {
       setLoading(true);
       const data = await familyMembersService.getFamilyMembers();
       setMembers(data);
     } catch (error) {
+      console.error('Fetch members error:', error);
       toast({
         title: "错误",
         description: "加载家庭成员失败",
@@ -54,74 +43,33 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name.trim() || !formData.relationship.trim()) {
-      toast({
-        title: "错误",
-        description: "姓名和关系为必填项",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      if (editingMember) {
-        await familyMembersService.updateFamilyMember(editingMember.id, formData);
-        toast({
-          title: "成功",
-          description: "更新家庭成员成功",
-        });
-      } else {
-        await familyMembersService.addFamilyMember(formData);
-        toast({
-          title: "成功",
-          description: "添加家庭成员成功",
-        });
-      }
-      
-      setShowAddDialog(false);
-      setEditingMember(null);
-      resetForm();
-      loadMembers();
-    } catch (error) {
-      toast({
-        title: "错误",
-        description: editingMember ? "更新家庭成员失败" : "添加家庭成员失败",
-        variant: "destructive",
-      });
-    }
+  const handleMemberAdded = () => {
+    setShowAddForm(false);
+    setEditingMember(null);
+    fetchMembers();
   };
 
-  const handleDelete = async (id: string) => {
+  const handleEditMember = (member: FamilyMember) => {
+    setEditingMember(member);
+    setShowAddForm(true);
+  };
+
+  const deleteMember = async (id: string) => {
     try {
       await familyMembersService.deleteFamilyMember(id);
       toast({
         title: "成功",
         description: "删除家庭成员成功",
       });
-      loadMembers();
+      fetchMembers();
     } catch (error) {
+      console.error('Delete member error:', error);
       toast({
         title: "错误",
         description: "删除家庭成员失败",
         variant: "destructive",
       });
     }
-  };
-
-  const handleEdit = (member: FamilyMember) => {
-    setEditingMember(member);
-    setFormData({
-      name: member.name,
-      relationship: member.relationship,
-      phone: member.phone || '',
-      birthday: member.birthday || '',
-      address: member.address || '',
-      notes: member.notes || ''
-    });
-    setShowAddDialog(true);
   };
 
   const handleAvatarUpload = async (file: File, memberId: string) => {
@@ -157,8 +105,9 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
         description: "头像上传成功",
       });
       
-      loadMembers();
+      fetchMembers();
     } catch (error) {
+      console.error('Avatar upload error:', error);
       toast({
         title: "错误",
         description: "头像上传失败",
@@ -167,23 +116,6 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
     } finally {
       setUploadingAvatar(null);
     }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      relationship: '',
-      phone: '',
-      birthday: '',
-      address: '',
-      notes: ''
-    });
-  };
-
-  const handleDialogClose = () => {
-    setShowAddDialog(false);
-    setEditingMember(null);
-    resetForm();
   };
 
   const getAvatarFallback = (name: string) => {
@@ -228,13 +160,40 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
       .slice(0, 3);
   };
 
-  const RELATIONSHIPS = [
-    '父亲', '母亲', '儿子', '女儿', '丈夫', '妻子', 
-    '兄弟', '姐妹', '祖父', '祖母', '外祖父', '外祖母',
-    '叔叔', '阿姨', '其他'
-  ];
+  const getAvatarDisplay = (member: FamilyMember) => {
+    if (member.avatar_url) {
+      // 检查是否是emoji头像
+      if (member.avatar_url.length <= 4 && /\p{Emoji}/u.test(member.avatar_url)) {
+        return (
+          <div className="w-full h-full flex items-center justify-center text-2xl">
+            {member.avatar_url}
+          </div>
+        );
+      }
+      return <AvatarImage src={member.avatar_url} />;
+    }
+    return <AvatarFallback className="text-lg">{getAvatarFallback(member.name)}</AvatarFallback>;
+  };
 
   const upcomingBirthdays = getUpcomingBirthdays();
+
+  // 如果显示表单，渲染表单组件
+  if (showAddForm) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+        <div className="container mx-auto px-4 py-6">
+          <FamilyMemberForm
+            member={editingMember}
+            onSuccess={handleMemberAdded}
+            onCancel={() => {
+              setShowAddForm(false);
+              setEditingMember(null);
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -251,101 +210,14 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
             返回
           </Button>
           <h1 className="text-xl font-bold text-gray-800">家庭成员</h1>
-          <Dialog open={showAddDialog} onOpenChange={handleDialogClose}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                <Plus className="h-4 w-4 mr-1" />
-                添加成员
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>{editingMember ? '编辑成员' : '添加成员'}</DialogTitle>
-                <DialogDescription>
-                  {editingMember ? '修改家庭成员信息' : '添加新的家庭成员'}
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="name">姓名 *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="请输入姓名"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="relationship">关系 *</Label>
-                  <Select
-                    value={formData.relationship}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, relationship: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="请选择关系" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {RELATIONSHIPS.map((rel) => (
-                        <SelectItem key={rel} value={rel}>{rel}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="phone">手机号</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="请输入手机号"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="birthday">生日</Label>
-                  <Input
-                    id="birthday"
-                    type="date"
-                    value={formData.birthday}
-                    onChange={(e) => setFormData(prev => ({ ...prev, birthday: e.target.value }))}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="address">地址</Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                    placeholder="请输入地址"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="notes">备注</Label>
-                  <Textarea
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                    placeholder="请输入备注信息"
-                    rows={3}
-                  />
-                </div>
-                
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button type="button" variant="outline" onClick={handleDialogClose}>
-                    取消
-                  </Button>
-                  <Button type="submit">
-                    {editingMember ? '更新' : '添加'}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button 
+            size="sm" 
+            className="bg-green-600 hover:bg-green-700"
+            onClick={() => setShowAddForm(true)}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            添加成员
+          </Button>
         </div>
 
         {/* 即将到来的生日提醒 */}
@@ -363,12 +235,13 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
                   <div key={member.id} className="flex items-center justify-between p-3 bg-pink-50 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={member.avatar_url || undefined} />
-                        <AvatarFallback>{getAvatarFallback(member.name)}</AvatarFallback>
+                        {getAvatarDisplay(member)}
                       </Avatar>
                       <div>
                         <div className="font-medium">{member.name}</div>
-                        <div className="text-sm text-gray-600">{member.relationship}</div>
+                        <Badge variant="secondary" className="text-xs">
+                          {member.relationship}
+                        </Badge>
                       </div>
                     </div>
                     <div className="text-right">
@@ -386,27 +259,28 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
           </Card>
         )}
 
-        {/* 成员列表 */}
+        {/* 加载状态 */}
         {loading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <div className="text-gray-500">加载中...</div>
           </div>
         ) : members.length === 0 ? (
+          // 空状态
           <Card>
             <CardContent className="p-8 text-center">
               <div className="text-gray-400 mb-4">暂无家庭成员</div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    添加第一个成员
-                  </Button>
-                </DialogTrigger>
-              </Dialog>
+              <p className="text-sm text-gray-500 mb-6">
+                添加您的家庭成员，方便管理生日提醒和联系信息
+              </p>
+              <Button onClick={() => setShowAddForm(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                添加第一个成员
+              </Button>
             </CardContent>
           </Card>
         ) : (
+          // 成员列表
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {members.map((member) => (
               <Card key={member.id} className="hover:shadow-md transition-shadow">
@@ -414,10 +288,7 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
                   <div className="flex items-start space-x-4">
                     <div className="relative">
                       <Avatar className="h-16 w-16">
-                        <AvatarImage src={member.avatar_url || undefined} />
-                        <AvatarFallback className="text-lg">
-                          {getAvatarFallback(member.name)}
-                        </AvatarFallback>
+                        {getAvatarDisplay(member)}
                       </Avatar>
                       <label className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-1 cursor-pointer hover:bg-blue-600 transition-colors">
                         <Camera className="h-3 w-3" />
@@ -445,13 +316,15 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <h3 className="font-semibold text-lg">{member.name}</h3>
-                          <p className="text-sm text-gray-600">{member.relationship}</p>
+                          <Badge variant="outline" className="text-xs">
+                            {member.relationship}
+                          </Badge>
                         </div>
                         <div className="flex space-x-2">
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleEdit(member)}
+                            onClick={() => handleEditMember(member)}
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -470,7 +343,7 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>取消</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(member.id)}>
+                                <AlertDialogAction onClick={() => deleteMember(member.id)}>
                                   删除
                                 </AlertDialogAction>
                               </AlertDialogFooter>
@@ -504,7 +377,7 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
                         {member.address && (
                           <div className="flex items-center">
                             <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                            {member.address}
+                            <span className="truncate">{member.address}</span>
                           </div>
                         )}
                         
