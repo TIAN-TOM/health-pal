@@ -175,11 +175,11 @@ const PageRenderer = ({
     case 'english':
       return <DailyEnglish {...commonProps} />;
     
-    // 添加缺失的页面路由
+    // 修复 DailyDataHub 的 props - 移除不存在的 onNavigate 属性
     case 'daily-data':
       return <DailyDataHub 
         onBack={() => onBack()}
-        onNavigate={onNavigation}
+        onRecordClick={onRecordClick}
       />;
     
     case 'export':
