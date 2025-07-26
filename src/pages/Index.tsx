@@ -74,6 +74,10 @@ export default function Index() {
     setCurrentPage("emergency");
   };
 
+  const handleSettingsClick = () => {
+    handleNavigation("settings");
+  };
+
   useEffect(() => {
     if (currentPage === "home") {
       restoreScrollPosition("home");
@@ -99,7 +103,7 @@ export default function Index() {
     return (
       <HomePage
         userDisplayName={userProfile?.full_name || user.email || "用户"}
-        onSettingsClick={() => handleNavigation("settings")}
+        onSettingsClick={handleSettingsClick}
         onEmergencyClick={handleEmergencyClick}
         onNavigate={handleNavigation}
         homeRef={homeRef}

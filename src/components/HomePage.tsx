@@ -1,22 +1,22 @@
+
 import React from 'react';
 import { Calendar, BarChart3, ListChecks, Settings, Users, HeartHandshake, MessageSquare, BrainCircuit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shell } from '@/components/Shell';
-import { useUser } from '@supabase/auth-helpers-react';
-import { useRouter } from 'next/router';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { useDailyCheckinData } from '@/hooks/useDailyCheckinData';
 
 interface HomePageProps {
-  onNavigation: (page: string) => void;
+  userDisplayName: string;
+  onSettingsClick: () => void;
+  onEmergencyClick: () => void;
+  onNavigate: (page: string, source?: string) => void;
+  homeRef: React.MutableRefObject<HTMLDivElement | null>;
 }
 
-const HomePage = ({ onNavigation }: HomePageProps) => {
+const HomePage = ({ userDisplayName, onSettingsClick, onEmergencyClick, onNavigate, homeRef }: HomePageProps) => {
   const { toast } = useToast();
-  const user = useUser();
-  const router = useRouter();
-  const { loadCheckinHistory } = useDailyCheckinData();
+  const { user } = useAuth();
 
   const handleNavigation = (route: string) => {
     if (!user) {
@@ -24,10 +24,9 @@ const HomePage = ({ onNavigation }: HomePageProps) => {
         title: '请先登录',
         description: '您需要登录才能访问此功能。',
       });
-      router.push('/login');
       return;
     }
-    onNavigation(route);
+    onNavigate(route);
   };
 
   const symptomsCards = [
@@ -36,7 +35,7 @@ const HomePage = ({ onNavigation }: HomePageProps) => {
       description: '记录眩晕、头晕等症状的详细信息',
       icon: '💫',
       color: 'from-blue-400 to-blue-500',
-      onClick: () => onNavigation('dizziness-record'),
+      onClick: () => onNavigate('dizziness-record'),
       category: 'primary'
     },
     {
@@ -44,7 +43,7 @@ const HomePage = ({ onNavigation }: HomePageProps) => {
       description: '记录血糖监测数据和相关信息',
       icon: '📊', 
       color: 'from-emerald-400 to-emerald-500',
-      onClick: () => onNavigation('diabetes-record'),
+      onClick: () => onNavigate('diabetes-record'),
       category: 'primary'
     },
     {
@@ -52,7 +51,7 @@ const HomePage = ({ onNavigation }: HomePageProps) => {
       description: '记录日常饮食、睡眠和生活习惯',
       icon: '🏠',
       color: 'from-green-400 to-green-500', 
-      onClick: () => onNavigation('lifestyle-record'),
+      onClick: () => onNavigate('lifestyle-record'),
       category: 'primary'
     },
     {
@@ -60,7 +59,7 @@ const HomePage = ({ onNavigation }: HomePageProps) => {
       description: '记录药物服用情况和效果评价',
       icon: '💊',
       color: 'from-orange-400 to-orange-500',
-      onClick: () => onNavigation('medication-record'),
+      onClick: () => onNavigate('medication-record'),
       category: 'primary'
     }
   ];
@@ -133,61 +132,63 @@ const HomePage = ({ onNavigation }: HomePageProps) => {
   ];
 
   return (
-    <Shell>
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {/* 主要功能卡片 */}
-        {mainCards.map((card, index) => (
-          <Card
-            key={index}
-            className={`group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 border-0 overflow-hidden`}
-            onClick={card.onClick}
-          >
-            <div className={`h-2 bg-gradient-to-r ${card.color}`} />
-            <CardHeader className="pb-3">
-              <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg bg-gradient-to-br ${card.color} text-white`}>
-                  <card.icon className="h-6 w-6" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50" ref={homeRef}>
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {/* 主要功能卡片 */}
+          {mainCards.map((card, index) => (
+            <Card
+              key={index}
+              className={`group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 border-0 overflow-hidden`}
+              onClick={card.onClick}
+            >
+              <div className={`h-2 bg-gradient-to-r ${card.color}`} />
+              <CardHeader className="pb-3">
+                <div className="flex items-center space-x-3">
+                  <div className={`p-2 rounded-lg bg-gradient-to-br ${card.color} text-white`}>
+                    <card.icon className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-lg group-hover:text-gray-700 transition-colors">
+                    {card.title}
+                  </CardTitle>
                 </div>
-                <CardTitle className="text-lg group-hover:text-gray-700 transition-colors">
-                  {card.title}
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                {card.description}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  {card.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
 
-        {/* 记录症状卡片 */}
-        {symptomsCards.map((card, index) => (
-          <Card
-            key={index}
-            className={`group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 border-0 overflow-hidden`}
-            onClick={card.onClick}
-          >
-            <div className={`h-2 bg-gradient-to-r ${card.color}`} />
-            <CardHeader className="pb-3">
-              <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg bg-gradient-to-br ${card.color} text-white`}>
-                  <span className="text-xl">{card.icon}</span>
+          {/* 记录症状卡片 */}
+          {symptomsCards.map((card, index) => (
+            <Card
+              key={index}
+              className={`group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 border-0 overflow-hidden`}
+              onClick={card.onClick}
+            >
+              <div className={`h-2 bg-gradient-to-r ${card.color}`} />
+              <CardHeader className="pb-3">
+                <div className="flex items-center space-x-3">
+                  <div className={`p-2 rounded-lg bg-gradient-to-br ${card.color} text-white`}>
+                    <span className="text-xl">{card.icon}</span>
+                  </div>
+                  <CardTitle className="text-lg group-hover:text-gray-700 transition-colors">
+                    {card.title}
+                  </CardTitle>
                 </div>
-                <CardTitle className="text-lg group-hover:text-gray-700 transition-colors">
-                  {card.title}
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                {card.description}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  {card.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
-    </Shell>
+    </div>
   );
 };
 
