@@ -21,6 +21,7 @@ import FamilyDashboard from './family/FamilyDashboard';
 import FamilyExpenses from './family/FamilyExpenses';
 import FamilyReminders from './family/FamilyReminders';
 import FamilyCalendar from './family/FamilyCalendar';
+import EnhancedFamilyCalendar from './family/EnhancedFamilyCalendar';
 import FamilyMembers from './family/FamilyMembers';
 import FamilyMessages from './family/FamilyMessages';
 import FamilyStats from './family/FamilyStats';
@@ -140,6 +141,13 @@ const PageRenderer = ({
     
     case 'family-calendar':
       return <FamilyCalendar 
+        onBack={() => onBack()}
+        onNavigate={onNavigation}
+      />;
+    
+    // 增强版家庭日历
+    case 'enhanced-family-calendar':
+      return <EnhancedFamilyCalendar 
         onBack={() => onBack()}
         onNavigate={onNavigation}
       />;
