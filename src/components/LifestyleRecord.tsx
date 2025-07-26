@@ -14,9 +14,10 @@ import MoodSection from './lifestyle/MoodSection';
 
 interface LifestyleRecordProps {
   onBack: () => void;
+  onNavigate?: (page: string, source?: string) => void;
 }
 
-const LifestyleRecord = ({ onBack }: LifestyleRecordProps) => {
+const LifestyleRecord = ({ onBack, onNavigate }: LifestyleRecordProps) => {
   // 折叠状态管理
   const [sleepOpen, setSleepOpen] = useState(false);
   const [dietOpen, setDietOpen] = useState(false);

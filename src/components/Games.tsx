@@ -12,6 +12,7 @@ import SnakeGame from '@/components/games/SnakeGame';
 import Game2048 from '@/components/games/Game2048';
 import BubblePopGame from '@/components/games/BubblePopGame';
 import MultiplayerGomoku from '@/components/games/MultiplayerGomoku';
+import TetrisGame from '@/components/games/TetrisGame';
 
 interface GamesProps {
   onBack: () => void;
@@ -80,6 +81,13 @@ const Games = ({ onBack }: GamesProps) => {
       description: '快速点击彩色气泡，连击获得更高分数',
       icon: '🫧',
       component: BubblePopGame
+    },
+    {
+      id: 'tetris',
+      name: '俄罗斯方块',
+      description: '经典俄罗斯方块游戏，消除完整行获得高分',
+      icon: '🧩',
+      component: TetrisGame
     }
   ];
 

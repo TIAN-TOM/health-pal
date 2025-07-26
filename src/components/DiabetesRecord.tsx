@@ -12,9 +12,10 @@ import { getBeijingTime } from '@/utils/beijingTime';
 
 interface DiabetesRecordProps {
   onBack: () => void;
+  onNavigate?: (page: string, source?: string) => void;
 }
 
-const DiabetesRecord = ({ onBack }: DiabetesRecordProps) => {
+const DiabetesRecord = ({ onBack, onNavigate }: DiabetesRecordProps) => {
   const [bloodSugar, setBloodSugar] = useState('');
   const [measurementTime, setMeasurementTime] = useState('before_meal');
   const [insulinDose, setInsulinDose] = useState('');

@@ -81,7 +81,8 @@ export const getFestivalForDate = (date: Date): string[] => {
   }
   
   // 农历节日需要农历库支持，这里暂时返回公历节日
-  return festivals;
+  // 去重：如果数组中已有相同的节日，不再添加
+  return [...new Set(festivals)];
 };
 
 export const getLunarDate = (date: Date): string => {

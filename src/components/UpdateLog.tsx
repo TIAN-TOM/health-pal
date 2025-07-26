@@ -216,10 +216,6 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
                       </div>
                       <div>
                         <CardTitle className="text-xl">版本 {update.version}</CardTitle>
-                        <CardDescription className="flex items-center mt-1">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          {update.date}
-                        </CardDescription>
                       </div>
                     </div>
                     <Badge variant="secondary" className={update.color}>

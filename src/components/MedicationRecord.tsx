@@ -14,10 +14,11 @@ import { getBeijingTime } from '@/utils/beijingTime';
 
 interface MedicationRecordProps {
   onBack: () => void;
+  onNavigate?: (page: string, source?: string) => void;
   onNavigateToMedicationManagement?: () => void;
 }
 
-const MedicationRecord = ({ onBack, onNavigateToMedicationManagement }: MedicationRecordProps) => {
+const MedicationRecord = ({ onBack, onNavigate, onNavigateToMedicationManagement }: MedicationRecordProps) => {
   const [medications, setMedications] = useState<string[]>([]);
   const [dosage, setDosage] = useState<string>('');
   const [note, setNote] = useState('');

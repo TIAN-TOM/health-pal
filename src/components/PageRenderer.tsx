@@ -192,17 +192,18 @@ const PageRenderer = ({
     
     // 症状记录页面
     case 'dizziness-record':
-      return <DizzinessRecord onBack={() => onBack()} />;
+      return <DizzinessRecord onBack={() => onNavigation('record-hub')} onNavigate={onNavigation} />;
     
     case 'diabetes-record':
-      return <DiabetesRecord onBack={() => onBack()} />;
+      return <DiabetesRecord onBack={() => onNavigation('record-hub')} onNavigate={onNavigation} />;
     
     case 'lifestyle-record':
-      return <LifestyleRecord onBack={() => onBack()} />;
+      return <LifestyleRecord onBack={() => onNavigation('record-hub')} onNavigate={onNavigation} />;
     
     case 'medication-record':
       return <MedicationRecord 
-        onBack={() => onBack()} 
+        onBack={() => onNavigation('record-hub')} 
+        onNavigate={onNavigation}
         onNavigateToMedicationManagement={() => onNavigation('medications')}
       />;
     

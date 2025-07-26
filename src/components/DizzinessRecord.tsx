@@ -9,9 +9,10 @@ import { useToast } from '@/hooks/use-toast';
 
 interface DizzinessRecordProps {
   onBack: () => void;
+  onNavigate?: (page: string, source?: string) => void;
 }
 
-const DizzinessRecord = ({ onBack }: DizzinessRecordProps) => {
+const DizzinessRecord = ({ onBack, onNavigate }: DizzinessRecordProps) => {
   const [severity, setSeverity] = useState('轻度');
   const [duration, setDuration] = useState('');
   const [symptoms, setSymptoms] = useState<string[]>([]);

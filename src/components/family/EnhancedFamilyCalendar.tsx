@@ -43,6 +43,7 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
 
   const loadData = async () => {
     try {
+      setLoading(true);
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
       
@@ -55,11 +56,9 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
       setMembers(membersData);
     } catch (error) {
       console.error('加载数据失败:', error);
-      toast({
-        title: "加载失败",
-        description: "无法加载日历数据",
-        variant: "destructive",
-      });
+      // 不显示错误提示，直接设置为空数组
+      setEvents([]);
+      setMembers([]);
     } finally {
       setLoading(false);
     }
