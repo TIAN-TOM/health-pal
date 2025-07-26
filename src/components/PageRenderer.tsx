@@ -27,6 +27,8 @@ import FamilyMessages from './family/FamilyMessages';
 import FamilyStats from './family/FamilyStats';
 import ExchangeRate from './ExchangeRate';
 import DailyEnglish from './DailyEnglish';
+import DailyDataHub from './DailyDataHub';
+import DataExport from './DataExport';
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
@@ -48,6 +50,11 @@ const PageRenderer = ({
   onNavigation,
   onRecordClick
 }: PageRendererProps) => {
+  // 家庭管理模块的返回逻辑处理
+  const handleFamilyModuleBack = () => {
+    onBack('familyDashboard');
+  };
+
   const commonProps = {
     onBack: () => onBack(),
     onNavigation
@@ -126,46 +133,57 @@ const PageRenderer = ({
     case 'admin-panel':
       return <AdminPanel {...commonProps} />;
     
+    // 家庭管理中心
     case 'familyDashboard':
       return <FamilyDashboard 
         onBack={() => onBack()}
         onNavigate={onNavigation}
       />;
     
-    // 家庭管理相关页面路由
+    // 家庭管理相关页面路由 - 修复返回逻辑
     case 'family-expenses':
-      return <FamilyExpenses onBack={() => onBack()} />;
+      return <FamilyExpenses onBack={handleFamilyModuleBack} />;
     
     case 'family-reminders':
-      return <FamilyReminders onBack={() => onBack()} />;
+      return <FamilyReminders onBack={handleFamilyModuleBack} />;
     
     case 'family-calendar':
       return <FamilyCalendar 
-        onBack={() => onBack()}
+        onBack={handleFamilyModuleBack}
         onNavigate={onNavigation}
       />;
     
     // 增强版家庭日历
     case 'enhanced-family-calendar':
       return <EnhancedFamilyCalendar 
-        onBack={() => onBack()}
+        onBack={handleFamilyModuleBack}
         onNavigate={onNavigation}
       />;
     
     case 'family-members':
-      return <FamilyMembers onBack={() => onBack()} />;
+      return <FamilyMembers onBack={handleFamilyModuleBack} />;
     
     case 'family-messages':
-      return <FamilyMessages onBack={() => onBack()} />;
+      return <FamilyMessages onBack={handleFamilyModuleBack} />;
     
     case 'family-stats':
-      return <FamilyStats onBack={() => onBack()} />;
+      return <FamilyStats onBack={handleFamilyModuleBack} />;
     
     case 'exchange-rate':
       return <ExchangeRate {...commonProps} />;
     
     case 'english':
       return <DailyEnglish {...commonProps} />;
+    
+    // 添加缺失的页面路由
+    case 'daily-data':
+      return <DailyDataHub 
+        onBack={() => onBack()}
+        onNavigate={onNavigation}
+      />;
+    
+    case 'export':
+      return <DataExport onBack={() => onBack()} />;
     
     default:
       return null;
