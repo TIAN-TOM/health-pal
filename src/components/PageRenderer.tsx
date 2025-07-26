@@ -1,3 +1,4 @@
+
 import React from 'react';
 import DailyCheckin from './DailyCheckin';
 import RecordHub from './RecordHub';
@@ -17,6 +18,12 @@ import UserManual from './UserManual';
 import UpdateLog from './UpdateLog';
 import AdminPanel from './AdminPanel';
 import FamilyDashboard from './family/FamilyDashboard';
+import FamilyExpenses from './family/FamilyExpenses';
+import FamilyReminders from './family/FamilyReminders';
+import FamilyCalendar from './family/FamilyCalendar';
+import FamilyMembers from './family/FamilyMembers';
+import FamilyMessages from './family/FamilyMessages';
+import FamilyStats from './family/FamilyStats';
 import ExchangeRate from './ExchangeRate';
 import DailyEnglish from './DailyEnglish';
 import type { Tables } from '@/integrations/supabase/types';
@@ -123,6 +130,28 @@ const PageRenderer = ({
         onBack={() => onBack()}
         onNavigate={onNavigation}
       />;
+    
+    // 家庭管理相关页面路由
+    case 'family-expenses':
+      return <FamilyExpenses onBack={() => onBack()} />;
+    
+    case 'family-reminders':
+      return <FamilyReminders onBack={() => onBack()} />;
+    
+    case 'family-calendar':
+      return <FamilyCalendar 
+        onBack={() => onBack()}
+        onNavigate={onNavigation}
+      />;
+    
+    case 'family-members':
+      return <FamilyMembers onBack={() => onBack()} />;
+    
+    case 'family-messages':
+      return <FamilyMessages onBack={() => onBack()} />;
+    
+    case 'family-stats':
+      return <FamilyStats onBack={() => onBack()} />;
     
     case 'exchange-rate':
       return <ExchangeRate {...commonProps} />;
