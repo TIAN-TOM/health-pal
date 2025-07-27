@@ -485,66 +485,84 @@ const TetrisGame = ({ onBack, soundEnabled = true }: TetrisGameProps) => {
               </CardContent>
             </Card>
 
-            {/* 移动端控制按钮 */}
+            {/* 移动端触控区域 */}
             <Card className="lg:hidden">
               <CardHeader>
                 <CardTitle className="text-lg">触屏控制</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  <div className="col-span-3 text-center">
+                {/* 主要游戏操作区域 */}
+                <div className="space-y-4">
+                  {/* 旋转按钮 */}
+                  <div className="text-center">
                     <Button
                       variant="outline"
                       size="lg"
                       onClick={handleRotate}
                       disabled={!isPlaying || isPaused || gameOver}
-                      className="w-full h-12"
+                      className="w-20 h-20 rounded-full text-lg font-bold"
                     >
-                      <RotateCw className="h-5 w-5 mr-2" />
-                      旋转
+                      <RotateCw className="h-6 w-6" />
+                    </Button>
+                    <p className="text-xs text-gray-500 mt-1">点击旋转</p>
+                  </div>
+                  
+                  {/* 左右移动 */}
+                  <div className="flex justify-between items-center px-8">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => movePiece(-1, 0)}
+                      disabled={!isPlaying || isPaused || gameOver}
+                      className="w-16 h-16 rounded-full text-xl"
+                    >
+                      ←
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => movePiece(1, 0)}
+                      disabled={!isPlaying || isPaused || gameOver}
+                      className="w-16 h-16 rounded-full text-xl"
+                    >
+                      →
+                    </Button>
+                  </div>
+                  
+                  {/* 下移和硬降 */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => movePiece(0, 1)}
+                      disabled={!isPlaying || isPaused || gameOver}
+                      className="h-14"
+                    >
+                      <ArrowDown className="h-5 w-5 mr-2" />
+                      软降
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={hardDrop}
+                      disabled={!isPlaying || isPaused || gameOver}
+                      className="h-14 bg-red-50 hover:bg-red-100"
+                    >
+                      <ArrowUp className="h-5 w-5 mr-2" />
+                      硬降
                     </Button>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => movePiece(-1, 0)}
-                    disabled={!isPlaying || isPaused || gameOver}
-                    className="h-12 text-lg"
-                  >
-                    ←
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => movePiece(0, 1)}
-                    disabled={!isPlaying || isPaused || gameOver}
-                    className="h-12"
-                  >
-                    <ArrowDown className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => movePiece(1, 0)}
-                    disabled={!isPlaying || isPaused || gameOver}
-                    className="h-12 text-lg"
-                  >
-                    →
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={hardDrop}
-                    disabled={!isPlaying || isPaused || gameOver}
-                    className="h-12"
-                  >
-                    <ArrowUp className="h-5 w-5 mr-2" />
-                    瞬间下降
-                  </Button>
+                
+                {/* 手势说明 */}
+                <div className="mt-6 p-3 bg-blue-50 rounded-lg">
+                  <h4 className="font-medium text-blue-800 mb-2">触屏说明</h4>
+                  <div className="text-sm text-blue-700 space-y-1">
+                    <p>• 点击"旋转"按钮进行方块旋转</p>
+                    <p>• 点击左右箭头进行水平移动</p>
+                    <p>• 软降：缓慢向下移动</p>
+                    <p>• 硬降：瞬间落到底部</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

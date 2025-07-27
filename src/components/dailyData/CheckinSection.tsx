@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -25,6 +25,8 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
   const [userPoints, setUserPoints] = useState<UserPoints | null>(null);
   const [earnedPoints, setEarnedPoints] = useState<{ points: number; streak: number } | null>(null);
   const [showRecordDialog, setShowRecordDialog] = useState(false);
+  const [countdown, setCountdown] = useState(6);
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -63,6 +65,23 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
 
       // 打卡成功后显示记录询问弹窗
       setShowRecordDialog(true);
+      setCountdown(6);
+      
+      // 开始倒计时
+      countdownRef.current = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            // 倒计时结束，自动选择"去记录"
+            if (countdownRef.current) {
+              clearInterval(countdownRef.current);
+            }
+            setShowRecordDialog(false);
+            onNavigateToRecords?.();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     } catch (error: any) {
       toast({
         title: "打卡失败",
@@ -96,6 +115,13 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
     if (streak >= 7) return { emoji: '🔥', text: '一周连击！', color: 'text-orange-600' };
     if (streak >= 3) return { emoji: '⭐', text: '连续打卡', color: 'text-blue-600' };
     return null;
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    if (!open && countdownRef.current) {
+      clearInterval(countdownRef.current);
+    }
+    setShowRecordDialog(open);
   };
 
   return (
@@ -214,30 +240,42 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
       <PointsStore />
 
       {/* 记录询问弹窗 */}
-      <Dialog open={showRecordDialog} onOpenChange={setShowRecordDialog}>
-        <DialogContent>
+      <Dialog open={showRecordDialog} onOpenChange={handleDialogClose}>
+        <DialogContent className="w-[95vw] max-w-sm mx-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center">
+            <DialogTitle className="flex items-center text-center">
               <Activity className="h-5 w-5 mr-2 text-green-600" />
               打卡完成！
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-center">
               是否要继续进行健康记录？记录今日的症状、药物或生活方式数据。
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="space-x-2">
-            <Button variant="outline" onClick={() => setShowRecordDialog(false)}>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                if (countdownRef.current) {
+                  clearInterval(countdownRef.current);
+                }
+                setShowRecordDialog(false);
+              }}
+              className="w-full sm:w-auto"
+            >
               暂不记录
             </Button>
             <Button 
               onClick={() => {
+                if (countdownRef.current) {
+                  clearInterval(countdownRef.current);
+                }
                 setShowRecordDialog(false);
                 onNavigateToRecords?.();
               }}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
             >
               <Activity className="h-4 w-4 mr-2" />
-              去记录
+              去记录 {countdown > 0 && `(${countdown}s)`}
             </Button>
           </DialogFooter>
         </DialogContent>

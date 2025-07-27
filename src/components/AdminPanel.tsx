@@ -19,7 +19,7 @@ interface AdminPanelProps {
 
 const AdminPanel = ({ onBack }: AdminPanelProps) => {
   const { userRole } = useAuth();
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState('notifications');
 
   if (userRole !== 'admin') {
     return (
@@ -65,6 +65,10 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-6">
+                <TabsTrigger value="notifications" className="flex items-center gap-2">
+                  <Bell className="h-4 w-4" />
+                  通知中心
+                </TabsTrigger>
                 <TabsTrigger value="users" className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   用户管理
@@ -85,11 +89,11 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
                   <Megaphone className="h-4 w-4" />
                   公告管理
                 </TabsTrigger>
-                <TabsTrigger value="notifications" className="flex items-center gap-2">
-                  <Bell className="h-4 w-4" />
-                  通知中心
-                </TabsTrigger>
               </TabsList>
+
+              <TabsContent value="notifications" className="mt-6">
+                <AdminNotifications />
+              </TabsContent>
 
               <TabsContent value="users" className="mt-6">
                 <AdminUserManagement />
@@ -109,10 +113,6 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
 
               <TabsContent value="announcements" className="mt-6">
                 <AnnouncementManagement />
-              </TabsContent>
-
-              <TabsContent value="notifications" className="mt-6">
-                <AdminNotifications />
               </TabsContent>
             </Tabs>
           </CardContent>

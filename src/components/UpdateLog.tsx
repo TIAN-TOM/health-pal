@@ -11,8 +11,30 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.3.0',
+      type: '功能优化',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🎮 俄罗斯方块游戏优化',
+          description: '新增手机端触屏控制，优化游戏操作体验，修复旋转卡位bug',
+          type: 'improvement'
+        },
+        {
+          title: '📱 打卡弹窗手机端优化',
+          description: '改进打卡完成弹窗在手机端的显示效果，添加6秒倒计时自动跳转',
+          type: 'improvement'
+        },
+        {
+          title: '⚙️ 管理员面板优化',
+          description: '调整管理员面板标签页顺序，通知中心置于首位',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.2.0',
-      date: '2025-01-26',
       type: '功能优化',
       icon: Bug,
       color: 'bg-red-50 text-red-600 border-red-200',
@@ -36,7 +58,6 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
     },
     {
       version: '2.0.0',
-      date: '2025-01-25',
       type: '重大更新',
       icon: Sparkles,
       color: 'bg-purple-50 text-purple-600 border-purple-200',
@@ -60,7 +81,6 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
     },
     {
       version: '1.9.0',
-      date: '2025-01-20',
       type: '功能增强',
       icon: Home,
       color: 'bg-blue-50 text-blue-600 border-blue-200',
@@ -84,7 +104,6 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
     },
     {
       version: '1.8.0',
-      date: '2025-01-15',
       type: '功能扩展',
       icon: Zap,
       color: 'bg-green-50 text-green-600 border-green-200',
@@ -108,7 +127,6 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
     },
     {
       version: '1.7.0',
-      date: '2025-01-10',
       type: '用户体验',
       icon: Calendar,
       color: 'bg-orange-50 text-orange-600 border-orange-200',
@@ -132,7 +150,6 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
     },
     {
       version: '1.6.0',
-      date: '2025-01-05',
       type: '健康管理',
       icon: Calendar,
       color: 'bg-teal-50 text-teal-600 border-teal-200',
