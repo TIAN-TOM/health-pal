@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Calendar, Heart, MessageCircle, Check, Award, Activity } from 'lucide-react';
-import { createCheckin } from '@/services/dailyCheckinService';
+import { createCheckin, getTodayCheckin, cancelCheckin } from '@/services/dailyCheckinService';
 import { updatePointsForCheckin, getUserPoints, type UserPoints } from '@/services/pointsService';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import PointsStore from '@/components/PointsStore';
 import type { Tables } from '@/integrations/supabase/types';
@@ -22,12 +24,14 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
   const [moodScore, setMoodScore] = useState(3);
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
   const [userPoints, setUserPoints] = useState<UserPoints | null>(null);
   const [earnedPoints, setEarnedPoints] = useState<{ points: number; streak: number } | null>(null);
   const [showRecordDialog, setShowRecordDialog] = useState(false);
   const [countdown, setCountdown] = useState(6);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+  const { userRole } = useAuth();
 
   useEffect(() => {
     loadUserPoints();
@@ -76,7 +80,10 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
               clearInterval(countdownRef.current);
             }
             setShowRecordDialog(false);
-            onNavigateToRecords?.();
+            // 确保导航到记录页面
+            if (onNavigateToRecords) {
+              onNavigateToRecords();
+            }
             return 0;
           }
           return prev - 1;
@@ -124,6 +131,35 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
     setShowRecordDialog(open);
   };
 
+  const handleCancelCheckin = async () => {
+    try {
+      setCancelLoading(true);
+      
+      if (!todayCheckin) return;
+      
+      // 使用服务函数删除打卡记录
+      await cancelCheckin(todayCheckin.id);
+      
+      // 重新设置状态
+      onCheckinSuccess(null as any);
+      setEarnedPoints(null);
+      onReloadHistory();
+      
+      toast({
+        title: "取消打卡成功",
+        description: "今日打卡记录已删除，可以重新打卡了",
+      });
+    } catch (error: any) {
+      toast({
+        title: "取消打卡失败",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <Card>
@@ -150,6 +186,17 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
               <div className="flex items-center justify-center mb-3">
                 <Check className="h-8 w-8 text-green-600 mr-2" />
                 <span className="text-xl font-bold text-green-800">今日已打卡</span>
+                {userRole === 'admin' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCancelCheckin}
+                    disabled={cancelLoading}
+                    className="ml-4 text-red-600 border-red-300 hover:bg-red-50"
+                  >
+                    {cancelLoading ? '取消中...' : '取消打卡'}
+                  </Button>
+                )}
               </div>
               <div className="text-green-700 space-y-2">
                 <p>心情评分: {getMoodEmoji(todayCheckin.mood_score || 3)} {getMoodText(todayCheckin.mood_score || 3)} ({todayCheckin.mood_score}/5)</p>

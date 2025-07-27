@@ -179,3 +179,21 @@ export const getDailyCheckins = async (startDate?: string, endDate?: string): Pr
     throw error;
   }
 };
+
+export const cancelCheckin = async (checkinId: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('用户未登录');
+  }
+
+  const { error } = await supabase
+    .from('daily_checkins')
+    .delete()
+    .eq('id', checkinId)
+    .eq('user_id', user.id); // 确保只能删除自己的打卡记录
+
+  if (error) {
+    throw new Error(`取消打卡失败: ${error.message}`);
+  }
+};

@@ -1,80 +1,38 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Play, Pause, RotateCw, ArrowDown, ArrowUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, RotateCw, Pause, Play, Home, RefreshCw } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-interface TetrisGameProps {
-  onBack: () => void;
-  soundEnabled?: boolean;
+interface Position {
+  x: number;
+  y: number;
 }
-
-// 俄罗斯方块形状定义
-const TETRIS_SHAPES = [
-  // I形状
-  [
-    [[1, 1, 1, 1]],
-    [[1], [1], [1], [1]]
-  ],
-  // O形状
-  [
-    [[1, 1], [1, 1]]
-  ],
-  // T形状
-  [
-    [[0, 1, 0], [1, 1, 1]],
-    [[1, 0], [1, 1], [1, 0]],
-    [[1, 1, 1], [0, 1, 0]],
-    [[0, 1], [1, 1], [0, 1]]
-  ],
-  // S形状
-  [
-    [[0, 1, 1], [1, 1, 0]],
-    [[1, 0], [1, 1], [0, 1]]
-  ],
-  // Z形状
-  [
-    [[1, 1, 0], [0, 1, 1]],
-    [[0, 1], [1, 1], [1, 0]]
-  ],
-  // J形状
-  [
-    [[1, 0, 0], [1, 1, 1]],
-    [[1, 1], [1, 0], [1, 0]],
-    [[1, 1, 1], [0, 0, 1]],
-    [[0, 1], [0, 1], [1, 1]]
-  ],
-  // L形状
-  [
-    [[0, 0, 1], [1, 1, 1]],
-    [[1, 0], [1, 0], [1, 1]],
-    [[1, 1, 1], [1, 0, 0]],
-    [[1, 1], [0, 1], [0, 1]]
-  ]
-];
-
-const BOARD_WIDTH = 10;
-const BOARD_HEIGHT = 20;
-const COLORS = [
-  '#FF0000', // 红色
-  '#00FF00', // 绿色
-  '#0000FF', // 蓝色
-  '#FFFF00', // 黄色
-  '#FF00FF', // 紫色
-  '#00FFFF', // 青色
-  '#FFA500'  // 橙色
-];
 
 interface Piece {
   shape: number[][];
+  color: string;
   x: number;
   y: number;
-  type: number;
-  rotation: number;
 }
 
-const TetrisGame = ({ onBack, soundEnabled = true }: TetrisGameProps) => {
-  const [board, setBoard] = useState<number[][]>(() => 
-    Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(0))
+const TETROMINOS = {
+  I: { shape: [[1, 1, 1, 1]], color: '#00f0f0' },
+  O: { shape: [[1, 1], [1, 1]], color: '#f0f000' },
+  T: { shape: [[0, 1, 0], [1, 1, 1]], color: '#a000f0' },
+  S: { shape: [[0, 1, 1], [1, 1, 0]], color: '#00f000' },
+  Z: { shape: [[1, 1, 0], [0, 1, 1]], color: '#f00000' },
+  J: { shape: [[1, 0, 0], [1, 1, 1]], color: '#0000f0' },
+  L: { shape: [[0, 0, 1], [1, 1, 1]], color: '#f0a000' }
+};
+
+const BOARD_WIDTH = 10;
+const BOARD_HEIGHT = 20;
+const INITIAL_FALL_TIME = 1000;
+
+const TetrisGame = ({ onBack }: { onBack: () => void }) => {
+  const [board, setBoard] = useState<string[][]>(() => 
+    Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(''))
   );
   const [currentPiece, setCurrentPiece] = useState<Piece | null>(null);
   const [nextPiece, setNextPiece] = useState<Piece | null>(null);
@@ -82,246 +40,272 @@ const TetrisGame = ({ onBack, soundEnabled = true }: TetrisGameProps) => {
   const [level, setLevel] = useState(1);
   const [lines, setLines] = useState(0);
   const [gameOver, setGameOver] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [paused, setPaused] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [dragStart, setDragStart] = useState<Position | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
+  const fallTimeRef = useRef(INITIAL_FALL_TIME);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
-  // 创建新方块
-  const createPiece = useCallback((type?: number): Piece => {
-    const pieceType = type !== undefined ? type : Math.floor(Math.random() * TETRIS_SHAPES.length);
-    const shapes = TETRIS_SHAPES[pieceType];
+  const createRandomPiece = useCallback((): Piece => {
+    const tetrominoKeys = Object.keys(TETROMINOS) as Array<keyof typeof TETROMINOS>;
+    const randomKey = tetrominoKeys[Math.floor(Math.random() * tetrominoKeys.length)];
+    const tetromino = TETROMINOS[randomKey];
+    
     return {
-      shape: shapes[0],
-      x: Math.floor(BOARD_WIDTH / 2) - 1,
-      y: 0,
-      type: pieceType,
-      rotation: 0
+      shape: tetromino.shape,
+      color: tetromino.color,
+      x: Math.floor(BOARD_WIDTH / 2) - Math.floor(tetromino.shape[0].length / 2),
+      y: 0
     };
   }, []);
 
-  // 检查是否可以放置方块
-  const canPlacePiece = useCallback((piece: Piece, board: number[][], dx = 0, dy = 0): boolean => {
-    for (let y = 0; y < piece.shape.length; y++) {
-      for (let x = 0; x < piece.shape[y].length; x++) {
-        if (piece.shape[y][x]) {
-          const newX = piece.x + x + dx;
-          const newY = piece.y + y + dy;
-          
-          if (newX < 0 || newX >= BOARD_WIDTH || newY >= BOARD_HEIGHT) {
+  const isValidMove = useCallback((piece: Piece, deltaX = 0, deltaY = 0, newShape?: number[][]) => {
+    const shape = newShape || piece.shape;
+    const newX = piece.x + deltaX;
+    const newY = piece.y + deltaY;
+
+    for (let y = 0; y < shape.length; y++) {
+      for (let x = 0; x < shape[y].length; x++) {
+        if (shape[y][x]) {
+          const boardX = newX + x;
+          const boardY = newY + y;
+
+          if (boardX < 0 || boardX >= BOARD_WIDTH || boardY >= BOARD_HEIGHT) {
             return false;
           }
-          
-          if (newY >= 0 && board[newY][newX]) {
+          if (boardY >= 0 && board[boardY][boardX]) {
             return false;
           }
         }
       }
     }
     return true;
+  }, [board]);
+
+  const rotatePiece = useCallback((piece: Piece) => {
+    const rotated = piece.shape[0].map((_, index) =>
+      piece.shape.map(row => row[index]).reverse()
+    );
+    return rotated;
   }, []);
 
-  // 旋转方块
-  const rotatePiece = useCallback((piece: Piece): Piece => {
-    const shapes = TETRIS_SHAPES[piece.type];
-    const nextRotation = (piece.rotation + 1) % shapes.length;
-    return {
-      ...piece,
-      shape: shapes[nextRotation],
-      rotation: nextRotation
-    };
-  }, []);
+  const clearLines = useCallback((newBoard: string[][]) => {
+    let linesCleared = 0;
+    const clearedBoard = newBoard.filter(row => {
+      if (row.every(cell => cell !== '')) {
+        linesCleared++;
+        return false;
+      }
+      return true;
+    });
 
-  // 放置方块到游戏板
-  const placePiece = useCallback((piece: Piece, board: number[][]): number[][] => {
+    while (clearedBoard.length < BOARD_HEIGHT) {
+      clearedBoard.unshift(Array(BOARD_WIDTH).fill(''));
+    }
+
+    if (linesCleared > 0) {
+      const points = [0, 100, 300, 500, 800][linesCleared] * level;
+      setScore(prev => prev + points);
+      setLines(prev => prev + linesCleared);
+      setLevel(prev => Math.floor((lines + linesCleared) / 10) + 1);
+      fallTimeRef.current = Math.max(50, INITIAL_FALL_TIME - (level - 1) * 100);
+      
+      toast({
+        title: `消除了 ${linesCleared} 行！`,
+        description: `获得 ${points} 分`,
+      });
+    }
+
+    return clearedBoard;
+  }, [level, lines, toast]);
+
+  const placePiece = useCallback(() => {
+    if (!currentPiece) return;
+
     const newBoard = board.map(row => [...row]);
     
-    for (let y = 0; y < piece.shape.length; y++) {
-      for (let x = 0; x < piece.shape[y].length; x++) {
-        if (piece.shape[y][x]) {
-          const boardY = piece.y + y;
-          const boardX = piece.x + x;
+    for (let y = 0; y < currentPiece.shape.length; y++) {
+      for (let x = 0; x < currentPiece.shape[y].length; x++) {
+        if (currentPiece.shape[y][x]) {
+          const boardY = currentPiece.y + y;
+          const boardX = currentPiece.x + x;
           if (boardY >= 0) {
-            newBoard[boardY][boardX] = piece.type + 1;
+            newBoard[boardY][boardX] = currentPiece.color;
           }
         }
       }
     }
-    
-    return newBoard;
-  }, []);
 
-  // 清除完整的行
-  const clearLines = useCallback((board: number[][]): { newBoard: number[][]; clearedLines: number } => {
-    const newBoard = [];
-    let clearedLines = 0;
+    const clearedBoard = clearLines(newBoard);
+    setBoard(clearedBoard);
     
-    for (let y = 0; y < BOARD_HEIGHT; y++) {
-      if (!board[y].every(cell => cell !== 0)) {
-        newBoard.push([...board[y]]);
-      } else {
-        clearedLines++;
-      }
-    }
-    
-    // 在顶部添加空行
-    while (newBoard.length < BOARD_HEIGHT) {
-      newBoard.unshift(Array(BOARD_WIDTH).fill(0));
-    }
-    
-    return { newBoard, clearedLines };
-  }, []);
+    setCurrentPiece(nextPiece);
+    setNextPiece(createRandomPiece());
+  }, [currentPiece, nextPiece, board, clearLines, createRandomPiece]);
 
-  // 移动方块
-  const movePiece = useCallback((dx: number, dy: number) => {
-    if (!currentPiece || gameOver || isPaused) return;
-    
-    if (canPlacePiece(currentPiece, board, dx, dy)) {
-      setCurrentPiece(prev => prev ? { ...prev, x: prev.x + dx, y: prev.y + dy } : null);
-    } else if (dy > 0) {
-      // 方块不能再向下移动，固定它
-      const newBoard = placePiece(currentPiece, board);
-      const { newBoard: clearedBoard, clearedLines: cleared } = clearLines(newBoard);
-      
-      setBoard(clearedBoard);
-      setLines(prev => prev + cleared);
-      setScore(prev => prev + cleared * 100 * level);
-      setLevel(Math.floor((lines + cleared) / 10) + 1);
-      
-      // 创建新方块
-      if (nextPiece) {
-        if (canPlacePiece(nextPiece, clearedBoard)) {
-          setCurrentPiece(nextPiece);
-          setNextPiece(createPiece());
-        } else {
-          setGameOver(true);
-          setIsPlaying(false);
-        }
-      }
-    }
-  }, [currentPiece, board, gameOver, isPaused, canPlacePiece, placePiece, clearLines, nextPiece, level, lines, createPiece]);
+  const movePiece = useCallback((deltaX: number, deltaY: number) => {
+    if (!currentPiece || gameOver || paused) return false;
 
-  // 旋转当前方块（增加墙踢机制）
-  const handleRotate = useCallback(() => {
-    if (!currentPiece || gameOver || isPaused) return;
-    
+    if (isValidMove(currentPiece, deltaX, deltaY)) {
+      setCurrentPiece(prev => prev ? { ...prev, x: prev.x + deltaX, y: prev.y + deltaY } : null);
+      return true;
+    }
+
+    if (deltaY > 0) {
+      placePiece();
+    }
+    return false;
+  }, [currentPiece, gameOver, paused, isValidMove, placePiece]);
+
+  const rotatePieceAction = useCallback(() => {
+    if (!currentPiece || gameOver || paused) return;
+
     const rotated = rotatePiece(currentPiece);
-    
-    // 尝试基本旋转
-    if (canPlacePiece(rotated, board)) {
-      setCurrentPiece(rotated);
-      return;
+    if (isValidMove(currentPiece, 0, 0, rotated)) {
+      setCurrentPiece(prev => prev ? { ...prev, shape: rotated } : null);
     }
-    
-    // 墙踢尝试：向左移动一格
-    if (canPlacePiece(rotated, board, -1, 0)) {
-      setCurrentPiece(prev => prev ? { ...rotated, x: prev.x - 1 } : null);
-      return;
-    }
-    
-    // 墙踢尝试：向右移动一格
-    if (canPlacePiece(rotated, board, 1, 0)) {
-      setCurrentPiece(prev => prev ? { ...rotated, x: prev.x + 1 } : null);
-      return;
-    }
-    
-    // 墙踢尝试：向上移动一格（特殊情况）
-    if (canPlacePiece(rotated, board, 0, -1)) {
-      setCurrentPiece(prev => prev ? { ...rotated, y: prev.y - 1 } : null);
-      return;
-    }
-    
-    // 如果所有墙踢都失败，则旋转失败
-  }, [currentPiece, gameOver, isPaused, rotatePiece, canPlacePiece, board]);
+  }, [currentPiece, gameOver, paused, rotatePiece, isValidMove]);
 
-  // 硬降（直接落到底部）
   const hardDrop = useCallback(() => {
-    if (!currentPiece || gameOver || isPaused) return;
-    
-    let piece = { ...currentPiece };
-    while (canPlacePiece(piece, board, 0, 1)) {
-      piece.y++;
-    }
-    setCurrentPiece(piece);
-    movePiece(0, 1); // 立即触发固定
-  }, [currentPiece, gameOver, isPaused, canPlacePiece, board, movePiece]);
+    if (!currentPiece || gameOver || paused) return;
 
-  // 开始新游戏
-  const startGame = useCallback(() => {
-    const newBoard = Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(0));
-    const firstPiece = createPiece();
-    const second = createPiece();
+    let dropDistance = 0;
+    while (isValidMove(currentPiece, 0, dropDistance + 1)) {
+      dropDistance++;
+    }
+
+    if (dropDistance > 0) {
+      setCurrentPiece(prev => prev ? { ...prev, y: prev.y + dropDistance } : null);
+      setTimeout(placePiece, 50);
+    }
+  }, [currentPiece, gameOver, paused, isValidMove, placePiece]);
+
+  const checkGameOver = useCallback(() => {
+    if (nextPiece && !isValidMove(nextPiece)) {
+      setGameOver(true);
+      if (gameLoopRef.current) {
+        clearInterval(gameLoopRef.current);
+      }
+      toast({
+        title: "游戏结束！",
+        description: `最终得分: ${score}`,
+        variant: "destructive",
+      });
+    }
+  }, [nextPiece, isValidMove, score, toast]);
+
+  // Touch handling for drag controls
+  const getCellFromPosition = useCallback((clientX: number, clientY: number) => {
+    if (!boardRef.current) return null;
     
-    setBoard(newBoard);
+    const rect = boardRef.current.getBoundingClientRect();
+    const cellWidth = rect.width / BOARD_WIDTH;
+    const cellHeight = rect.height / BOARD_HEIGHT;
+    
+    const x = Math.floor((clientX - rect.left) / cellWidth);
+    const y = Math.floor((clientY - rect.top) / cellHeight);
+    
+    if (x >= 0 && x < BOARD_WIDTH && y >= 0 && y < BOARD_HEIGHT) {
+      return { x, y };
+    }
+    return null;
+  }, []);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (!currentPiece || gameOver || paused) return;
+    
+    e.preventDefault();
+    const touch = e.touches[0];
+    const cell = getCellFromPosition(touch.clientX, touch.clientY);
+    
+    if (cell) {
+      setDragStart({ x: currentPiece.x, y: currentPiece.y });
+      setIsDragging(true);
+    }
+  }, [currentPiece, gameOver, paused, getCellFromPosition]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!currentPiece || !isDragging || !dragStart || gameOver || paused) return;
+    
+    e.preventDefault();
+    const touch = e.touches[0];
+    const cell = getCellFromPosition(touch.clientX, touch.clientY);
+    
+    if (cell) {
+      const deltaX = cell.x - dragStart.x;
+      const deltaY = Math.max(0, cell.y - dragStart.y); // Only allow downward movement
+      
+      const newX = dragStart.x + deltaX;
+      const newY = dragStart.y + deltaY;
+      
+      if (isValidMove({ ...currentPiece, x: newX, y: newY })) {
+        setCurrentPiece(prev => prev ? { ...prev, x: newX, y: newY } : null);
+      }
+    }
+  }, [currentPiece, isDragging, dragStart, gameOver, paused, getCellFromPosition, isValidMove]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    setDragStart(null);
+  }, []);
+
+  // Game loop
+  useEffect(() => {
+    if (!gameStarted || gameOver || paused) return;
+
+    gameLoopRef.current = setInterval(() => {
+      movePiece(0, 1);
+    }, fallTimeRef.current);
+
+    return () => {
+      if (gameLoopRef.current) {
+        clearInterval(gameLoopRef.current);
+      }
+    };
+  }, [gameStarted, gameOver, paused, movePiece]);
+
+  useEffect(() => {
+    checkGameOver();
+  }, [currentPiece, checkGameOver]);
+
+  const startGame = () => {
+    const firstPiece = createRandomPiece();
+    const secondPiece = createRandomPiece();
+    
     setCurrentPiece(firstPiece);
-    setNextPiece(second);
+    setNextPiece(secondPiece);
+    setBoard(Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill('')));
     setScore(0);
     setLevel(1);
     setLines(0);
     setGameOver(false);
-    setIsPaused(false);
-    setIsPlaying(true);
-  }, [createPiece]);
+    setPaused(false);
+    setGameStarted(true);
+    fallTimeRef.current = INITIAL_FALL_TIME;
+  };
 
-  // 游戏循环
-  useEffect(() => {
-    if (isPlaying && !isPaused && !gameOver) {
-      const speed = Math.max(100, 1000 - (level - 1) * 100);
-      intervalRef.current = setInterval(() => {
-        movePiece(0, 1);
-      }, speed);
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+  const resetGame = () => {
+    if (gameLoopRef.current) {
+      clearInterval(gameLoopRef.current);
     }
-    
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [isPlaying, isPaused, gameOver, level, movePiece]);
+    setGameStarted(false);
+    setCurrentPiece(null);
+    setNextPiece(null);
+  };
 
-  // 键盘控制
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (!isPlaying || isPaused || gameOver) return;
-      
-      switch (e.key) {
-        case 'ArrowLeft':
-          e.preventDefault();
-          movePiece(-1, 0);
-          break;
-        case 'ArrowRight':
-          e.preventDefault();
-          movePiece(1, 0);
-          break;
-        case 'ArrowDown':
-          e.preventDefault();
-          movePiece(0, 1);
-          break;
-        case 'ArrowUp':
-        case ' ':
-          e.preventDefault();
-          handleRotate();
-          break;
-        case 'Enter':
-          e.preventDefault();
-          hardDrop();
-          break;
-      }
-    };
+  const togglePause = () => {
+    setPaused(prev => !prev);
+  };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isPlaying, isPaused, gameOver, movePiece, handleRotate, hardDrop]);
-
-  // 渲染游戏板
+  // Render board with current piece
   const renderBoard = () => {
     const displayBoard = board.map(row => [...row]);
     
-    // 绘制当前方块
     if (currentPiece) {
       for (let y = 0; y < currentPiece.shape.length; y++) {
         for (let x = 0; x < currentPiece.shape[y].length; x++) {
@@ -329,21 +313,22 @@ const TetrisGame = ({ onBack, soundEnabled = true }: TetrisGameProps) => {
             const boardY = currentPiece.y + y;
             const boardX = currentPiece.x + x;
             if (boardY >= 0 && boardY < BOARD_HEIGHT && boardX >= 0 && boardX < BOARD_WIDTH) {
-              displayBoard[boardY][boardX] = currentPiece.type + 1;
+              displayBoard[boardY][boardX] = currentPiece.color;
             }
           }
         }
       }
     }
-    
+
     return displayBoard.map((row, y) => (
       <div key={y} className="flex">
         {row.map((cell, x) => (
           <div
-            key={x}
-            className="w-6 h-6 border border-gray-300"
+            key={`${y}-${x}`}
+            className="w-6 h-6 border border-gray-300 flex-shrink-0"
             style={{
-              backgroundColor: cell ? COLORS[cell - 1] : 'white'
+              backgroundColor: cell || '#f8f9fa',
+              border: cell ? '1px solid #333' : '1px solid #ddd'
             }}
           />
         ))}
@@ -351,223 +336,174 @@ const TetrisGame = ({ onBack, soundEnabled = true }: TetrisGameProps) => {
     ));
   };
 
-  // 渲染下一个方块
   const renderNextPiece = () => {
     if (!nextPiece) return null;
-    
-    return nextPiece.shape.map((row, y) => (
-      <div key={y} className="flex">
-        {row.map((cell, x) => (
-          <div
-            key={x}
-            className="w-4 h-4 border border-gray-300"
-            style={{
-              backgroundColor: cell ? COLORS[nextPiece.type] : 'transparent'
-            }}
-          />
-        ))}
+
+    return (
+      <div className="grid gap-0" style={{ gridTemplateColumns: `repeat(${nextPiece.shape[0].length}, 1fr)` }}>
+        {nextPiece.shape.map((row, y) =>
+          row.map((cell, x) => (
+            <div
+              key={`${y}-${x}`}
+              className="w-4 h-4 border"
+              style={{
+                backgroundColor: cell ? nextPiece.color : 'transparent',
+                borderColor: cell ? '#333' : '#ddd'
+              }}
+            />
+          ))
+        )}
       </div>
-    ));
+    );
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-4">
-      <div className="container mx-auto max-w-4xl">
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-md mx-auto">
         <div className="flex items-center justify-between mb-4">
-          <Button variant="ghost" size="sm" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            返回
+          <Button variant="ghost" onClick={onBack} className="p-2">
+            <ArrowLeft className="h-5 w-5" />
+            <span className="ml-2">返回</span>
           </Button>
-          <h1 className="text-2xl font-bold">🧩 俄罗斯方块</h1>
-          <div className="w-16" />
+          <h1 className="text-xl font-bold text-center flex-1">俄罗斯方块</h1>
+          <div className="w-20" />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* 游戏区域 */}
-          <div className="lg:col-span-2">
+        {!gameStarted ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">俄罗斯方块</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center space-y-2">
+                <p className="text-sm text-gray-600">
+                  在游戏区域内拖动方块进行移动
+                </p>
+                <p className="text-sm text-gray-600">
+                  点击旋转按钮进行方块旋转
+                </p>
+              </div>
+              <Button onClick={startGame} className="w-full bg-blue-600 hover:bg-blue-700">
+                <Play className="h-4 w-4 mr-2" />
+                开始游戏
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {/* Game Stats */}
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="bg-white p-2 rounded-lg shadow">
+                <div className="text-xs text-gray-500">得分</div>
+                <div className="font-bold">{score}</div>
+              </div>
+              <div className="bg-white p-2 rounded-lg shadow">
+                <div className="text-xs text-gray-500">等级</div>
+                <div className="font-bold">{level}</div>
+              </div>
+              <div className="bg-white p-2 rounded-lg shadow">
+                <div className="text-xs text-gray-500">行数</div>
+                <div className="font-bold">{lines}</div>
+              </div>
+            </div>
+
+            {/* Next Piece */}
             <Card>
               <CardContent className="p-4">
-                <div className="flex justify-center mb-4">
-                  <div className="inline-block border-2 border-gray-800 bg-black p-2">
-                    {renderBoard()}
-                  </div>
+                <div className="text-sm font-medium mb-2">下一个：</div>
+                <div className="flex justify-center">
+                  {renderNextPiece()}
                 </div>
-                
-                {gameOver && (
-                  <div className="text-center mb-4">
-                    <h2 className="text-2xl font-bold text-red-600 mb-2">游戏结束</h2>
-                    <p className="text-gray-600">最终得分: {score}</p>
-                  </div>
-                )}
-                
-                <div className="flex justify-center gap-2">
-                  {!isPlaying ? (
-                    <Button onClick={startGame} className="bg-green-600 hover:bg-green-700">
-                      <Play className="h-4 w-4 mr-2" />
-                      开始游戏
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => setIsPaused(!isPaused)}
-                      variant="outline"
-                    >
-                      {isPaused ? <Play className="h-4 w-4 mr-2" /> : <Pause className="h-4 w-4 mr-2" />}
-                      {isPaused ? '继续' : '暂停'}
-                    </Button>
-                  )}
-                  <Button onClick={startGame} variant="outline">
+              </CardContent>
+            </Card>
+
+            {/* Game Board */}
+            <Card>
+              <CardContent className="p-2">
+                <div 
+                  ref={boardRef}
+                  className="bg-gray-100 border-2 border-gray-300 mx-auto touch-none select-none"
+                  style={{ width: 'fit-content' }}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                >
+                  {renderBoard()}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Control Buttons */}
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                onClick={rotatePieceAction}
+                disabled={gameOver || paused}
+                className="h-12"
+              >
+                <RotateCw className="h-5 w-5 mr-2" />
+                旋转
+              </Button>
+              <Button
+                variant="outline"
+                onClick={hardDrop}
+                disabled={gameOver || paused}
+                className="h-12"
+              >
+                ⬇️ 硬降
+              </Button>
+            </div>
+
+            {/* Game Control Buttons */}
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                variant="outline"
+                onClick={togglePause}
+                disabled={gameOver}
+              >
+                {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={resetGame}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                onClick={onBack}
+              >
+                <Home className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Game Over */}
+            {gameOver && (
+              <Card className="border-red-200 bg-red-50">
+                <CardContent className="p-4 text-center">
+                  <h3 className="font-bold text-red-800 mb-2">游戏结束！</h3>
+                  <p className="text-red-600 mb-3">最终得分: {score}</p>
+                  <Button onClick={startGame} className="bg-red-600 hover:bg-red-700">
                     重新开始
                   </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Instructions */}
+            <Card>
+              <CardContent className="p-4">
+                <h4 className="font-medium mb-2">触屏操作说明</h4>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p>• 在游戏区域内拖动方块进行移动</p>
+                  <p>• 点击"旋转"按钮进行方块旋转</p>
+                  <p>• 点击"硬降"直接下落到底部</p>
+                  <p>• 只能水平移动和向下移动</p>
                 </div>
               </CardContent>
             </Card>
           </div>
-
-          {/* 侧边栏 */}
-          <div className="space-y-4">
-            {/* 得分信息 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">游戏信息</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span>得分:</span>
-                  <span className="font-bold">{score}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>等级:</span>
-                  <span className="font-bold">{level}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>行数:</span>
-                  <span className="font-bold">{lines}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* 下一个方块 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">下一个</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-center">
-                  <div className="inline-block border border-gray-300 p-2 bg-white">
-                    {renderNextPiece()}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* 控制说明 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">控制方式</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>移动:</span>
-                  <span>← →</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>加速:</span>
-                  <span>↓</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>旋转:</span>
-                  <span>↑ 空格</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>硬降:</span>
-                  <span>Enter</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* 移动端触控区域 */}
-            <Card className="lg:hidden">
-              <CardHeader>
-                <CardTitle className="text-lg">触屏控制</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {/* 主要游戏操作区域 */}
-                <div className="space-y-4">
-                  {/* 旋转按钮 */}
-                  <div className="text-center">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={handleRotate}
-                      disabled={!isPlaying || isPaused || gameOver}
-                      className="w-20 h-20 rounded-full text-lg font-bold"
-                    >
-                      <RotateCw className="h-6 w-6" />
-                    </Button>
-                    <p className="text-xs text-gray-500 mt-1">点击旋转</p>
-                  </div>
-                  
-                  {/* 左右移动 */}
-                  <div className="flex justify-between items-center px-8">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => movePiece(-1, 0)}
-                      disabled={!isPlaying || isPaused || gameOver}
-                      className="w-16 h-16 rounded-full text-xl"
-                    >
-                      ←
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => movePiece(1, 0)}
-                      disabled={!isPlaying || isPaused || gameOver}
-                      className="w-16 h-16 rounded-full text-xl"
-                    >
-                      →
-                    </Button>
-                  </div>
-                  
-                  {/* 下移和硬降 */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => movePiece(0, 1)}
-                      disabled={!isPlaying || isPaused || gameOver}
-                      className="h-14"
-                    >
-                      <ArrowDown className="h-5 w-5 mr-2" />
-                      软降
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={hardDrop}
-                      disabled={!isPlaying || isPaused || gameOver}
-                      className="h-14 bg-red-50 hover:bg-red-100"
-                    >
-                      <ArrowUp className="h-5 w-5 mr-2" />
-                      硬降
-                    </Button>
-                  </div>
-                </div>
-                
-                {/* 手势说明 */}
-                <div className="mt-6 p-3 bg-blue-50 rounded-lg">
-                  <h4 className="font-medium text-blue-800 mb-2">触屏说明</h4>
-                  <div className="text-sm text-blue-700 space-y-1">
-                    <p>• 点击"旋转"按钮进行方块旋转</p>
-                    <p>• 点击左右箭头进行水平移动</p>
-                    <p>• 软降：缓慢向下移动</p>
-                    <p>• 硬降：瞬间落到底部</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
