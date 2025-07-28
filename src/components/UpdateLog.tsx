@@ -11,6 +11,29 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.4.0',
+      type: '功能增强',
+      icon: Zap,
+      color: 'bg-green-50 text-green-600 border-green-200',
+      items: [
+        {
+          title: '💱 汇率计算器优化',
+          description: '完善多币种转换功能，支持各币种间实时汇率计算',
+          type: 'improvement'
+        },
+        {
+          title: '📅 周末汇率提示',
+          description: '汇率页面新增周末时间提示，提醒用户外汇市场休市状态',
+          type: 'feature'
+        },
+        {
+          title: '🔄 汇率数据源优化',
+          description: '增加备用API接口，提高汇率数据获取的稳定性和准确性',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.3.0',
       type: '功能优化',
       icon: Sparkles,
