@@ -80,10 +80,13 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
               clearInterval(countdownRef.current);
             }
             setShowRecordDialog(false);
-            // 确保导航到记录页面
-            if (onNavigateToRecords) {
-              onNavigateToRecords();
-            }
+            // 确保导航到记录页面 - 使用setTimeout确保状态更新完成后再跳转
+            setTimeout(() => {
+              console.log('倒计时结束，跳转到记录页面');
+              if (onNavigateToRecords) {
+                onNavigateToRecords();
+              }
+            }, 100);
             return 0;
           }
           return prev - 1;
@@ -140,16 +143,19 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
       // 使用服务函数删除打卡记录
       await cancelCheckin(todayCheckin.id);
       
-      // 重新设置状态
-      onCheckinSuccess(null as any);
+      // 正确重置前端状态，传递null表示今日未打卡
+      onCheckinSuccess(null);
       setEarnedPoints(null);
       onReloadHistory();
+      
+      console.log('前端状态已重置，应该可以重新打卡');
       
       toast({
         title: "取消打卡成功",
         description: "今日打卡记录已删除，可以重新打卡了",
       });
     } catch (error: any) {
+      console.error('取消打卡失败:', error);
       toast({
         title: "取消打卡失败",
         description: error.message,

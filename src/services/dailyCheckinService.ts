@@ -196,4 +196,6 @@ export const cancelCheckin = async (checkinId: string): Promise<void> => {
   if (error) {
     throw new Error(`取消打卡失败: ${error.message}`);
   }
+  
+  console.log('取消打卡成功，记录ID:', checkinId);
 };
