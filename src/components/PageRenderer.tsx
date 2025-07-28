@@ -67,7 +67,10 @@ const PageRenderer = ({
 
   switch (currentPage) {
     case 'checkin':
-      return <DailyCheckin {...commonProps} />;
+      return <DailyCheckin 
+        {...commonProps} 
+        onNavigateToRecords={() => onNavigation('record-hub')}
+      />;
     
     case 'record-hub':
       return <RecordHub 
