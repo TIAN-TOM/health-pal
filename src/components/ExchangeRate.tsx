@@ -1,11 +1,12 @@
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, RefreshCw, TrendingUp, TrendingDown, Calculator, DollarSign } from 'lucide-react';
+import { ArrowLeft, RefreshCw, TrendingUp, TrendingDown, Calculator, DollarSign, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { exchangeRateService } from '@/services/exchangeRateService';
 
 interface ExchangeRateProps {
@@ -18,8 +19,15 @@ interface ExchangeRateData {
   change?: number;
 }
 
+interface AllRatesData {
+  rates: Record<string, number>;
+  timestamp: string;
+  base: string;
+}
+
 const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
   const [data, setData] = useState<ExchangeRateData | null>(null);
+  const [allRates, setAllRates] = useState<AllRatesData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -32,7 +40,11 @@ const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
     setError(null);
 
     try {
+      // 获取AUD到CNY的汇率（主要显示）
       const newData = await exchangeRateService.getAUDToCNYRate();
+      
+      // 获取所有货币汇率（用于计算器）
+      const allRatesData = await exchangeRateService.getAllRates('USD');
       
       // 计算变化
       let change = undefined;
@@ -44,6 +56,7 @@ const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
         ...newData,
         change
       });
+      setAllRates(allRatesData);
       setLastUpdate(new Date());
     } catch (err) {
       console.error('Exchange rate fetch error:', err);
@@ -86,17 +99,24 @@ const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
   };
 
   const calculateResult = () => {
-    if (!data || !calculatorAmount) return '0.00';
+    if (!allRates || !calculatorAmount) return '0.00';
     
     const amount = parseFloat(calculatorAmount);
     if (isNaN(amount)) return '0.00';
 
-    if (calculatorFrom === 'AUD' && calculatorTo === 'CNY') {
-      return (amount * data.rate).toFixed(2);
-    } else if (calculatorFrom === 'CNY' && calculatorTo === 'AUD') {
-      return (amount / data.rate).toFixed(2);
+    try {
+      const result = exchangeRateService.convertCurrency(
+        amount, 
+        calculatorFrom, 
+        calculatorTo, 
+        allRates.rates, 
+        allRates.base
+      );
+      return result.toFixed(2);
+    } catch (error) {
+      console.error('Currency conversion error:', error);
+      return '0.00';
     }
-    return '0.00';
   };
 
   const currencySymbols = {
@@ -132,6 +152,16 @@ const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
+
+        {/* 周末提示 */}
+        {exchangeRateService.isWeekend() && (
+          <Alert className="mb-6 border-orange-200 bg-orange-50">
+            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-orange-800">
+              当前为周末时间，外汇市场休市，显示的汇率为上一个交易日的数据。
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* 主汇率卡片 */}
         <Card className="mb-6">
@@ -178,7 +208,7 @@ const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
         </Card>
 
         {/* 增强版计算器 */}
-        {data && (
+        {allRates && (
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="flex items-center text-lg">
@@ -242,6 +272,12 @@ const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
               <div className="text-center text-sm text-gray-500">
                 {calculatorAmount} {calculatorFrom} = {calculateResult()} {calculatorTo}
               </div>
+              
+              {allRates.base !== 'USD' && (
+                <div className="text-xs text-gray-400 text-center">
+                  * 通过 {allRates.base} 基准汇率计算
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
