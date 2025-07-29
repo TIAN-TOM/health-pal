@@ -112,34 +112,34 @@ const PageRenderer = ({
       );
     
     case 'profile':
-      return <PersonalProfile {...commonProps} />;
+      return <PersonalProfile onBack={() => onBack('settings')} />;
     
     case 'user-preferences':
-      return <UserPreferences {...commonProps} />;
+      return <UserPreferences onBack={() => onBack('settings')} />;
     
     case 'medical-records':
-      return <MedicalRecords {...commonProps} />;
+      return <MedicalRecords onBack={() => onBack('settings')} />;
     
     case 'emergency-contacts':
-      return <EmergencyContacts {...commonProps} />;
+      return <EmergencyContacts onBack={() => onBack('settings')} />;
     
     case 'education':
-      return <EducationCenter {...commonProps} />;
+      return <EducationCenter onBack={() => onBack('settings')} />;
     
     case 'medications':
-      return <MedicationManagement {...commonProps} />;
+      return <MedicationManagement onBack={() => onBack('settings')} />;
     
     case 'emergency':
       return <EmergencyMode onBack={() => onBack()} />;
     
     case 'user-manual':
-      return <UserManual {...commonProps} />;
+      return <UserManual onBack={() => onBack('settings')} />;
     
     case 'update-log':
-      return <UpdateLog {...commonProps} />;
+      return <UpdateLog onBack={() => onBack('settings')} />;
     
     case 'admin-panel':
-      return <AdminPanel {...commonProps} />;
+      return <AdminPanel onBack={() => onBack('settings')} />;
     
     // 家庭管理中心
     case 'familyDashboard':
