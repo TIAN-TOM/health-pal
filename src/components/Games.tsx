@@ -169,16 +169,16 @@ const Games = ({ onBack }: GamesProps) => {
 
         <div className="grid gap-4 md:grid-cols-2">
           {games.map((game) => (
-            <Card key={game.id} className="hover:shadow-lg transition-shadow duration-200 relative group">
+            <Card key={game.id} className="hover:shadow-lg transition-shadow duration-200">
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
                   <span className="text-2xl mr-3">{game.icon}</span>
                   {game.name}
-                  <div className="ml-auto relative">
-                    <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs cursor-help hover:bg-blue-600 transition-colors">
+                  <div className="ml-auto relative group">
+                    <button className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs cursor-help hover:bg-blue-600 transition-colors">
                       ?
-                    </div>
-                    <div className="absolute right-0 top-8 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm text-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                    </button>
+                    <div className="absolute right-0 top-8 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm text-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-active:opacity-100 group-active:visible transition-all duration-200 z-10">
                       <h4 className="font-semibold mb-2">游戏说明:</h4>
                       <p className="mb-2">{game.description}</p>
                       <div className="text-xs text-gray-500">

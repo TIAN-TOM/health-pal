@@ -11,6 +11,29 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.5.0',
+      type: '游戏增强',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🐍 贪吃蛇游戏重大升级',
+          description: '新增特殊食物系统(金色、奖励、加速、减速)，道具系统(无敌、双倍得分、慢动作)，动态障碍和最高分记录',
+          type: 'feature'
+        },
+        {
+          title: '🫧 泡泡消消乐功能增强',
+          description: '添加分层颜色系统、特殊气泡效果(冻结、双倍、时间奖励)、气泡移动动画和连击奖励机制',
+          type: 'feature'
+        },
+        {
+          title: '🎮 游戏工具提示优化',
+          description: '在每个游戏卡片右上角添加说明图标，悬停或点击显示详细游戏操作指导',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.4.0',
       type: '功能增强',
       icon: Zap,
