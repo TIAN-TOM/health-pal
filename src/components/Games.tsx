@@ -169,11 +169,31 @@ const Games = ({ onBack }: GamesProps) => {
 
         <div className="grid gap-4 md:grid-cols-2">
           {games.map((game) => (
-            <Card key={game.id} className="hover:shadow-lg transition-shadow duration-200">
+            <Card key={game.id} className="hover:shadow-lg transition-shadow duration-200 relative group">
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
                   <span className="text-2xl mr-3">{game.icon}</span>
                   {game.name}
+                  <div className="ml-auto relative">
+                    <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs cursor-help hover:bg-blue-600 transition-colors">
+                      ?
+                    </div>
+                    <div className="absolute right-0 top-8 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-sm text-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                      <h4 className="font-semibold mb-2">游戏说明:</h4>
+                      <p className="mb-2">{game.description}</p>
+                      <div className="text-xs text-gray-500">
+                        {game.id === 'memory-cards' && '翻开相同图案的卡片，训练记忆力'}
+                        {game.id === 'flappy-bird' && '点击屏幕控制小鸟飞行，避开障碍物'}
+                        {game.id === 'gomoku' && '五子连线获胜，支持不同难度'}
+                        {game.id === 'multiplayer-gomoku' && '与其他玩家在线对战'}
+                        {game.id === 'breakout' && '移动挡板控制球击破砖块'}
+                        {game.id === 'snake' && '方向键控制，吃食物成长，有道具和特殊食物'}
+                        {game.id === '2048' && '滑动合并数字，目标达到2048'}
+                        {game.id === 'bubble-pop' && '点击彩色气泡，连击获得高分，特殊气泡有惊喜'}
+                        {game.id === 'tetris' && '旋转和移动方块，消除完整行'}
+                      </div>
+                    </div>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
