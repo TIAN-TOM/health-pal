@@ -58,16 +58,16 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
     progressRef.current = 0;
     
     toast({
-      title: "开始呼吸训练",
-      description: `${currentPattern.name} - ${sessionDuration}分钟训练开始`,
+      title: "开始呼吸冥想",
+      description: `${currentPattern.name} - ${sessionDuration}分钟冥想开始`,
     });
   };
 
   const pauseSession = () => {
     setIsActive(!isActive);
     toast({
-      title: isActive ? "训练已暂停" : "训练已继续",
-      description: isActive ? "点击继续按钮恢复训练" : "继续您的呼吸练习",
+      title: isActive ? "冥想已暂停" : "冥想已继续",
+      description: isActive ? "点击继续按钮恢复冥想" : "继续您的呼吸练习",
     });
   };
 
@@ -81,8 +81,8 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
     progressRef.current = 0;
     
     toast({
-      title: "训练已重置",
-      description: "准备开始新的训练",
+      title: "冥想已重置",
+      description: "准备开始新的冥想",
     });
   };
 
@@ -268,8 +268,8 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
       setSessionCompleted(true);
       
       toast({
-        title: "🎉 训练完成！",
-        description: `恭喜您完成了${sessionDuration}分钟的呼吸训练，共完成${completedCycles}个呼吸周期`,
+        title: "🎉 冥想完成！",
+        description: `恭喜您完成了${sessionDuration}分钟的呼吸冥想，共完成${completedCycles}个呼吸周期`,
       });
     }
   }, [sessionTime, sessionDuration, completedCycles]);
@@ -338,9 +338,9 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
                   <Star className="h-6 w-6 text-yellow-500 animate-pulse" />
                 </div>
               </div>
-              <h3 className="text-xl font-bold text-green-800 mb-2">训练完成！</h3>
+              <h3 className="text-xl font-bold text-green-800 mb-2">冥想完成！</h3>
               <p className="text-green-700 mb-4 leading-relaxed">
-                恭喜您完成了 {sessionDuration} 分钟的呼吸训练<br />
+                恭喜您完成了 {sessionDuration} 分钟的呼吸冥想<br />
                 共完成 <span className="font-semibold">{completedCycles}</span> 个完整周期
               </p>
               <Button 
@@ -352,6 +352,76 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
               </Button>
             </div>
           </div>
+        )}
+
+        {/* 设置面板 - 可折叠 */}
+        {showSettings && (
+          <Card className="mb-8 backdrop-blur-sm bg-white/30 border-white/40 shadow-lg rounded-2xl animate-fade-in">
+            <CardHeader>
+              <CardTitle className="flex items-center text-gray-800">
+                <Settings className="h-5 w-5 mr-2" />
+                冥想设置
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* 呼吸模式选择 */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-medium text-gray-700">呼吸模式</label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowPatternInfo(!showPatternInfo)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Info className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Select 
+                  value={breathingPattern} 
+                  onValueChange={setBreathingPattern}
+                  disabled={isActive}
+                >
+                  <SelectTrigger className="backdrop-blur-sm bg-white/50 border-white/60">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(patterns).map(([key, pattern]) => (
+                      <SelectItem key={key} value={key}>
+                        {pattern.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                {showPatternInfo && (
+                  <div className="mt-3 p-4 bg-blue-50/80 backdrop-blur-sm rounded-xl border border-blue-200/50 animate-fade-in">
+                    <p className="text-sm text-blue-800 leading-relaxed">{currentPattern.description}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* 训练时长 */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-3 block">冥想时长</label>
+                <Select 
+                  value={sessionDuration.toString()} 
+                  onValueChange={(value) => setSessionDuration(parseInt(value))}
+                  disabled={isActive}
+                >
+                  <SelectTrigger className="backdrop-blur-sm bg-white/50 border-white/60">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 分钟 · 快速体验</SelectItem>
+                    <SelectItem value="3">3 分钟 · 日常练习</SelectItem>
+                    <SelectItem value="5">5 分钟 · 深度放松</SelectItem>
+                    <SelectItem value="10">10 分钟 · 冥想入定</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* 主要呼吸动画区域 */}
@@ -400,7 +470,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
                     {!isActive && !sessionCompleted && (
                       <div className="text-sm text-gray-600 flex items-center animate-pulse">
                         <Timer className="h-4 w-4 mr-1" />
-                        {sessionDuration} 分钟训练
+                        {sessionDuration} 分钟冥想
                       </div>
                     )}
                   </div>
@@ -452,7 +522,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
                 <Timer className="h-5 w-5 text-blue-600 mr-1" />
               </div>
               <div className="text-2xl font-bold text-blue-600 mb-1">{formatTime(sessionTime)}</div>
-              <div className="text-xs text-gray-600">训练时间</div>
+              <div className="text-xs text-gray-600">冥想时间</div>
             </CardContent>
           </Card>
           
@@ -467,75 +537,6 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
           </Card>
         </div>
 
-        {/* 设置面板 - 可折叠 */}
-        {showSettings && (
-          <Card className="mb-8 backdrop-blur-sm bg-white/30 border-white/40 shadow-lg rounded-2xl animate-fade-in">
-            <CardHeader>
-              <CardTitle className="flex items-center text-gray-800">
-                <Settings className="h-5 w-5 mr-2" />
-                训练设置
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* 呼吸模式选择 */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <label className="text-sm font-medium text-gray-700">呼吸模式</label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowPatternInfo(!showPatternInfo)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Info className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Select 
-                  value={breathingPattern} 
-                  onValueChange={setBreathingPattern}
-                  disabled={isActive}
-                >
-                  <SelectTrigger className="backdrop-blur-sm bg-white/50 border-white/60">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(patterns).map(([key, pattern]) => (
-                      <SelectItem key={key} value={key}>
-                        {pattern.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                {showPatternInfo && (
-                  <div className="mt-3 p-4 bg-blue-50/80 backdrop-blur-sm rounded-xl border border-blue-200/50 animate-fade-in">
-                    <p className="text-sm text-blue-800 leading-relaxed">{currentPattern.description}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* 训练时长 */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-3 block">训练时长</label>
-                <Select 
-                  value={sessionDuration.toString()} 
-                  onValueChange={(value) => setSessionDuration(parseInt(value))}
-                  disabled={isActive}
-                >
-                  <SelectTrigger className="backdrop-blur-sm bg-white/50 border-white/60">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 分钟 · 快速体验</SelectItem>
-                    <SelectItem value="3">3 分钟 · 日常练习</SelectItem>
-                    <SelectItem value="5">5 分钟 · 深度放松</SelectItem>
-                    <SelectItem value="10">10 分钟 · 冥想入定</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* 精美的指导卡片 */}
         <Card className="backdrop-blur-sm bg-gradient-to-r from-white/20 to-white/30 border-white/40 shadow-lg rounded-2xl">

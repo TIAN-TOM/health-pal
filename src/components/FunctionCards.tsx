@@ -27,7 +27,7 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
     },
     {
       id: 'breathing',
-      title: '呼吸训练',
+      title: '呼吸冥想',
       description: '深呼吸放松练习',
       icon: Wind,
       color: 'from-purple-500 to-purple-600',
