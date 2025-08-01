@@ -133,10 +133,16 @@ const PageRenderer = ({
       return <EmergencyMode onBack={() => onBack()} />;
     
     case 'user-manual':
-      return <UserManual onBack={() => onBack('settings')} />;
+      return <UserManual 
+        onBack={() => onBack(navigationSource === 'home' ? 'home' : 'settings')} 
+        source={navigationSource}
+      />;
     
     case 'update-log':
-      return <UpdateLog onBack={() => onBack('settings')} />;
+      return <UpdateLog 
+        onBack={() => onBack(navigationSource === 'home' ? 'home' : 'settings')} 
+        source={navigationSource}
+      />;
     
     case 'admin-panel':
       return <AdminPanel onBack={() => onBack('settings')} />;

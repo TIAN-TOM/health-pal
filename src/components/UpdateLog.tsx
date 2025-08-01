@@ -6,9 +6,10 @@ import { Badge } from '@/components/ui/badge';
 
 interface UpdateLogProps {
   onBack: () => void;
+  source?: string;
 }
 
-const UpdateLog = ({ onBack }: UpdateLogProps) => {
+const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
       version: '2.5.0',

@@ -101,37 +101,24 @@ export const deleteContact = async (id: string): Promise<void> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('未登录');
 
-    // 如果是临时ID（老数据），需要先查找真实记录
-    if (id.startsWith('temp_')) {
-      // 通过索引找到对应的联系人
-      const contacts = await getContacts();
-      const contactIndex = parseInt(id.split('_')[2]);
-      const targetContact = contacts[contactIndex];
-      
-      if (targetContact && !targetContact.id.startsWith('temp_')) {
-        id = targetContact.id;
-      } else {
-        // 如果无法找到真实ID，通过其他字段查找
-        const { data: allContacts } = await supabase
-          .from('emergency_contacts')
-          .select('*')
-          .eq('user_id', user.id);
-
-        if (allContacts && allContacts[contactIndex]) {
-          id = allContacts[contactIndex].id;
-        } else {
-          throw new Error('无法找到要删除的联系人');
-        }
-      }
+    // 检查是否是有效的UUID格式
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    
+    if (!uuidRegex.test(id)) {
+      throw new Error('无效的联系人ID格式');
     }
 
+    // 直接删除，添加更好的错误处理
     const { error } = await supabase
       .from('emergency_contacts')
       .delete()
       .eq('id', id)
       .eq('user_id', user.id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('删除操作数据库错误:', error);
+      throw new Error(`删除失败: ${error.message}`);
+    }
   } catch (error) {
     console.error('删除联系人失败:', error);
     throw error;

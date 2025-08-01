@@ -9,9 +9,10 @@ import * as Icons from 'lucide-react';
 
 interface UserManualProps {
   onBack: () => void;
+  source?: string;
 }
 
-const UserManual = ({ onBack }: UserManualProps) => {
+const UserManual = ({ onBack, source }: UserManualProps) => {
   const [manualItems, setManualItems] = useState<ManualSection[]>([]);
   const [loading, setLoading] = useState(false);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['入门指南']));

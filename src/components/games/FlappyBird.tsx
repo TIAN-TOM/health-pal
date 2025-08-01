@@ -21,9 +21,9 @@ const FlappyBird = ({ onBack, soundEnabled = true }: FlappyBirdProps) => {
   const gameRef = useRef({
     bird: { x: 50, y: 200, velocity: 0 },
     pipes: [] as Array<{ x: number; topHeight: number; passed: boolean; color: string }>,
-    gameSpeed: 1.2,
-    gravity: 0.25,
-    jumpForce: -5.5,
+    gameSpeed: 1.8, // 增加游戏速度以匹配桌面版体验
+    gravity: 0.35, // 调整重力适配移动端
+    jumpForce: -6.5, // 调整跳跃力度
     pipeWidth: 60,
     pipeGap: 200,
     animationId: 0,
