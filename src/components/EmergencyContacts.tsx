@@ -77,17 +77,19 @@ const EmergencyContacts = ({ onBack }: EmergencyContactsProps) => {
   const handleDelete = async (id: string) => {
     if (window.confirm('确定要删除这个联系人吗？')) {
       try {
+        console.log('尝试删除联系人ID:', id);
         await deleteContact(id);
         toast({
           title: "删除成功",
           description: "联系人已删除"
         });
-        loadContacts();
-      } catch (error) {
+        // 重新加载联系人列表
+        await loadContacts();
+      } catch (error: any) {
         console.error('删除联系人失败:', error);
         toast({
           title: "删除失败",
-          description: "请稍后重试",
+          description: error.message || "请稍后重试",
           variant: "destructive"
         });
       }

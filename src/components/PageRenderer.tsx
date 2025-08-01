@@ -134,13 +134,25 @@ const PageRenderer = ({
     
     case 'user-manual':
       return <UserManual 
-        onBack={() => onBack(navigationSource === 'home' ? 'home' : 'settings')} 
+        onBack={() => {
+          if (navigationSource === 'home') {
+            onBack('home');
+          } else {
+            onBack('settings');
+          }
+        }} 
         source={navigationSource}
       />;
     
     case 'update-log':
       return <UpdateLog 
-        onBack={() => onBack(navigationSource === 'home' ? 'home' : 'settings')} 
+        onBack={() => {
+          if (navigationSource === 'home') {
+            onBack('home');
+          } else {
+            onBack('settings');
+          }
+        }} 
         source={navigationSource}
       />;
     
