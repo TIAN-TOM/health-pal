@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Settings as SettingsIcon, Book, HelpCircle, Shield, History, User } from 'lucide-react';
+import { Settings as SettingsIcon, Book, HelpCircle, Shield, History, User, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -10,9 +10,10 @@ interface SystemSettingsProps {
   onUpdateLog: () => void;
   onUserPreferences: () => void;
   onAdminPanel?: () => void;
+  onUserFeedback: () => void;
 }
 
-const SystemSettings = ({ onEducation, onUserManual, onUpdateLog, onUserPreferences, onAdminPanel }: SystemSettingsProps) => {
+const SystemSettings = ({ onEducation, onUserManual, onUpdateLog, onUserPreferences, onAdminPanel, onUserFeedback }: SystemSettingsProps) => {
   return (
     <Card>
       <CardHeader>
@@ -40,14 +41,23 @@ const SystemSettings = ({ onEducation, onUserManual, onUpdateLog, onUserPreferen
           使用手册
         </Button>
 
-        <Button
-          onClick={onUpdateLog}
-          variant="outline"
-          className="w-full justify-start"
-        >
-          <History className="h-4 w-4 mr-2" />
-          更新日志
-        </Button>
+          <Button
+            onClick={onUpdateLog}
+            variant="outline"
+            className="w-full justify-start"
+          >
+            <History className="h-4 w-4 mr-2" />
+            更新日志
+          </Button>
+          
+          <Button
+            onClick={onUserFeedback}
+            variant="outline"
+            className="w-full justify-start"
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            用户反馈
+          </Button>
 
         <Button
           onClick={onUserPreferences}

@@ -38,6 +38,8 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
 
+import UserFeedback from './UserFeedback';
+
 interface PageRendererProps {
   currentPage: string;
   selectedRecord?: MeniereRecord | null;
@@ -108,6 +110,7 @@ const PageRenderer = ({
           onUpdateLog={() => onNavigation('update-log')}
           onAdminPanel={() => onNavigation('admin-panel')}
           onUserPreferences={() => onNavigation('user-preferences')}
+          onUserFeedback={() => onNavigation('user-feedback')}
         />
       );
     
@@ -227,6 +230,9 @@ const PageRenderer = ({
         onNavigate={onNavigation}
         onNavigateToMedicationManagement={() => onNavigation('medications')}
       />;
+    
+    case 'user-feedback':
+      return <UserFeedback onBack={() => onBack('settings')} />;
     
     default:
       return null;

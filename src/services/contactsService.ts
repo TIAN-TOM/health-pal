@@ -102,6 +102,7 @@ export const deleteContact = async (id: string): Promise<void> => {
     if (!user) throw new Error('未登录');
 
     // 如果是临时ID，尝试通过其他方式找到真实记录
+    let realId = id;
     if (id.startsWith('temp_')) {
       const parts = id.split('_');
       if (parts.length >= 3) {
@@ -115,7 +116,7 @@ export const deleteContact = async (id: string): Promise<void> => {
           .order('created_at', { ascending: true });
 
         if (allContacts && allContacts[index]) {
-          id = allContacts[index].id;
+          realId = allContacts[index].id;
         } else {
           throw new Error('找不到要删除的联系人');
         }
@@ -126,20 +127,34 @@ export const deleteContact = async (id: string): Promise<void> => {
 
     // 检查是否是有效的UUID格式
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(id)) {
+    if (!uuidRegex.test(realId)) {
       throw new Error('无效的联系人ID格式');
     }
 
-    // 执行删除操作
-    const { error, count } = await supabase
-      .from('emergency_contacts')
-      .delete({ count: 'exact' })
-      .eq('id', id)
+    console.log('开始删除联系人及相关记录，ID:', realId);
+
+    // 先删除相关的SMS日志记录（因为外键约束）
+    const { error: smsError } = await supabase
+      .from('emergency_sms_logs')
+      .delete()
+      .eq('contact_id', realId)
       .eq('user_id', user.id);
 
-    if (error) {
-      console.error('删除操作数据库错误:', error);
-      throw new Error(`删除失败: ${error.message}`);
+    if (smsError) {
+      console.error('删除SMS日志失败:', smsError);
+      // 不抛出错误，因为可能没有相关的SMS记录
+    }
+
+    // 再删除联系人记录
+    const { error: contactError, count } = await supabase
+      .from('emergency_contacts')
+      .delete({ count: 'exact' })
+      .eq('id', realId)
+      .eq('user_id', user.id);
+
+    if (contactError) {
+      console.error('删除联系人失败:', contactError);
+      throw new Error(`删除失败: ${contactError.message}`);
     }
 
     // 检查是否真的删除了记录
@@ -147,7 +162,7 @@ export const deleteContact = async (id: string): Promise<void> => {
       throw new Error('没有找到要删除的联系人记录');
     }
 
-    console.log(`成功删除了 ${count} 条联系人记录`);
+    console.log(`成功删除了联系人及相关记录`);
   } catch (error) {
     console.error('删除联系人失败:', error);
     throw error;

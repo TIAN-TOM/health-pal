@@ -871,6 +871,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_feedback: {
+        Row: {
+          contact_info: string | null
+          content: string
+          created_at: string
+          feedback_type: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact_info?: string | null
+          content: string
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact_info?: string | null
+          content?: string
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_manual: {
         Row: {
           content: string

@@ -20,6 +20,7 @@ interface SettingsProps {
   onUserManual: () => void;
   onUpdateLog: () => void;
   onUserPreferences: () => void;
+  onUserFeedback: () => void;
 }
 
 const Settings = ({ 
@@ -32,7 +33,8 @@ const Settings = ({
   onPersonalProfile,
   onUserManual,
   onUpdateLog,
-  onUserPreferences
+  onUserPreferences,
+  onUserFeedback
 }: SettingsProps) => {
   const { user, userRole } = useAuth();
 
@@ -67,6 +69,7 @@ const Settings = ({
             onUpdateLog={onUpdateLog}
             onAdminPanel={userRole === 'admin' ? onAdminPanel : undefined}
             onUserPreferences={onUserPreferences}
+            onUserFeedback={onUserFeedback}
           />
 
           <AccountManagement />
