@@ -11,7 +11,8 @@ import AdminNotifications from '@/components/AdminNotifications';
 import AnnouncementManagement from '@/components/AnnouncementManagement';
 import EnglishContentManagement from '@/components/admin/EnglishContentManagement';
 import AdminPointsManagement from '@/components/admin/AdminPointsManagement';
-import { ArrowLeft, Users, BookOpen, Bell, Megaphone, Globe, Coins } from 'lucide-react';
+import AdminFeedbackManagement from '@/components/admin/AdminFeedbackManagement';
+import { ArrowLeft, Users, BookOpen, Bell, Megaphone, Globe, Coins, MessageSquare } from 'lucide-react';
 
 interface AdminPanelProps {
   onBack: () => void;
@@ -64,7 +65,7 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-7">
                 <TabsTrigger value="notifications" className="flex items-center gap-2">
                   <Bell className="h-4 w-4" />
                   通知中心
@@ -72,6 +73,10 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
                 <TabsTrigger value="users" className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   用户管理
+                </TabsTrigger>
+                <TabsTrigger value="feedback" className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  反馈管理
                 </TabsTrigger>
                 <TabsTrigger value="points" className="flex items-center gap-2">
                   <Coins className="h-4 w-4" />
@@ -97,6 +102,10 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
 
               <TabsContent value="users" className="mt-6">
                 <AdminUserManagement />
+              </TabsContent>
+
+              <TabsContent value="feedback" className="mt-6">
+                <AdminFeedbackManagement />
               </TabsContent>
 
               <TabsContent value="points" className="mt-6">
