@@ -197,19 +197,25 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
               <CardContent>
                 {userDetails?.checkins?.length > 0 ? (
                   <div className="space-y-3">
-                    {userDetails.checkins.slice(0, 10).map((checkin: any) => (
-                      <div key={checkin.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">{format(new Date(checkin.checkin_date), 'yyyy-MM-dd')}</p>
-                          {checkin.note && <p className="text-sm text-gray-600">{checkin.note}</p>}
-                        </div>
-                        <div className="text-right">
-                          {checkin.mood_score && (
-                            <Badge variant="outline">心情: {checkin.mood_score}/10</Badge>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                     {userDetails.checkins.slice(0, 10).map((checkin: any) => (
+                       <div key={checkin.id} className="flex items-center justify-between p-3 border rounded-lg bg-green-50">
+                         <div className="flex-1">
+                           <p className="font-medium">{format(new Date(checkin.checkin_date), 'yyyy-MM-dd')}</p>
+                           {checkin.mood_score && (
+                             <p className="text-sm text-blue-600 font-medium">心情评分: {checkin.mood_score}/5</p>
+                           )}
+                           {checkin.note && (
+                             <div className="mt-2">
+                               <p className="text-sm text-gray-500">今日感想:</p>
+                               <p className="text-sm text-gray-700 bg-white p-2 rounded border-l-4 border-green-500 mt-1">{checkin.note}</p>
+                             </div>
+                           )}
+                         </div>
+                         <div className="text-right text-xs text-gray-400">
+                           {format(new Date(checkin.created_at), 'HH:mm')}
+                         </div>
+                       </div>
+                     ))}
                   </div>
                 ) : (
                   <p className="text-gray-500 text-center py-8">暂无打卡记录</p>

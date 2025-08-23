@@ -10,67 +10,88 @@ export const useAdminUserDetails = () => {
   const getUserDetailedInfo = async (userId: string) => {
     setLoading(true);
     try {
+      console.log('获取用户详细信息, userId:', userId);
+      
       // 获取用户基本信息
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
+      if (profileError) {
+        console.error('获取用户资料失败:', profileError);
+      }
+
       // 获取用户偏好设置
-      const { data: preferences } = await supabase
+      const { data: preferences, error: preferencesError } = await supabase
         .from('user_preferences')
         .select('*')
         .eq('user_id', userId)
         .single();
 
+      if (preferencesError && preferencesError.code !== 'PGRST116') {
+        console.error('获取用户偏好设置失败:', preferencesError);
+      }
+
       // 获取用户角色
-      const { data: roles } = await supabase
+      const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('*')
         .eq('user_id', userId);
 
+      if (rolesError) {
+        console.error('获取用户角色失败:', rolesError);
+      }
+
       // 获取最近的打卡记录
-      const { data: checkins } = await supabase
+      const { data: checkins, error: checkinsError } = await supabase
         .from('daily_checkins')
         .select('*')
         .eq('user_id', userId)
         .order('checkin_date', { ascending: false })
         .limit(30);
 
-      // 获取症状记录数量
-      const { count: symptomCount } = await supabase
+      if (checkinsError) {
+        console.error('获取打卡记录失败:', checkinsError);
+      } else {
+        console.log('获取到的打卡记录:', checkins);
+      }
+
+      // 获取各类记录数量
+      const { count: dizzinessCount } = await supabase
         .from('meniere_records')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
-        .eq('type', 'symptom');
+        .eq('type', 'dizziness');
 
-      // 获取生活记录数量
       const { count: lifestyleCount } = await supabase
         .from('meniere_records')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('type', 'lifestyle');
 
-      // 获取用药记录数量
       const { count: medicationCount } = await supabase
         .from('meniere_records')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('type', 'medication');
 
-      return {
+      const result = {
         profile,
         preferences,
         roles: roles || [],
         checkins: checkins || [],
         stats: {
-          symptomRecords: symptomCount || 0,
+          symptomRecords: dizzinessCount || 0,
           lifestyleRecords: lifestyleCount || 0,
           medicationRecords: medicationCount || 0,
           totalCheckins: checkins?.length || 0
         }
       };
+
+      console.log('用户详细信息结果:', result);
+      return result;
     } catch (error: any) {
       console.error('获取用户详细信息失败:', error);
       toast({
