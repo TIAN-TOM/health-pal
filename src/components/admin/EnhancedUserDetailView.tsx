@@ -192,33 +192,73 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
           <TabsContent value="checkins" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>最近打卡记录</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  最近打卡记录
+                  <Badge variant="outline">
+                    共 {userDetails?.checkins?.length || 0} 条记录
+                  </Badge>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {userDetails?.checkins?.length > 0 ? (
                   <div className="space-y-3">
                      {userDetails.checkins.slice(0, 10).map((checkin: any) => (
-                       <div key={checkin.id} className="flex items-center justify-between p-3 border rounded-lg bg-green-50">
-                         <div className="flex-1">
-                           <p className="font-medium">{format(new Date(checkin.checkin_date), 'yyyy-MM-dd')}</p>
-                           {checkin.mood_score && (
-                             <p className="text-sm text-blue-600 font-medium">心情评分: {checkin.mood_score}/5</p>
-                           )}
-                           {checkin.note && (
-                             <div className="mt-2">
-                               <p className="text-sm text-gray-500">今日感想:</p>
-                               <p className="text-sm text-gray-700 bg-white p-2 rounded border-l-4 border-green-500 mt-1">{checkin.note}</p>
+                       <div key={checkin.id} className="p-4 border rounded-lg bg-gradient-to-r from-green-50 to-blue-50 hover:shadow-md transition-shadow">
+                         <div className="flex items-start justify-between">
+                           <div className="flex-1">
+                             <div className="flex items-center gap-2 mb-2">
+                               <Calendar className="h-4 w-4 text-green-600" />
+                               <p className="font-semibold text-gray-800">
+                                 {format(new Date(checkin.checkin_date), 'yyyy年MM月dd日')}
+                               </p>
+                               <Badge variant="secondary" className="text-xs">
+                                 {format(new Date(checkin.created_at), 'HH:mm')} 打卡
+                               </Badge>
                              </div>
-                           )}
-                         </div>
-                         <div className="text-right text-xs text-gray-400">
-                           {format(new Date(checkin.created_at), 'HH:mm')}
+                             
+                             {checkin.mood_score && (
+                               <div className="flex items-center gap-2 mb-2">
+                                 <span className="text-sm text-gray-600">心情评分:</span>
+                                 <div className="flex items-center">
+                                   {Array.from({ length: 5 }).map((_, i) => (
+                                     <span key={i} className={`text-lg ${i < checkin.mood_score ? 'text-yellow-400' : 'text-gray-300'}`}>
+                                       ⭐
+                                     </span>
+                                   ))}
+                                   <span className="ml-2 text-sm font-medium text-blue-600">
+                                     {checkin.mood_score}/5
+                                   </span>
+                                 </div>
+                               </div>
+                             )}
+                             
+                             {checkin.note && checkin.note.trim() ? (
+                               <div className="mt-3 p-3 bg-white rounded-md border border-green-200 shadow-sm">
+                                 <div className="flex items-center gap-2 mb-2">
+                                   <span className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded">今日感想</span>
+                                 </div>
+                                 <p className="text-sm text-gray-700 leading-relaxed">"{checkin.note}"</p>
+                               </div>
+                             ) : (
+                               <p className="text-xs text-gray-400 italic mt-2">该用户当日未填写感想</p>
+                             )}
+                             
+                             {checkin.photo_url && (
+                               <div className="mt-2">
+                                 <p className="text-xs text-blue-600">📷 包含照片</p>
+                               </div>
+                             )}
+                           </div>
                          </div>
                        </div>
                      ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-center py-8">暂无打卡记录</p>
+                  <div className="text-center py-12">
+                    <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">该用户暂无打卡记录</p>
+                    <p className="text-gray-400 text-sm mt-2">用户开始使用打卡功能后，记录将显示在这里</p>
+                  </div>
                 )}
               </CardContent>
             </Card>

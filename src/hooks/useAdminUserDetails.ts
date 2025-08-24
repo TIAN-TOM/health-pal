@@ -44,18 +44,32 @@ export const useAdminUserDetails = () => {
         console.error('获取用户角色失败:', rolesError);
       }
 
-      // 获取最近的打卡记录
+      // 获取最近的打卡记录 - 管理员可以查看所有用户的记录
       const { data: checkins, error: checkinsError } = await supabase
         .from('daily_checkins')
-        .select('*')
+        .select('id, user_id, checkin_date, mood_score, note, created_at, updated_at, photo_url')
         .eq('user_id', userId)
         .order('checkin_date', { ascending: false })
         .limit(30);
 
+      console.log('正在获取用户打卡记录, userId:', userId);
       if (checkinsError) {
         console.error('获取打卡记录失败:', checkinsError);
+        // 显示具体错误信息给管理员
+        toast({
+          title: "获取打卡记录失败",
+          description: `错误详情: ${checkinsError.message}`,
+          variant: "destructive"
+        });
       } else {
-        console.log('获取到的打卡记录:', checkins);
+        console.log('成功获取打卡记录数量:', checkins?.length);
+        console.log('打卡记录详情:', checkins);
+        
+        // 如果有记录，检查是否包含note字段
+        if (checkins && checkins.length > 0) {
+          const recordsWithNotes = checkins.filter(c => c.note && c.note.trim());
+          console.log('包含今日感想的记录数:', recordsWithNotes.length);
+        }
       }
 
       // 获取各类记录数量
