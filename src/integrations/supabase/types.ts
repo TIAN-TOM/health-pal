@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -106,6 +106,7 @@ export type Database = {
           checkin_date: string
           created_at: string
           id: string
+          is_makeup: boolean
           mood_score: number | null
           note: string | null
           photo_url: string | null
@@ -116,6 +117,7 @@ export type Database = {
           checkin_date?: string
           created_at?: string
           id?: string
+          is_makeup?: boolean
           mood_score?: number | null
           note?: string | null
           photo_url?: string | null
@@ -126,6 +128,7 @@ export type Database = {
           checkin_date?: string
           created_at?: string
           id?: string
+          is_makeup?: boolean
           mood_score?: number | null
           note?: string | null
           photo_url?: string | null
@@ -907,6 +910,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_item_inventory: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string
+          quantity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type: string
+          quantity?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_manual: {
         Row: {
           content: string
@@ -1153,10 +1186,10 @@ export type Database = {
     Functions: {
       admin_update_user_points: {
         Args: {
-          target_user_id: string
-          points_change: number
-          transaction_type: string
           description?: string
+          points_change: number
+          target_user_id: string
+          transaction_type: string
         }
         Returns: boolean
       }
@@ -1170,8 +1203,8 @@ export type Database = {
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }

@@ -53,6 +53,7 @@ const DailyCheckin = ({ onBack, onNavigateToRecords }: DailyCheckinProps) => {
           checkinDates={checkinDates}
           selectedDate={selectedDate}
           onDateSelect={handleDateSelect}
+          onMakeupSuccess={loadCheckinHistory}
         />
       </div>
     </div>

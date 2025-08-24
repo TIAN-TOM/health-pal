@@ -54,7 +54,8 @@ export const ACTIVITY_TYPES = {
   PURCHASE: 'purchase',
   GAME: 'game_play',
   LEARNING: 'learning',
-  EXPORT: 'export'
+  EXPORT: 'export',
+  MAKEUP_CHECKIN: 'makeup_checkin'
 } as const;
 
 // 预定义的模块名称
@@ -69,5 +70,6 @@ export const MODULE_NAMES = {
   GAMES: '解压游戏',
   DATA_EXPORT: '数据导出',
   USER_PREFERENCES: '用户设置',
-  LIFESTYLE: '生活方式记录'
+  LIFESTYLE: '生活方式记录',
+  CHECKIN: '每日打卡'
 } as const;

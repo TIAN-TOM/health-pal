@@ -54,10 +54,35 @@ export const getUserPurchases = async (): Promise<UserPurchase[]> => {
   return data as UserPurchase[] || [];
 };
 
-// 获取用户道具效果
+// 获取用户道具效果 - 从数据库库存表获取
 export const getUserItemEffects = async (): Promise<UserItemEffects> => {
-  const purchases = await getUserPurchases();
+  const { data: { user } } = await supabase.auth.getUser();
   
+  if (!user) {
+    return {
+      gameSkinsUnlocked: [],
+      virtualBadges: [],
+      unlockedFeatures: [],
+      makeupCards: 0
+    };
+  }
+
+  const { data: inventory, error } = await supabase
+    .from('user_item_inventory')
+    .select('item_id, item_type, quantity')
+    .eq('user_id', user.id)
+    .gt('quantity', 0);
+
+  if (error) {
+    console.error('获取用户道具效果失败:', error);
+    return {
+      gameSkinsUnlocked: [],
+      virtualBadges: [],
+      unlockedFeatures: [],
+      makeupCards: 0
+    };
+  }
+
   const effects: UserItemEffects = {
     gameSkinsUnlocked: [],
     virtualBadges: [],
@@ -65,22 +90,19 @@ export const getUserItemEffects = async (): Promise<UserItemEffects> => {
     makeupCards: 0
   };
 
-  purchases.forEach(purchase => {
-    const item = purchase.points_store_items;
-    if (!item) return;
-
+  (inventory || []).forEach(item => {
     switch (item.item_type) {
       case 'game_skin':
-        effects.gameSkinsUnlocked.push(item.id);
+        effects.gameSkinsUnlocked.push(item.item_id);
         break;
       case 'virtual_badge':
-        effects.virtualBadges.push(item.id);
+        effects.virtualBadges.push(item.item_id);
         break;
       case 'unlock_feature':
-        effects.unlockedFeatures.push(item.id);
+        effects.unlockedFeatures.push(item.item_id);
         break;
       case 'makeup_card':
-        effects.makeupCards += 1; // 每购买一次补签卡增加1张
+        effects.makeupCards = item.quantity;
         break;
     }
   });
@@ -188,21 +210,35 @@ export const purchaseItem = async (itemId: string, itemPrice: number): Promise<b
 // 应用道具效果
 const applyItemEffect = async (item: StoreItem, userId: string) => {
   try {
-    // 存储道具效果到用户偏好设置或专门的道具效果表
-    const effectData = {
-      itemId: item.id,
-      itemType: item.item_type,
-      itemName: item.item_name,
-      appliedAt: new Date().toISOString(),
-      isActive: true
-    };
-
-    console.log('应用道具效果:', effectData);
+    console.log('应用道具效果:', item.item_name, item.item_type);
     
-    // 如果是补签卡，可以在这里记录到用户的补签卡余额
-    if (item.item_type === 'makeup_card') {
-      const currentCount = parseInt(localStorage.getItem('makeup-cards-count') || '0');
-      localStorage.setItem('makeup-cards-count', (currentCount + 1).toString());
+    // 将道具添加到用户库存
+    const { data: existingInventory } = await supabase
+      .from('user_item_inventory')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('item_id', item.id)
+      .maybeSingle();
+
+    if (existingInventory) {
+      // 更新现有库存数量
+      await supabase
+        .from('user_item_inventory')
+        .update({ 
+          quantity: existingInventory.quantity + 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingInventory.id);
+    } else {
+      // 创建新的库存记录
+      await supabase
+        .from('user_item_inventory')
+        .insert({
+          user_id: userId,
+          item_id: item.id,
+          item_type: item.item_type,
+          quantity: 1
+        });
     }
     
   } catch (error) {
@@ -210,19 +246,27 @@ const applyItemEffect = async (item: StoreItem, userId: string) => {
   }
 };
 
-// 获取补签卡数量
-export const getMakeupCardsCount = (): number => {
-  return parseInt(localStorage.getItem('makeup-cards-count') || '0');
-};
-
-// 使用补签卡
-export const useMakeupCard = (): boolean => {
-  const currentCount = getMakeupCardsCount();
-  if (currentCount > 0) {
-    localStorage.setItem('makeup-cards-count', (currentCount - 1).toString());
-    return true;
+// 获取补签卡数量 - 从数据库获取
+export const getMakeupCardsCount = async (): Promise<number> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return 0;
   }
-  return false;
+
+  const { data, error } = await supabase
+    .from('user_item_inventory')
+    .select('quantity')
+    .eq('user_id', user.id)
+    .eq('item_type', 'makeup_card')
+    .maybeSingle();
+
+  if (error) {
+    console.error('获取补签卡数量失败:', error);
+    return 0;
+  }
+
+  return data?.quantity || 0;
 };
 
 // 检查用户是否拥有特定道具效果

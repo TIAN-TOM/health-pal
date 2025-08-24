@@ -12,6 +12,29 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.6.0',
+      type: '功能增强',
+      icon: Calendar,
+      color: 'bg-blue-50 text-blue-600 border-blue-200',
+      items: [
+        {
+          title: '🎫 补签卡功能完善',
+          description: '完善积分商城补签卡功能，支持补签过去30天内错过的打卡记录，使用数据库存储道具库存',
+          type: 'feature'
+        },
+        {
+          title: '📅 智能补签系统',
+          description: '新增补签卡使用界面，可选择可补签日期、设置心情评分和备注，完善前后端数据联通',
+          type: 'feature'
+        },
+        {
+          title: '🔧 道具系统优化',
+          description: '将道具存储从localStorage迁移到数据库，增加用户道具库存表，提高数据安全性和一致性',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.5.0',
       type: '游戏增强',
       icon: Sparkles,
