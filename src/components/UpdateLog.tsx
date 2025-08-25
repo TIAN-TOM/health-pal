@@ -12,6 +12,34 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.7.0',
+      type: '功能增强',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '📝 个人资料功能整合',
+          description: '整合个人偏好设置到个人资料页面，统一管理用户基本信息和健康偏好',
+          type: 'improvement'
+        },
+        {
+          title: '🎂 生日管理系统',
+          description: '新增生日字段，支持年龄自动计算，生日当天弹出生日祝福弹窗',
+          type: 'feature'
+        },
+        {
+          title: '🧬 家族病史记录',
+          description: '新增家族病史字段，完善个人健康档案信息',
+          type: 'feature'
+        },
+        {
+          title: '🔢 智能年龄计算',
+          description: '基于生日自动计算年龄，移除手动年龄输入，提高数据准确性',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.6.1',
       type: '问题修复',
       icon: Bug,

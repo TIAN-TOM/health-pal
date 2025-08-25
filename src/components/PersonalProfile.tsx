@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, User, Heart, Globe } from 'lucide-react';
+import { ArrowLeft, Save, User, Heart, Globe, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -25,13 +26,16 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
 
   // 偏好设置状态
   const [formData, setFormData] = useState({
-    age: '',
+    birthday: '',
     gender: '',
     height: '',
     weight: '',
   });
   const [medicalHistoryInput, setMedicalHistoryInput] = useState('');
   const [allergiesInput, setAllergiesInput] = useState('');
+  const [familyMedicalHistoryInput, setFamilyMedicalHistoryInput] = useState('');
+  const [showBirthdayWish, setShowBirthdayWish] = useState(false);
+  const [calculatedAge, setCalculatedAge] = useState<number | null>(null);
 
   useEffect(() => {
     if (userProfile) {
@@ -42,15 +46,48 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
   useEffect(() => {
     if (preferences) {
       setFormData({
-        age: preferences.age?.toString() || '',
+        birthday: preferences.birthday || '',
         gender: preferences.gender || '',
         height: preferences.height?.toString() || '',
         weight: preferences.weight?.toString() || '',
       });
       setMedicalHistoryInput(preferences.medical_history?.join(', ') || '');
       setAllergiesInput(preferences.allergies?.join(', ') || '');
+      setFamilyMedicalHistoryInput(preferences.family_medical_history?.join(', ') || '');
+      
+      // 计算年龄并检查是否是生日
+      if (preferences.birthday) {
+        const age = calculateAge(preferences.birthday);
+        setCalculatedAge(age);
+        checkBirthday(preferences.birthday);
+      }
     }
   }, [preferences]);
+
+  // 计算年龄的函数
+  const calculateAge = (birthday: string): number => {
+    const birthDate = new Date(birthday);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  };
+
+  // 检查是否是生日的函数
+  const checkBirthday = (birthday: string) => {
+    const birthDate = new Date(birthday);
+    const today = new Date();
+    
+    if (birthDate.getMonth() === today.getMonth() && 
+        birthDate.getDate() === today.getDate()) {
+      setShowBirthdayWish(true);
+    }
+  };
 
   const handleFieldChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -73,14 +110,16 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
 
       // 保存偏好设置
       const updatedPreferences = {
-        age: formData.age ? parseInt(formData.age) : undefined,
+        birthday: formData.birthday || undefined,
         height: formData.height ? parseInt(formData.height) : undefined,
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
         gender: formData.gender ? formData.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say' : undefined,
         medical_history: medicalHistoryInput ? 
           medicalHistoryInput.split(',').map(item => item.trim()).filter(Boolean) : [],
         allergies: allergiesInput ? 
-          allergiesInput.split(',').map(item => item.trim()).filter(Boolean) : []
+          allergiesInput.split(',').map(item => item.trim()).filter(Boolean) : [],
+        family_medical_history: familyMedicalHistoryInput ? 
+          familyMedicalHistoryInput.split(',').map(item => item.trim()).filter(Boolean) : []
       };
 
       await savePreferences(updatedPreferences);
@@ -167,14 +206,16 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="age">年龄</Label>
+                  <Label htmlFor="birthday">出生日期</Label>
                   <Input
-                    id="age"
-                    type="number"
-                    placeholder="如：30"
-                    value={formData.age}
-                    onChange={(e) => handleFieldChange('age', e.target.value)}
+                    id="birthday"
+                    type="date"
+                    value={formData.birthday}
+                    onChange={(e) => handleFieldChange('birthday', e.target.value)}
                   />
+                  {calculatedAge !== null && (
+                    <p className="text-xs text-gray-500 mt-1">年龄：{calculatedAge}岁</p>
+                  )}
                 </div>
                 
                 <div>
@@ -250,6 +291,17 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
                   rows={3}
                 />
               </div>
+              
+              <div>
+                <Label htmlFor="family_medical_history">家族病史</Label>
+                <Textarea
+                  id="family_medical_history"
+                  placeholder="请用逗号分隔，如：高血压，心脏病，糖尿病"
+                  value={familyMedicalHistoryInput}
+                  onChange={(e) => setFamilyMedicalHistoryInput(e.target.value)}
+                  rows={3}
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -278,6 +330,34 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
             {isLoading ? '保存中...' : '保存所有设置'}
           </Button>
         </div>
+
+        {/* 生日祝福弹窗 */}
+        <Dialog open={showBirthdayWish} onOpenChange={setShowBirthdayWish}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-center flex items-center justify-center">
+                <Gift className="h-6 w-6 mr-2 text-yellow-500" />
+                生日快乐！
+              </DialogTitle>
+            </DialogHeader>
+            <div className="text-center py-6">
+              <div className="text-6xl mb-4">🎂</div>
+              <p className="text-lg font-medium mb-2">
+                {userProfile?.full_name}，生日快乐！
+              </p>
+              <p className="text-gray-600">
+                祝您身体健康，心想事成！
+                {calculatedAge && `今天您${calculatedAge}岁了！`}
+              </p>
+            </div>
+            <Button 
+              onClick={() => setShowBirthdayWish(false)}
+              className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+            >
+              谢谢！
+            </Button>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

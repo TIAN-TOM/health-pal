@@ -1034,9 +1034,11 @@ export type Database = {
         Row: {
           age: number | null
           allergies: string[] | null
+          birthday: string | null
           created_at: string
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
+          family_medical_history: string[] | null
           gender: string | null
           height: number | null
           id: string
@@ -1050,9 +1052,11 @@ export type Database = {
         Insert: {
           age?: number | null
           allergies?: string[] | null
+          birthday?: string | null
           created_at?: string
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
+          family_medical_history?: string[] | null
           gender?: string | null
           height?: number | null
           id?: string
@@ -1066,9 +1070,11 @@ export type Database = {
         Update: {
           age?: number | null
           allergies?: string[] | null
+          birthday?: string | null
           created_at?: string
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
+          family_medical_history?: string[] | null
           gender?: string | null
           height?: number | null
           id?: string

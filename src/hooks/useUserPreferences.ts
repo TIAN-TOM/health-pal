@@ -7,11 +7,12 @@ import { useAuth } from '@/hooks/useAuth';
 interface UserPreferences {
   id?: string;
   gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
-  age?: number;
+  birthday?: string; // Date in YYYY-MM-DD format
   height?: number;
   weight?: number;
   medical_history?: string[];
   allergies?: string[];
+  family_medical_history?: string[];
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
 }
@@ -40,11 +41,12 @@ export const useUserPreferences = () => {
         const mappedData: UserPreferences = {
           id: data.id,
           gender: data.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say',
-          age: data.age,
+          birthday: data.birthday,
           height: data.height,
           weight: data.weight,
           medical_history: data.medical_history,
           allergies: data.allergies,
+          family_medical_history: data.family_medical_history,
           emergency_contact_name: data.emergency_contact_name,
           emergency_contact_phone: data.emergency_contact_phone,
         };
