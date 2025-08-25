@@ -127,7 +127,7 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
             <ArrowLeft className="h-4 w-4 mr-1" />
             返回
           </Button>
-          <h1 className="text-xl font-bold">个人资料设置</h1>
+          <h1 className="text-xl font-bold">个人资料与偏好设置</h1>
           <div className="w-16"></div>
         </div>
 

@@ -19,7 +19,6 @@ interface SettingsProps {
   onPersonalProfile: () => void;
   onUserManual: () => void;
   onUpdateLog: () => void;
-  onUserPreferences: () => void;
   onUserFeedback: () => void;
 }
 
@@ -33,7 +32,6 @@ const Settings = ({
   onPersonalProfile,
   onUserManual,
   onUpdateLog,
-  onUserPreferences,
   onUserFeedback
 }: SettingsProps) => {
   const { user, userRole } = useAuth();
@@ -68,7 +66,6 @@ const Settings = ({
             onUserManual={onUserManual}
             onUpdateLog={onUpdateLog}
             onAdminPanel={userRole === 'admin' ? onAdminPanel : undefined}
-            onUserPreferences={onUserPreferences}
             onUserFeedback={onUserFeedback}
           />
 

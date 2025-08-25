@@ -8,7 +8,7 @@ import Games from './Games';
 import RecordDetail from './RecordDetail';
 import Settings from './Settings';
 import PersonalProfile from './PersonalProfile';
-import UserPreferences from './UserPreferences';
+
 import MedicalRecords from './MedicalRecords';
 import EmergencyContacts from './EmergencyContacts';
 import EducationCenter from './EducationCenter';
@@ -109,7 +109,7 @@ const PageRenderer = ({
           onUserManual={() => onNavigation('user-manual')}
           onUpdateLog={() => onNavigation('update-log')}
           onAdminPanel={() => onNavigation('admin-panel')}
-          onUserPreferences={() => onNavigation('user-preferences')}
+          
           onUserFeedback={() => onNavigation('user-feedback')}
         />
       );
@@ -117,8 +117,6 @@ const PageRenderer = ({
     case 'profile':
       return <PersonalProfile onBack={() => onBack('settings')} />;
     
-    case 'user-preferences':
-      return <UserPreferences onBack={() => onBack('settings')} />;
     
     case 'medical-records':
       return <MedicalRecords onBack={() => onBack('settings')} />;
