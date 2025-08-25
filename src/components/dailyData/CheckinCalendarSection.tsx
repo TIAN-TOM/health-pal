@@ -278,6 +278,77 @@ const CheckinCalendarSection = ({ checkinDates, selectedDate, onDateSelect, onMa
               </div>
             </div>
           )}
+          
+          {/* 补签卡使用按钮 */}
+          {makeupCardsCount > 0 && availableDates.length > 0 && (
+            <div className="mt-3">
+              <Dialog open={showMakeupDialog} onOpenChange={setShowMakeupDialog}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="w-full text-blue-600 border-blue-200 hover:bg-blue-50">
+                    <Ticket className="h-4 w-4 mr-2" />
+                    使用补签卡 ({makeupCardsCount}张)
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center">
+                      <Ticket className="h-5 w-5 mr-2 text-blue-600" />
+                      补签打卡
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">选择补签日期</label>
+                      <Select value={selectedMakeupDate} onValueChange={setSelectedMakeupDate}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="选择要补签的日期" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableDates.map(date => (
+                            <SelectItem key={date} value={date}>{date}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">心情评分 (1-5分)</label>
+                      <Select value={moodScore.toString()} onValueChange={(value) => setMoodScore(parseInt(value))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[1, 2, 3, 4, 5].map(score => (
+                            <SelectItem key={score} value={score.toString()}>
+                              {score}分 {'★'.repeat(score)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">今日感想</label>
+                      <Textarea
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                        placeholder="记录您当天的心情和感想..."
+                        className="min-h-[100px]"
+                      />
+                    </div>
+                    
+                    <Button 
+                      onClick={handleMakeupCheckin}
+                      disabled={!selectedMakeupDate || makeupLoading}
+                      className="w-full"
+                    >
+                      {makeupLoading ? '补签中...' : '确认补签'}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

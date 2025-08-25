@@ -118,10 +118,21 @@ export const canPurchaseItem = async (item: StoreItem): Promise<{ canPurchase: b
     return { canPurchase: false, reason: '请先登录' };
   }
 
-  const effectivePoints = await getEffectiveUserPoints();
+  // 检查用户是否为管理员，管理员拥有无限积分
+  const { data: adminRole } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .eq('role', 'admin')
+    .single();
+
+  const isAdmin = !!adminRole;
   
-  if (effectivePoints < item.price_points) {
-    return { canPurchase: false, reason: '积分不足' };
+  if (!isAdmin) {
+    const effectivePoints = await getEffectiveUserPoints();
+    if (effectivePoints < item.price_points) {
+      return { canPurchase: false, reason: '积分不足' };
+    }
   }
 
   // 检查库存
@@ -166,10 +177,22 @@ export const purchaseItem = async (itemId: string, itemPrice: number): Promise<b
     return false;
   }
 
-  // 先扣除积分
-  const pointsSpent = await spendPoints(itemPrice, `购买商品: ${item.item_name}`, itemId);
-  if (!pointsSpent) {
-    return false;
+  // 检查用户是否为管理员
+  const { data: adminRole } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .eq('role', 'admin')
+    .single();
+
+  const isAdmin = !!adminRole;
+  
+  // 管理员不需要扣积分，直接跳过积分扣除
+  if (!isAdmin) {
+    const pointsSpent = await spendPoints(itemPrice, `购买商品: ${item.item_name}`, itemId);
+    if (!pointsSpent) {
+      return false;
+    }
   }
 
   // 创建购买记录

@@ -12,6 +12,29 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.6.1',
+      type: '问题修复',
+      icon: Bug,
+      color: 'bg-red-50 text-red-600 border-red-200',
+      items: [
+        {
+          title: '🔧 管理员积分购买权限修复',
+          description: '修复管理员在积分商城购买道具时显示"积分不足"的问题，管理员现在拥有无限积分',
+          type: 'fix'
+        },
+        {
+          title: '👥 管理员查看用户记录权限修复',
+          description: '修复管理员无法查看用户每日打卡记录和感想的问题，完善RLS策略',
+          type: 'fix'
+        },
+        {
+          title: '🎫 补签卡使用界面优化',
+          description: '在日历页面显著位置增加补签卡使用按钮，提升用户体验',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.6.0',
       type: '功能增强',
       icon: Calendar,
