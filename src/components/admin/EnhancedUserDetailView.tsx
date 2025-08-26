@@ -282,8 +282,24 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">年龄</p>
-                      <p className="font-medium">{userDetails.preferences.age || '未设置'}</p>
+                      <p className="text-sm text-gray-500">生日/年龄</p>
+                      <p className="font-medium">
+                        {userDetails.preferences.birthday ? (
+                          <>
+                            {userDetails.preferences.birthday} (
+                            {(() => {
+                              const birthDate = new Date(userDetails.preferences.birthday);
+                              const today = new Date();
+                              let age = today.getFullYear() - birthDate.getFullYear();
+                              const monthDiff = today.getMonth() - birthDate.getMonth();
+                              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                                age--;
+                              }
+                              return age;
+                            })()}岁)
+                          </>
+                        ) : '未设置'}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">身高</p>
@@ -317,6 +333,16 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
                         <div className="flex flex-wrap gap-2">
                           {userDetails.preferences.allergies.map((allergy: string, index: number) => (
                             <Badge key={index} variant="destructive">{allergy}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {userDetails.preferences.family_medical_history?.length > 0 && (
+                      <div className="md:col-span-2">
+                        <p className="text-sm text-gray-500 mb-2">家族病史</p>
+                        <div className="flex flex-wrap gap-2">
+                          {userDetails.preferences.family_medical_history.map((history: string, index: number) => (
+                            <Badge key={index} variant="outline">{history}</Badge>
                           ))}
                         </div>
                       </div>

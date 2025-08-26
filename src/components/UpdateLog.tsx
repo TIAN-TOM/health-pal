@@ -12,6 +12,24 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.7.1',
+      type: '修复更新',
+      icon: Bug,
+      color: 'bg-red-50 text-red-600 border-red-200',
+      items: [
+        {
+          title: '🔧 系统管理中心偏好设置同步',
+          description: '修复管理员界面用户偏好设置显示问题，确保前后端数据结构一致性',
+          type: 'fix'
+        },
+        {
+          title: '📊 管理员界面数据显示优化',
+          description: '支持在管理员界面显示用户生日、自动计算年龄和家族病史信息',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.7.0',
       type: '功能增强',
       icon: Sparkles,
