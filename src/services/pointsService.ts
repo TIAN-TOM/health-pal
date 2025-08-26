@@ -175,7 +175,7 @@ export const spendPoints = async (amount: number, description: string = '', refe
   return !error;
 };
 
-export const addPoints = async (amount: number, reason: string = ''): Promise<boolean> => {
+export const addPoints = async (amount: number, reason: string = '', transactionType: string = 'reward'): Promise<boolean> => {
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
@@ -198,7 +198,7 @@ export const addPoints = async (amount: number, reason: string = ''): Promise<bo
       await supabase.from('points_transactions').insert({
         user_id: user.id,
         amount,
-        transaction_type: 'reward',
+        transaction_type: transactionType,
         description: reason
       });
     }
@@ -218,7 +218,7 @@ export const addPoints = async (amount: number, reason: string = ''): Promise<bo
     await supabase.from('points_transactions').insert({
       user_id: user.id,
       amount,
-      transaction_type: 'reward',
+      transaction_type: transactionType,
       description: reason
     });
   }

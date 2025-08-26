@@ -12,6 +12,24 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.7.2',
+      type: '功能优化',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🎂 生日祝福功能优化',
+          description: '生日祝福弹窗现在在首页显示，过了生日后首次登录即可收到祝福和666积分奖励',
+          type: 'improvement'
+        },
+        {
+          title: '🎁 生日积分奖励',
+          description: '用户生日时自动赠送666积分，不限当天登录，错过生日也能收到祝福',
+          type: 'feature'
+        }
+      ]
+    },
+    {
       version: '2.7.1',
       type: '修复更新',
       icon: Bug,

@@ -1,13 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, User, Heart, Globe, Gift } from 'lucide-react';
+import { ArrowLeft, Save, User, Heart, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -34,7 +33,6 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
   const [medicalHistoryInput, setMedicalHistoryInput] = useState('');
   const [allergiesInput, setAllergiesInput] = useState('');
   const [familyMedicalHistoryInput, setFamilyMedicalHistoryInput] = useState('');
-  const [showBirthdayWish, setShowBirthdayWish] = useState(false);
   const [calculatedAge, setCalculatedAge] = useState<number | null>(null);
 
   useEffect(() => {
@@ -55,11 +53,10 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
       setAllergiesInput(preferences.allergies?.join(', ') || '');
       setFamilyMedicalHistoryInput(preferences.family_medical_history?.join(', ') || '');
       
-      // 计算年龄并检查是否是生日
+      // 计算年龄
       if (preferences.birthday) {
         const age = calculateAge(preferences.birthday);
         setCalculatedAge(age);
-        checkBirthday(preferences.birthday);
       }
     }
   }, [preferences]);
@@ -76,17 +73,6 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
     }
     
     return age;
-  };
-
-  // 检查是否是生日的函数
-  const checkBirthday = (birthday: string) => {
-    const birthDate = new Date(birthday);
-    const today = new Date();
-    
-    if (birthDate.getMonth() === today.getMonth() && 
-        birthDate.getDate() === today.getDate()) {
-      setShowBirthdayWish(true);
-    }
   };
 
   const handleFieldChange = (field: string, value: string) => {
@@ -330,34 +316,6 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
             {isLoading ? '保存中...' : '保存所有设置'}
           </Button>
         </div>
-
-        {/* 生日祝福弹窗 */}
-        <Dialog open={showBirthdayWish} onOpenChange={setShowBirthdayWish}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-center flex items-center justify-center">
-                <Gift className="h-6 w-6 mr-2 text-yellow-500" />
-                生日快乐！
-              </DialogTitle>
-            </DialogHeader>
-            <div className="text-center py-6">
-              <div className="text-6xl mb-4">🎂</div>
-              <p className="text-lg font-medium mb-2">
-                {userProfile?.full_name}，生日快乐！
-              </p>
-              <p className="text-gray-600">
-                祝您身体健康，心想事成！
-                {calculatedAge && `今天您${calculatedAge}岁了！`}
-              </p>
-            </div>
-            <Button 
-              onClick={() => setShowBirthdayWish(false)}
-              className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
-            >
-              谢谢！
-            </Button>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );

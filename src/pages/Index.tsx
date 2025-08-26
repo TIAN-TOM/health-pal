@@ -1,15 +1,20 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useBirthdayWish } from "@/hooks/useBirthdayWish";
 import PageRenderer from "@/components/PageRenderer";
 import HomePage from "@/components/HomePage";
 import AuthPage from "./AuthPage";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Gift } from "lucide-react";
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeniereRecord = Tables<'meniere_records'>;
 
 export default function Index() {
   const { user, userProfile, userRole, loading } = useAuth();
+  const { showBirthdayWish, birthdayAge, handleBirthdayWishClose } = useBirthdayWish();
   const [currentPage, setCurrentPage] = useState<string>("home");
   const [selectedRecord, setSelectedRecord] = useState<MeniereRecord | null>(null);
   const [navigationSource, setNavigationSource] = useState<string>("home");
@@ -97,17 +102,51 @@ export default function Index() {
 
   if (currentPage === "home") {
     return (
-      <HomePage
-        userDisplayName={userProfile?.full_name || user.email || "用户"}
-        onSettingsClick={() => handleNavigation("settings")}
-        onEmergencyClick={handleEmergencyClick}
-        onNavigate={handleNavigation}
-        homeRef={homeRef}
-      />
+      <>
+        <HomePage
+          userDisplayName={userProfile?.full_name || user.email || "用户"}
+          onSettingsClick={() => handleNavigation("settings")}
+          onEmergencyClick={handleEmergencyClick}
+          onNavigate={handleNavigation}
+          homeRef={homeRef}
+        />
+        
+        {/* 生日祝福弹窗 */}
+        <Dialog open={showBirthdayWish} onOpenChange={() => handleBirthdayWishClose()}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-center flex items-center justify-center">
+                <Gift className="h-6 w-6 mr-2 text-yellow-500" />
+                生日快乐！🎉
+              </DialogTitle>
+            </DialogHeader>
+            <div className="text-center py-6">
+              <div className="text-6xl mb-4">🎂</div>
+              <p className="text-lg font-medium mb-2">
+                {userProfile?.full_name}，生日快乐！
+              </p>
+              <p className="text-gray-600 mb-4">
+                祝您身体健康，心想事成！
+                {birthdayAge && `今年您${birthdayAge}岁了！`}
+              </p>
+              <div className="bg-yellow-50 p-3 rounded-lg mb-4">
+                <p className="text-yellow-700 font-semibold">🎁 生日礼物</p>
+                <p className="text-yellow-600 text-sm">为您送上666积分作为生日祝福！</p>
+              </div>
+            </div>
+            <Button 
+              onClick={handleBirthdayWishClose}
+              className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+            >
+              收下礼物，谢谢！✨
+            </Button>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
-  const pageContent = (
+  return (
     <PageRenderer
       currentPage={currentPage}
       selectedRecord={selectedRecord}
@@ -117,6 +156,4 @@ export default function Index() {
       onRecordClick={handleRecordClick}
     />
   );
-
-  return pageContent;
 }
