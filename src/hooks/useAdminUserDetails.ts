@@ -146,20 +146,17 @@ export const useAdminUserDetails = () => {
 
   const suspendUser = async (userId: string) => {
     try {
-      // 这里可以添加用户状态字段来实现用户暂停功能
-      // 目前我们添加一个备注到用户偏好设置中
+      // 更新用户状态为暂停
       const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: userId,
-          // 可以添加一个状态字段来标记用户被暂停
-        });
+        .from('profiles')
+        .update({ status: 'suspended' })
+        .eq('id', userId);
 
       if (error) throw error;
 
       toast({
         title: "用户已暂停",
-        description: "用户账号已被暂停使用"
+        description: "用户账号已被暂停使用，用户将无法登录系统"
       });
       return true;
     } catch (error: any) {
@@ -172,10 +169,39 @@ export const useAdminUserDetails = () => {
     }
   };
 
+  const sendEmailToUser = async (userEmail: string, subject: string, message: string, adminId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-send-email', {
+        body: {
+          userEmail,
+          subject,
+          message,
+          adminId
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "邮件发送成功",
+        description: `已向 ${userEmail} 发送邮件`
+      });
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "发送邮件失败",
+        description: error.message,
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   return {
     loading,
     getUserDetailedInfo,
     resetUserPassword,
-    suspendUser
+    suspendUser,
+    sendEmailToUser
   };
 };

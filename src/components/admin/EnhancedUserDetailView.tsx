@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdminUserDetails } from '@/hooks/useAdminUserDetails';
+import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
+import AdminEmailModal from './AdminEmailModal';
 
 interface UserWithProfile {
   id: string;
@@ -24,8 +26,10 @@ interface EnhancedUserDetailViewProps {
 }
 
 const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) => {
-  const { loading, getUserDetailedInfo, resetUserPassword, suspendUser } = useAdminUserDetails();
+  const { loading, getUserDetailedInfo, resetUserPassword, suspendUser, sendEmailToUser } = useAdminUserDetails();
+  const { user: currentUser } = useAuth();
   const [userDetails, setUserDetails] = useState<any>(null);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   useEffect(() => {
     loadUserDetails();
@@ -37,15 +41,26 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
   };
 
   const handleResetPassword = async () => {
-    if (confirm(`确定要为用户 ${user.email} 重置密码吗？`)) {
+    if (confirm(`确定要为用户 ${user.email} 重置密码吗？系统将发送密码重置邮件给该用户。`)) {
       await resetUserPassword(user.id, user.email);
     }
   };
 
   const handleSuspendUser = async () => {
-    if (confirm(`确定要暂停用户 ${user.email} 的账号吗？`)) {
-      await suspendUser(user.id);
+    if (confirm(`确定要暂停用户 ${user.email} 的账号吗？暂停后该用户将无法登录系统。`)) {
+      const success = await suspendUser(user.id);
+      if (success) {
+        // 刷新用户详情以显示最新状态
+        await loadUserDetails();
+      }
     }
+  };
+
+  const handleSendEmail = async (subject: string, message: string) => {
+    if (!currentUser?.id) {
+      return false;
+    }
+    return await sendEmailToUser(user.email, subject, message, currentUser.id);
   };
 
   if (loading) {
@@ -78,6 +93,12 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
               <div className="flex items-center">
                 <User className="h-6 w-6 mr-2" />
                 {user.full_name || '未设置姓名'}
+                {userDetails?.profile?.status && userDetails.profile.status !== 'active' && (
+                  <Badge variant="destructive" className="ml-2">
+                    {userDetails.profile.status === 'suspended' ? '已暂停' : 
+                     userDetails.profile.status === 'banned' ? '已封禁' : '异常状态'}
+                  </Badge>
+                )}
               </div>
               <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
                 {user.role === 'admin' ? '管理员' : '普通用户'}
@@ -112,15 +133,23 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-3">
-              <Button onClick={handleResetPassword} variant="outline">
+              <Button onClick={handleResetPassword} variant="outline" disabled={loading}>
                 <RotateCcw className="h-4 w-4 mr-2" />
                 重置密码
               </Button>
-              <Button onClick={handleSuspendUser} variant="destructive">
+              <Button 
+                onClick={handleSuspendUser} 
+                variant="destructive" 
+                disabled={loading || userDetails?.profile?.status === 'suspended'}
+              >
                 <Ban className="h-4 w-4 mr-2" />
-                暂停账号
+                {userDetails?.profile?.status === 'suspended' ? '已暂停' : '暂停账号'}
               </Button>
-              <Button variant="outline">
+              <Button 
+                onClick={() => setIsEmailModalOpen(true)} 
+                variant="outline"
+                disabled={loading}
+              >
                 <Mail className="h-4 w-4 mr-2" />
                 发送邮件
               </Button>
@@ -366,6 +395,16 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* 邮件发送模态框 */}
+        <AdminEmailModal
+          isOpen={isEmailModalOpen}
+          onClose={() => setIsEmailModalOpen(false)}
+          userEmail={user.email}
+          userName={user.full_name}
+          onSend={handleSendEmail}
+          loading={loading}
+        />
       </div>
     </div>
   );

@@ -12,6 +12,34 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.7.3',
+      type: '功能完善',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🛡️ 管理员操作功能完善',
+          description: '实现用户账号暂停功能，管理员可以禁止用户登录系统',
+          type: 'feature'
+        },
+        {
+          title: '📧 管理员邮件发送系统',
+          description: '管理员可以直接向用户发送邮件，支持自定义主题和内容',
+          type: 'feature'
+        },
+        {
+          title: '🔄 密码重置功能增强',
+          description: '完善管理员重置用户密码功能，自动发送密码重置邮件',
+          type: 'improvement'
+        },
+        {
+          title: '📊 用户状态可视化',
+          description: '在用户管理界面显示用户状态标识（正常/已暂停），直观显示账号状态',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.7.2',
       type: '功能优化',
       icon: Sparkles,
@@ -26,24 +54,6 @@ const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
           title: '🎁 生日积分奖励',
           description: '用户生日时自动赠送666积分，不限当天登录，错过生日也能收到祝福',
           type: 'feature'
-        }
-      ]
-    },
-    {
-      version: '2.7.1',
-      type: '修复更新',
-      icon: Bug,
-      color: 'bg-red-50 text-red-600 border-red-200',
-      items: [
-        {
-          title: '🔧 系统管理中心偏好设置同步',
-          description: '修复管理员界面用户偏好设置显示问题，确保前后端数据结构一致性',
-          type: 'fix'
-        },
-        {
-          title: '📊 管理员界面数据显示优化',
-          description: '支持在管理员界面显示用户生日、自动计算年龄和家族病史信息',
-          type: 'improvement'
         }
       ]
     },
