@@ -169,6 +169,31 @@ export const useAdminUserDetails = () => {
     }
   };
 
+  const reactivateUser = async (userId: string) => {
+    try {
+      // 恢复用户状态为正常
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: 'active' })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "用户已恢复",
+        description: "用户账号已恢复正常，可以正常登录系统"
+      });
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "恢复用户失败",
+        description: error.message,
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   const sendEmailToUser = async (userEmail: string, subject: string, message: string, adminId: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('admin-send-email', {
@@ -202,6 +227,7 @@ export const useAdminUserDetails = () => {
     getUserDetailedInfo,
     resetUserPassword,
     suspendUser,
+    reactivateUser,
     sendEmailToUser
   };
 };
