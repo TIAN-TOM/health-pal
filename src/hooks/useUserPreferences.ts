@@ -15,6 +15,7 @@ interface UserPreferences {
   family_medical_history?: string[];
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
+  last_birthday_wish_year?: number; // Year when user last received birthday wish
 }
 
 export const useUserPreferences = () => {
@@ -49,6 +50,7 @@ export const useUserPreferences = () => {
           family_medical_history: data.family_medical_history,
           emergency_contact_name: data.emergency_contact_name,
           emergency_contact_phone: data.emergency_contact_phone,
+          last_birthday_wish_year: data.last_birthday_wish_year,
         };
         setPreferences(mappedData);
       } else {

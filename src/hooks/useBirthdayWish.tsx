@@ -33,19 +33,13 @@ export const useBirthdayWish = () => {
 
       if (!hasBirthdayPassed) return;
 
-      // 检查是否已经收到今年的生日祝福（通过积分交易记录）
-      const { data: transactions } = await supabase
-        .from('points_transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('transaction_type', 'birthday_reward')
-        .gte('created_at', `${currentYear}-01-01`)
-        .lt('created_at', `${currentYear + 1}-01-01`);
-
-      if (!transactions || transactions.length === 0) {
-        setBirthdayAge(age);
-        setShowBirthdayWish(true);
+      // 检查是否已经在今年收到过生日祝福
+      if (preferences.last_birthday_wish_year === currentYear) {
+        return; // 今年已经收到过生日祝福，不再显示
       }
+
+      setBirthdayAge(age);
+      setShowBirthdayWish(true);
     };
 
     checkBirthdayWish();
@@ -55,6 +49,17 @@ export const useBirthdayWish = () => {
     if (!user) return;
 
     try {
+      const currentYear = new Date().getFullYear();
+      
+      // 更新用户偏好设置，记录今年已收到生日祝福
+      await supabase
+        .from('user_preferences')
+        .update({ 
+          last_birthday_wish_year: currentYear,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
       // 赠送666积分
       await addPoints(666, '生日祝福奖励', 'birthday_reward');
       

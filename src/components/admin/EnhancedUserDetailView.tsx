@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, User, Calendar, Activity, TrendingUp, Mail, Phone, Shield, Ban, RotateCcw } from 'lucide-react';
+import { ArrowLeft, User, Calendar, Activity, TrendingUp, Mail, Phone, Shield, Ban, RotateCcw, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +26,7 @@ interface EnhancedUserDetailViewProps {
 }
 
 const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) => {
-  const { loading, getUserDetailedInfo, resetUserPassword, suspendUser, sendEmailToUser } = useAdminUserDetails();
+  const { loading, getUserDetailedInfo, resetUserPassword, suspendUser, reactivateUser, sendEmailToUser } = useAdminUserDetails();
   const { user: currentUser } = useAuth();
   const [userDetails, setUserDetails] = useState<any>(null);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -49,6 +49,16 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
   const handleSuspendUser = async () => {
     if (confirm(`确定要暂停用户 ${user.email} 的账号吗？暂停后该用户将无法登录系统。`)) {
       const success = await suspendUser(user.id);
+      if (success) {
+        // 刷新用户详情以显示最新状态
+        await loadUserDetails();
+      }
+    }
+  };
+
+  const handleReactivateUser = async () => {
+    if (confirm(`确定要恢复用户 ${user.email} 的账号吗？恢复后该用户可以正常登录系统。`)) {
+      const success = await reactivateUser(user.id);
       if (success) {
         // 刷新用户详情以显示最新状态
         await loadUserDetails();
@@ -137,14 +147,25 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
                 <RotateCcw className="h-4 w-4 mr-2" />
                 重置密码
               </Button>
-              <Button 
-                onClick={handleSuspendUser} 
-                variant="destructive" 
-                disabled={loading || userDetails?.profile?.status === 'suspended'}
-              >
-                <Ban className="h-4 w-4 mr-2" />
-                {userDetails?.profile?.status === 'suspended' ? '已暂停' : '暂停账号'}
-              </Button>
+              {userDetails?.profile?.status === 'suspended' ? (
+                <Button 
+                  onClick={handleReactivateUser} 
+                  variant="default" 
+                  disabled={loading}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  恢复账号
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleSuspendUser} 
+                  variant="destructive" 
+                  disabled={loading || userDetails?.profile?.status === 'suspended'}
+                >
+                  <Ban className="h-4 w-4 mr-2" />
+                  暂停账号
+                </Button>
+              )}
               <Button 
                 onClick={() => setIsEmailModalOpen(true)} 
                 variant="outline"

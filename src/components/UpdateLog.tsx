@@ -12,6 +12,34 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.7.4',
+      type: '功能完善',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🔓 账号恢复功能',
+          description: '管理员可以手动恢复被暂停的用户账号，支持账号状态的双向管理',
+          type: 'feature'
+        },
+        {
+          title: '🎂 生日祝福优化',
+          description: '生日祝福弹窗现在每年只显示一次，用户点击"谢谢"后不再重复弹出',
+          type: 'improvement'
+        },
+        {
+          title: '💾 数据记录优化',
+          description: '优化生日祝福记录机制，改用用户偏好设置存储而非积分交易记录',
+          type: 'improvement'
+        },
+        {
+          title: '🔄 管理界面增强',
+          description: '根据用户状态动态显示"暂停账号"或"恢复账号"按钮，提升管理体验',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.7.3',
       type: '功能完善',
       icon: Sparkles,

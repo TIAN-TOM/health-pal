@@ -1045,6 +1045,7 @@ export type Database = {
           gender: string | null
           height: number | null
           id: string
+          last_birthday_wish_year: number | null
           medical_history: string[] | null
           preferred_language: string | null
           timezone: string | null
@@ -1063,6 +1064,7 @@ export type Database = {
           gender?: string | null
           height?: number | null
           id?: string
+          last_birthday_wish_year?: number | null
           medical_history?: string[] | null
           preferred_language?: string | null
           timezone?: string | null
@@ -1081,6 +1083,7 @@ export type Database = {
           gender?: string | null
           height?: number | null
           id?: string
+          last_birthday_wish_year?: number | null
           medical_history?: string[] | null
           preferred_language?: string | null
           timezone?: string | null
