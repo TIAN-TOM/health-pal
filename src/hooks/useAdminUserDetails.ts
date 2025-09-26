@@ -146,13 +146,21 @@ export const useAdminUserDetails = () => {
 
   const suspendUser = async (userId: string) => {
     try {
+      console.log('开始暂停用户, userId:', userId);
+      
       // 更新用户状态为暂停
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
-        .update({ status: 'suspended' })
-        .eq('id', userId);
+        .update({ status: 'suspended', updated_at: new Date().toISOString() })
+        .eq('id', userId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('暂停用户数据库操作失败:', error);
+        throw error;
+      }
+
+      console.log('暂停用户成功，更新结果:', data);
 
       toast({
         title: "用户已暂停",
@@ -160,6 +168,7 @@ export const useAdminUserDetails = () => {
       });
       return true;
     } catch (error: any) {
+      console.error('暂停用户失败:', error);
       toast({
         title: "暂停用户失败",
         description: error.message,
@@ -171,13 +180,21 @@ export const useAdminUserDetails = () => {
 
   const reactivateUser = async (userId: string) => {
     try {
+      console.log('开始恢复用户, userId:', userId);
+      
       // 恢复用户状态为正常
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
-        .update({ status: 'active' })
-        .eq('id', userId);
+        .update({ status: 'active', updated_at: new Date().toISOString() })
+        .eq('id', userId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('恢复用户数据库操作失败:', error);
+        throw error;
+      }
+
+      console.log('恢复用户成功，更新结果:', data);
 
       toast({
         title: "用户已恢复",
@@ -185,6 +202,7 @@ export const useAdminUserDetails = () => {
       });
       return true;
     } catch (error: any) {
+      console.error('恢复用户失败:', error);
       toast({
         title: "恢复用户失败",
         description: error.message,

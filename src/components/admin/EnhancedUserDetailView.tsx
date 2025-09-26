@@ -52,7 +52,9 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
       if (success) {
         // 强制刷新用户详情以显示最新状态
         setUserDetails(null); // 清空当前数据，强制重新加载
-        await loadUserDetails();
+        setTimeout(async () => {
+          await loadUserDetails();
+        }, 500); // 给数据库更新一点时间
       }
     }
   };
@@ -63,7 +65,9 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
       if (success) {
         // 强制刷新用户详情以显示最新状态
         setUserDetails(null); // 清空当前数据，强制重新加载
-        await loadUserDetails();
+        setTimeout(async () => {
+          await loadUserDetails();
+        }, 500); // 给数据库更新一点时间
       }
     }
   };
