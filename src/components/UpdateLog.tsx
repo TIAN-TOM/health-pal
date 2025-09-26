@@ -12,29 +12,29 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
-      version: '2.7.5',
-      type: '功能完善',
-      icon: Sparkles,
-      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      version: '2.7.6',
+      type: '重要修复',
+      icon: Bug,
+      color: 'bg-red-50 text-red-600 border-red-200',
       items: [
         {
-          title: '🔧 修复管理员账号恢复按钮显示',
-          description: '修复暂停账号后恢复按钮不显示的问题，强化状态刷新机制',
+          title: '🔧 修复管理员暂停账号功能',
+          description: '解决管理员暂停用户账号后恢复按钮不显示的问题，添加管理员更新用户状态的RLS权限',
           type: 'fix'
         },
         {
-          title: '📅 改进家庭成员生日输入',
-          description: '支持手动输入多种日期格式（yyyy-MM-dd、yyyy/MM/dd等），避免英文界面困扰',
+          title: '📊 增强操作日志记录',
+          description: '添加详细的暂停/恢复操作日志，便于问题排查和调试',
           type: 'improvement'
         },
         {
-          title: '🇨🇳 生日选择器中文显示',
-          description: '日历组件显示中文月份和星期，提供更友好的本土化体验',
+          title: '⏱️ 优化状态刷新机制',
+          description: '改进暂停/恢复操作后的状态刷新，确保界面立即反映最新状态',
           type: 'improvement'
         },
         {
-          title: '⚡ 管理员操作状态优化',
-          description: '优化暂停/恢复账号操作的状态更新，确保界面立即反映最新状态',
+          title: '🛡️ 完善RLS安全策略',
+          description: '为profiles表添加管理员更新权限，确保管理员操作的安全性和有效性',
           type: 'improvement'
         }
       ]
