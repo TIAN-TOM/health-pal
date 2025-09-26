@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format, parse, isValid } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { zhCN } from 'date-fns/locale';
+import WheelDatePicker from './WheelDatePicker';
 
-interface DateInputWithCalendarProps {
+interface EnhancedDateInputProps {
   date?: Date;
   onDateChange: (date: Date | undefined) => void;
   placeholder?: string;
@@ -17,17 +19,17 @@ interface DateInputWithCalendarProps {
   className?: string;
 }
 
-const DateInputWithCalendar = ({ 
+const EnhancedDateInput = ({ 
   date, 
   onDateChange, 
   placeholder = "选择日期",
   label,
   className 
-}: DateInputWithCalendarProps) => {
+}: EnhancedDateInputProps) => {
   const [inputValue, setInputValue] = useState(
     date ? format(date, 'yyyy-MM-dd') : ''
   );
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -69,7 +71,16 @@ const DateInputWithCalendar = ({
     } else {
       setInputValue('');
     }
-    setIsCalendarOpen(false);
+    setIsPopoverOpen(false);
+  };
+
+  const handleWheelDateChange = (selectedDate: Date | undefined) => {
+    onDateChange(selectedDate);
+    if (selectedDate) {
+      setInputValue(format(selectedDate, 'yyyy-MM-dd'));
+    } else {
+      setInputValue('');
+    }
   };
 
   // 格式化中文显示
@@ -91,8 +102,8 @@ const DateInputWithCalendar = ({
           className="flex-1"
         />
         
-        {/* 日历选择按钮 */}
-        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+        {/* 日期选择按钮 */}
+        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -105,18 +116,41 @@ const DateInputWithCalendar = ({
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={handleCalendarSelect}
-              initialFocus
-              className="pointer-events-auto"
-              locale={zhCN}
-              formatters={{
-                formatMonthCaption: (date) => format(date, 'yyyy年MM月', { locale: zhCN }),
-                formatWeekdayName: (date) => format(date, 'eeeee', { locale: zhCN })
-              }}
-            />
+            <Tabs defaultValue="calendar" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="calendar" className="flex items-center space-x-1">
+                  <CalendarIcon className="h-4 w-4" />
+                  <span>日历</span>
+                </TabsTrigger>
+                <TabsTrigger value="wheel" className="flex items-center space-x-1">
+                  <Clock className="h-4 w-4" />
+                  <span>滚轮</span>
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="calendar" className="p-0">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={handleCalendarSelect}
+                  initialFocus
+                  className="pointer-events-auto"
+                  locale={zhCN}
+                  formatters={{
+                    formatMonthCaption: (date) => format(date, 'yyyy年MM月', { locale: zhCN }),
+                    formatWeekdayName: (date) => format(date, 'eeeee', { locale: zhCN })
+                  }}
+                />
+              </TabsContent>
+              
+              <TabsContent value="wheel" className="p-4">
+                <WheelDatePicker
+                  date={date}
+                  onDateChange={handleWheelDateChange}
+                  placeholder={placeholder}
+                />
+              </TabsContent>
+            </Tabs>
           </PopoverContent>
         </Popover>
       </div>
@@ -131,4 +165,4 @@ const DateInputWithCalendar = ({
   );
 };
 
-export default DateInputWithCalendar;
+export default EnhancedDateInput;

@@ -13,7 +13,7 @@ import { presetAvatars, getAvatarsByCategory, getAvatarCategories, getAvatarUrl 
 import { format } from 'date-fns';
 import { Upload, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import DateInputWithCalendar from './DateInputWithCalendar';
+import EnhancedDateInput from './EnhancedDateInput';
 
 interface FamilyMemberFormProps {
   member?: FamilyMember | null;
@@ -321,7 +321,7 @@ const FamilyMemberForm = ({ member, onSuccess, onCancel }: FamilyMemberFormProps
               />
             </div>
             
-            <DateInputWithCalendar
+            <EnhancedDateInput
               label="生日"
               date={formData.birthday}
               onDateChange={(date) => setFormData(prev => ({ ...prev, birthday: date }))}
