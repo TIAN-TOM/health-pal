@@ -44,7 +44,9 @@ export const familyCalendarService = {
   // 获取当月事件
   async getMonthEvents(year: number, month: number): Promise<FamilyCalendarEvent[]> {
     const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-    const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
+    // 计算当月最后一天，避免无效日期如2025-09-31
+    const lastDayOfMonth = new Date(year, month, 0).getDate();
+    const endDate = `${year}-${month.toString().padStart(2, '0')}-${lastDayOfMonth.toString().padStart(2, '0')}`;
     
     return this.getFamilyCalendarEvents(startDate, endDate);
   },
