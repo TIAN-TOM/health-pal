@@ -6,15 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { familyMembersService, type FamilyMember } from '@/services/familyMembersService';
 import { presetAvatars, getAvatarsByCategory, getAvatarCategories, getAvatarUrl } from '@/data/avatars';
 import { format } from 'date-fns';
-import { CalendarIcon, Upload, X } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import DateInputWithCalendar from './DateInputWithCalendar';
 
 interface FamilyMemberFormProps {
   member?: FamilyMember | null;
@@ -322,32 +321,13 @@ const FamilyMemberForm = ({ member, onSuccess, onCancel }: FamilyMemberFormProps
               />
             </div>
             
-            <div className="space-y-2">
-              <Label>生日</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.birthday && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.birthday ? format(formData.birthday, 'yyyy-MM-dd') : '选择生日'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.birthday}
-                    onSelect={(date) => setFormData(prev => ({ ...prev, birthday: date }))}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+            <DateInputWithCalendar
+              label="生日"
+              date={formData.birthday}
+              onDateChange={(date) => setFormData(prev => ({ ...prev, birthday: date }))}
+              placeholder="选择生日"
+              className="space-y-2"
+            />
           </div>
 
           <div className="space-y-2">

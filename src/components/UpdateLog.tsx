@@ -12,6 +12,34 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.7.5',
+      type: '功能完善',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🔧 修复管理员账号恢复按钮显示',
+          description: '修复暂停账号后恢复按钮不显示的问题，强化状态刷新机制',
+          type: 'fix'
+        },
+        {
+          title: '📅 改进家庭成员生日输入',
+          description: '支持手动输入多种日期格式（yyyy-MM-dd、yyyy/MM/dd等），避免英文界面困扰',
+          type: 'improvement'
+        },
+        {
+          title: '🇨🇳 生日选择器中文显示',
+          description: '日历组件显示中文月份和星期，提供更友好的本土化体验',
+          type: 'improvement'
+        },
+        {
+          title: '⚡ 管理员操作状态优化',
+          description: '优化暂停/恢复账号操作的状态更新，确保界面立即反映最新状态',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.7.4',
       type: '功能完善',
       icon: Sparkles,

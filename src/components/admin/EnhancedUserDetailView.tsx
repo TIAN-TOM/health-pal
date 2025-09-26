@@ -50,7 +50,8 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
     if (confirm(`确定要暂停用户 ${user.email} 的账号吗？暂停后该用户将无法登录系统。`)) {
       const success = await suspendUser(user.id);
       if (success) {
-        // 刷新用户详情以显示最新状态
+        // 强制刷新用户详情以显示最新状态
+        setUserDetails(null); // 清空当前数据，强制重新加载
         await loadUserDetails();
       }
     }
@@ -60,7 +61,8 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
     if (confirm(`确定要恢复用户 ${user.email} 的账号吗？恢复后该用户可以正常登录系统。`)) {
       const success = await reactivateUser(user.id);
       if (success) {
-        // 刷新用户详情以显示最新状态
+        // 强制刷新用户详情以显示最新状态
+        setUserDetails(null); // 清空当前数据，强制重新加载
         await loadUserDetails();
       }
     }
