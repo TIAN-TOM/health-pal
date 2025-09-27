@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format, parse, isValid } from 'date-fns';
-import { CalendarIcon, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { zhCN } from 'date-fns/locale';
 import WheelDatePicker from './WheelDatePicker';
@@ -27,7 +25,7 @@ const EnhancedDateInput = ({
   className 
 }: EnhancedDateInputProps) => {
   const [inputValue, setInputValue] = useState(
-    date ? format(date, 'yyyy-MM-dd') : ''
+    date ? format(date, 'yyyyMMdd') : ''
   );
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
@@ -35,49 +33,30 @@ const EnhancedDateInput = ({
     const value = e.target.value;
     setInputValue(value);
     
-    // 尝试解析输入的日期
+    // 只支持无分隔符格式 YYYYMMDD
     if (value) {
-      // 支持多种日期格式，包括无分隔符格式
-      const formats = [
-        'yyyy-MM-dd',
-        'yyyy/MM/dd', 
-        'MM/dd/yyyy',
-        'MM-dd-yyyy',
-        'dd/MM/yyyy',
-        'dd-MM-yyyy',
-        'yyyyMMdd'  // 支持无分隔符格式如20020101
-      ];
-      
-      for (const dateFormat of formats) {
+      if (value.length === 8 && /^\d{8}$/.test(value)) {
         try {
-          const parsedDate = parse(value, dateFormat, new Date());
+          const parsedDate = parse(value, 'yyyyMMdd', new Date());
           if (isValid(parsedDate)) {
             onDateChange(parsedDate);
             return;
           }
         } catch {
-          // Continue to next format
+          // Invalid date
         }
       }
+      // 如果格式不正确，清除日期
+      onDateChange(undefined);
     } else {
       onDateChange(undefined);
     }
   };
 
-  const handleCalendarSelect = (selectedDate: Date | undefined) => {
-    onDateChange(selectedDate);
-    if (selectedDate) {
-      setInputValue(format(selectedDate, 'yyyy-MM-dd'));
-    } else {
-      setInputValue('');
-    }
-    setIsPopoverOpen(false);
-  };
-
   const handleWheelDateChange = (selectedDate: Date | undefined) => {
     onDateChange(selectedDate);
     if (selectedDate) {
-      setInputValue(format(selectedDate, 'yyyy-MM-dd'));
+      setInputValue(format(selectedDate, 'yyyyMMdd'));
     } else {
       setInputValue('');
     }
@@ -98,11 +77,11 @@ const EnhancedDateInput = ({
           type="text"
           value={inputValue}
           onChange={handleInputChange}
-          placeholder="输入日期，如 2024-01-01 或 20240101"
+          placeholder="输入日期，如 20240101"
           className="flex-1"
         />
         
-        {/* 日期选择按钮 */}
+        {/* 滚轮日期选择按钮 */}
         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -112,45 +91,17 @@ const EnhancedDateInput = ({
                 !date && "text-muted-foreground"
               )}
             >
-              <CalendarIcon className="h-4 w-4" />
+              <Clock className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Tabs defaultValue="calendar" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="calendar" className="flex items-center space-x-1">
-                  <CalendarIcon className="h-4 w-4" />
-                  <span>日历</span>
-                </TabsTrigger>
-                <TabsTrigger value="wheel" className="flex items-center space-x-1">
-                  <Clock className="h-4 w-4" />
-                  <span>滚轮</span>
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="calendar" className="p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={handleCalendarSelect}
-                  initialFocus
-                  className="pointer-events-auto"
-                  locale={zhCN}
-                  formatters={{
-                    formatMonthCaption: (date) => format(date, 'yyyy年MM月', { locale: zhCN }),
-                    formatWeekdayName: (date) => format(date, 'eeeee', { locale: zhCN })
-                  }}
-                />
-              </TabsContent>
-              
-              <TabsContent value="wheel" className="p-4">
-                <WheelDatePicker
-                  date={date}
-                  onDateChange={handleWheelDateChange}
-                  placeholder={placeholder}
-                />
-              </TabsContent>
-            </Tabs>
+            <div className="p-4">
+              <WheelDatePicker
+                date={date}
+                onDateChange={handleWheelDateChange}
+                placeholder={placeholder}
+              />
+            </div>
           </PopoverContent>
         </Popover>
       </div>
