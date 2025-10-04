@@ -25,7 +25,6 @@ export const getStoreItems = async (): Promise<StoreItem[]> => {
     .order('price_points', { ascending: true });
 
   if (error) {
-    console.error('获取商城商品失败:', error);
     return [];
   }
 
@@ -47,7 +46,6 @@ export const getUserPurchases = async (): Promise<UserPurchase[]> => {
     .order('purchased_at', { ascending: false });
 
   if (error) {
-    console.error('获取用户购买记录失败:', error);
     return [];
   }
 
@@ -82,7 +80,6 @@ export const getUserPurchasesWithPagination = async (
   const { data, error, count } = await query.range(from, to);
 
   if (error) {
-    console.error('获取用户购买记录失败:', error);
     return { data: [], count: 0 };
   }
 
@@ -109,7 +106,6 @@ export const getUserItemEffects = async (): Promise<UserItemEffects> => {
     .gt('quantity', 0);
 
   if (error) {
-    console.error('获取用户道具效果失败:', error);
     return {
       gameSkinsUnlocked: [],
       virtualBadges: [],
@@ -153,21 +149,10 @@ export const canPurchaseItem = async (item: StoreItem): Promise<{ canPurchase: b
     return { canPurchase: false, reason: '请先登录' };
   }
 
-  // 检查用户是否为管理员，管理员拥有无限积分
-  const { data: adminRole } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', user.id)
-    .eq('role', 'admin')
-    .single();
-
-  const isAdmin = !!adminRole;
-  
-  if (!isAdmin) {
-    const effectivePoints = await getEffectiveUserPoints();
-    if (effectivePoints < item.price_points) {
-      return { canPurchase: false, reason: '积分不足' };
-    }
+  // Get effective points (handles admin unlimited points)
+  const effectivePoints = await getEffectiveUserPoints();
+  if (effectivePoints < item.price_points) {
+    return { canPurchase: false, reason: '积分不足' };
   }
 
   // 检查库存
@@ -194,115 +179,49 @@ export const purchaseItem = async (itemId: string, itemPrice: number): Promise<b
     return false;
   }
 
-  // 获取商品信息
-  const { data: item } = await supabase
-    .from('points_store_items')
-    .select('*')
-    .eq('id', itemId)
-    .single();
-
-  if (!item) {
-    return false;
-  }
-
-  // 检查是否可以购买
-  const { canPurchase, reason } = await canPurchaseItem(item);
-  if (!canPurchase) {
-    console.error('无法购买商品:', reason);
-    return false;
-  }
-
-  // 检查用户是否为管理员
-  const { data: adminRole } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', user.id)
-    .eq('role', 'admin')
-    .single();
-
-  const isAdmin = !!adminRole;
-  
-  // 管理员不需要扣积分，直接跳过积分扣除
-  if (!isAdmin) {
-    const pointsSpent = await spendPoints(itemPrice, `购买商品: ${item.item_name}`, itemId);
-    if (!pointsSpent) {
-      return false;
-    }
-  }
-
-  // 创建购买记录
-  const { error } = await supabase
-    .from('user_purchases')
-    .insert({
-      user_id: user.id,
-      item_id: itemId,
-      points_spent: itemPrice
+  try {
+    // Call secure server-side purchase function
+    const { data, error } = await supabase.rpc('purchase_store_item', {
+      p_item_id: itemId,
+      p_item_price: itemPrice
     });
 
-  if (error) {
-    console.error('创建购买记录失败:', error);
+    if (error) {
+      console.error('Purchase failed');
+      return false;
+    }
+
+    const result = data as { success: boolean; error?: string; message?: string };
+    
+    if (!result.success) {
+      console.error('Purchase failed:', result.error || 'Unknown error');
+      return false;
+    }
+
+    // Get item name for notification
+    const { data: item } = await supabase
+      .from('points_store_items')
+      .select('item_name')
+      .eq('id', itemId)
+      .single();
+
+    // Notify admin
+    if (item) {
+      await notifyAdminActivity({
+        activity_type: ACTIVITY_TYPES.PURCHASE,
+        activity_description: `购买了商品 "${item.item_name}" (${itemPrice}积分)`,
+        module_name: MODULE_NAMES.POINTS_STORE
+      });
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Purchase error');
     return false;
   }
-
-  // 更新库存（如果有限库存）
-  if (item.stock_quantity !== null && item.stock_quantity !== -1) {
-    await supabase
-      .from('points_store_items')
-      .update({ stock_quantity: item.stock_quantity - 1 })
-      .eq('id', itemId);
-  }
-
-  // 应用道具效果到用户游戏状态
-  await applyItemEffect(item, user.id);
-
-  // 通知管理员
-  await notifyAdminActivity({
-    activity_type: ACTIVITY_TYPES.PURCHASE,
-    activity_description: `购买了商品 "${item.item_name}" (${itemPrice}积分)`,
-    module_name: MODULE_NAMES.POINTS_STORE
-  });
-
-  return true;
 };
 
-// 应用道具效果
-const applyItemEffect = async (item: StoreItem, userId: string) => {
-  try {
-    console.log('应用道具效果:', item.item_name, item.item_type);
-    
-    // 将道具添加到用户库存
-    const { data: existingInventory } = await supabase
-      .from('user_item_inventory')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('item_id', item.id)
-      .maybeSingle();
-
-    if (existingInventory) {
-      // 更新现有库存数量
-      await supabase
-        .from('user_item_inventory')
-        .update({ 
-          quantity: existingInventory.quantity + 1,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingInventory.id);
-    } else {
-      // 创建新的库存记录
-      await supabase
-        .from('user_item_inventory')
-        .insert({
-          user_id: userId,
-          item_id: item.id,
-          item_type: item.item_type,
-          quantity: 1
-        });
-    }
-    
-  } catch (error) {
-    console.error('应用道具效果失败:', error);
-  }
-};
+// Remove old applyItemEffect function - now handled by server-side function
 
 // 获取补签卡数量 - 从数据库获取
 export const getMakeupCardsCount = async (): Promise<number> => {
@@ -320,7 +239,6 @@ export const getMakeupCardsCount = async (): Promise<number> => {
     .maybeSingle();
 
   if (error) {
-    console.error('获取补签卡数量失败:', error);
     return 0;
   }
 

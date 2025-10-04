@@ -1224,6 +1224,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      purchase_store_item: {
+        Args: { p_item_id: string; p_item_price: number }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "user"
