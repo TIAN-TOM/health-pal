@@ -4,11 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Award, Star, Package, Trophy, BookOpen, Calendar } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ShoppingCart, Award, Star, Package, Trophy, BookOpen, Calendar, History } from 'lucide-react';
 import { getStoreItems, getUserPurchases, purchaseItem, canPurchaseItem, type StoreItem } from '@/services/pointsStoreService';
 import { getEffectiveUserPoints } from '@/services/pointsService';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import MyPurchases from './MyPurchases';
 
 const PointsStore = () => {
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
@@ -136,7 +138,7 @@ const PointsStore = () => {
           积分商城
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <ShoppingCart className="h-5 w-5 mr-2 text-yellow-600" />
@@ -144,89 +146,106 @@ const PointsStore = () => {
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
-          {/* 用户积分显示 */}
-          <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Award className="h-5 w-5 text-yellow-600 mr-2" />
-                  <span className="font-medium">我的积分</span>
-                  {isAdmin && (
-                    <Badge variant="outline" className="ml-2 text-xs">
-                      管理员
-                    </Badge>
-                  )}
+        <Tabs defaultValue="store" className="flex-1 flex flex-col overflow-hidden">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="store" className="flex items-center gap-2">
+              <ShoppingCart className="h-4 w-4" />
+              商城
+            </TabsTrigger>
+            <TabsTrigger value="purchases" className="flex items-center gap-2">
+              <History className="h-4 w-4" />
+              我的已购
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="store" className="flex-1 overflow-y-auto mt-4 space-y-4">
+            {/* 用户积分显示 */}
+            <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950 border-yellow-200 dark:border-yellow-800">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Award className="h-5 w-5 text-yellow-600 dark:text-yellow-500 mr-2" />
+                    <span className="font-medium">我的积分</span>
+                    {isAdmin && (
+                      <Badge variant="outline" className="ml-2 text-xs">
+                        管理员
+                      </Badge>
+                    )}
+                  </div>
+                  <span className="text-xl font-bold text-yellow-600 dark:text-yellow-500">
+                    {isAdmin ? '∞' : userPoints}
+                  </span>
                 </div>
-                <span className="text-xl font-bold text-yellow-600">
-                  {isAdmin ? '∞' : userPoints}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* 商品列表 */}
-          <div className="space-y-3">
-            {storeItems.map((item) => (
-              <Card key={item.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center mb-2">
-                        <span className="text-2xl mr-2">
-                          {typeof getItemIcon(item.item_type, item.item_name) === 'string' 
-                            ? getItemIcon(item.item_type, item.item_name)
-                            : <div className="text-blue-600">{getItemIcon(item.item_type, item.item_name)}</div>
-                          }
-                        </span>
-                        <div>
-                          <h3 className="font-medium text-gray-800">{item.item_name}</h3>
-                          <p className="text-xs text-gray-500">{getItemTypeText(item.item_type)}</p>
-                        </div>
-                      </div>
-                      
-                      <p className="text-sm text-gray-600 mb-3">
-                        {item.item_description || getItemEffectDescription(item.item_name)}
-                      </p>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                          <span className="font-bold text-yellow-600">{item.price_points}</span>
-                          <span className="text-sm text-gray-500 ml-1">积分</span>
-                          {item.stock_quantity !== -1 && item.stock_quantity !== null && (
-                            <Badge variant="outline" className="ml-2 text-xs">
-                              库存: {item.stock_quantity}
-                            </Badge>
-                          )}
+            {/* 商品列表 */}
+            <div className="space-y-3">
+              {storeItems.map((item) => (
+                <Card key={item.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center mb-2">
+                          <span className="text-2xl mr-2">
+                            {typeof getItemIcon(item.item_type, item.item_name) === 'string' 
+                              ? getItemIcon(item.item_type, item.item_name)
+                              : <div className="text-primary">{getItemIcon(item.item_type, item.item_name)}</div>
+                            }
+                          </span>
+                          <div>
+                            <h3 className="font-medium">{item.item_name}</h3>
+                            <p className="text-xs text-muted-foreground">{getItemTypeText(item.item_type)}</p>
+                          </div>
                         </div>
                         
-                        <Button
-                          size="sm"
-                          onClick={() => handlePurchase(item)}
-                          disabled={
-                            purchaseLoading === item.id || 
-                            (!isAdmin && userPoints < item.price_points)
-                          }
-                          className="bg-blue-600 hover:bg-blue-700"
-                        >
-                          {purchaseLoading === item.id ? '购买中...' : '购买'}
-                        </Button>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {item.item_description || getItemEffectDescription(item.item_name)}
+                        </p>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                            <span className="font-bold text-yellow-600 dark:text-yellow-500">{item.price_points}</span>
+                            <span className="text-sm text-muted-foreground ml-1">积分</span>
+                            {item.stock_quantity !== -1 && item.stock_quantity !== null && (
+                              <Badge variant="outline" className="ml-2 text-xs">
+                                库存: {item.stock_quantity}
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <Button
+                            size="sm"
+                            onClick={() => handlePurchase(item)}
+                            disabled={
+                              purchaseLoading === item.id || 
+                              (!isAdmin && userPoints < item.price_points)
+                            }
+                            className="bg-primary hover:bg-primary/90"
+                          >
+                            {purchaseLoading === item.id ? '购买中...' : '购买'}
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {storeItems.length === 0 && (
-            <div className="text-center py-8">
-              <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">暂无商品</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          )}
-        </div>
+
+            {storeItems.length === 0 && (
+              <div className="text-center py-8">
+                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                <p className="text-muted-foreground">暂无商品</p>
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="purchases" className="flex-1 overflow-y-auto mt-4">
+            <MyPurchases />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

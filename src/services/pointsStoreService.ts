@@ -54,6 +54,41 @@ export const getUserPurchases = async (): Promise<UserPurchase[]> => {
   return data as UserPurchase[] || [];
 };
 
+// 获取用户购买记录（带分页）
+export const getUserPurchasesWithPagination = async (
+  page: number = 1,
+  pageSize: number = 10,
+  isActive?: boolean
+): Promise<{ data: UserPurchase[]; count: number }> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return { data: [], count: 0 };
+  }
+
+  let query = supabase
+    .from('user_purchases')
+    .select('*, points_store_items(*)', { count: 'exact' })
+    .eq('user_id', user.id)
+    .order('purchased_at', { ascending: false });
+
+  if (isActive !== undefined) {
+    query = query.eq('is_active', isActive);
+  }
+
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error, count } = await query.range(from, to);
+
+  if (error) {
+    console.error('获取用户购买记录失败:', error);
+    return { data: [], count: 0 };
+  }
+
+  return { data: data as UserPurchase[] || [], count: count || 0 };
+};
+
 // 获取用户道具效果 - 从数据库库存表获取
 export const getUserItemEffects = async (): Promise<UserItemEffects> => {
   const { data: { user } } = await supabase.auth.getUser();
