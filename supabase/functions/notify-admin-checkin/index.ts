@@ -20,7 +20,33 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Verify JWT token
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing authorization header' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
     const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Verify the user is authenticated
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      console.error('Authentication failed:', authError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
+    // Use service role client for admin operations
+    const supabaseServiceClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
@@ -30,7 +56,7 @@ Deno.serve(async (req) => {
     console.log('收到打卡通知请求:', { user_id, user_name, checkin_date, mood_score })
 
     // 获取所有管理员
-    const { data: admins, error: adminError } = await supabaseClient
+    const { data: admins, error: adminError } = await supabaseServiceClient
       .from('user_roles')
       .select('user_id')
       .eq('role', 'admin')
@@ -59,7 +85,7 @@ Deno.serve(async (req) => {
       type: 'info'
     }))
 
-    const { error: notificationError } = await supabaseClient
+    const { error: notificationError } = await supabaseServiceClient
       .from('admin_notifications')
       .insert(notifications)
 

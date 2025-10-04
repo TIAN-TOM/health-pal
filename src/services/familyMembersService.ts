@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { familyMemberSchema } from '@/utils/validation';
 
 export interface FamilyMember {
   id: string;
@@ -23,8 +24,7 @@ export const familyMembersService = {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('获取家庭成员失败:', error);
-      throw error;
+      return [];
     }
 
     return data || [];
@@ -32,6 +32,9 @@ export const familyMembersService = {
 
   // 添加家庭成员
   async addFamilyMember(member: Omit<FamilyMember, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<FamilyMember> {
+    // Validate input
+    familyMemberSchema.parse(member);
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('用户未登录');
 
@@ -42,8 +45,7 @@ export const familyMembersService = {
       .single();
 
     if (error) {
-      console.error('添加家庭成员失败:', error);
-      throw error;
+      throw new Error('添加家庭成员失败');
     }
 
     return data;
@@ -51,6 +53,11 @@ export const familyMembersService = {
 
   // 更新家庭成员
   async updateFamilyMember(id: string, updates: Partial<FamilyMember>): Promise<FamilyMember> {
+    // Validate input if provided
+    if (Object.keys(updates).length > 0) {
+      familyMemberSchema.partial().parse(updates);
+    }
+
     const { data, error } = await supabase
       .from('family_members')
       .update(updates)
@@ -59,8 +66,7 @@ export const familyMembersService = {
       .single();
 
     if (error) {
-      console.error('更新家庭成员失败:', error);
-      throw error;
+      throw new Error('更新家庭成员失败');
     }
 
     return data;
@@ -74,8 +80,7 @@ export const familyMembersService = {
       .eq('id', id);
 
     if (error) {
-      console.error('删除家庭成员失败:', error);
-      throw error;
+      throw new Error('删除家庭成员失败');
     }
   },
 
@@ -92,8 +97,7 @@ export const familyMembersService = {
       .upload(fileName, file, { upsert: true });
 
     if (uploadError) {
-      console.error('上传头像失败:', uploadError);
-      throw uploadError;
+      throw new Error('上传头像失败');
     }
 
     const { data } = supabase.storage

@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
+import { medicalRecordSchema } from '@/utils/validation';
 
 export interface MedicalRecord {
   id?: string;
@@ -17,6 +18,9 @@ export interface MedicalRecord {
 }
 
 export const saveMedicalRecord = async (record: Omit<MedicalRecord, 'id'>) => {
+  // Validate input
+  medicalRecordSchema.parse(record);
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('用户未登录');
 
@@ -29,7 +33,7 @@ export const saveMedicalRecord = async (record: Omit<MedicalRecord, 'id'>) => {
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) throw new Error('创建医疗记录失败');
   
   // 通知管理员
   await notifyAdminActivity({
@@ -56,6 +60,11 @@ export const getMedicalRecords = async (): Promise<MedicalRecord[]> => {
 };
 
 export const updateMedicalRecord = async (id: string, updates: Partial<MedicalRecord>) => {
+  // Validate input if provided
+  if (Object.keys(updates).length > 0) {
+    medicalRecordSchema.partial().parse(updates);
+  }
+
   const { data, error } = await supabase
     .from('medical_records')
     .update(updates)
@@ -63,7 +72,7 @@ export const updateMedicalRecord = async (id: string, updates: Partial<MedicalRe
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) throw new Error('更新医疗记录失败');
   
   // 通知管理员
   await notifyAdminActivity({

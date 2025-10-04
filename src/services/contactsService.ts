@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { contactSchema, validateUUID } from '@/utils/validation';
 
 export interface Contact {
   id: string;
@@ -30,13 +31,19 @@ export const getContacts = async (): Promise<Contact[]> => {
       avatar: contact.avatar || '👤'
     }));
   } catch (error) {
-    console.error('获取联系人失败:', error);
     return [];
   }
 };
 
 export const saveContact = async (contact: Omit<Contact, 'id'>): Promise<void> => {
   try {
+    // Validate input
+    const validatedContact = contactSchema.parse({
+      name: contact.name,
+      phone: contact.phone,
+      avatar: contact.avatar
+    });
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('未登录');
 
@@ -44,20 +51,31 @@ export const saveContact = async (contact: Omit<Contact, 'id'>): Promise<void> =
       .from('emergency_contacts')
       .insert({
         user_id: user.id,
-        name: contact.name,
-        phone: contact.phone,
-        avatar: contact.avatar || '👤'
+        name: validatedContact.name,
+        phone: validatedContact.phone,
+        avatar: validatedContact.avatar || '👤'
       });
 
     if (error) throw error;
   } catch (error) {
-    console.error('保存联系人失败:', error);
+    if (error instanceof Error) {
+      throw new Error('保存联系人失败');
+    }
     throw error;
   }
 };
 
 export const updateContact = async (id: string, contact: Partial<Contact>): Promise<void> => {
   try {
+    // Validate input if provided
+    if (contact.name || contact.phone || contact.avatar) {
+      contactSchema.partial().parse({
+        name: contact.name,
+        phone: contact.phone,
+        avatar: contact.avatar
+      });
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('未登录');
 
@@ -91,7 +109,9 @@ export const updateContact = async (id: string, contact: Partial<Contact>): Prom
 
     if (error) throw error;
   } catch (error) {
-    console.error('更新联系人失败:', error);
+    if (error instanceof Error) {
+      throw new Error('更新联系人失败');
+    }
     throw error;
   }
 };
@@ -126,24 +146,16 @@ export const deleteContact = async (id: string): Promise<void> => {
     }
 
     // 检查是否是有效的UUID格式
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(realId)) {
+    if (!validateUUID(realId)) {
       throw new Error('无效的联系人ID格式');
     }
 
-    console.log('开始删除联系人及相关记录，ID:', realId);
-
     // 先删除相关的SMS日志记录（因为外键约束）
-    const { error: smsError } = await supabase
+    await supabase
       .from('emergency_sms_logs')
       .delete()
       .eq('contact_id', realId)
       .eq('user_id', user.id);
-
-    if (smsError) {
-      console.error('删除SMS日志失败:', smsError);
-      // 不抛出错误，因为可能没有相关的SMS记录
-    }
 
     // 再删除联系人记录
     const { error: contactError, count } = await supabase
@@ -153,18 +165,17 @@ export const deleteContact = async (id: string): Promise<void> => {
       .eq('user_id', user.id);
 
     if (contactError) {
-      console.error('删除联系人失败:', contactError);
-      throw new Error(`删除失败: ${contactError.message}`);
+      throw new Error('删除失败');
     }
 
     // 检查是否真的删除了记录
     if (count === 0) {
       throw new Error('没有找到要删除的联系人记录');
     }
-
-    console.log(`成功删除了联系人及相关记录`);
   } catch (error) {
-    console.error('删除联系人失败:', error);
-    throw error;
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('删除联系人失败');
   }
 };
