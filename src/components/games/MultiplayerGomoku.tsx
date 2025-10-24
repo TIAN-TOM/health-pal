@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,11 +7,11 @@ import { Users, Share2, Copy, UserCheck, Clock, Trophy, LogOut, Smartphone, Moni
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { RealtimeChannel } from '@supabase/supabase-js';
 import { 
   createGomokuRoom, 
   joinGomokuRoom, 
-  makeMove, 
-  leaveRoom,
+  finishGame,
   getRoomByCode,
   GomokuRoom, 
   GomokuGameState 
@@ -29,14 +29,23 @@ const BOARD_SIZE = 15;
 const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuProps) => {
   const [gameMode, setGameMode] = useState<GameMode>('menu');
   const [room, setRoom] = useState<GomokuRoom | null>(null);
+  const [gameState, setGameState] = useState<GomokuGameState | null>(null);
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [playerRole, setPlayerRole] = useState<'host' | 'guest'>('host');
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
+  const [opponentOnline, setOpponentOnline] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const channelRef = useRef<RealtimeChannel | null>(null);
+  const gameStateRef = useRef<GomokuGameState | null>(null);
+
+  // 同步 gameState 到 ref
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
 
   // 获取当前用户
   useEffect(() => {
@@ -81,88 +90,164 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
     }
   }, [soundEnabled]);
 
-  // 实时订阅房间更新
-  useEffect(() => {
-    if (!room || !currentUserId) return;
+  // 检查获胜条件
+  const checkWinner = useCallback((board: (string | null)[][], row: number, col: number, player: string): boolean => {
+    const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
 
-    console.log('订阅房间更新:', room.id);
+    for (const [dx, dy] of directions) {
+      let count = 1;
+      
+      for (let i = 1; i < 5; i++) {
+        const newRow = row + dx * i;
+        const newCol = col + dy * i;
+        if (newRow >= 0 && newRow < 15 && newCol >= 0 && newCol < 15 && 
+            board[newRow][newCol] === player) {
+          count++;
+        } else break;
+      }
+      
+      for (let i = 1; i < 5; i++) {
+        const newRow = row - dx * i;
+        const newCol = col - dy * i;
+        if (newRow >= 0 && newRow < 15 && newCol >= 0 && newCol < 15 && 
+            board[newRow][newCol] === player) {
+          count++;
+        } else break;
+      }
+      
+      if (count >= 5) return true;
+    }
+    
+    return false;
+  }, []);
+
+  // 实时订阅房间更新（使用 Broadcast）
+  useEffect(() => {
+    if (!room || !currentUserId || gameMode !== 'game') return;
+
+    console.log('🔌 建立实时连接:', room.room_code);
     setConnectionStatus('connecting');
     
-    const channel = supabase
-      .channel(`gomoku-room-${room.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'gomoku_rooms',
-          filter: `id=eq.${room.id}`
-        },
-        (payload) => {
-          console.log('收到房间更新:', payload);
-          const updatedRoom = payload.new as GomokuRoom;
-          setRoom(updatedRoom);
-          
-          // 检查是否轮到当前玩家
-          const role = updatedRoom.host_id === currentUserId ? 'host' : 'guest';
-          setPlayerRole(role);
-          setIsMyTurn(updatedRoom.game_state.currentPlayer === role);
-          
-          // 如果游戏状态从waiting变为playing，切换到游戏界面
-          if (room.game_state.status === 'waiting' && updatedRoom.game_state.status === 'playing') {
-            setGameMode('game');
-            
-            // 根据用户角色显示不同的消息
-            const isHost = updatedRoom.host_id === currentUserId;
-            toast({
-              title: "🎮 游戏开始！",
-              description: isHost ? "对手已加入，开始对战！" : "成功加入房间，开始对战！",
-            });
-          }
-          
-          // 播放下棋音效
-          if (updatedRoom.game_state.moveHistory.length > room.game_state.moveHistory.length) {
-            playSound(440, 0.1);
-          }
-          
-          // 检查游戏结束
-          if (updatedRoom.game_state.status === 'finished') {
-            if (updatedRoom.game_state.winner === role) {
-              playSound(523, 0.5);
-              toast({
-                title: "🎉 恭喜获胜！",
-                description: "你在多人对战中获得了胜利！",
-              });
-            } else if (updatedRoom.game_state.winner === 'draw') {
-              toast({
-                title: "🤝 平局",
-                description: "这是一场精彩的对局！",
-              });
-            } else {
-              playSound(196, 0.5);
-              toast({
-                title: "😔 游戏结束",
-                description: "对手获得了胜利，再试一次吧！",
-              });
-            }
-          }
+    const channel = supabase.channel(`gomoku:${room.room_code}`, {
+      config: {
+        broadcast: { self: false },
+        presence: { key: currentUserId }
+      }
+    });
+
+    // Presence - 追踪在线玩家
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const onlineUsers = Object.keys(state);
+        console.log('👥 在线玩家:', onlineUsers);
+        
+        const opponentId = playerRole === 'host' ? room.guest_id : room.host_id;
+        setOpponentOnline(onlineUsers.includes(opponentId || ''));
+      })
+      .on('presence', { event: 'join' }, ({ key }) => {
+        console.log('✅ 玩家上线:', key);
+        const opponentId = playerRole === 'host' ? room.guest_id : room.host_id;
+        if (key === opponentId) {
+          setOpponentOnline(true);
         }
-      )
-      .subscribe((status) => {
-        console.log('订阅状态:', status);
-        if (status === 'SUBSCRIBED') {
-          setConnectionStatus('connected');
-        } else if (status === 'CLOSED') {
-          setConnectionStatus('disconnected');
+      })
+      .on('presence', { event: 'leave' }, ({ key }) => {
+        console.log('❌ 玩家离线:', key);
+        const opponentId = playerRole === 'host' ? room.guest_id : room.host_id;
+        if (key === opponentId) {
+          setOpponentOnline(false);
+          toast({
+            title: "对手已离线",
+            description: "等待对手重新连接...",
+            variant: "destructive",
+          });
         }
       });
 
+    // Broadcast - 接收对手的移动
+    channel.on('broadcast', { event: 'move' }, ({ payload }) => {
+      console.log('📨 收到对手移动:', payload);
+      
+      const { row, col, player, moveIndex } = payload;
+      
+      // 使用 ref 获取最新状态
+      const currentState = gameStateRef.current;
+      if (!currentState) return;
+
+      // 防止重复处理
+      if (currentState.moveHistory.length >= moveIndex + 1) {
+        console.log('⚠️ 忽略重复移动');
+        return;
+      }
+
+      // 更新棋盘
+      const newBoard = currentState.board.map(r => [...r]);
+      newBoard[row][col] = player;
+
+      // 检查获胜
+      const isWin = checkWinner(newBoard, row, col, player);
+      const isBoardFull = newBoard.every(row => row.every(cell => cell !== null));
+
+      const newGameState: GomokuGameState = {
+        ...currentState,
+        board: newBoard,
+        currentPlayer: player === 'host' ? 'guest' : 'host',
+        winner: isWin ? player : (isBoardFull ? 'draw' : null),
+        status: isWin || isBoardFull ? 'finished' : 'playing',
+        lastMove: { row, col },
+        moveHistory: [
+          ...currentState.moveHistory,
+          { row, col, player, timestamp: new Date().toISOString() }
+        ]
+      };
+
+      setGameState(newGameState);
+      setIsMyTurn(newGameState.currentPlayer === playerRole);
+      playSound(440, 0.1);
+
+      // 游戏结束处理
+      if (newGameState.status === 'finished') {
+        if (newGameState.winner === playerRole) {
+          playSound(523, 0.5);
+          toast({ title: "🎉 恭喜获胜！", description: "你在多人对战中获得了胜利！" });
+        } else if (newGameState.winner === 'draw') {
+          toast({ title: "🤝 平局", description: "这是一场精彩的对局！" });
+        } else {
+          playSound(196, 0.5);
+          toast({ title: "😔 游戏结束", description: "对手获得了胜利，再试一次吧！" });
+        }
+        
+        // 保存游戏结果到数据库
+        finishGame(room.id, newGameState);
+      }
+    });
+
+    // 订阅并加入 Presence
+    channel.subscribe(async (status) => {
+      console.log('📡 连接状态:', status);
+      if (status === 'SUBSCRIBED') {
+        await channel.track({ 
+          user_id: currentUserId, 
+          role: playerRole,
+          online_at: new Date().toISOString()
+        });
+        setConnectionStatus('connected');
+      } else if (status === 'CLOSED') {
+        setConnectionStatus('disconnected');
+      }
+    });
+
+    channelRef.current = channel;
+
     return () => {
-      console.log('取消订阅房间:', room.id);
+      console.log('🔌 断开连接');
+      channel.untrack();
       supabase.removeChannel(channel);
+      channelRef.current = null;
       setConnectionStatus('disconnected');
     };
-  }, [room, currentUserId, playSound, toast]);
+  }, [room, currentUserId, playerRole, gameMode, playSound, toast, checkWinner]);
 
   // 创建房间
   const handleCreateRoom = async () => {
@@ -192,6 +277,7 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
     }
 
     setRoom(newRoom);
+    setGameState(newRoom.game_state);
     setPlayerRole('host');
     setGameMode('lobby');
     console.log('房间创建成功:', newRoom);
@@ -252,23 +338,26 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
     }
 
     setRoom(joinedRoom);
-    setPlayerRole('guest');
+    setGameState(joinedRoom.game_state);
+    const role = joinedRoom.host_id === currentUserId ? 'host' : 'guest';
+    setPlayerRole(role);
     
     // 根据游戏状态设置模式
     if (joinedRoom.game_state.status === 'playing') {
       setGameMode('game');
-      const role = joinedRoom.host_id === currentUserId ? 'host' : 'guest';
-      setPlayerRole(role);
       setIsMyTurn(joinedRoom.game_state.currentPlayer === role);
+      
+      toast({
+        title: "🎮 游戏开始！",
+        description: "成功加入房间，开始对战！",
+      });
     } else {
       setGameMode('lobby');
+      toast({
+        title: "成功加入房间！",
+        description: "等待游戏开始",
+      });
     }
-    
-    console.log('成功加入房间:', joinedRoom);
-    toast({
-      title: "成功加入房间！",
-      description: joinedRoom.game_state.status === 'playing' ? "游戏进行中" : "等待游戏开始",
-    });
   };
 
   // 复制房间码
@@ -297,73 +386,95 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
     }
   };
 
-  // 下棋
+  // 下棋（使用 Broadcast）
   const handleCellClick = async (row: number, col: number) => {
-    if (!room || !isMyTurn || room.game_state.status !== 'playing') return;
-    if (room.game_state.board[row][col] !== null) return;
+    if (!gameState || !isMyTurn || gameState.status !== 'playing' || !channelRef.current) return;
+    if (gameState.board[row][col] !== null) return;
 
-    console.log('尝试下棋:', row, col, playerRole, '当前轮次:', room.game_state.currentPlayer);
+    console.log('🎯 下棋:', row, col, playerRole);
     
-    // 立即更新本地状态（乐观更新）
+    // 乐观更新本地状态
     setIsMyTurn(false);
-    
-    const { success, error, newGameState } = await makeMove(room.id, row, col, playerRole);
-    if (!success) {
-      // 如果失败，恢复本地状态
-      const role = room.host_id === currentUserId ? 'host' : 'guest';
-      setIsMyTurn(room.game_state.currentPlayer === role);
-      
+    const newBoard = gameState.board.map(r => [...r]);
+    newBoard[row][col] = playerRole;
+
+    const isWin = checkWinner(newBoard, row, col, playerRole);
+    const isBoardFull = newBoard.every(row => row.every(cell => cell !== null));
+
+    const newGameState: GomokuGameState = {
+      ...gameState,
+      board: newBoard,
+      currentPlayer: playerRole === 'host' ? 'guest' : 'host',
+      winner: isWin ? playerRole : (isBoardFull ? 'draw' : null),
+      status: isWin || isBoardFull ? 'finished' : 'playing',
+      lastMove: { row, col },
+      moveHistory: [
+        ...gameState.moveHistory,
+        { row, col, player: playerRole, timestamp: new Date().toISOString() }
+      ]
+    };
+
+    setGameState(newGameState);
+    playSound(440, 0.1);
+
+    // 通过 Broadcast 发送移动
+    try {
+      await channelRef.current.send({
+        type: 'broadcast',
+        event: 'move',
+        payload: {
+          row,
+          col,
+          player: playerRole,
+          moveIndex: newGameState.moveHistory.length - 1,
+          timestamp: new Date().toISOString()
+        }
+      });
+      console.log('✅ 移动已广播');
+    } catch (error) {
+      console.error('❌ 广播失败:', error);
+      // 回滚状态
+      setGameState(gameState);
+      setIsMyTurn(true);
       toast({
-        title: "下棋失败",
-        description: error,
+        title: "网络错误",
+        description: "移动发送失败，请重试",
         variant: "destructive",
       });
       return;
     }
 
-    // 成功时，播放音效
-    playSound(440, 0.1);
-    
-    // 如果返回了新的游戏状态，立即更新本地状态
-    if (newGameState) {
-      const updatedRoom = { ...room, game_state: newGameState };
-      setRoom(updatedRoom);
+    // 游戏结束处理
+    if (newGameState.status === 'finished') {
+      if (newGameState.winner === playerRole) {
+        playSound(523, 0.5);
+        toast({ title: "🎉 恭喜获胜！", description: "你在多人对战中获得了胜利！" });
+      } else if (newGameState.winner === 'draw') {
+        toast({ title: "🤝 平局", description: "这是一场精彩的对局！" });
+      }
       
-      const role = room.host_id === currentUserId ? 'host' : 'guest';
-      setIsMyTurn(newGameState.currentPlayer === role);
+      // 保存游戏结果
+      if (room) {
+        await finishGame(room.id, newGameState);
+      }
+    } else {
+      setIsMyTurn(newGameState.currentPlayer === playerRole);
     }
   };
 
   // 离开房间
-  const handleLeaveRoom = async () => {
-    if (!room) return;
-
-    const { success, error } = await leaveRoom(room.id);
-    if (!success) {
-      toast({
-        title: "离开房间失败",
-        description: error,
-        variant: "destructive",
-      });
-      return;
+  const handleLeaveRoom = () => {
+    if (channelRef.current) {
+      channelRef.current.untrack();
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
     }
-
     setRoom(null);
+    setGameState(null);
     setGameMode('menu');
-    toast({
-      title: "已离开房间",
-    });
+    setOpponentOnline(false);
+    toast({ title: "已离开房间" });
   };
-
-  // 检查游戏是否开始
-  useEffect(() => {
-    if (room && room.game_state.status === 'playing' && gameMode === 'lobby') {
-      setGameMode('game');
-      const role = room.host_id === currentUserId ? 'host' : 'guest';
-      setPlayerRole(role);
-      setIsMyTurn(room.game_state.currentPlayer === role);
-    }
-  }, [room, gameMode, currentUserId]);
 
   // 渲染主菜单
   if (gameMode === 'menu') {
@@ -476,11 +587,45 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
     );
   }
 
+  // 监听房间状态变化（等待对手加入）
+  useEffect(() => {
+    if (!room || gameMode !== 'lobby') return;
+
+    const channel = supabase
+      .channel(`gomoku-lobby:${room.room_code}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'gomoku_rooms',
+          filter: `id=eq.${room.id}`
+        },
+        (payload) => {
+          const updatedRoom = payload.new as GomokuRoom;
+          if (updatedRoom.game_state.status === 'playing' && updatedRoom.guest_id) {
+            setRoom(updatedRoom);
+            setGameState(updatedRoom.game_state);
+            setGameMode('game');
+            setIsMyTurn(updatedRoom.game_state.currentPlayer === playerRole);
+            
+            toast({
+              title: "🎮 游戏开始！",
+              description: "对手已加入，开始对战！",
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [room, gameMode, playerRole, toast]);
+
   // 渲染游戏界面
-  if (gameMode === 'game' && room) {
-    const gameState = room.game_state;
+  if (gameMode === 'game' && room && gameState) {
     const isHost = playerRole === 'host';
-    const opponentConnected = room.guest_id !== null;
     
     // 响应式棋盘尺寸
     const boardSize = isMobile ? 280 : 360;
@@ -495,7 +640,10 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
             <div className={`flex items-center justify-between ${isMobile ? 'flex-col gap-3' : ''}`}>
               <div className={`flex items-center gap-2 ${isMobile ? 'order-2' : ''}`}>
                 <Badge variant={connectionStatus === 'connected' ? 'default' : 'destructive'}>
-                  {connectionStatus === 'connected' ? '已连接' : '连接中...'}
+                  {connectionStatus === 'connected' ? '🟢 已连接' : '🔴 连接中...'}
+                </Badge>
+                <Badge variant={opponentOnline ? 'default' : 'secondary'}>
+                  {opponentOnline ? '👤 对手在线' : '👤 对手离线'}
                 </Badge>
                 <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>房间: {room.room_code}</span>
               </div>
@@ -543,13 +691,7 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
               </div>
             )}
 
-            {!opponentConnected && (
-              <div className={`text-center ${isMobile ? 'mb-3 p-3' : 'mb-4 p-4'} bg-yellow-50 rounded-lg`}>
-                <p className={`text-yellow-700 ${isMobile ? 'text-sm' : ''}`}>等待对手重新连接...</p>
-              </div>
-            )}
-            
-            {gameState.status === 'playing' && opponentConnected && (
+            {gameState.status === 'playing' && (
               <div className={`text-center ${isMobile ? 'mb-3' : 'mb-4'}`}>
                 <p className={`${isMobile ? 'text-sm' : 'text-sm'} text-gray-600 font-medium`}>
                   {isMyTurn ? 
@@ -651,7 +793,7 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
                     row.map((cell, colIndex) => {
                       const x = cellSize * 0.5 + colIndex * cellSize;
                       const y = cellSize * 0.5 + rowIndex * cellSize;
-                      const canPlay = gameState.status === 'playing' && isMyTurn && opponentConnected && cell === null;
+                      const canPlay = gameState.status === 'playing' && isMyTurn && cell === null;
                       
                       return (
                         <circle

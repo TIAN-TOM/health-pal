@@ -1,3 +1,4 @@
+// 简化服务，减少数据库操作，游戏移动通过 Broadcast 实时同步
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 
@@ -24,17 +25,6 @@ export interface GomokuRoom {
   host_id: string;
   guest_id: string | null;
   game_state: GomokuGameState;
-  status: 'waiting' | 'playing' | 'finished' | 'abandoned';
-  created_at: string;
-  updated_at: string;
-}
-
-interface DatabaseGomokuRoom {
-  id: string;
-  room_code: string;
-  host_id: string;
-  guest_id: string | null;
-  game_state: Json;
   status: 'waiting' | 'playing' | 'finished' | 'abandoned';
   created_at: string;
   updated_at: string;
@@ -67,7 +57,7 @@ export const createGomokuRoom = async (): Promise<{ room: GomokuRoom | null; err
     const roomCode = generateRoomCode();
     const gameState = createInitialGameState();
 
-    console.log('创建房间，用户ID:', user.id, '房间码:', roomCode);
+    console.log('🎮 创建房间 - 用户:', user.id, '房间码:', roomCode);
 
     const { data, error } = await supabase
       .from('gomoku_rooms')
@@ -81,7 +71,7 @@ export const createGomokuRoom = async (): Promise<{ room: GomokuRoom | null; err
       .single();
 
     if (error) {
-      console.error('创建房间失败:', error);
+      console.error('❌ 创建房间失败:', error);
       return { room: null, error: '创建房间失败: ' + error.message };
     }
 
@@ -91,10 +81,10 @@ export const createGomokuRoom = async (): Promise<{ room: GomokuRoom | null; err
       status: data.status as 'waiting' | 'playing' | 'finished' | 'abandoned'
     };
 
-    console.log('房间创建成功:', room);
+    console.log('✅ 房间创建成功:', room.room_code);
     return { room };
   } catch (err) {
-    console.error('创建房间错误:', err);
+    console.error('❌ 创建房间错误:', err);
     return { room: null, error: '创建房间失败' };
   }
 };
@@ -107,19 +97,17 @@ export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRo
       return { room: null, error: '用户未登录' };
     }
 
-    console.log('尝试加入房间，用户ID:', user.id, '房间码:', roomCode);
+    console.log('🚪 加入房间 - 用户:', user.id, '房间码:', roomCode);
 
-    // 先查找房间，放宽查找条件
+    // 查找房间
     const { data: rooms, error: findError } = await supabase
       .from('gomoku_rooms')
       .select()
       .eq('room_code', roomCode.toUpperCase())
       .order('created_at', { ascending: false });
 
-    console.log('查找房间结果:', rooms, '错误:', findError);
-
     if (findError) {
-      console.error('查找房间失败:', findError);
+      console.error('❌ 查找房间失败:', findError);
       return { room: null, error: '查找房间失败: ' + findError.message };
     }
 
@@ -134,8 +122,8 @@ export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRo
       return { room: null, error: '没有找到可用房间' };
     }
 
+    // 如果是房主，直接返回
     if (room.host_id === user.id) {
-      // 房主直接返回房间信息，不需要加入
       const finalRoom: GomokuRoom = {
         ...room,
         game_state: room.game_state as unknown as GomokuGameState,
@@ -144,11 +132,12 @@ export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRo
       return { room: finalRoom };
     }
 
+    // 如果房间已满
     if (room.guest_id && room.guest_id !== user.id) {
       return { room: null, error: '房间已满' };
     }
 
-    // 如果已经是房间成员，直接返回房间信息
+    // 如果已经是成员，直接返回
     if (room.guest_id === user.id) {
       const finalRoom: GomokuRoom = {
         ...room,
@@ -158,14 +147,14 @@ export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRo
       return { room: finalRoom };
     }
 
-    // 更新房间，添加客人并开始游戏
+    // 加入房间并开始游戏
     const existingGameState = room.game_state as unknown as GomokuGameState;
     const newGameState: GomokuGameState = {
       ...existingGameState,
       status: 'playing'
     };
 
-    console.log('更新房间状态，添加客人:', user.id);
+    console.log('➕ 添加客人并开始游戏');
 
     const { data: updatedRooms, error: updateError } = await supabase
       .from('gomoku_rooms')
@@ -177,10 +166,8 @@ export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRo
       .eq('id', room.id)
       .select();
 
-    console.log('更新房间操作结果:', { updatedRooms, updateError });
-
     if (updateError) {
-      console.error('加入房间失败 - 更新错误:', updateError);
+      console.error('❌ 加入房间失败:', updateError);
       return { room: null, error: '加入房间失败: ' + updateError.message };
     }
 
@@ -189,57 +176,24 @@ export const joinGomokuRoom = async (roomCode: string): Promise<{ room: GomokuRo
     }
 
     const updatedRoom = updatedRooms[0];
-
     const finalRoom: GomokuRoom = {
       ...updatedRoom,
       game_state: updatedRoom.game_state as unknown as GomokuGameState,
       status: updatedRoom.status as 'waiting' | 'playing' | 'finished' | 'abandoned'
     };
 
-    console.log('成功加入房间:', finalRoom);
+    console.log('✅ 成功加入房间');
     return { room: finalRoom };
   } catch (err) {
-    console.error('加入房间错误:', err);
+    console.error('❌ 加入房间错误:', err);
     return { room: null, error: '加入房间失败' };
-  }
-};
-
-// 获取房间信息
-export const getGomokuRoom = async (roomId: string): Promise<{ room: GomokuRoom | null; error?: string }> => {
-  try {
-    const { data, error } = await supabase
-      .from('gomoku_rooms')
-      .select()
-      .eq('id', roomId)
-      .limit(1);
-
-    if (error) {
-      console.error('获取房间信息失败:', error);
-      return { room: null, error: '获取房间信息失败: ' + error.message };
-    }
-
-    if (!data || data.length === 0) {
-      return { room: null, error: '房间不存在' };
-    }
-
-    const roomData = data[0];
-    const room: GomokuRoom = {
-      ...roomData,
-      game_state: roomData.game_state as unknown as GomokuGameState,
-      status: roomData.status as 'waiting' | 'playing' | 'finished' | 'abandoned'
-    };
-
-    return { room };
-  } catch (err) {
-    console.error('获取房间错误:', err);
-    return { room: null, error: '获取房间信息失败' };
   }
 };
 
 // 通过房间码获取房间信息
 export const getRoomByCode = async (roomCode: string): Promise<{ room: GomokuRoom | null; error?: string }> => {
   try {
-    console.log('开始查找房间，房间码:', roomCode.toUpperCase());
+    console.log('🔍 查找房间:', roomCode.toUpperCase());
 
     const { data, error } = await supabase
       .from('gomoku_rooms')
@@ -248,42 +202,38 @@ export const getRoomByCode = async (roomCode: string): Promise<{ room: GomokuRoo
       .order('created_at', { ascending: false })
       .limit(1);
 
-    console.log('查找房间结果 - data:', data, 'error:', error);
-
     if (error) {
-      console.error('获取房间信息失败:', error);
+      console.error('❌ 查找房间失败:', error);
       return { room: null, error: '查找房间失败: ' + error.message };
     }
 
     if (!data || data.length === 0) {
-      console.log('没有找到房间，房间码:', roomCode.toUpperCase());
+      console.log('⚠️ 房间不存在:', roomCode.toUpperCase());
       return { room: null, error: '房间不存在' };
     }
 
     const roomData = data[0];
-    console.log('找到房间数据:', roomData);
-    
     const room: GomokuRoom = {
       ...roomData,
       game_state: roomData.game_state as unknown as GomokuGameState,
       status: roomData.status as 'waiting' | 'playing' | 'finished' | 'abandoned'
     };
 
-    console.log('转换后的房间对象:', room);
+    console.log('✅ 找到房间:', room.room_code);
     return { room };
   } catch (err) {
-    console.error('获取房间错误:', err);
+    console.error('❌ 获取房间错误:', err);
     return { room: null, error: '获取房间信息失败' };
   }
 };
 
-// 更新游戏状态
-export const updateGameState = async (
+// 保存游戏结果（仅在游戏结束时调用）
+export const finishGame = async (
   roomId: string, 
   gameState: GomokuGameState
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    console.log('开始更新游戏状态:', { roomId, gameState });
+    console.log('💾 保存游戏结果:', { roomId, winner: gameState.winner });
     
     const { error } = await supabase
       .from('gomoku_rooms')
@@ -294,189 +244,14 @@ export const updateGameState = async (
       .eq('id', roomId);
 
     if (error) {
-      console.error('更新游戏状态失败 - 数据库错误:', error);
-      return { success: false, error: '更新游戏状态失败: ' + error.message };
+      console.error('❌ 保存游戏结果失败:', error);
+      return { success: false, error: '保存游戏结果失败' };
     }
 
-    console.log('游戏状态更新成功');
+    console.log('✅ 游戏结果已保存');
     return { success: true };
   } catch (err) {
-    console.error('更新游戏状态错误:', err);
-    return { success: false, error: '更新游戏状态失败' };
-  }
-};
-
-// 下棋
-export const makeMove = async (
-  roomId: string,
-  row: number,
-  col: number,
-  player: 'host' | 'guest'
-): Promise<{ success: boolean; newGameState?: GomokuGameState; error?: string }> => {
-  try {
-    console.log('开始下棋操作:', { roomId, row, col, player });
-    
-    // 获取当前游戏状态
-    const { room, error: getRoomError } = await getGomokuRoom(roomId);
-    if (getRoomError || !room) {
-      console.error('获取房间信息失败:', getRoomError);
-      return { success: false, error: '获取房间信息失败' };
-    }
-
-    console.log('当前房间状态:', room.game_state);
-    const gameState = room.game_state;
-
-    // 验证游戏状态
-    if (gameState.status !== 'playing') {
-      console.error('游戏状态错误:', gameState.status);
-      return { success: false, error: '游戏未开始或已结束' };
-    }
-
-    // 验证是否是当前玩家的回合
-    if (gameState.currentPlayer !== player) {
-      console.error('轮次验证失败:', { 
-        expected: gameState.currentPlayer, 
-        actual: player,
-        moveHistory: gameState.moveHistory.slice(-2)
-      });
-      return { success: false, error: '不是你的回合' };
-    }
-
-    if (gameState.board[row][col] !== null) {
-      console.error('位置已占用:', { row, col, current: gameState.board[row][col] });
-      return { success: false, error: '该位置已有棋子' };
-    }
-
-    // 更新棋盘
-    const newBoard = gameState.board.map(r => [...r]);
-    newBoard[row][col] = player;
-
-    // 检查是否获胜
-    const isWin = checkWinner(newBoard, row, col, player);
-    const isBoardFull = newBoard.every(row => row.every(cell => cell !== null));
-
-    const newGameState: GomokuGameState = {
-      ...gameState,
-      board: newBoard,
-      currentPlayer: player === 'host' ? 'guest' : 'host',
-      winner: isWin ? player : (isBoardFull ? 'draw' : null),
-      status: isWin || isBoardFull ? 'finished' : 'playing',
-      lastMove: { row, col },
-      moveHistory: [
-        ...gameState.moveHistory,
-        {
-          row,
-          col,
-          player,
-          timestamp: new Date().toISOString()
-        }
-      ]
-    };
-
-    console.log('准备更新游戏状态:', newGameState);
-
-    const { success, error } = await updateGameState(roomId, newGameState);
-    if (!success) {
-      console.error('更新游戏状态失败:', error);
-      return { success: false, error };
-    }
-
-    console.log('下棋操作完成');
-    return { success: true, newGameState };
-  } catch (err) {
-    console.error('下棋错误:', err);
-    return { success: false, error: '下棋失败' };
-  }
-};
-
-// 检查获胜条件
-const checkWinner = (board: (string | null)[][], row: number, col: number, player: string): boolean => {
-  const directions = [
-    [0, 1], [1, 0], [1, 1], [1, -1]
-  ];
-
-  for (const [dx, dy] of directions) {
-    let count = 1;
-    
-    // 向一个方向检查
-    for (let i = 1; i < 5; i++) {
-      const newRow = row + dx * i;
-      const newCol = col + dy * i;
-      if (newRow >= 0 && newRow < 15 && newCol >= 0 && newCol < 15 && 
-          board[newRow][newCol] === player) {
-        count++;
-      } else {
-        break;
-      }
-    }
-    
-    // 向相反方向检查
-    for (let i = 1; i < 5; i++) {
-      const newRow = row - dx * i;
-      const newCol = col - dy * i;
-      if (newRow >= 0 && newRow < 15 && newCol >= 0 && newCol < 15 && 
-          board[newRow][newCol] === player) {
-        count++;
-      } else {
-        break;
-      }
-    }
-    
-    if (count >= 5) {
-      return true;
-    }
-  }
-  
-  return false;
-};
-
-// 离开房间
-export const leaveRoom = async (roomId: string): Promise<{ success: boolean; error?: string }> => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { success: false, error: '用户未登录' };
-    }
-
-    const { room, error: getRoomError } = await getGomokuRoom(roomId);
-    if (getRoomError || !room) {
-      return { success: false, error: '获取房间信息失败' };
-    }
-
-    // 如果是房主离开，删除房间
-    if (room.host_id === user.id) {
-      const { error } = await supabase
-        .from('gomoku_rooms')
-        .delete()
-        .eq('id', roomId);
-
-      if (error) {
-        return { success: false, error: '删除房间失败' };
-      }
-    } else {
-      // 如果是客人离开，设置游戏为放弃状态
-      const newGameState: GomokuGameState = {
-        ...room.game_state,
-        status: 'abandoned'
-      };
-
-      const { error } = await supabase
-        .from('gomoku_rooms')
-        .update({
-          guest_id: null,
-          game_state: newGameState as unknown as Json,
-          status: 'abandoned'
-        })
-        .eq('id', roomId);
-
-      if (error) {
-        return { success: false, error: '离开房间失败' };
-      }
-    }
-
-    return { success: true };
-  } catch (err) {
-    console.error('离开房间错误:', err);
-    return { success: false, error: '离开房间失败' };
+    console.error('❌ 保存游戏结果错误:', err);
+    return { success: false, error: '保存游戏结果失败' };
   }
 };
