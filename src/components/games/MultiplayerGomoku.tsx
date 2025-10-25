@@ -247,7 +247,7 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
       channelRef.current = null;
       setConnectionStatus('disconnected');
     };
-  }, [room, currentUserId, playerRole, gameMode, playSound, toast, checkWinner]);
+  }, [room, currentUserId, playerRole, gameMode]);
 
   // 创建房间
   const handleCreateRoom = async () => {
