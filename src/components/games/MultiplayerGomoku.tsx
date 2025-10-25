@@ -249,6 +249,42 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
     };
   }, [room, currentUserId, playerRole, gameMode]);
 
+  // 监听房间状态变化（等待对手加入）
+  useEffect(() => {
+    if (!room || gameMode !== 'lobby') return;
+
+    const channel = supabase
+      .channel(`gomoku-lobby:${room.room_code}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'gomoku_rooms',
+          filter: `id=eq.${room.id}`
+        },
+        (payload) => {
+          const updatedRoom = payload.new as GomokuRoom;
+          if (updatedRoom.game_state.status === 'playing' && updatedRoom.guest_id) {
+            setRoom(updatedRoom);
+            setGameState(updatedRoom.game_state);
+            setGameMode('game');
+            setIsMyTurn(updatedRoom.game_state.currentPlayer === playerRole);
+            
+            toast({
+              title: "🎮 游戏开始！",
+              description: "对手已加入，开始对战！",
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [room, gameMode, playerRole, toast]);
+
   // 创建房间
   const handleCreateRoom = async () => {
     if (!currentUserId) {
@@ -586,42 +622,6 @@ const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuPro
       </div>
     );
   }
-
-  // 监听房间状态变化（等待对手加入）
-  useEffect(() => {
-    if (!room || gameMode !== 'lobby') return;
-
-    const channel = supabase
-      .channel(`gomoku-lobby:${room.room_code}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'gomoku_rooms',
-          filter: `id=eq.${room.id}`
-        },
-        (payload) => {
-          const updatedRoom = payload.new as GomokuRoom;
-          if (updatedRoom.game_state.status === 'playing' && updatedRoom.guest_id) {
-            setRoom(updatedRoom);
-            setGameState(updatedRoom.game_state);
-            setGameMode('game');
-            setIsMyTurn(updatedRoom.game_state.currentPlayer === playerRole);
-            
-            toast({
-              title: "🎮 游戏开始！",
-              description: "对手已加入，开始对战！",
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [room, gameMode, playerRole, toast]);
 
   // 渲染游戏界面
   if (gameMode === 'game' && room && gameState) {
