@@ -3,6 +3,7 @@ import React from 'react';
 import UserWelcomeWithClock from '@/components/UserWelcomeWithClock';
 import NavigationActions from '@/components/NavigationActions';
 import EmergencyBanner from '@/components/EmergencyBanner';
+import CountdownDisplay from '@/components/CountdownDisplay';
 import FunctionCards from '@/components/FunctionCards';
 import AnnouncementDisplay from '@/components/AnnouncementDisplay';
 import { Button } from '@/components/ui/button';
@@ -34,7 +35,11 @@ const HomePage = ({
         
         <AnnouncementDisplay />
         
-        <EmergencyBanner onEmergencyClick={onEmergencyClick} />
+        {/* 我需要帮助横幅和倒数日 */}
+        <div className="grid grid-cols-2 gap-3">
+          <EmergencyBanner onEmergencyClick={onEmergencyClick} />
+          <CountdownDisplay />
+        </div>
         
         <div className="grid grid-cols-2 gap-3">
           <FunctionCards onNavigate={onNavigate} />

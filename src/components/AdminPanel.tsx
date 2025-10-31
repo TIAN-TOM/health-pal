@@ -12,7 +12,8 @@ import AnnouncementManagement from '@/components/AnnouncementManagement';
 import EnglishContentManagement from '@/components/admin/EnglishContentManagement';
 import AdminPointsManagement from '@/components/admin/AdminPointsManagement';
 import AdminFeedbackManagement from '@/components/admin/AdminFeedbackManagement';
-import { ArrowLeft, Users, BookOpen, Bell, Megaphone, Globe, Coins, MessageSquare } from 'lucide-react';
+import CountdownManagement from '@/components/admin/CountdownManagement';
+import { ArrowLeft, Users, BookOpen, Bell, Megaphone, Globe, Coins, MessageSquare, Calendar } from 'lucide-react';
 
 interface AdminPanelProps {
   onBack: () => void;
@@ -65,7 +66,7 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-7">
+              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
                 <TabsTrigger value="notifications" className="flex items-center gap-2">
                   <Bell className="h-4 w-4" />
                   通知中心
@@ -81,6 +82,10 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
                 <TabsTrigger value="points" className="flex items-center gap-2">
                   <Coins className="h-4 w-4" />
                   积分管理
+                </TabsTrigger>
+                <TabsTrigger value="countdown" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  倒数日
                 </TabsTrigger>
                 <TabsTrigger value="education" className="flex items-center gap-2">
                   <BookOpen className="h-4 w-4" />
@@ -110,6 +115,10 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
 
               <TabsContent value="points" className="mt-6">
                 <AdminPointsManagement />
+              </TabsContent>
+
+              <TabsContent value="countdown" className="mt-6">
+                <CountdownManagement />
               </TabsContent>
 
               <TabsContent value="education" className="mt-6">

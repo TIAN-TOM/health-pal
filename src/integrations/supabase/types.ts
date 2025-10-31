@@ -101,6 +101,39 @@ export type Database = {
         }
         Relationships: []
       }
+      countdown_events: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          target_date: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          target_date: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          target_date?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       daily_checkins: {
         Row: {
           checkin_date: string
@@ -1205,10 +1238,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      delete_expired_voice_records: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      delete_expired_voice_records: { Args: never; Returns: undefined }
       get_effective_user_points: {
         Args: { check_user_id: string }
         Returns: number
@@ -1220,10 +1250,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_user_suspended: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      is_user_suspended: { Args: { user_id: string }; Returns: boolean }
       purchase_store_item: {
         Args: { p_item_id: string; p_item_price: number }
         Returns: Json

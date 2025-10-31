@@ -24,15 +24,13 @@ const EmergencyBanner = ({ onEmergencyClick }: EmergencyBannerProps) => {
   };
 
   return (
-    <div className="bg-orange-500 text-white p-4 shadow-lg">
-      <Button
-        onClick={handleClick}
-        className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xl font-bold py-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200"
-      >
-        <AlertCircle className="mr-3 h-6 w-6" />
-        我需要帮助
-      </Button>
-    </div>
+    <Button
+      onClick={handleClick}
+      className="w-full h-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 flex flex-col items-center justify-center gap-2"
+    >
+      <AlertCircle className="h-8 w-8" />
+      <span className="text-lg">我需要帮助</span>
+    </Button>
   );
 };
 
