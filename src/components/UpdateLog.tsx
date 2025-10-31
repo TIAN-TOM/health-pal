@@ -12,6 +12,34 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.7.8',
+      type: '功能优化',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '📊 首页功能模块统一尺寸',
+          description: '调整所有功能卡片为统一尺寸，保持间距和对齐一致，提升整体视觉效果',
+          type: 'improvement'
+        },
+        {
+          title: '✨ 紧急帮助按钮流光效果',
+          description: '"我需要帮助"模块新增流光闪烁动画，每隔5秒自动触发，过渡自然不刺眼',
+          type: 'feature'
+        },
+        {
+          title: '⏰ 倒数日功能',
+          description: '新增倒数日模块，管理员可自定义设置重要日期倒数，全体用户可查看',
+          type: 'feature'
+        },
+        {
+          title: '🎨 管理员面板布局优化',
+          description: '改进管理员面板标签页排版，统一间距对齐，增强响应式设计和层级清晰度',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.7.7',
       type: '新功能',
       icon: Sparkles,

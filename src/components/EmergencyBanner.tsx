@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -8,6 +8,16 @@ interface EmergencyBannerProps {
 }
 
 const EmergencyBanner = ({ onEmergencyClick }: EmergencyBannerProps) => {
+  const [shouldGlow, setShouldGlow] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShouldGlow(true);
+      setTimeout(() => setShouldGlow(false), 1500);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
   const playClickSound = () => {
     try {
       const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+PyvGEcBz2V2+7FdCQCKHjC8+CVQQ0PUrFrh3AE3eR7dDYOcfFJa+FoYuLSlOeOdNh0FHbeDNrCy3JFbfxWZelgZ93kWnQ3Dn3xS2jhY2fjhEIqHiJ8jW77XEIwH4gH16gAm7qzjLSFbxM8Wdx28t2QOgwFKYPH+OGKPAgZY7rq9J5QEQ1Oq+X0w3IlBSuEzfHejD4EJW/H7d+TOAcZY7nr86hSFAlGmeT0wG8nBjJ/y+/dhjwOGGvF5+efWB4AVuze6aFaGQ9Dn+L5v2QdCz6V3PHFZR0IR+zy2IMSAQ==');
@@ -26,10 +36,15 @@ const EmergencyBanner = ({ onEmergencyClick }: EmergencyBannerProps) => {
   return (
     <Button
       onClick={handleClick}
-      className="w-full h-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 flex flex-col items-center justify-center gap-2"
+      className={`w-full h-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 flex flex-col items-center justify-center gap-2 min-h-[140px] relative overflow-hidden ${
+        shouldGlow ? 'animate-pulse' : ''
+      }`}
     >
-      <AlertCircle className="h-8 w-8" />
-      <span className="text-lg">我需要帮助</span>
+      {shouldGlow && (
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+      )}
+      <AlertCircle className="h-8 w-8 relative z-10" />
+      <span className="text-lg relative z-10">我需要帮助</span>
     </Button>
   );
 };

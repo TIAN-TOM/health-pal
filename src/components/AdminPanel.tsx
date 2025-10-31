@@ -66,38 +66,46 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
-                <TabsTrigger value="notifications" className="flex items-center gap-2">
+              <TabsList className="grid w-full gap-2 grid-cols-2 md:grid-cols-4 lg:grid-cols-8 h-auto p-2">
+                <TabsTrigger value="notifications" className="flex items-center gap-1.5 py-2.5 text-sm">
                   <Bell className="h-4 w-4" />
-                  通知中心
+                  <span className="hidden sm:inline">通知中心</span>
+                  <span className="sm:hidden">通知</span>
                 </TabsTrigger>
-                <TabsTrigger value="users" className="flex items-center gap-2">
+                <TabsTrigger value="users" className="flex items-center gap-1.5 py-2.5 text-sm">
                   <Users className="h-4 w-4" />
-                  用户管理
+                  <span className="hidden sm:inline">用户管理</span>
+                  <span className="sm:hidden">用户</span>
                 </TabsTrigger>
-                <TabsTrigger value="feedback" className="flex items-center gap-2">
+                <TabsTrigger value="feedback" className="flex items-center gap-1.5 py-2.5 text-sm">
                   <MessageSquare className="h-4 w-4" />
-                  反馈管理
+                  <span className="hidden sm:inline">反馈管理</span>
+                  <span className="sm:hidden">反馈</span>
                 </TabsTrigger>
-                <TabsTrigger value="points" className="flex items-center gap-2">
+                <TabsTrigger value="points" className="flex items-center gap-1.5 py-2.5 text-sm">
                   <Coins className="h-4 w-4" />
-                  积分管理
+                  <span className="hidden sm:inline">积分管理</span>
+                  <span className="sm:hidden">积分</span>
                 </TabsTrigger>
-                <TabsTrigger value="countdown" className="flex items-center gap-2">
+                <TabsTrigger value="countdown" className="flex items-center gap-1.5 py-2.5 text-sm">
                   <Calendar className="h-4 w-4" />
-                  倒数日
+                  <span className="hidden sm:inline">倒数日</span>
+                  <span className="sm:hidden">倒数</span>
                 </TabsTrigger>
-                <TabsTrigger value="education" className="flex items-center gap-2">
+                <TabsTrigger value="education" className="flex items-center gap-1.5 py-2.5 text-sm">
                   <BookOpen className="h-4 w-4" />
-                  教育资源
+                  <span className="hidden sm:inline">教育资源</span>
+                  <span className="sm:hidden">教育</span>
                 </TabsTrigger>
-                <TabsTrigger value="english" className="flex items-center gap-2">
+                <TabsTrigger value="english" className="flex items-center gap-1.5 py-2.5 text-sm">
                   <Globe className="h-4 w-4" />
-                  英语内容
+                  <span className="hidden sm:inline">英语内容</span>
+                  <span className="sm:hidden">英语</span>
                 </TabsTrigger>
-                <TabsTrigger value="announcements" className="flex items-center gap-2">
+                <TabsTrigger value="announcements" className="flex items-center gap-1.5 py-2.5 text-sm">
                   <Megaphone className="h-4 w-4" />
-                  公告管理
+                  <span className="hidden sm:inline">公告管理</span>
+                  <span className="sm:hidden">公告</span>
                 </TabsTrigger>
               </TabsList>
 

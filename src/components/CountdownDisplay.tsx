@@ -50,7 +50,7 @@ const CountdownDisplay = () => {
 
   if (loading) {
     return (
-      <Card className="h-full bg-gradient-to-br from-purple-50 to-pink-50">
+      <Card className="h-full bg-gradient-to-br from-purple-50 to-pink-50 min-h-[140px]">
         <CardContent className="p-4 flex flex-col items-center justify-center h-full">
           <Clock className="h-8 w-8 text-purple-400 animate-pulse" />
         </CardContent>
@@ -60,7 +60,7 @@ const CountdownDisplay = () => {
 
   if (!countdown) {
     return (
-      <Card className="h-full bg-gradient-to-br from-purple-50 to-pink-50">
+      <Card className="h-full bg-gradient-to-br from-purple-50 to-pink-50 min-h-[140px]">
         <CardContent className="p-4 flex flex-col items-center justify-center h-full">
           <Calendar className="h-8 w-8 text-purple-400 mb-2" />
           <p className="text-sm text-purple-600 text-center">暂无倒数日</p>
@@ -73,7 +73,7 @@ const CountdownDisplay = () => {
   const isPast = daysLeft < 0;
 
   return (
-    <Card className="h-full bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+    <Card className="h-full bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200 min-h-[140px]">
       <CardContent className="p-4 flex flex-col items-center justify-center h-full">
         <Calendar className="h-6 w-6 text-purple-600 mb-2" />
         <h3 className="text-sm font-semibold text-purple-800 text-center mb-1 line-clamp-1">
