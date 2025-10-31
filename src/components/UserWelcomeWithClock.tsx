@@ -4,6 +4,7 @@ import { Settings, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { getBeijingTime, getCurrentBeijingTime } from '@/utils/beijingTime';
+import { getFestivalForDate, getFestivalGreeting } from '@/data/festivals';
 
 interface UserWelcomeWithClockProps {
   userDisplayName: string;
@@ -29,6 +30,17 @@ const UserWelcomeWithClock = ({ userDisplayName, onSettingsClick }: UserWelcomeW
   }, []);
 
   const getGreeting = (date: Date) => {
+    // 首先检查是否有节日
+    const festivals = getFestivalForDate(date);
+    if (festivals.length > 0) {
+      // 优先返回第一个节日的问候语
+      const festivalGreeting = getFestivalGreeting(festivals[0]);
+      if (festivalGreeting) {
+        return festivalGreeting;
+      }
+    }
+    
+    // 如果没有节日，返回常规时间问候
     const hour = date.getHours();
     const greetings = {
       dawn: ["夜深了，注意休息哦", "深夜时光，保重身体", "夜猫子，早点睡觉吧"],
