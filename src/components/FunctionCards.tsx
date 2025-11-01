@@ -83,11 +83,11 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
           className="hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:scale-105 h-full" 
           onClick={() => onNavigate(func.id, 'home')}
         >
-          <CardContent className="p-4 text-center flex flex-col items-center justify-center h-full min-h-[140px]">
-            <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${func.color} flex items-center justify-center mx-auto mb-3`}>
-              <func.icon className="h-7 w-7 text-white" />
+          <CardContent className="p-3 text-center flex flex-col items-center justify-center h-full min-h-[110px]">
+            <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${func.color} flex items-center justify-center mx-auto mb-2`}>
+              <func.icon className="h-6 w-6 text-white" />
             </div>
-            <h3 className={`font-medium ${func.textColor} mb-1 text-base`}>{func.title}</h3>
+            <h3 className={`font-medium ${func.textColor} mb-1 text-sm`}>{func.title}</h3>
             <p className="text-xs text-gray-600">{func.description}</p>
           </CardContent>
         </Card>

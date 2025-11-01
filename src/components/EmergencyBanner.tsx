@@ -8,12 +8,12 @@ interface EmergencyBannerProps {
 }
 
 const EmergencyBanner = ({ onEmergencyClick }: EmergencyBannerProps) => {
-  const [shouldGlow, setShouldGlow] = useState(false);
+  const [shouldShimmer, setShouldShimmer] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setShouldGlow(true);
-      setTimeout(() => setShouldGlow(false), 1500);
+      setShouldShimmer(true);
+      setTimeout(() => setShouldShimmer(false), 2000);
     }, 5000);
 
     return () => clearInterval(interval);
@@ -36,15 +36,13 @@ const EmergencyBanner = ({ onEmergencyClick }: EmergencyBannerProps) => {
   return (
     <Button
       onClick={handleClick}
-      className={`w-full h-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 flex flex-col items-center justify-center gap-2 min-h-[140px] relative overflow-hidden ${
-        shouldGlow ? 'animate-pulse' : ''
-      }`}
+      className="w-full h-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 flex flex-col items-center justify-center gap-2 min-h-[110px] relative overflow-hidden"
     >
-      {shouldGlow && (
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+      {shouldShimmer && (
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer pointer-events-none" />
       )}
-      <AlertCircle className="h-8 w-8 relative z-10" />
-      <span className="text-lg relative z-10">我需要帮助</span>
+      <AlertCircle className="h-7 w-7 relative z-10" />
+      <span className="text-base relative z-10">我需要帮助</span>
     </Button>
   );
 };

@@ -18,14 +18,14 @@ const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
       color: 'bg-purple-50 text-purple-600 border-purple-200',
       items: [
         {
-          title: '📊 首页功能模块统一尺寸',
-          description: '调整所有功能卡片为统一尺寸，保持间距和对齐一致，提升整体视觉效果',
+          title: '📏 首页功能模块尺寸调整',
+          description: '将所有功能卡片调整为更紧凑的统一尺寸（110px高度），以每日签到模块尺寸为标准，保持间距和对齐一致',
           type: 'improvement'
         },
         {
-          title: '✨ 紧急帮助按钮流光效果',
-          description: '"我需要帮助"模块新增流光闪烁动画，每隔5秒自动触发，过渡自然不刺眼',
-          type: 'feature'
+          title: '✨ 紧急帮助按钮流光效果优化',
+          description: '"我需要帮助"模块升级为浮光掠过的渐变动态光影效果，每隔5秒自然流动，提升视觉体验',
+          type: 'improvement'
         },
         {
           title: '⏰ 倒数日功能',
