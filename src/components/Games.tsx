@@ -13,6 +13,12 @@ import Game2048 from '@/components/games/Game2048';
 import BubblePopGame from '@/components/games/BubblePopGame';
 import MultiplayerGomoku from '@/components/games/MultiplayerGomoku';
 import TetrisGame from '@/components/games/TetrisGame';
+import { PopStarGame } from '@/components/games/PopStarGame';
+import { LinkLinkGame } from '@/components/games/LinkLinkGame';
+import { CoinCatchGame } from '@/components/games/CoinCatchGame';
+import { FruitNinjaGame } from '@/components/games/FruitNinjaGame';
+import { BejeweledGame } from '@/components/games/BejeweledGame';
+import { PianoTilesGame } from '@/components/games/PianoTilesGame';
 
 interface GamesProps {
   onBack: () => void;
@@ -88,6 +94,48 @@ const Games = ({ onBack }: GamesProps) => {
       description: '经典俄罗斯方块游戏，消除完整行获得高分',
       icon: '🧩',
       component: TetrisGame
+    },
+    {
+      id: 'popstar',
+      name: 'PopStar消消看',
+      description: '点击相同颜色的连续方块消除，连击越多分数越高',
+      icon: '✨',
+      component: PopStarGame
+    },
+    {
+      id: 'linklink',
+      name: '连连看',
+      description: '连接相同图标消除，路径最多转两个弯',
+      icon: '🔗',
+      component: LinkLinkGame
+    },
+    {
+      id: 'coincatch',
+      name: '接金币',
+      description: '移动接住掉落的金币，避开炸弹，挑战高分',
+      icon: '💰',
+      component: CoinCatchGame
+    },
+    {
+      id: 'fruitninja',
+      name: '水果忍者',
+      description: '划过水果切开它们，避开炸弹，不要让水果掉落',
+      icon: '🍉',
+      component: FruitNinjaGame
+    },
+    {
+      id: 'bejeweled',
+      name: '宝石消除',
+      description: '交换相邻宝石形成三连消除，连锁得分翻倍',
+      icon: '💎',
+      component: BejeweledGame
+    },
+    {
+      id: 'pianotiles',
+      name: '钢琴块',
+      description: '点击黑色方块，速度越来越快，挑战你的反应力',
+      icon: '🎹',
+      component: PianoTilesGame
     }
   ];
 
