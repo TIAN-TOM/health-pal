@@ -105,15 +105,17 @@ const UserWelcomeWithClock = ({ userDisplayName, onSettingsClick, onEmergencyCli
     <Card className="mb-3">
       <CardContent className="p-3">
         <div className="flex items-center justify-between mb-2">
-          <div className="flex-1 flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-              <span className="mr-2">{getTimeEmoji(currentTime)}</span>
-              {getGreeting(currentTime)}
-            </h2>
+          <div className="flex items-center gap-2">
+            <div className="text-2xl">{getTimeEmoji(currentTime)}</div>
+            <div>
+              <div className="text-base font-semibold leading-tight">
+                {getGreeting(currentTime)}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {userDisplayName} ✨
+              </div>
+            </div>
           </div>
-          <p className="text-sm text-gray-600">
-            {userDisplayName} <span className="text-sm text-muted-foreground">✨</span>
-          </p>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"

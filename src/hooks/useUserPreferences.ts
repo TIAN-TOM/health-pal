@@ -16,6 +16,8 @@ interface UserPreferences {
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
   last_birthday_wish_year?: number; // Year when user last received birthday wish
+  preferred_weather_city?: string; // 用户偏好的天气城市
+  preferred_weather_city2?: string; // 第二个对比城市
 }
 
 export const useUserPreferences = () => {

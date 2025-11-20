@@ -12,6 +12,16 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: "2.8.0",
+      date: "2025-11-20",
+      changes: [
+        "天气模块添加未来7天天气预报功能，展示温度趋势和降雨概率",
+        "支持保存用户选择的城市偏好，下次自动显示上次选择的城市",
+        "支持双城市天气对比功能，可并排显示两个城市的天气",
+        "优化问候语排版，缩小字体确保单行显示，提升视觉效果"
+      ]
+    },
+    {
       version: '2.7.9',
       type: '功能优化',
       icon: Sparkles,
