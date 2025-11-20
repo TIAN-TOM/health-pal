@@ -12,49 +12,6 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
-      version: '2.7.9',
-      type: '新增游戏',
-      icon: Sparkles,
-      color: 'bg-purple-50 text-purple-600 border-purple-200',
-      items: [
-        {
-          title: '🎮 新增6个解压小游戏',
-          description: '添加了PopStar消消看、连连看、接金币、水果忍者、宝石消除、钢琴块等6款全新小游戏',
-          type: 'feature'
-        },
-        {
-          title: '✨ PopStar消消看',
-          description: '点击相同颜色的连续方块消除，至少2个方块可消除，连击越多分数越高，挑战清空整个棋盘',
-          type: 'feature'
-        },
-        {
-          title: '🔗 连连看',
-          description: '连接相同图标消除配对，路径最多可以转两个弯，限时模式挑战你的观察力',
-          type: 'feature'
-        },
-        {
-          title: '💰 接金币',
-          description: '移动鼠标或触摸屏幕接住掉落的金币，金币+10分，银币+5分，避开炸弹挑战高分',
-          type: 'feature'
-        },
-        {
-          title: '🍉 水果忍者',
-          description: '划过水果切开它们，避开炸弹，不要让水果掉落，考验你的手速和反应力',
-          type: 'feature'
-        },
-        {
-          title: '💎 宝石消除',
-          description: '交换相邻宝石形成三连消除，连锁消除得分翻倍，限时模式增加挑战性',
-          type: 'feature'
-        },
-        {
-          title: '🎹 钢琴块',
-          description: '点击下落的黑色方块，不要让它们掉落，速度越来越快，挑战你的极限反应力',
-          type: 'feature'
-        }
-      ]
-    },
-    {
       version: '2.7.8',
       type: '功能优化',
       icon: Sparkles,
