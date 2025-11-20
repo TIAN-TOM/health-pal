@@ -9,9 +9,10 @@ import { getFestivalForDate, getFestivalGreeting } from '@/data/festivals';
 interface UserWelcomeWithClockProps {
   userDisplayName: string;
   onSettingsClick: () => void;
+  onEmergencyClick: () => void;
 }
 
-const UserWelcomeWithClock = ({ userDisplayName, onSettingsClick }: UserWelcomeWithClockProps) => {
+const UserWelcomeWithClock = ({ userDisplayName, onSettingsClick, onEmergencyClick }: UserWelcomeWithClockProps) => {
   const [currentTime, setCurrentTime] = useState(getBeijingTime());
 
   useEffect(() => {
@@ -104,24 +105,35 @@ const UserWelcomeWithClock = ({ userDisplayName, onSettingsClick }: UserWelcomeW
     <Card className="mb-3">
       <CardContent className="p-3">
         <div className="flex items-center justify-between mb-2">
-          <div className="flex-1">
+          <div className="flex-1 flex items-center gap-2">
             <h2 className="text-lg font-semibold text-gray-800 flex items-center">
               <span className="mr-2">{getTimeEmoji(currentTime)}</span>
               {getGreeting(currentTime)}
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              {userDisplayName} ✨
-            </p>
           </div>
-          
-          <Button
-            onClick={onSettingsClick}
-            variant="ghost"
-            size="sm"
-            className="text-gray-600 hover:text-gray-800"
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
+          <p className="text-sm text-gray-600">
+            {userDisplayName} <span className="text-sm text-muted-foreground">✨</span>
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onEmergencyClick}
+              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 h-8 text-xs font-medium"
+              aria-label="我需要帮助"
+            >
+              🆘 帮助
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onSettingsClick}
+              className="hover:bg-primary/10"
+              aria-label="设置"
+            >
+              <Settings className="h-5 w-5 text-primary" />
+            </Button>
+          </div>
         </div>
 
         <div className="bg-blue-50 rounded-lg p-2 border border-blue-100">
