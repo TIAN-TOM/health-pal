@@ -2,8 +2,8 @@
 import React from 'react';
 import UserWelcomeWithClock from '@/components/UserWelcomeWithClock';
 import NavigationActions from '@/components/NavigationActions';
-import EmergencyBanner from '@/components/EmergencyBanner';
 import CountdownDisplay from '@/components/CountdownDisplay';
+import WeatherWidget from '@/components/WeatherWidget';
 import FunctionCards from '@/components/FunctionCards';
 import AnnouncementDisplay from '@/components/AnnouncementDisplay';
 import { Button } from '@/components/ui/button';
@@ -31,13 +31,17 @@ const HomePage = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50" ref={homeRef}>
       <div className="container mx-auto px-4 py-3 max-w-md space-y-3">
-        <UserWelcomeWithClock userDisplayName={userDisplayName} onSettingsClick={onSettingsClick} />
+        <UserWelcomeWithClock 
+          userDisplayName={userDisplayName} 
+          onSettingsClick={onSettingsClick}
+          onEmergencyClick={onEmergencyClick}
+        />
         
         <AnnouncementDisplay />
         
-        {/* 我需要帮助横幅和倒数日 */}
+        {/* 天气和倒数日 */}
         <div className="grid grid-cols-2 gap-3">
-          <EmergencyBanner onEmergencyClick={onEmergencyClick} />
+          <WeatherWidget />
           <CountdownDisplay />
         </div>
         

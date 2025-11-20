@@ -12,6 +12,29 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.7.9',
+      type: '功能优化',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🌤️ 实时天气模块',
+          description: '新增苹果风格的天气小组件，实时显示北京天气信息，包括温度、湿度、风速等数据，每30分钟自动更新',
+          type: 'feature'
+        },
+        {
+          title: '🆘 紧急帮助按钮优化',
+          description: '将"我需要帮助"按钮移至顶部用户信息栏右侧，更加便捷且节省首页空间',
+          type: 'improvement'
+        },
+        {
+          title: '📱 首页布局优化',
+          description: '调整首页整体布局，天气模块与倒数日并排显示，提升整体视觉一致性',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.7.8',
       type: '功能优化',
       icon: Sparkles,
