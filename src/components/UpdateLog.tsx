@@ -18,8 +18,8 @@ const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
       color: 'bg-purple-50 text-purple-600 border-purple-200',
       items: [
         {
-          title: '🌤️ 实时天气模块',
-          description: '新增苹果风格的天气小组件，实时显示北京天气信息，包括温度、湿度、风速等数据，每30分钟自动更新',
+          title: '🌤️ 实时天气模块 + 城市切换',
+          description: '新增苹果风格的天气小组件，支持切换查看10个城市的天气（悉尼、北京、上海、广州、深圳、成都、杭州、纽约、伦敦、东京），默认显示悉尼天气，数据每30分钟自动更新',
           type: 'feature'
         },
         {

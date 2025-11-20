@@ -9,7 +9,28 @@ export interface WeatherData {
   windSpeed: number;
   description: string;
   icon: string;
+  cityName: string;
 }
+
+export interface City {
+  name: string;
+  latitude: number;
+  longitude: number;
+}
+
+// 支持的城市列表
+export const CITIES: City[] = [
+  { name: '悉尼', latitude: -33.8688, longitude: 151.2093 },
+  { name: '北京', latitude: 39.9042, longitude: 116.4074 },
+  { name: '上海', latitude: 31.2304, longitude: 121.4737 },
+  { name: '广州', latitude: 23.1291, longitude: 113.2644 },
+  { name: '深圳', latitude: 22.5431, longitude: 114.0579 },
+  { name: '成都', latitude: 30.5728, longitude: 104.0668 },
+  { name: '杭州', latitude: 30.2741, longitude: 120.1551 },
+  { name: '纽约', latitude: 40.7128, longitude: -74.0060 },
+  { name: '伦敦', latitude: 51.5074, longitude: -0.1278 },
+  { name: '东京', latitude: 35.6762, longitude: 139.6503 },
+];
 
 // 天气代码映射到中文描述和图标
 const weatherCodeMap: Record<number, { description: string; icon: string }> = {
@@ -38,16 +59,12 @@ const weatherCodeMap: Record<number, { description: string; icon: string }> = {
 };
 
 /**
- * 获取天气数据（北京）
+ * 获取指定城市的天气数据
  */
-export const getWeatherData = async (): Promise<WeatherData> => {
+export const getWeatherData = async (city: City): Promise<WeatherData> => {
   try {
-    // 北京坐标
-    const latitude = 39.9042;
-    const longitude = 116.4074;
-    
     const response = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=Asia/Shanghai`
+      `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`
     );
     
     if (!response.ok) {
@@ -66,7 +83,8 @@ export const getWeatherData = async (): Promise<WeatherData> => {
       humidity: current.relative_humidity_2m,
       windSpeed: current.wind_speed_10m,
       description: weatherInfo.description,
-      icon: weatherInfo.icon
+      icon: weatherInfo.icon,
+      cityName: city.name
     };
   } catch (error) {
     console.error('Error fetching weather:', error);
