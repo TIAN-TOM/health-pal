@@ -1,16 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { Cloud, Droplets, Wind } from 'lucide-react';
-import { getWeatherData, WeatherData } from '@/services/weatherService';
+import { Cloud, Droplets, Wind, MapPin } from 'lucide-react';
+import { getWeatherData, WeatherData, CITIES, City } from '@/services/weatherService';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const WeatherWidget = () => {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedCity, setSelectedCity] = useState<City>(CITIES[0]); // 默认悉尼
+  const [showCitySelect, setShowCitySelect] = useState(false);
 
   useEffect(() => {
     const fetchWeather = async () => {
       try {
-        const data = await getWeatherData();
+        const data = await getWeatherData(selectedCity);
         setWeather(data);
       } catch (error) {
         console.error('获取天气失败:', error);
@@ -25,7 +34,15 @@ const WeatherWidget = () => {
     const interval = setInterval(fetchWeather, 30 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedCity]);
+
+  const handleCityChange = (cityName: string) => {
+    const city = CITIES.find(c => c.name === cityName);
+    if (city) {
+      setSelectedCity(city);
+      setLoading(true);
+    }
+  };
 
   if (loading) {
     return (
@@ -48,12 +65,33 @@ const WeatherWidget = () => {
   }
 
   return (
-    <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg min-h-[110px] hover:shadow-xl transition-shadow">
+    <Card 
+      className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg min-h-[110px] hover:shadow-xl transition-shadow cursor-pointer relative overflow-hidden"
+      onClick={() => setShowCitySelect(!showCitySelect)}
+    >
       <div className="p-4 h-full flex flex-col justify-between">
-        {/* 顶部：地点和天气图标 */}
+        {/* 顶部：地点选择器和天气图标 */}
         <div className="flex items-start justify-between">
-          <div>
-            <div className="text-xs opacity-90 mb-1">北京</div>
+          <div className="flex-1">
+            {showCitySelect ? (
+              <Select value={selectedCity.name} onValueChange={handleCityChange}>
+                <SelectTrigger className="h-6 w-20 text-xs bg-white/20 border-white/30 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CITIES.map((city) => (
+                    <SelectItem key={city.name} value={city.name}>
+                      {city.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="flex items-center gap-1 text-xs opacity-90 mb-1">
+                <MapPin className="h-3 w-3" />
+                <span>{weather.cityName}</span>
+              </div>
+            )}
             <div className="text-sm opacity-90">{weather.description}</div>
           </div>
           <div className="text-3xl">{weather.icon}</div>
