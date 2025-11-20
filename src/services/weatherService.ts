@@ -10,6 +10,17 @@ export interface WeatherData {
   description: string;
   icon: string;
   cityName: string;
+  forecast?: DailyForecast[];
+}
+
+export interface DailyForecast {
+  date: string;
+  tempMax: number;
+  tempMin: number;
+  weatherCode: number;
+  precipitationProbability: number;
+  icon: string;
+  description: string;
 }
 
 export interface City {
@@ -59,12 +70,16 @@ const weatherCodeMap: Record<number, { description: string; icon: string }> = {
 };
 
 /**
- * 获取指定城市的天气数据
+ * 获取指定城市的天气数据（包含7天预报）
  */
-export const getWeatherData = async (city: City): Promise<WeatherData> => {
+export const getWeatherData = async (city: City, includeForecast = true): Promise<WeatherData> => {
   try {
+    const forecastParams = includeForecast 
+      ? '&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max'
+      : '';
+    
     const response = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`
+      `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m${forecastParams}&timezone=auto`
     );
     
     if (!response.ok) {
@@ -77,6 +92,24 @@ export const getWeatherData = async (city: City): Promise<WeatherData> => {
     const weatherCode = current.weather_code;
     const weatherInfo = weatherCodeMap[weatherCode] || { description: '未知', icon: '🌡️' };
     
+    // 处理未来7天预报
+    let forecast: DailyForecast[] | undefined;
+    if (includeForecast && data.daily) {
+      forecast = data.daily.time.slice(1, 8).map((date: string, index: number) => {
+        const code = data.daily.weather_code[index + 1];
+        const info = weatherCodeMap[code] || { description: '未知', icon: '🌡️' };
+        return {
+          date,
+          tempMax: Math.round(data.daily.temperature_2m_max[index + 1]),
+          tempMin: Math.round(data.daily.temperature_2m_min[index + 1]),
+          weatherCode: code,
+          precipitationProbability: data.daily.precipitation_probability_max[index + 1] || 0,
+          icon: info.icon,
+          description: info.description
+        };
+      });
+    }
+    
     return {
       temperature: Math.round(current.temperature_2m),
       weatherCode: weatherCode,
@@ -84,7 +117,8 @@ export const getWeatherData = async (city: City): Promise<WeatherData> => {
       windSpeed: current.wind_speed_10m,
       description: weatherInfo.description,
       icon: weatherInfo.icon,
-      cityName: city.name
+      cityName: city.name,
+      forecast
     };
   } catch (error) {
     console.error('Error fetching weather:', error);
