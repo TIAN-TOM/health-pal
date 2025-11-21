@@ -1081,6 +1081,8 @@ export type Database = {
           last_birthday_wish_year: number | null
           medical_history: string[] | null
           preferred_language: string | null
+          preferred_weather_city: string | null
+          preferred_weather_city2: string | null
           timezone: string | null
           updated_at: string
           user_id: string
@@ -1100,6 +1102,8 @@ export type Database = {
           last_birthday_wish_year?: number | null
           medical_history?: string[] | null
           preferred_language?: string | null
+          preferred_weather_city?: string | null
+          preferred_weather_city2?: string | null
           timezone?: string | null
           updated_at?: string
           user_id: string
@@ -1119,6 +1123,8 @@ export type Database = {
           last_birthday_wish_year?: number | null
           medical_history?: string[] | null
           preferred_language?: string | null
+          preferred_weather_city?: string | null
+          preferred_weather_city2?: string | null
           timezone?: string | null
           updated_at?: string
           user_id?: string

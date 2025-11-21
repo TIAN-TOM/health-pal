@@ -12,6 +12,16 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: "2.8.2",
+      date: "2025-11-21",
+      changes: [
+        "修复天气城市选择保存错误，添加数据库字段支持",
+        "倒数日模块全面升级：实时秒级倒计时、进度条显示、动态渐变配色",
+        "倒数日新增三种状态视觉：即将到来、就是今天、已结束",
+        "优化倒数日布局，增加时分秒实时显示和完成度进度条"
+      ]
+    },
+    {
       version: "2.8.1",
       date: "2025-11-21",
       changes: [
