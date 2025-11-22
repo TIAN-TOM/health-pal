@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { Cloud, Droplets, Wind, MapPin } from 'lucide-react';
+import { Droplets, Wind } from 'lucide-react';
 import { getWeatherData, WeatherData, CITIES, City } from '@/services/weatherService';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
-import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import {
   Select,
   SelectContent,
@@ -13,11 +13,11 @@ import {
 } from '@/components/ui/select';
 
 const WeatherWidget = () => {
+  const navigate = useNavigate();
   const { preferences, savePreferences } = useUserPreferences();
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedCity, setSelectedCity] = useState<City>(CITIES[0]); // 默认悉尼
-  const [showForecast, setShowForecast] = useState(false);
+  const [selectedCity, setSelectedCity] = useState<City>(CITIES[0]);
 
   // 从偏好加载城市
   useEffect(() => {
@@ -33,7 +33,7 @@ const WeatherWidget = () => {
     const fetchWeather = async () => {
       setLoading(true);
       try {
-        const data = await getWeatherData(selectedCity, true);
+        const data = await getWeatherData(selectedCity, false);
         setWeather(data);
       } catch (error) {
         console.error('获取天气失败:', error);
@@ -44,7 +44,6 @@ const WeatherWidget = () => {
 
     fetchWeather();
     
-    // 每30分钟更新一次天气
     const interval = setInterval(fetchWeather, 30 * 60 * 1000);
     
     return () => clearInterval(interval);
@@ -84,13 +83,19 @@ const WeatherWidget = () => {
   }
 
   return (
-    <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden h-[140px]">
+    <Card 
+      className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden h-[140px] cursor-pointer"
+      onClick={() => navigate('/weather')}
+    >
       <div className="p-3 h-full flex flex-col">
         {/* 顶部：地点选择器和天气图标 */}
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1">
             <Select value={selectedCity.name} onValueChange={handleCityChange}>
-              <SelectTrigger className="h-6 w-24 text-xs bg-white/20 border-white/30 text-white">
+              <SelectTrigger 
+                className="h-6 w-24 text-xs bg-white/20 border-white/30 text-white"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -124,35 +129,10 @@ const WeatherWidget = () => {
           </div>
         </div>
 
-        {/* 7天预报按钮 */}
+        {/* 点击提示 */}
         <div className="mt-auto">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 text-xs text-white hover:bg-white/20 w-full"
-            onClick={() => setShowForecast(!showForecast)}
-          >
-            {showForecast ? '隐藏' : '查看'}7天预报
-          </Button>
+          <p className="text-xs text-center text-white/60">点击查看详情</p>
         </div>
-
-        {/* 7天预报 */}
-        {showForecast && weather.forecast && (
-          <div className="border-t border-white/20 pt-2 mt-2 space-y-1.5">
-            {weather.forecast.slice(0, 7).map((day) => (
-              <div key={day.date} className="flex items-center justify-between text-xs">
-                <span className="opacity-90 w-14 text-xs">
-                  {new Date(day.date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
-                </span>
-                <div className="flex items-center gap-2 flex-1 justify-end">
-                  <span className="text-sm">{day.icon}</span>
-                  <span className="w-16 text-right text-xs">{day.tempMin}°-{day.tempMax}°</span>
-                  <span className="opacity-80 w-10 text-right text-xs">{day.precipitationProbability}%💧</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </Card>
   );

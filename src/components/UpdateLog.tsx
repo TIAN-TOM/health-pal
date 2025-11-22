@@ -12,6 +12,17 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
 const updates = [
   {
+    version: '2.8.5',
+    date: '2025-11-22',
+    type: 'feature' as const,
+    changes: [
+      '新增：支持创建多个倒数日并轮播切换显示',
+      '新增：天气详情页面，点击天气模块可查看7天预报详情',
+      '优化：移除天气模块内嵌预报按钮，改为跳转到详情页',
+      '优化：倒数日切换体验，支持左右箭头切换多个事件',
+    ],
+  },
+  {
     version: '2.8.4',
     date: '2025-11-22',
     type: 'optimization' as const,
