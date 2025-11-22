@@ -84,8 +84,8 @@ const WeatherWidget = () => {
   }
 
   return (
-    <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden">
-      <div className="p-3">
+    <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden h-[140px]">
+      <div className="p-3 h-full flex flex-col">
         {/* 顶部：地点选择器和天气图标 */}
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1">
@@ -107,13 +107,13 @@ const WeatherWidget = () => {
         </div>
         
         {/* 温度显示 */}
-        <div className="flex items-baseline mb-2">
+        <div className="flex items-baseline mb-1">
           <span className="text-3xl font-light">{weather.temperature}</span>
           <span className="text-xl font-light ml-1">°</span>
         </div>
         
         {/* 详细信息 */}
-        <div className="flex items-center justify-between text-xs opacity-90 mb-2">
+        <div className="flex items-center justify-between text-xs opacity-90">
           <div className="flex items-center gap-1.5">
             <Droplets className="h-3.5 w-3.5" />
             <span>{weather.humidity}%</span>
@@ -125,14 +125,16 @@ const WeatherWidget = () => {
         </div>
 
         {/* 7天预报按钮 */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 text-xs text-white hover:bg-white/20 w-full"
-          onClick={() => setShowForecast(!showForecast)}
-        >
-          {showForecast ? '隐藏' : '查看'}7天预报
-        </Button>
+        <div className="mt-auto">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 text-xs text-white hover:bg-white/20 w-full"
+            onClick={() => setShowForecast(!showForecast)}
+          >
+            {showForecast ? '隐藏' : '查看'}7天预报
+          </Button>
+        </div>
 
         {/* 7天预报 */}
         {showForecast && weather.forecast && (

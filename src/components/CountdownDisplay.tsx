@@ -124,7 +124,7 @@ const CountdownDisplay = () => {
   };
 
   return (
-    <Card className={`h-full bg-gradient-to-br ${getGradientColors()} border-purple-200 h-[140px] overflow-hidden relative shadow-lg hover:shadow-xl transition-all duration-300`}>
+    <Card className={`bg-gradient-to-br ${getGradientColors()} border-purple-200 h-[140px] overflow-hidden relative shadow-lg hover:shadow-xl transition-all duration-300`}>
       <CardContent className="p-3 flex flex-col h-full relative z-10">
         {/* 标题区域 */}
         <div className="flex items-center justify-between mb-2">
@@ -169,21 +169,12 @@ const CountdownDisplay = () => {
                 <p className={`text-xs ${getTextColor()} mt-0.5`}>天</p>
               </div>
               
-              {/* 时分 */}
-              <div className="flex items-center justify-center gap-2 text-xs">
-                <div className="text-center">
-                  <p className={`text-sm font-semibold ${getTextColor()}`}>
-                    {String(timeLeft.hours).padStart(2, '0')}
-                  </p>
-                  <p className="text-xs text-gray-500">时</p>
-                </div>
-                <span className={`text-sm font-bold ${getTextColor()}`}>:</span>
-                <div className="text-center">
-                  <p className={`text-sm font-semibold ${getTextColor()}`}>
-                    {String(timeLeft.minutes).padStart(2, '0')}
-                  </p>
-                  <p className="text-xs text-gray-500">分</p>
-                </div>
+              {/* 小时 */}
+              <div className="flex items-center justify-center gap-1 text-xs">
+                <p className={`text-lg font-semibold ${getTextColor()}`}>
+                  {String(timeLeft.hours).padStart(2, '0')}
+                </p>
+                <p className="text-xs text-gray-500">小时</p>
               </div>
             </div>
           )}
