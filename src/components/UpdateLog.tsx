@@ -10,7 +10,17 @@ interface UpdateLogProps {
 }
 
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
-  const updates = [
+const updates = [
+  {
+    version: '2.8.4',
+    date: '2025-11-22',
+    type: 'optimization' as const,
+    changes: [
+      '优化倒数日显示：移除分钟显示，仅显示天数和小时',
+      '修复天气预报和倒数日模块高度不一致问题',
+      '统一两个模块高度为140px，确保布局协调',
+    ],
+  },
     {
       version: "2.8.3",
       date: "2025-11-21",
