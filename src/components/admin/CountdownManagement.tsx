@@ -30,6 +30,7 @@ const CountdownManagement = () => {
   const [formData, setFormData] = useState({
     title: '',
     target_date: '',
+    target_time: '00:00',
     description: '',
     is_active: true,
   });
@@ -52,9 +53,15 @@ const CountdownManagement = () => {
   const handleOpenDialog = (countdown?: CountdownEvent) => {
     if (countdown) {
       setEditingCountdown(countdown);
+      // 解析日期和时间
+      const datetime = new Date(countdown.target_date);
+      const dateStr = datetime.toISOString().split('T')[0];
+      const timeStr = `${String(datetime.getHours()).padStart(2, '0')}:${String(datetime.getMinutes()).padStart(2, '0')}`;
+      
       setFormData({
         title: countdown.title,
-        target_date: countdown.target_date,
+        target_date: dateStr,
+        target_time: timeStr,
         description: countdown.description || '',
         is_active: countdown.is_active,
       });
@@ -63,6 +70,7 @@ const CountdownManagement = () => {
       setFormData({
         title: '',
         target_date: '',
+        target_time: '00:00',
         description: '',
         is_active: true,
       });
@@ -76,6 +84,7 @@ const CountdownManagement = () => {
     setFormData({
       title: '',
       target_date: '',
+      target_time: '00:00',
       description: '',
       is_active: true,
     });
@@ -88,11 +97,20 @@ const CountdownManagement = () => {
     }
 
     try {
+      // 组合日期和时间为完整的 datetime 字符串
+      const datetimeStr = `${formData.target_date}T${formData.target_time}:00`;
+      const submitData = {
+        title: formData.title,
+        target_date: datetimeStr,
+        description: formData.description,
+        is_active: formData.is_active,
+      };
+
       if (editingCountdown) {
-        await updateCountdownEvent(editingCountdown.id, formData);
+        await updateCountdownEvent(editingCountdown.id, submitData);
         toast.success('倒数日更新成功');
       } else {
-        await createCountdownEvent(formData);
+        await createCountdownEvent(submitData);
         toast.success('倒数日创建成功');
       }
       handleCloseDialog();
@@ -116,10 +134,12 @@ const CountdownManagement = () => {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('zh-CN', {
+    return date.toLocaleString('zh-CN', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
@@ -225,6 +245,15 @@ const CountdownManagement = () => {
                 type="date"
                 value={formData.target_date}
                 onChange={(e) => setFormData({ ...formData, target_date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="target_time">目标时间</Label>
+              <Input
+                id="target_time"
+                type="time"
+                value={formData.target_time}
+                onChange={(e) => setFormData({ ...formData, target_time: e.target.value })}
               />
             </div>
             <div className="space-y-2">
