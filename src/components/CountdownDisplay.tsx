@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Sparkles, PartyPopper } from 'lucide-react';
+import { Calendar, Clock, Sparkles, PartyPopper, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { getActiveCountdownEvent, CountdownEvent } from '@/services/countdownService';
+import { getActiveCountdownEvents, CountdownEvent } from '@/services/countdownService';
 import { getBeijingTime } from '@/utils/beijingTime';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 
 interface TimeLeft {
   days: number;
@@ -14,27 +15,30 @@ interface TimeLeft {
 }
 
 const CountdownDisplay = () => {
-  const [countdown, setCountdown] = useState<CountdownEvent | null>(null);
+  const [countdowns, setCountdowns] = useState<CountdownEvent[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 });
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
+
+  const currentCountdown = countdowns[currentIndex] || null;
 
   useEffect(() => {
     loadCountdown();
   }, []);
 
   useEffect(() => {
-    if (countdown) {
+    if (currentCountdown) {
       calculateTimeLeft();
-      const timer = setInterval(calculateTimeLeft, 1000); // Update every second
+      const timer = setInterval(calculateTimeLeft, 1000);
       return () => clearInterval(timer);
     }
-  }, [countdown]);
+  }, [currentCountdown]);
 
   const loadCountdown = async () => {
     try {
-      const data = await getActiveCountdownEvent();
-      setCountdown(data);
+      const data = await getActiveCountdownEvents();
+      setCountdowns(data);
     } catch (error) {
       console.error('Failed to load countdown:', error);
     } finally {
@@ -42,12 +46,20 @@ const CountdownDisplay = () => {
     }
   };
 
+  const handlePrevious = () => {
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : countdowns.length - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev < countdowns.length - 1 ? prev + 1 : 0));
+  };
+
   const calculateTimeLeft = () => {
-    if (!countdown) return;
+    if (!currentCountdown) return;
     
     const now = getBeijingTime();
-    const targetDate = new Date(countdown.target_date);
-    targetDate.setHours(23, 59, 59, 999); // 设置为目标日期的最后一刻
+    const targetDate = new Date(currentCountdown.target_date);
+    targetDate.setHours(23, 59, 59, 999);
     
     const diffTime = targetDate.getTime() - now.getTime();
     const totalSeconds = Math.floor(diffTime / 1000);
@@ -65,9 +77,8 @@ const CountdownDisplay = () => {
     
     setTimeLeft({ days, hours, minutes, seconds, total: totalSeconds });
     
-    // 计算进度（假设从创建日期到目标日期为100%）
-    if (countdown.created_at) {
-      const startDate = new Date(countdown.created_at);
+    if (currentCountdown.created_at) {
+      const startDate = new Date(currentCountdown.created_at);
       const totalDuration = targetDate.getTime() - startDate.getTime();
       const elapsed = now.getTime() - startDate.getTime();
       const progressPercent = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
@@ -85,9 +96,9 @@ const CountdownDisplay = () => {
     );
   }
 
-  if (!countdown) {
+  if (countdowns.length === 0) {
     return (
-      <Card className="h-full bg-gradient-to-br from-slate-50 to-gray-100 h-[140px] overflow-hidden border-slate-200">
+      <Card className="bg-gradient-to-br from-slate-50 to-gray-100 h-[140px] overflow-hidden border-slate-200">
         <CardContent className="p-3 flex flex-col items-center justify-center h-full">
           <Calendar className="h-8 w-8 text-slate-400 mb-2" />
           <p className="text-xs text-slate-600 text-center font-medium">暂无倒数日</p>
@@ -96,6 +107,8 @@ const CountdownDisplay = () => {
       </Card>
     );
   }
+
+  if (!currentCountdown) return null;
 
   const isToday = timeLeft.days === 0 && timeLeft.hours < 24 && timeLeft.total > 0;
   const isPast = timeLeft.total <= 0;
@@ -126,13 +139,35 @@ const CountdownDisplay = () => {
   return (
     <Card className={`bg-gradient-to-br ${getGradientColors()} border-purple-200 h-[140px] overflow-hidden relative shadow-lg hover:shadow-xl transition-all duration-300`}>
       <CardContent className="p-3 flex flex-col h-full relative z-10">
-        {/* 标题区域 */}
+        {/* 标题区域和切换按钮 */}
         <div className="flex items-center justify-between mb-2">
-          {getIcon()}
+          {countdowns.length > 1 ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5 p-0 hover:bg-white/20"
+              onClick={handlePrevious}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          ) : (
+            getIcon()
+          )}
           <h3 className={`text-xs font-bold ${getTextColor()} text-center flex-1 mx-1.5 line-clamp-1`}>
-            {countdown.title}
+            {currentCountdown.title}
           </h3>
-          <div className="w-5"></div>
+          {countdowns.length > 1 ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5 p-0 hover:bg-white/20"
+              onClick={handleNext}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          ) : (
+            <div className="w-5"></div>
+          )}
         </div>
 
         {/* 时间显示区域 */}
@@ -180,19 +215,22 @@ const CountdownDisplay = () => {
           )}
         </div>
 
-        {/* 描述和进度条 */}
+        {/* 描述、进度条和指示器 */}
         <div className="mt-2 space-y-1">
-          {countdown.description && (
+          {currentCountdown.description && (
             <p className="text-xs text-center text-gray-600 line-clamp-1 px-1">
-              {countdown.description}
+              {currentCountdown.description}
             </p>
           )}
           {!isPast && (
             <div className="space-y-0.5">
               <Progress value={progress} className="h-1" />
-              <p className="text-xs text-center text-gray-500">
-                {progress.toFixed(0)}% 完成
-              </p>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-500">{progress.toFixed(0)}% 完成</span>
+                {countdowns.length > 1 && (
+                  <span className="text-gray-500">{currentIndex + 1}/{countdowns.length}</span>
+                )}
+              </div>
             </div>
           )}
         </div>
