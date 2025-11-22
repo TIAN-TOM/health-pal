@@ -77,9 +77,9 @@ const CountdownDisplay = () => {
 
   if (loading) {
     return (
-      <Card className="h-full bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 min-h-[180px] overflow-hidden">
-        <CardContent className="p-4 flex flex-col items-center justify-center h-full">
-          <Clock className="h-8 w-8 text-purple-400 animate-pulse" />
+      <Card className="h-full bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 h-[140px] overflow-hidden">
+        <CardContent className="p-3 flex flex-col items-center justify-center h-full">
+          <Clock className="h-6 w-6 text-purple-400 animate-pulse" />
         </CardContent>
       </Card>
     );
@@ -87,11 +87,11 @@ const CountdownDisplay = () => {
 
   if (!countdown) {
     return (
-      <Card className="h-full bg-gradient-to-br from-slate-50 to-gray-100 min-h-[180px] overflow-hidden border-slate-200">
-        <CardContent className="p-4 flex flex-col items-center justify-center h-full">
-          <Calendar className="h-10 w-10 text-slate-400 mb-3" />
-          <p className="text-sm text-slate-600 text-center font-medium">暂无倒数日</p>
-          <p className="text-xs text-slate-400 text-center mt-1">管理员可在后台设置</p>
+      <Card className="h-full bg-gradient-to-br from-slate-50 to-gray-100 h-[140px] overflow-hidden border-slate-200">
+        <CardContent className="p-3 flex flex-col items-center justify-center h-full">
+          <Calendar className="h-8 w-8 text-slate-400 mb-2" />
+          <p className="text-xs text-slate-600 text-center font-medium">暂无倒数日</p>
+          <p className="text-xs text-slate-400 text-center mt-0.5">管理员可在后台设置</p>
         </CardContent>
       </Card>
     );
@@ -124,77 +124,65 @@ const CountdownDisplay = () => {
   };
 
   return (
-    <Card className={`h-full bg-gradient-to-br ${getGradientColors()} border-purple-200 min-h-[180px] overflow-hidden relative shadow-lg hover:shadow-xl transition-all duration-300`}>
-      <CardContent className="p-4 flex flex-col h-full relative z-10">
+    <Card className={`h-full bg-gradient-to-br ${getGradientColors()} border-purple-200 h-[140px] overflow-hidden relative shadow-lg hover:shadow-xl transition-all duration-300`}>
+      <CardContent className="p-3 flex flex-col h-full relative z-10">
         {/* 标题区域 */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           {getIcon()}
-          <h3 className={`text-sm font-bold ${getTextColor()} text-center flex-1 mx-2 line-clamp-1`}>
+          <h3 className={`text-xs font-bold ${getTextColor()} text-center flex-1 mx-1.5 line-clamp-1`}>
             {countdown.title}
           </h3>
-          <div className="w-6"></div>
+          <div className="w-5"></div>
         </div>
 
         {/* 时间显示区域 */}
         <div className="flex-1 flex flex-col items-center justify-center">
           {isPast ? (
-            <div className="text-center space-y-1">
-              <p className="text-2xl font-bold text-gray-500">已结束</p>
+            <div className="text-center space-y-0.5">
+              <p className="text-xl font-bold text-gray-500">已结束</p>
               <p className="text-xs text-gray-400">
                 已过去 {Math.abs(timeLeft.days)} 天
               </p>
             </div>
           ) : isToday ? (
-            <div className="text-center space-y-2 animate-pulse">
-              <p className="text-3xl font-bold text-rose-600">就是今天！🎉</p>
-              <div className="flex items-center justify-center gap-2 text-rose-500">
+            <div className="text-center space-y-1 animate-pulse">
+              <p className="text-2xl font-bold text-rose-600">就是今天！🎉</p>
+              <div className="flex items-center justify-center gap-1.5 text-rose-500">
                 <div className="text-center">
-                  <p className="text-xl font-bold">{String(timeLeft.hours).padStart(2, '0')}</p>
+                  <p className="text-base font-bold">{String(timeLeft.hours).padStart(2, '0')}</p>
                   <p className="text-xs">时</p>
                 </div>
-                <span className="text-xl font-bold">:</span>
+                <span className="text-base font-bold">:</span>
                 <div className="text-center">
-                  <p className="text-xl font-bold">{String(timeLeft.minutes).padStart(2, '0')}</p>
+                  <p className="text-base font-bold">{String(timeLeft.minutes).padStart(2, '0')}</p>
                   <p className="text-xs">分</p>
-                </div>
-                <span className="text-xl font-bold">:</span>
-                <div className="text-center">
-                  <p className="text-xl font-bold">{String(timeLeft.seconds).padStart(2, '0')}</p>
-                  <p className="text-xs">秒</p>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="text-center w-full space-y-2">
+            <div className="text-center w-full space-y-1">
               {/* 主要倒计时 - 天数 */}
-              <div className="mb-2">
-                <p className={`text-5xl font-bold ${getTextColor()} leading-none`}>
+              <div className="mb-1">
+                <p className={`text-3xl font-bold ${getTextColor()} leading-none`}>
                   {timeLeft.days}
                 </p>
-                <p className={`text-sm ${getTextColor()} mt-1`}>天</p>
+                <p className={`text-xs ${getTextColor()} mt-0.5`}>天</p>
               </div>
               
-              {/* 时分秒 */}
-              <div className="flex items-center justify-center gap-3 text-xs">
+              {/* 时分 */}
+              <div className="flex items-center justify-center gap-2 text-xs">
                 <div className="text-center">
-                  <p className={`text-lg font-semibold ${getTextColor()}`}>
+                  <p className={`text-sm font-semibold ${getTextColor()}`}>
                     {String(timeLeft.hours).padStart(2, '0')}
                   </p>
                   <p className="text-xs text-gray-500">时</p>
                 </div>
-                <span className={`text-lg font-bold ${getTextColor()}`}>:</span>
+                <span className={`text-sm font-bold ${getTextColor()}`}>:</span>
                 <div className="text-center">
-                  <p className={`text-lg font-semibold ${getTextColor()}`}>
+                  <p className={`text-sm font-semibold ${getTextColor()}`}>
                     {String(timeLeft.minutes).padStart(2, '0')}
                   </p>
                   <p className="text-xs text-gray-500">分</p>
-                </div>
-                <span className={`text-lg font-bold ${getTextColor()}`}>:</span>
-                <div className="text-center">
-                  <p className={`text-lg font-semibold ${getTextColor()}`}>
-                    {String(timeLeft.seconds).padStart(2, '0')}
-                  </p>
-                  <p className="text-xs text-gray-500">秒</p>
                 </div>
               </div>
             </div>
@@ -202,15 +190,15 @@ const CountdownDisplay = () => {
         </div>
 
         {/* 描述和进度条 */}
-        <div className="mt-3 space-y-2">
+        <div className="mt-2 space-y-1">
           {countdown.description && (
-            <p className="text-xs text-center text-gray-600 line-clamp-1 px-2">
+            <p className="text-xs text-center text-gray-600 line-clamp-1 px-1">
               {countdown.description}
             </p>
           )}
           {!isPast && (
-            <div className="space-y-1">
-              <Progress value={progress} className="h-1.5" />
+            <div className="space-y-0.5">
+              <Progress value={progress} className="h-1" />
               <p className="text-xs text-center text-gray-500">
                 {progress.toFixed(0)}% 完成
               </p>
