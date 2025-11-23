@@ -14,70 +14,129 @@ const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
     {
       version: '2.8.6',
       date: '2025-11-23',
-      changes: [
-        '修复天气预报和倒数日数据加载异常问题',
-        '增强所有数组访问的防御性检查，提高系统稳定性',
-        '优化数据验证逻辑，防止空白屏幕错误',
+      type: '问题修复',
+      icon: Bug,
+      color: 'bg-red-50 text-red-600 border-red-200',
+      items: [
+        {
+          title: '🔧 天气和倒数日数据异常修复',
+          description: '修复天气预报和倒数日模块数据加载失败导致的空白屏幕问题，增强所有数组访问的防御性检查，优化数据验证逻辑',
+          type: 'fix'
+        }
       ]
     },
     {
       version: '2.8.5',
-    date: '2025-11-22',
-    type: 'feature' as const,
-    changes: [
-      '新增：支持创建多个倒数日并轮播切换显示',
-      '新增：天气详情页面，点击天气模块可查看7天预报详情',
-      '优化：移除天气模块内嵌预报按钮，改为跳转到详情页',
-      '优化：倒数日切换体验，支持左右箭头切换多个事件',
-    ],
-  },
-  {
-    version: '2.8.4',
-    date: '2025-11-22',
-    type: 'optimization' as const,
-    changes: [
-      '优化倒数日显示：移除分钟显示，仅显示天数和小时',
-      '修复天气预报和倒数日模块高度不一致问题',
-      '统一两个模块高度为140px，确保布局协调',
-    ],
-  },
+      date: '2025-11-22',
+      type: '新功能',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🗓️ 多倒数日轮播切换',
+          description: '支持创建多个倒数日并通过左右箭头轮播切换显示，可同时追踪多个重要日期倒计时',
+          type: 'feature'
+        },
+        {
+          title: '🌤️ 天气详情页面',
+          description: '新增独立的天气详情页面，点击天气模块可查看完整的7天天气预报和详细气象信息',
+          type: 'feature'
+        }
+      ]
+    },
+    {
+      version: '2.8.4',
+      date: '2025-11-22',
+      type: '功能优化',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '⏰ 倒数日显示精简',
+          description: '优化倒数日显示，移除分钟显示，仅保留天数和小时，使信息更清晰简洁',
+          type: 'improvement'
+        },
+        {
+          title: '📐 模块高度统一',
+          description: '修复天气预报和倒数日模块高度不一致问题，统一为140px，提升视觉协调性',
+          type: 'fix'
+        }
+      ]
+    },
     {
       version: "2.8.3",
       date: "2025-11-21",
-      changes: [
-        "优化天气预报和倒数日模块布局，使其更紧凑",
-        "统一两个模块的高度为140px，提升视觉一致性",
-        "倒数日精确度调整为小时级别，移除秒级显示",
-        "优化倒数日管理界面，支持设置精确到小时的目标时间",
-        "减少模块内边距和字体大小，提升空间利用率"
+      type: "功能优化",
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '📦 首页模块布局优化',
+          description: '优化天气预报和倒数日模块布局，减少内边距和字体大小，提升空间利用率，使界面更加紧凑',
+          type: 'improvement'
+        },
+        {
+          title: '⏰ 倒数日精度调整',
+          description: '倒数日精确度调整为小时级别，移除秒级显示，优化管理界面支持设置精确到小时的目标时间',
+          type: 'improvement'
+        }
       ]
     },
     {
       version: "2.8.2",
       date: "2025-11-21",
-      changes: [
-        "修复天气城市选择保存错误，添加数据库字段支持",
-        "倒数日模块全面升级：实时秒级倒计时、进度条显示、动态渐变配色",
-        "倒数日新增三种状态视觉：即将到来、就是今天、已结束",
-        "优化倒数日布局，增加时分秒实时显示和完成度进度条"
+      type: "功能增强",
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🌤️ 天气城市选择修复',
+          description: '修复天气城市选择保存错误，添加数据库字段支持，确保用户选择的城市能够正确保存和恢复',
+          type: 'fix'
+        },
+        {
+          title: '⏰ 倒数日模块全面升级',
+          description: '新增实时秒级倒计时、进度条显示、动态渐变配色，支持三种状态视觉（即将到来、就是今天、已结束）',
+          type: 'feature'
+        }
       ]
     },
     {
       version: "2.8.1",
       date: "2025-11-21",
-      changes: [
-        "优化天气模块布局，恢复为单城市显示，提升信息密度",
-        "移除双城市对比功能，简化天气模块交互",
-        "改进天气预报展示样式，支持展开查看完整7天预报"
+      type: "功能优化",
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🌤️ 天气模块布局优化',
+          description: '恢复为单城市显示模式，提升信息密度，移除双城市对比功能，简化交互流程',
+          type: 'improvement'
+        },
+        {
+          title: '📊 天气预报展示改进',
+          description: '改进天气预报展示样式，支持展开查看完整7天预报，提升用户体验',
+          type: 'improvement'
+        }
       ]
     },
     {
       version: "2.8.0",
       date: "2025-11-20",
-      changes: [
-        "天气模块添加未来7天天气预报功能，展示温度趋势和降雨概率",
-        "支持保存用户选择的城市偏好，下次自动显示上次选择的城市",
-        "优化问候语排版，缩小字体确保单行显示，提升视觉效果"
+      type: "新功能",
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🌤️ 7天天气预报',
+          description: '天气模块新增未来7天天气预报功能，展示温度趋势和降雨概率，帮助用户更好地规划行程',
+          type: 'feature'
+        },
+        {
+          title: '🏙️ 城市偏好保存',
+          description: '支持保存用户选择的城市偏好，下次访问时自动显示上次选择的城市，提升使用便捷性',
+          type: 'feature'
+        }
       ]
     },
     {
