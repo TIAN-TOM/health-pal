@@ -94,7 +94,7 @@ export const getWeatherData = async (city: City, includeForecast = true): Promis
     
     // 处理未来7天预报
     let forecast: DailyForecast[] | undefined;
-    if (includeForecast && data.daily) {
+    if (includeForecast && data.daily && data.daily.time && Array.isArray(data.daily.time)) {
       forecast = data.daily.time.slice(1, 8).map((date: string, index: number) => {
         const code = data.daily.weather_code[index + 1];
         const info = weatherCodeMap[code] || { description: '未知', icon: '🌡️' };
