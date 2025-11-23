@@ -169,7 +169,7 @@ const WeatherDetail = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {weather.forecast.map((day, index) => (
+                {weather.forecast.slice(0, 7).map((day, index) => (
                   <div
                     key={day.date}
                     className={`flex items-center justify-between p-4 rounded-lg ${

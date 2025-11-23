@@ -21,7 +21,7 @@ const CountdownDisplay = () => {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
 
-  const currentCountdown = countdowns[currentIndex] || null;
+  const currentCountdown = countdowns && countdowns.length > 0 ? countdowns[currentIndex] : null;
 
   useEffect(() => {
     loadCountdown();
