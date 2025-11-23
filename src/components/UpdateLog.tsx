@@ -12,6 +12,35 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.9.0',
+      date: '2025-11-23',
+      type: '新功能',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🎨 倒数日个性化主题',
+          description: '支持为每个倒数日设置自定义主题颜色（6种配色）和背景图片，打造专属纪念日视觉效果',
+          type: 'feature'
+        },
+        {
+          title: '⏰ 倒数日时间设置简化',
+          description: '移除小时级精确设置，只需选择日期，自动设为当日结束时刻，简化操作流程',
+          type: 'improvement'
+        },
+        {
+          title: '🌤️ 天气预警系统',
+          description: '自动监测极端天气（暴雨、台风、高温、低温、雷暴），实时推送预警横幅提醒用户注意安全',
+          type: 'feature'
+        },
+        {
+          title: '📊 天气预警记录',
+          description: '保存历史天气预警记录，支持查看和管理，24小时内相同预警不重复推送',
+          type: 'feature'
+        }
+      ]
+    },
+    {
       version: '2.8.7',
       date: '2025-11-23',
       type: '性能优化',

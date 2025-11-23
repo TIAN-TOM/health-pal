@@ -148,6 +148,29 @@ export const getWeatherData = async (city: City, includeForecast = true): Promis
       forecast
     };
 
+    // 检查并创建天气预警
+    try {
+      const { checkWeatherAlert, createWeatherAlert } = await import('./weatherAlertService');
+      const alertCheck = checkWeatherAlert(
+        city.name,
+        weatherCode,
+        weatherData.temperature,
+        weatherData.windSpeed
+      );
+      
+      if (alertCheck.needsAlert && alertCheck.alertType && alertCheck.message) {
+        await createWeatherAlert(
+          city.name,
+          alertCheck.alertType,
+          alertCheck.message,
+          weatherCode,
+          weatherData.temperature
+        );
+      }
+    } catch (error) {
+      console.error('天气预警检查失败:', error);
+    }
+
     // 更新缓存
     weatherCache.set(cacheKey, {
       data: weatherData,

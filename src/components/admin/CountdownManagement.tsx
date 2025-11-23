@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Calendar, Plus, Trash2, Edit2 } from 'lucide-react';
+import { Calendar, Plus, Trash2, Edit2, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   getAllCountdownEvents,
@@ -21,6 +21,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const CountdownManagement = () => {
   const [countdowns, setCountdowns] = useState<CountdownEvent[]>([]);
@@ -30,9 +37,10 @@ const CountdownManagement = () => {
   const [formData, setFormData] = useState({
     title: '',
     target_date: '',
-    target_time: '00:00',
     description: '',
     is_active: true,
+    background_image: '',
+    theme_color: 'purple',
   });
 
   useEffect(() => {
@@ -53,26 +61,25 @@ const CountdownManagement = () => {
   const handleOpenDialog = (countdown?: CountdownEvent) => {
     if (countdown) {
       setEditingCountdown(countdown);
-      // 解析日期和时间
-      const datetime = new Date(countdown.target_date);
-      const dateStr = datetime.toISOString().split('T')[0];
-      const timeStr = `${String(datetime.getHours()).padStart(2, '0')}:${String(datetime.getMinutes()).padStart(2, '0')}`;
+      const dateStr = countdown.target_date.split('T')[0];
       
       setFormData({
         title: countdown.title,
         target_date: dateStr,
-        target_time: timeStr,
         description: countdown.description || '',
         is_active: countdown.is_active,
+        background_image: (countdown as any).background_image || '',
+        theme_color: (countdown as any).theme_color || 'purple',
       });
     } else {
       setEditingCountdown(null);
       setFormData({
         title: '',
         target_date: '',
-        target_time: '00:00',
         description: '',
         is_active: true,
+        background_image: '',
+        theme_color: 'purple',
       });
     }
     setShowDialog(true);
@@ -84,9 +91,10 @@ const CountdownManagement = () => {
     setFormData({
       title: '',
       target_date: '',
-      target_time: '00:00',
       description: '',
       is_active: true,
+      background_image: '',
+      theme_color: 'purple',
     });
   };
 
@@ -97,13 +105,13 @@ const CountdownManagement = () => {
     }
 
     try {
-      // 组合日期和时间为完整的 datetime 字符串
-      const datetimeStr = `${formData.target_date}T${formData.target_time}:00`;
       const submitData = {
         title: formData.title,
-        target_date: datetimeStr,
+        target_date: formData.target_date,
         description: formData.description,
         is_active: formData.is_active,
+        background_image: formData.background_image || null,
+        theme_color: formData.theme_color,
       };
 
       if (editingCountdown) {
@@ -134,14 +142,21 @@ const CountdownManagement = () => {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleString('zh-CN', {
+    return date.toLocaleDateString('zh-CN', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
     });
   };
+
+  const themeColors = [
+    { value: 'purple', label: '紫色', gradient: 'from-purple-100 via-violet-100 to-indigo-100' },
+    { value: 'blue', label: '蓝色', gradient: 'from-blue-100 via-cyan-100 to-sky-100' },
+    { value: 'pink', label: '粉色', gradient: 'from-rose-100 via-pink-100 to-fuchsia-100' },
+    { value: 'orange', label: '橙色', gradient: 'from-orange-100 via-amber-100 to-yellow-100' },
+    { value: 'green', label: '绿色', gradient: 'from-emerald-100 via-green-100 to-teal-100' },
+    { value: 'red', label: '红色', gradient: 'from-red-100 via-rose-100 to-pink-100' },
+  ];
 
   if (loading) {
     return (
@@ -248,13 +263,35 @@ const CountdownManagement = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="target_time">目标时间</Label>
+              <Label htmlFor="theme_color">主题颜色</Label>
+              <Select
+                value={formData.theme_color}
+                onValueChange={(value) => setFormData({ ...formData, theme_color: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {themeColors.map((color) => (
+                    <SelectItem key={color.value} value={color.value}>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-4 h-4 rounded bg-gradient-to-r ${color.gradient}`}></div>
+                        <span>{color.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="background_image">背景图片URL（可选）</Label>
               <Input
-                id="target_time"
-                type="time"
-                value={formData.target_time}
-                onChange={(e) => setFormData({ ...formData, target_time: e.target.value })}
+                id="background_image"
+                value={formData.background_image}
+                onChange={(e) => setFormData({ ...formData, background_image: e.target.value })}
+                placeholder="https://..."
               />
+              <p className="text-xs text-gray-500">输入图片URL以设置自定义背景</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">描述（可选）</Label>
