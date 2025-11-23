@@ -103,32 +103,38 @@ export type Database = {
       }
       countdown_events: {
         Row: {
+          background_image: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
           id: string
           is_active: boolean | null
           target_date: string
+          theme_color: string | null
           title: string
           updated_at: string | null
         }
         Insert: {
+          background_image?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
           target_date: string
+          theme_color?: string | null
           title: string
           updated_at?: string | null
         }
         Update: {
+          background_image?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
           target_date?: string
+          theme_color?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -1227,6 +1233,42 @@ export type Database = {
           transcription?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      weather_alerts: {
+        Row: {
+          alert_message: string
+          alert_type: string
+          city_name: string
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          temperature: number | null
+          user_id: string
+          weather_code: number
+        }
+        Insert: {
+          alert_message: string
+          alert_type: string
+          city_name: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          temperature?: number | null
+          user_id: string
+          weather_code: number
+        }
+        Update: {
+          alert_message?: string
+          alert_type?: string
+          city_name?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          temperature?: number | null
+          user_id?: string
+          weather_code?: number
         }
         Relationships: []
       }

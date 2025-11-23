@@ -4,6 +4,7 @@ import UserWelcomeWithClock from '@/components/UserWelcomeWithClock';
 import NavigationActions from '@/components/NavigationActions';
 import CountdownDisplay from '@/components/CountdownDisplay';
 import WeatherWidget from '@/components/WeatherWidget';
+import WeatherAlertBanner from '@/components/WeatherAlertBanner';
 import FunctionCards from '@/components/FunctionCards';
 import AnnouncementDisplay from '@/components/AnnouncementDisplay';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,8 @@ const HomePage = ({
           onSettingsClick={onSettingsClick}
           onEmergencyClick={onEmergencyClick}
         />
+        
+        <WeatherAlertBanner />
         
         <AnnouncementDisplay />
         
