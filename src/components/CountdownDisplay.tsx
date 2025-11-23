@@ -3,7 +3,6 @@ import { Calendar, Clock, Sparkles, PartyPopper, ChevronLeft, ChevronRight } fro
 import { Card, CardContent } from '@/components/ui/card';
 import { getActiveCountdownEvents, CountdownEvent } from '@/services/countdownService';
 import { getBeijingTime } from '@/utils/beijingTime';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 
 interface TimeLeft {
@@ -19,7 +18,6 @@ const CountdownDisplay = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 });
   const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState(0);
 
   const currentCountdown = countdowns && countdowns.length > 0 ? countdowns[currentIndex] : null;
 
@@ -66,7 +64,6 @@ const CountdownDisplay = () => {
     
     if (totalSeconds <= 0) {
       setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, total: totalSeconds });
-      setProgress(100);
       return;
     }
     
@@ -76,14 +73,6 @@ const CountdownDisplay = () => {
     const seconds = totalSeconds % 60;
     
     setTimeLeft({ days, hours, minutes, seconds, total: totalSeconds });
-    
-    if (currentCountdown.created_at) {
-      const startDate = new Date(currentCountdown.created_at);
-      const totalDuration = targetDate.getTime() - startDate.getTime();
-      const elapsed = now.getTime() - startDate.getTime();
-      const progressPercent = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-      setProgress(progressPercent);
-    }
   };
 
   if (loading) {
@@ -215,23 +204,17 @@ const CountdownDisplay = () => {
           )}
         </div>
 
-        {/* 描述、进度条和指示器 */}
-        <div className="mt-2 space-y-1">
+        {/* 底部描述信息 */}
+        <div className="mt-auto">
           {currentCountdown.description && (
             <p className="text-xs text-center text-gray-600 line-clamp-1 px-1">
               {currentCountdown.description}
             </p>
           )}
-          {!isPast && (
-            <div className="space-y-0.5">
-              <Progress value={progress} className="h-1" />
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-500">{progress.toFixed(0)}% 完成</span>
-                {countdowns.length > 1 && (
-                  <span className="text-gray-500">{currentIndex + 1}/{countdowns.length}</span>
-                )}
-              </div>
-            </div>
+          {countdowns.length > 1 && (
+            <p className="text-xs text-center text-gray-500 mt-1">
+              {currentIndex + 1}/{countdowns.length}
+            </p>
           )}
         </div>
       </CardContent>

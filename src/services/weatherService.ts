@@ -2,6 +2,15 @@
  * 天气服务 - 使用 Open-Meteo 免费API获取天气数据
  */
 
+// 缓存配置
+const CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
+interface CacheEntry {
+  data: WeatherData;
+  timestamp: number;
+}
+
+const weatherCache = new Map<string, CacheEntry>();
+
 export interface WeatherData {
   temperature: number;
   weatherCode: number;
@@ -73,6 +82,13 @@ const weatherCodeMap: Record<number, { description: string; icon: string }> = {
  * 获取指定城市的天气数据（包含7天预报）
  */
 export const getWeatherData = async (city: City, includeForecast = true): Promise<WeatherData> => {
+  // 检查缓存
+  const cacheKey = `${city.name}-${includeForecast}`;
+  const cached = weatherCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+
   try {
     const forecastParams = includeForecast 
       ? '&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max'
@@ -121,7 +137,7 @@ export const getWeatherData = async (city: City, includeForecast = true): Promis
       }
     }
     
-    return {
+    const weatherData: WeatherData = {
       temperature: Math.round(current.temperature_2m),
       weatherCode: weatherCode,
       humidity: current.relative_humidity_2m,
@@ -131,6 +147,14 @@ export const getWeatherData = async (city: City, includeForecast = true): Promis
       cityName: city.name,
       forecast
     };
+
+    // 更新缓存
+    weatherCache.set(cacheKey, {
+      data: weatherData,
+      timestamp: Date.now()
+    });
+
+    return weatherData;
   } catch (error) {
     console.error('Error fetching weather:', error);
     throw error;

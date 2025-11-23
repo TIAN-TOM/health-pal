@@ -17,6 +17,7 @@ const WeatherWidget = () => {
   const { preferences, savePreferences } = useUserPreferences();
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedCity, setSelectedCity] = useState<City>(CITIES[0]);
 
   // 从偏好加载城市
@@ -30,8 +31,13 @@ const WeatherWidget = () => {
   }, [preferences]);
 
   useEffect(() => {
-    const fetchWeather = async () => {
-      setLoading(true);
+    const fetchWeather = async (isRefresh = false) => {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      
       try {
         const data = await getWeatherData(selectedCity, false);
         setWeather(data);
@@ -39,12 +45,13 @@ const WeatherWidget = () => {
         console.error('获取天气失败:', error);
       } finally {
         setLoading(false);
+        setRefreshing(false);
       }
     };
 
     fetchWeather();
     
-    const interval = setInterval(fetchWeather, 30 * 60 * 1000);
+    const interval = setInterval(() => fetchWeather(true), 30 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, [selectedCity]);
@@ -53,7 +60,6 @@ const WeatherWidget = () => {
     const city = CITIES.find(c => c.name === cityName);
     if (city) {
       setSelectedCity(city);
-      setLoading(true);
       // 保存偏好
       await savePreferences({
         ...preferences,
@@ -62,11 +68,15 @@ const WeatherWidget = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !weather) {
     return (
       <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg h-[140px]">
         <div className="p-3 flex items-center justify-center h-full">
-          <div className="text-xs opacity-90">加载中...</div>
+          <div className="animate-pulse">
+            <div className="h-4 bg-white/20 rounded w-20 mb-2"></div>
+            <div className="h-8 bg-white/20 rounded w-16 mb-2"></div>
+            <div className="h-3 bg-white/20 rounded w-24"></div>
+          </div>
         </div>
       </Card>
     );
@@ -87,6 +97,11 @@ const WeatherWidget = () => {
       className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden h-[140px] cursor-pointer"
       onClick={() => navigate('/weather')}
     >
+      {refreshing && (
+        <div className="absolute top-2 right-2 z-10">
+          <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></div>
+        </div>
+      )}
       <div className="p-3 h-full flex flex-col">
         {/* 顶部：地点选择器和天气图标 */}
         <div className="flex items-start justify-between mb-2">

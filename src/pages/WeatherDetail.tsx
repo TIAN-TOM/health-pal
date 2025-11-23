@@ -31,7 +31,11 @@ const WeatherDetail = () => {
 
   useEffect(() => {
     const fetchWeather = async () => {
-      setLoading(true);
+      // 只在首次加载或没有数据时显示loading
+      if (!weather) {
+        setLoading(true);
+      }
+      
       try {
         const data = await getWeatherData(selectedCity, true);
         setWeather(data);
@@ -52,7 +56,7 @@ const WeatherDetail = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !weather) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
         <div className="max-w-4xl mx-auto">
@@ -64,9 +68,14 @@ const WeatherDetail = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             返回
           </Button>
-          <Card>
-            <CardContent className="p-8 text-center">
-              <p className="text-gray-500">加载中...</p>
+          <Card className="mb-6 animate-pulse">
+            <CardContent className="p-8">
+              <div className="h-8 bg-gray-200 rounded w-32 mb-4"></div>
+              <div className="h-16 bg-gray-200 rounded w-24 mb-4"></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="h-20 bg-gray-200 rounded"></div>
+                <div className="h-20 bg-gray-200 rounded"></div>
+              </div>
             </CardContent>
           </Card>
         </div>
