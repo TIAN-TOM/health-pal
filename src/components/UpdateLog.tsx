@@ -12,6 +12,30 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.8.7',
+      date: '2025-11-23',
+      type: '性能优化',
+      icon: Zap,
+      color: 'bg-green-50 text-green-600 border-green-200',
+      items: [
+        {
+          title: '⚡ 天气API性能大幅提升',
+          description: '实现5分钟智能缓存机制，显著减少API请求次数，提升响应速度，降低服务器负载',
+          type: 'improvement'
+        },
+        {
+          title: '🎨 天气组件加载体验优化',
+          description: '引入骨架屏加载效果，采用渐进式加载策略，切换城市时保持原数据可见，提升用户体验',
+          type: 'improvement'
+        },
+        {
+          title: '🧹 倒数日界面精简',
+          description: '移除倒数日模块进度条，简化界面显示，突出核心倒计时信息',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.8.6',
       date: '2025-11-23',
       type: '问题修复',
