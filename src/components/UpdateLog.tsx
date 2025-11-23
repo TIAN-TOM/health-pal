@@ -10,9 +10,17 @@ interface UpdateLogProps {
 }
 
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
-const updates = [
-  {
-    version: '2.8.5',
+  const updates = [
+    {
+      version: '2.8.6',
+      date: '2025-11-23',
+      changes: [
+        '修复天气预报详情页数据加载异常问题',
+        '增强天气API数据验证，提高系统稳定性',
+      ]
+    },
+    {
+      version: '2.8.5',
     date: '2025-11-22',
     type: 'feature' as const,
     changes: [
