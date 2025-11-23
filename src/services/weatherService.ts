@@ -94,20 +94,31 @@ export const getWeatherData = async (city: City, includeForecast = true): Promis
     
     // 处理未来7天预报
     let forecast: DailyForecast[] | undefined;
-    if (includeForecast && data.daily && data.daily.time && Array.isArray(data.daily.time)) {
-      forecast = data.daily.time.slice(1, 8).map((date: string, index: number) => {
-        const code = data.daily.weather_code[index + 1];
-        const info = weatherCodeMap[code] || { description: '未知', icon: '🌡️' };
-        return {
-          date,
-          tempMax: Math.round(data.daily.temperature_2m_max[index + 1]),
-          tempMin: Math.round(data.daily.temperature_2m_min[index + 1]),
-          weatherCode: code,
-          precipitationProbability: data.daily.precipitation_probability_max[index + 1] || 0,
-          icon: info.icon,
-          description: info.description
-        };
-      });
+    if (includeForecast && data.daily) {
+      const { time, weather_code, temperature_2m_max, temperature_2m_min, precipitation_probability_max } = data.daily;
+      
+      // 验证所有必需的数组都存在且有足够的数据
+      if (
+        Array.isArray(time) && time.length > 1 &&
+        Array.isArray(weather_code) && weather_code.length > 1 &&
+        Array.isArray(temperature_2m_max) && temperature_2m_max.length > 1 &&
+        Array.isArray(temperature_2m_min) && temperature_2m_min.length > 1
+      ) {
+        forecast = time.slice(1, 8).map((date: string, index: number) => {
+          const actualIndex = index + 1;
+          const code = weather_code[actualIndex] || 0;
+          const info = weatherCodeMap[code] || { description: '未知', icon: '🌡️' };
+          return {
+            date,
+            tempMax: Math.round(temperature_2m_max[actualIndex] || 0),
+            tempMin: Math.round(temperature_2m_min[actualIndex] || 0),
+            weatherCode: code,
+            precipitationProbability: precipitation_probability_max?.[actualIndex] || 0,
+            icon: info.icon,
+            description: info.description
+          };
+        });
+      }
     }
     
     return {
