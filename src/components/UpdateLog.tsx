@@ -12,6 +12,20 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.9.1',
+      date: '2025-11-24',
+      type: '界面优化',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🎯 倒数日显示精简',
+          description: '完全移除倒数日模块的小时显示，只保留天数信息，界面更加简洁清晰',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.9.0',
       date: '2025-11-23',
       type: '新功能',
