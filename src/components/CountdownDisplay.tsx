@@ -195,36 +195,15 @@ const CountdownDisplay = () => {
             </div>
           ) : isToday ? (
             <div className="text-center space-y-1 animate-pulse">
-              <p className={`text-2xl font-bold ${backgroundImage ? 'text-white drop-shadow-lg' : 'text-rose-600'}`}>就是今天！🎉</p>
-              <div className={`flex items-center justify-center gap-1.5 ${backgroundImage ? 'text-white' : 'text-rose-500'}`}>
-                <div className="text-center">
-                  <p className="text-base font-bold">{String(timeLeft.hours).padStart(2, '0')}</p>
-                  <p className="text-xs">时</p>
-                </div>
-                <span className="text-base font-bold">:</span>
-                <div className="text-center">
-                  <p className="text-base font-bold">{String(timeLeft.minutes).padStart(2, '0')}</p>
-                  <p className="text-xs">分</p>
-                </div>
-              </div>
+              <p className={`text-3xl font-bold ${backgroundImage ? 'text-white drop-shadow-lg' : 'text-rose-600'}`}>就是今天！🎉</p>
             </div>
           ) : (
-            <div className="text-center w-full space-y-1">
+            <div className="text-center w-full">
               {/* 主要倒计时 - 天数 */}
-              <div className="mb-1">
-                <p className={`text-3xl font-bold ${getTextColor()} ${backgroundImage ? 'text-white drop-shadow-lg' : ''} leading-none`}>
-                  {timeLeft.days}
-                </p>
-                <p className={`text-xs ${getTextColor()} ${backgroundImage ? 'text-white/90' : ''} mt-0.5`}>天</p>
-              </div>
-              
-              {/* 小时 */}
-              <div className="flex items-center justify-center gap-1 text-xs">
-                <p className={`text-lg font-semibold ${getTextColor()} ${backgroundImage ? 'text-white drop-shadow-lg' : ''}`}>
-                  {String(timeLeft.hours).padStart(2, '0')}
-                </p>
-                <p className={`text-xs ${backgroundImage ? 'text-white/80' : 'text-gray-500'}`}>小时</p>
-              </div>
+              <p className={`text-4xl font-bold ${getTextColor()} ${backgroundImage ? 'text-white drop-shadow-lg' : ''} leading-none`}>
+                {timeLeft.days}
+              </p>
+              <p className={`text-sm ${getTextColor()} ${backgroundImage ? 'text-white/90' : ''} mt-1`}>天</p>
             </div>
           )}
         </div>
