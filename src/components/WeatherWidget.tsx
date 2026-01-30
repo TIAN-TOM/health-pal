@@ -18,17 +18,29 @@ const WeatherWidget = () => {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedCity, setSelectedCity] = useState<City>(CITIES[0]);
-
-  // 从偏好加载城市
-  useEffect(() => {
+  const [cityInitialized, setCityInitialized] = useState(false);
+  
+  // 根据用户偏好初始化城市，如果没有偏好则使用默认城市
+  const getInitialCity = (): City => {
     if (preferences?.preferred_weather_city) {
       const city = CITIES.find(c => c.name === preferences.preferred_weather_city);
-      if (city) {
+      if (city) return city;
+    }
+    return CITIES[0]; // 默认悉尼
+  };
+  
+  const [selectedCity, setSelectedCity] = useState<City>(getInitialCity);
+
+  // 当偏好加载完成后更新城市（首次加载）
+  useEffect(() => {
+    if (!cityInitialized && preferences?.preferred_weather_city) {
+      const city = CITIES.find(c => c.name === preferences.preferred_weather_city);
+      if (city && city.name !== selectedCity.name) {
         setSelectedCity(city);
       }
+      setCityInitialized(true);
     }
-  }, [preferences]);
+  }, [preferences, cityInitialized, selectedCity.name]);
 
   useEffect(() => {
     const fetchWeather = async (isRefresh = false) => {
