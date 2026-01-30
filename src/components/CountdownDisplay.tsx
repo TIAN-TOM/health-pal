@@ -46,7 +46,15 @@ const CountdownDisplay = () => {
   const loadCountdown = async () => {
     try {
       const data = await getActiveCountdownEvents();
-      setCountdowns(data);
+      // 过滤掉已经结束的倒数日（目标日期已过）
+      const now = getBeijingTime();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const activeCountdowns = data.filter(countdown => {
+        const targetDate = new Date(countdown.target_date);
+        targetDate.setHours(23, 59, 59, 999);
+        return targetDate.getTime() >= today.getTime();
+      });
+      setCountdowns(activeCountdowns);
     } catch (error) {
       console.error('Failed to load countdown:', error);
     } finally {

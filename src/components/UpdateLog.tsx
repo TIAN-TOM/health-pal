@@ -12,18 +12,30 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.9.2',
+      date: '2025-11-24',
+      type: '功能优化',
+      icon: Sparkles,
+      color: 'bg-green-50 text-green-600 border-green-200',
+      items: [
+        {
+          title: '🎯 倒数日自动清理',
+          description: '已结束的倒数日自动从首页隐藏，保持界面整洁',
+          type: 'improvement'
+        },
+        {
+          title: '🌤️ 天气城市记忆',
+          description: '天气模块现在会记住您上次选择的城市，下次登录自动显示',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.9.1',
       date: '2025-11-24',
       type: '界面优化',
       icon: Sparkles,
       color: 'bg-purple-50 text-purple-600 border-purple-200',
-      items: [
-        {
-          title: '🎯 倒数日显示精简',
-          description: '完全移除倒数日模块的小时显示，只保留天数信息，界面更加简洁清晰',
-          type: 'improvement'
-        }
-      ]
     },
     {
       version: '2.9.0',
