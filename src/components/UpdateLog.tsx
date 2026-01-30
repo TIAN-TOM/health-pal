@@ -12,6 +12,25 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.9.3',
+      date: '2026-01-30',
+      type: '内容更新',
+      icon: Sparkles,
+      color: 'bg-orange-50 text-orange-600 border-orange-200',
+      items: [
+        {
+          title: '📅 2026年节日更新',
+          description: '更新农历节日和二十四节气到2026年，确保问候语准确显示',
+          type: 'improvement'
+        },
+        {
+          title: '🎉 新增彩蛋问候语',
+          description: '添加程序员节、世界睡眠日、世界读书日、愚人节等更多特殊日期问候',
+          type: 'feature'
+        }
+      ]
+    },
+    {
       version: '2.9.2',
       date: '2025-11-24',
       type: '功能优化',
@@ -36,6 +55,13 @@ const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
       type: '界面优化',
       icon: Sparkles,
       color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🎯 倒数日显示精简',
+          description: '完全移除倒数日模块的小时显示，只保留天数信息，界面更加简洁清晰',
+          type: 'improvement'
+        }
+      ]
     },
     {
       version: '2.9.0',
