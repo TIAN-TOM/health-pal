@@ -12,6 +12,20 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.9.4',
+      date: '2026-01-31',
+      type: '问题修复',
+      icon: Bug,
+      color: 'bg-red-50 text-red-600 border-red-200',
+      items: [
+        {
+          title: '🌤️ 修复天气城市记忆',
+          description: '修复天气模块城市选择记忆功能，现在会正确记住并恢复您上次选择的城市',
+          type: 'fix'
+        }
+      ]
+    },
+    {
       version: '2.9.3',
       date: '2026-01-30',
       type: '内容更新',

@@ -14,35 +14,40 @@ import {
 
 const WeatherWidget = () => {
   const navigate = useNavigate();
-  const { preferences, savePreferences } = useUserPreferences();
+  const { preferences, loading: preferencesLoading, savePreferences } = useUserPreferences();
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [cityInitialized, setCityInitialized] = useState(false);
-  
-  // 根据用户偏好初始化城市，如果没有偏好则使用默认城市
-  const getInitialCity = (): City => {
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+
+  // 当偏好加载完成后设置城市（只执行一次）
+  useEffect(() => {
+    // 等待偏好加载完成
+    if (preferencesLoading) return;
+    
+    // 如果城市已经初始化，不再更新
+    if (cityInitialized) return;
+    
+    // 根据用户偏好设置城市
     if (preferences?.preferred_weather_city) {
       const city = CITIES.find(c => c.name === preferences.preferred_weather_city);
-      if (city) return city;
-    }
-    return CITIES[0]; // 默认悉尼
-  };
-  
-  const [selectedCity, setSelectedCity] = useState<City>(getInitialCity);
-
-  // 当偏好加载完成后更新城市（首次加载）
-  useEffect(() => {
-    if (!cityInitialized && preferences?.preferred_weather_city) {
-      const city = CITIES.find(c => c.name === preferences.preferred_weather_city);
-      if (city && city.name !== selectedCity.name) {
+      if (city) {
         setSelectedCity(city);
+        setCityInitialized(true);
+        return;
       }
-      setCityInitialized(true);
     }
-  }, [preferences, cityInitialized, selectedCity.name]);
+    
+    // 没有偏好或找不到城市，使用默认城市
+    setSelectedCity(CITIES[0]);
+    setCityInitialized(true);
+  }, [preferences, preferencesLoading, cityInitialized]);
 
   useEffect(() => {
+    // 等待城市初始化完成
+    if (!selectedCity) return;
+    
     const fetchWeather = async (isRefresh = false) => {
       if (isRefresh) {
         setRefreshing(true);
@@ -80,7 +85,7 @@ const WeatherWidget = () => {
     }
   };
 
-  if (loading && !weather) {
+  if ((loading && !weather) || !selectedCity) {
     return (
       <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg h-[140px]">
         <div className="p-3 flex items-center justify-center h-full">
@@ -118,7 +123,7 @@ const WeatherWidget = () => {
         {/* 顶部：地点选择器和天气图标 */}
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1">
-            <Select value={selectedCity.name} onValueChange={handleCityChange}>
+            <Select value={selectedCity?.name || ''} onValueChange={handleCityChange}>
               <SelectTrigger 
                 className="h-6 w-24 text-xs bg-white/20 border-white/30 text-white"
                 onClick={(e) => e.stopPropagation()}
