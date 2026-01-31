@@ -53,6 +53,8 @@ export const useUserPreferences = () => {
           emergency_contact_name: data.emergency_contact_name,
           emergency_contact_phone: data.emergency_contact_phone,
           last_birthday_wish_year: data.last_birthday_wish_year,
+          preferred_weather_city: data.preferred_weather_city,
+          preferred_weather_city2: data.preferred_weather_city2,
         };
         setPreferences(mappedData);
       } else {
