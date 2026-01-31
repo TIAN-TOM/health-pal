@@ -1,4 +1,10 @@
 import React from 'react';
+
+// 版本 2.9.5 更新日志 - 2025-01-31
+// - 修复7天天气预报日期显示错误（跳过明天的问题）
+// - 使用本地日期解析避免时区偏移
+// - 新增昨日天气查看功能
+// - 优化天气预报数据处理逻辑
 import { ArrowLeft, Calendar, Zap, Bug, Sparkles, Home, Navigation, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

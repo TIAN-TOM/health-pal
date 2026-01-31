@@ -20,6 +20,7 @@ export interface WeatherData {
   icon: string;
   cityName: string;
   forecast?: DailyForecast[];
+  yesterday?: DailyForecast;
 }
 
 export interface DailyForecast {
@@ -79,7 +80,25 @@ const weatherCodeMap: Record<number, { description: string; icon: string }> = {
 };
 
 /**
- * 获取指定城市的天气数据（包含7天预报）
+ * 解析日期字符串为本地日期组件，避免时区偏移问题
+ */
+const parseDateString = (dateStr: string): { year: number; month: number; day: number } => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return { year, month, day };
+};
+
+/**
+ * 格式化日期为 YYYY-MM-DD 格式
+ */
+const formatDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * 获取指定城市的天气数据（包含7天预报和昨日天气）
  */
 export const getWeatherData = async (city: City, includeForecast = true): Promise<WeatherData> => {
   // 检查缓存
@@ -90,12 +109,21 @@ export const getWeatherData = async (city: City, includeForecast = true): Promis
   }
 
   try {
+    // 计算昨天的日期用于获取历史数据
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const yesterdayStr = formatDateString(yesterday);
+    
     const forecastParams = includeForecast 
       ? '&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max'
       : '';
     
+    // 添加 past_days=1 来获取昨天的数据
+    const pastDaysParam = includeForecast ? '&past_days=1' : '';
+    
     const response = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m${forecastParams}&timezone=auto`
+      `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m${forecastParams}${pastDaysParam}&timezone=auto`
     );
     
     if (!response.ok) {
@@ -108,28 +136,47 @@ export const getWeatherData = async (city: City, includeForecast = true): Promis
     const weatherCode = current.weather_code;
     const weatherInfo = weatherCodeMap[weatherCode] || { description: '未知', icon: '🌡️' };
     
-    // 处理未来7天预报
+    // 处理预报数据（包括昨天、今天和未来6天）
     let forecast: DailyForecast[] | undefined;
+    let yesterdayWeather: DailyForecast | undefined;
+    
     if (includeForecast && data.daily) {
       const { time, weather_code, temperature_2m_max, temperature_2m_min, precipitation_probability_max } = data.daily;
       
       // 验证所有必需的数组都存在且有足够的数据
       if (
-        Array.isArray(time) && time.length > 1 &&
-        Array.isArray(weather_code) && weather_code.length > 1 &&
-        Array.isArray(temperature_2m_max) && temperature_2m_max.length > 1 &&
-        Array.isArray(temperature_2m_min) && temperature_2m_min.length > 1
+        Array.isArray(time) && time.length > 0 &&
+        Array.isArray(weather_code) && weather_code.length > 0 &&
+        Array.isArray(temperature_2m_max) && temperature_2m_max.length > 0 &&
+        Array.isArray(temperature_2m_min) && temperature_2m_min.length > 0
       ) {
+        // 使用 past_days=1 后，数据结构为：index 0 = 昨天，index 1 = 今天，index 2+ = 未来
+        // 提取昨天的天气数据
+        if (time.length > 0) {
+          const code = weather_code[0] || 0;
+          const info = weatherCodeMap[code] || { description: '未知', icon: '🌡️' };
+          yesterdayWeather = {
+            date: time[0],
+            tempMax: Math.round(temperature_2m_max[0] || 0),
+            tempMin: Math.round(temperature_2m_min[0] || 0),
+            weatherCode: code,
+            precipitationProbability: precipitation_probability_max?.[0] || 0,
+            icon: info.icon,
+            description: info.description
+          };
+        }
+        
+        // 从 index 1 开始（今天）获取7天预报
         forecast = time.slice(1, 8).map((date: string, index: number) => {
-          const actualIndex = index + 1;
-          const code = weather_code[actualIndex] || 0;
+          const dataIndex = index + 1; // 对应原始数据的索引
+          const code = weather_code[dataIndex] || 0;
           const info = weatherCodeMap[code] || { description: '未知', icon: '🌡️' };
           return {
             date,
-            tempMax: Math.round(temperature_2m_max[actualIndex] || 0),
-            tempMin: Math.round(temperature_2m_min[actualIndex] || 0),
+            tempMax: Math.round(temperature_2m_max[dataIndex] || 0),
+            tempMin: Math.round(temperature_2m_min[dataIndex] || 0),
             weatherCode: code,
-            precipitationProbability: precipitation_probability_max?.[actualIndex] || 0,
+            precipitationProbability: precipitation_probability_max?.[dataIndex] || 0,
             icon: info.icon,
             description: info.description
           };
@@ -145,7 +192,8 @@ export const getWeatherData = async (city: City, includeForecast = true): Promis
       description: weatherInfo.description,
       icon: weatherInfo.icon,
       cityName: city.name,
-      forecast
+      forecast,
+      yesterday: yesterdayWeather
     };
 
     // 检查并创建天气预警

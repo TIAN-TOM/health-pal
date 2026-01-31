@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Cloud, Droplets, Wind, Sun, Moon, Sunrise, Sunset } from 'lucide-react';
-import { getWeatherData, WeatherData, CITIES, City } from '@/services/weatherService';
+import { ArrowLeft, Cloud, Droplets, Wind, History } from 'lucide-react';
+import { getWeatherData, WeatherData, CITIES, City, DailyForecast } from '@/services/weatherService';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import {
   Select,
@@ -12,6 +12,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
+/**
+ * 解析日期字符串为本地日期，避免时区偏移
+ */
+const parseLocalDate = (dateStr: string): Date => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+/**
+ * 格式化日期显示
+ */
+const formatDateDisplay = (dateStr: string, index: number): { date: string; weekday: string } => {
+  const date = parseLocalDate(dateStr);
+  
+  // 根据索引判断是今天还是其他天
+  if (index === 0) {
+    return {
+      date: '今天',
+      weekday: date.toLocaleDateString('zh-CN', { weekday: 'short' })
+    };
+  }
+  
+  if (index === 1) {
+    return {
+      date: '明天',
+      weekday: date.toLocaleDateString('zh-CN', { weekday: 'short' })
+    };
+  }
+  
+  return {
+    date: date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }),
+    weekday: date.toLocaleDateString('zh-CN', { weekday: 'short' })
+  };
+};
 
 const WeatherDetail = () => {
   const navigate = useNavigate();
@@ -167,6 +202,54 @@ const WeatherDetail = () => {
           </CardContent>
         </Card>
 
+        {/* 昨日天气 */}
+        {weather.yesterday && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <History className="h-5 w-5" />
+                昨日天气
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50">
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="w-24">
+                    <p className="font-medium">昨天</p>
+                    <p className="text-sm text-gray-500">
+                      {parseLocalDate(weather.yesterday.date).toLocaleDateString('zh-CN', {
+                        weekday: 'short',
+                      })}
+                    </p>
+                  </div>
+
+                  <div className="text-3xl">{weather.yesterday.icon}</div>
+
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600">{weather.yesterday.description}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <p className="text-lg font-semibold text-gray-900">
+                      {weather.yesterday.tempMax}°
+                    </p>
+                    <p className="text-sm text-gray-500">{weather.yesterday.tempMin}°</p>
+                  </div>
+
+                  <div className="flex items-center gap-1 text-blue-600 min-w-[60px]">
+                    <Droplets className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      {weather.yesterday.precipitationProbability}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* 7天预报 */}
         {weather.forecast && weather.forecast.length > 0 && (
           <Card>
@@ -178,54 +261,46 @@ const WeatherDetail = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {weather.forecast.slice(0, 7).map((day, index) => (
-                  <div
-                    key={day.date}
-                    className={`flex items-center justify-between p-4 rounded-lg ${
-                      index === 0 ? 'bg-blue-50' : 'bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className="w-24">
-                        <p className="font-medium">
-                          {index === 0
-                            ? '今天'
-                            : new Date(day.date).toLocaleDateString('zh-CN', {
-                                month: 'short',
-                                day: 'numeric',
-                              })}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {new Date(day.date).toLocaleDateString('zh-CN', {
-                            weekday: 'short',
-                          })}
-                        </p>
+                {weather.forecast.slice(0, 7).map((day, index) => {
+                  const dateInfo = formatDateDisplay(day.date, index);
+                  return (
+                    <div
+                      key={day.date}
+                      className={`flex items-center justify-between p-4 rounded-lg ${
+                        index === 0 ? 'bg-blue-50' : 'bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="w-24">
+                          <p className="font-medium">{dateInfo.date}</p>
+                          <p className="text-sm text-gray-500">{dateInfo.weekday}</p>
+                        </div>
+
+                        <div className="text-3xl">{day.icon}</div>
+
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-600">{day.description}</p>
+                        </div>
                       </div>
 
-                      <div className="text-3xl">{day.icon}</div>
+                      <div className="flex items-center gap-6">
+                        <div className="text-right">
+                          <p className="text-lg font-semibold text-gray-900">
+                            {day.tempMax}°
+                          </p>
+                          <p className="text-sm text-gray-500">{day.tempMin}°</p>
+                        </div>
 
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-600">{day.description}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-6">
-                      <div className="text-right">
-                        <p className="text-lg font-semibold text-gray-900">
-                          {day.tempMax}°
-                        </p>
-                        <p className="text-sm text-gray-500">{day.tempMin}°</p>
-                      </div>
-
-                      <div className="flex items-center gap-1 text-blue-600 min-w-[60px]">
-                        <Droplets className="h-4 w-4" />
-                        <span className="text-sm font-medium">
-                          {day.precipitationProbability}%
-                        </span>
+                        <div className="flex items-center gap-1 text-blue-600 min-w-[60px]">
+                          <Droplets className="h-4 w-4" />
+                          <span className="text-sm font-medium">
+                            {day.precipitationProbability}%
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
