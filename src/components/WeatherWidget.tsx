@@ -87,7 +87,7 @@ const WeatherWidget = () => {
 
   if ((loading && !weather) || !selectedCity) {
     return (
-      <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg h-[110px]">
+      <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg min-h-[110px]">
         <div className="p-3 flex items-center justify-center h-full">
           <div className="animate-pulse">
             <div className="h-4 bg-white/20 rounded w-20 mb-2"></div>
@@ -101,7 +101,7 @@ const WeatherWidget = () => {
 
   if (!weather) {
     return (
-      <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg h-[110px]">
+      <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg min-h-[110px]">
         <div className="p-3 flex items-center justify-center h-full">
           <div className="text-xs opacity-90">天气加载失败</div>
         </div>
@@ -111,7 +111,7 @@ const WeatherWidget = () => {
 
   return (
     <Card 
-      className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden h-[110px] cursor-pointer"
+      className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden min-h-[110px] cursor-pointer"
       onClick={() => navigate('/weather')}
     >
       {refreshing && (
@@ -144,26 +144,21 @@ const WeatherWidget = () => {
         </div>
         
         {/* 温度显示 */}
-        <div className="flex items-baseline mb-1">
-          <span className="text-3xl font-light">{weather.temperature}</span>
-          <span className="text-xl font-light ml-1">°</span>
-        </div>
-        
-        {/* 详细信息 */}
-        <div className="flex items-center justify-between text-xs opacity-90">
-          <div className="flex items-center gap-1.5">
-            <Droplets className="h-3.5 w-3.5" />
-            <span>{weather.humidity}%</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Wind className="h-3.5 w-3.5" />
-            <span>{weather.windSpeed.toFixed(1)}m/s</span>
-          </div>
+        <div className="flex items-baseline">
+          <span className="text-2xl font-light">{weather.temperature}</span>
+          <span className="text-lg font-light ml-0.5">°</span>
         </div>
 
-        {/* 点击提示 */}
-        <div className="mt-auto">
-          <p className="text-xs text-center text-white/60">点击查看详情</p>
+        {/* 温度和详情在同一行 */}
+        <div className="flex items-center justify-between text-xs opacity-90 mt-auto">
+          <div className="flex items-center gap-1">
+            <Droplets className="h-3 w-3" />
+            <span>{weather.humidity}%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Wind className="h-3 w-3" />
+            <span>{weather.windSpeed.toFixed(1)}m/s</span>
+          </div>
         </div>
       </div>
     </Card>
