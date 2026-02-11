@@ -95,7 +95,7 @@ const CountdownDisplay = () => {
 
   if (loading) {
     return (
-      <Card className="h-full bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 min-h-[110px] overflow-hidden">
+      <Card className="h-full bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 h-[110px] overflow-hidden">
         <CardContent className="p-3 flex flex-col items-center justify-center h-full">
           <Calendar className="h-6 w-6 text-purple-400 animate-pulse" />
         </CardContent>
@@ -105,7 +105,7 @@ const CountdownDisplay = () => {
 
   if (countdowns.length === 0) {
     return (
-      <Card className="bg-gradient-to-br from-slate-50 to-gray-100 min-h-[110px] overflow-hidden border-slate-200">
+      <Card className="bg-gradient-to-br from-slate-50 to-gray-100 h-[110px] overflow-hidden border-slate-200">
         <CardContent className="p-3 flex flex-col items-center justify-center h-full">
           <Calendar className="h-8 w-8 text-slate-400 mb-2" />
           <p className="text-xs text-slate-600 text-center font-medium">暂无倒数日</p>
@@ -154,7 +154,7 @@ const CountdownDisplay = () => {
 
   return (
     <Card
-      className={`${!backgroundImage ? `bg-gradient-to-br ${getGradientColors()}` : ''} border-purple-200 min-h-[110px] overflow-hidden relative shadow-lg hover:shadow-xl transition-all duration-300`}
+      className={`${!backgroundImage ? `bg-gradient-to-br ${getGradientColors()}` : ''} border-purple-200 h-[110px] overflow-hidden relative shadow-lg hover:shadow-xl transition-all duration-300`}
       style={cardStyle}
     >
       {backgroundImage && (
