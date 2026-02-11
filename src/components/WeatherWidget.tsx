@@ -87,7 +87,7 @@ const WeatherWidget = () => {
 
   if ((loading && !weather) || !selectedCity) {
     return (
-      <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg min-h-[110px]">
+      <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg h-[110px]">
         <div className="p-3 flex items-center justify-center h-full">
           <div className="animate-pulse">
             <div className="h-4 bg-white/20 rounded w-20 mb-2"></div>
@@ -101,7 +101,7 @@ const WeatherWidget = () => {
 
   if (!weather) {
     return (
-      <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg min-h-[110px]">
+      <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg h-[110px]">
         <div className="p-3 flex items-center justify-center h-full">
           <div className="text-xs opacity-90">天气加载失败</div>
         </div>
@@ -111,7 +111,7 @@ const WeatherWidget = () => {
 
   return (
     <Card 
-      className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden min-h-[110px] cursor-pointer"
+      className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden h-[110px] cursor-pointer"
       onClick={() => navigate('/weather')}
     >
       {refreshing && (
