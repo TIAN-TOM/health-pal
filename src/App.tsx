@@ -9,6 +9,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import WeatherDetail from "./pages/WeatherDetail";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
