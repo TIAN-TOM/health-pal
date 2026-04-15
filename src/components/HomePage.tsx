@@ -35,14 +35,23 @@ const HomePage = ({
       <div className="container mx-auto px-4 py-3 max-w-md space-y-3">
         <UserWelcomeWithClock userDisplayName={userDisplayName} onSettingsClick={onSettingsClick} onEmergencyClick={onEmergencyClick} />
         
-        <WeatherAlertBanner />
+       
+        <Suspense fallback={null}>
+          <WeatherAlertBanner />
+        </Suspense>
         
-        <AnnouncementDisplay />
+        <Suspense fallback={null}>
+          <AnnouncementDisplay />
+        </Suspense>
         
         {/* 天气和倒数日 */}
         <div className="grid grid-cols-2 gap-3">
-          <WeatherWidget />
-          <CountdownDisplay />
+          <Suspense fallback={<CardSkeleton />}>
+            <WeatherWidget />
+          </Suspense>
+          <Suspense fallback={<CardSkeleton />}>
+            <CountdownDisplay />
+          </Suspense>
         </div>
         
         <div className="grid grid-cols-2 gap-3">
@@ -62,7 +71,9 @@ const HomePage = ({
           </Button>
         </div>
         
-        <NavigationActions onDataExport={() => onNavigate("export")} onDailyData={() => onNavigate("daily-data")} />
+        <Suspense fallback={null}>
+          <NavigationActions onDataExport={() => onNavigate("export")} onDailyData={() => onNavigate("daily-data")} />
+        </Suspense>
         
         {/* 版权信息 - 缩减上方间距 */}
         <div className="pt-1 pb-4 text-center">
