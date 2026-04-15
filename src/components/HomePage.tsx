@@ -1,13 +1,19 @@
-import React from 'react';
+import React, { lazy, Suspense, memo } from 'react';
 import UserWelcomeWithClock from '@/components/UserWelcomeWithClock';
-import NavigationActions from '@/components/NavigationActions';
-import CountdownDisplay from '@/components/CountdownDisplay';
-import WeatherWidget from '@/components/WeatherWidget';
-import WeatherAlertBanner from '@/components/WeatherAlertBanner';
 import FunctionCards from '@/components/FunctionCards';
-import AnnouncementDisplay from '@/components/AnnouncementDisplay';
 import { Button } from '@/components/ui/button';
 import { BookOpen, History } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const NavigationActions = lazy(() => import('@/components/NavigationActions'));
+const CountdownDisplay = lazy(() => import('@/components/CountdownDisplay'));
+const WeatherWidget = lazy(() => import('@/components/WeatherWidget'));
+const WeatherAlertBanner = lazy(() => import('@/components/WeatherAlertBanner'));
+const AnnouncementDisplay = lazy(() => import('@/components/AnnouncementDisplay'));
+
+const CardSkeleton = () => (
+  <Skeleton className="h-[110px] w-full rounded-lg" />
+);
 interface HomePageProps {
   userDisplayName: string;
   onSettingsClick: () => void;
