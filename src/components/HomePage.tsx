@@ -1,13 +1,19 @@
-import React from 'react';
+import React, { lazy, Suspense, memo } from 'react';
 import UserWelcomeWithClock from '@/components/UserWelcomeWithClock';
-import NavigationActions from '@/components/NavigationActions';
-import CountdownDisplay from '@/components/CountdownDisplay';
-import WeatherWidget from '@/components/WeatherWidget';
-import WeatherAlertBanner from '@/components/WeatherAlertBanner';
 import FunctionCards from '@/components/FunctionCards';
-import AnnouncementDisplay from '@/components/AnnouncementDisplay';
 import { Button } from '@/components/ui/button';
 import { BookOpen, History } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const NavigationActions = lazy(() => import('@/components/NavigationActions'));
+const CountdownDisplay = lazy(() => import('@/components/CountdownDisplay'));
+const WeatherWidget = lazy(() => import('@/components/WeatherWidget'));
+const WeatherAlertBanner = lazy(() => import('@/components/WeatherAlertBanner'));
+const AnnouncementDisplay = lazy(() => import('@/components/AnnouncementDisplay'));
+
+const CardSkeleton = () => (
+  <Skeleton className="h-[110px] w-full rounded-lg" />
+);
 interface HomePageProps {
   userDisplayName: string;
   onSettingsClick: () => void;
@@ -29,14 +35,23 @@ const HomePage = ({
       <div className="container mx-auto px-4 py-3 max-w-md space-y-3">
         <UserWelcomeWithClock userDisplayName={userDisplayName} onSettingsClick={onSettingsClick} onEmergencyClick={onEmergencyClick} />
         
-        <WeatherAlertBanner />
+       
+        <Suspense fallback={null}>
+          <WeatherAlertBanner />
+        </Suspense>
         
-        <AnnouncementDisplay />
+        <Suspense fallback={null}>
+          <AnnouncementDisplay />
+        </Suspense>
         
         {/* 天气和倒数日 */}
         <div className="grid grid-cols-2 gap-3">
-          <WeatherWidget />
-          <CountdownDisplay />
+          <Suspense fallback={<CardSkeleton />}>
+            <WeatherWidget />
+          </Suspense>
+          <Suspense fallback={<CardSkeleton />}>
+            <CountdownDisplay />
+          </Suspense>
         </div>
         
         <div className="grid grid-cols-2 gap-3">
@@ -56,7 +71,9 @@ const HomePage = ({
           </Button>
         </div>
         
-        <NavigationActions onDataExport={() => onNavigate("export")} onDailyData={() => onNavigate("daily-data")} />
+        <Suspense fallback={null}>
+          <NavigationActions onDataExport={() => onNavigate("export")} onDailyData={() => onNavigate("daily-data")} />
+        </Suspense>
         
         {/* 版权信息 - 缩减上方间距 */}
         <div className="pt-1 pb-4 text-center">
@@ -76,4 +93,4 @@ const HomePage = ({
       </div>
     </div>;
 };
-export default HomePage;
+export default memo(HomePage);
