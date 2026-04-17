@@ -1,44 +1,42 @@
-
-import React from 'react';
-import DailyCheckin from './DailyCheckin';
-import RecordHub from './RecordHub';
-import BreathingExercise from './BreathingExercise';
-import VoiceRecord from './VoiceRecord';
-import Games from './Games';
-import RecordDetail from './RecordDetail';
-import Settings from './Settings';
-import PersonalProfile from './PersonalProfile';
-
-import MedicalRecords from './MedicalRecords';
-import EmergencyContacts from './EmergencyContacts';
-import EducationCenter from './EducationCenter';
-import MedicationManagement from './MedicationManagement';
-import EmergencyMode from './EmergencyMode';
-import UserManual from './UserManual';
-import UpdateLog from './UpdateLog';
-import AdminPanel from './AdminPanel';
-// 症状记录相关组件
-import DizzinessRecord from './DizzinessRecord';
-import DiabetesRecord from './DiabetesRecord';
-import LifestyleRecord from './LifestyleRecord';
-import MedicationRecord from './MedicationRecord';
-import FamilyDashboard from './family/FamilyDashboard';
-import FamilyExpenses from './family/FamilyExpenses';
-import FamilyReminders from './family/FamilyReminders';
-import FamilyCalendar from './family/FamilyCalendar';
-import EnhancedFamilyCalendar from './family/EnhancedFamilyCalendar';
-import FamilyMembers from './family/FamilyMembers';
-import FamilyMessages from './family/FamilyMessages';
-import FamilyStats from './family/FamilyStats';
-import ExchangeRate from './ExchangeRate';
-import DailyEnglish from './DailyEnglish';
-import DailyDataHub from './DailyDataHub';
-import DataExport from './DataExport';
+import React, { lazy, Suspense } from 'react';
 import type { Tables } from '@/integrations/supabase/types';
 
-type MeniereRecord = Tables<'meniere_records'>;
+// 全部页面组件懒加载，仅在路由切换到对应页面时才加载对应代码包
+const DailyCheckin = lazy(() => import('./DailyCheckin'));
+const RecordHub = lazy(() => import('./RecordHub'));
+const BreathingExercise = lazy(() => import('./BreathingExercise'));
+const VoiceRecord = lazy(() => import('./VoiceRecord'));
+const Games = lazy(() => import('./Games'));
+const RecordDetail = lazy(() => import('./RecordDetail'));
+const Settings = lazy(() => import('./Settings'));
+const PersonalProfile = lazy(() => import('./PersonalProfile'));
+const MedicalRecords = lazy(() => import('./MedicalRecords'));
+const EmergencyContacts = lazy(() => import('./EmergencyContacts'));
+const EducationCenter = lazy(() => import('./EducationCenter'));
+const MedicationManagement = lazy(() => import('./MedicationManagement'));
+const EmergencyMode = lazy(() => import('./EmergencyMode'));
+const UserManual = lazy(() => import('./UserManual'));
+const UpdateLog = lazy(() => import('./UpdateLog'));
+const AdminPanel = lazy(() => import('./AdminPanel'));
+const DizzinessRecord = lazy(() => import('./DizzinessRecord'));
+const DiabetesRecord = lazy(() => import('./DiabetesRecord'));
+const LifestyleRecord = lazy(() => import('./LifestyleRecord'));
+const MedicationRecord = lazy(() => import('./MedicationRecord'));
+const FamilyDashboard = lazy(() => import('./family/FamilyDashboard'));
+const FamilyExpenses = lazy(() => import('./family/FamilyExpenses'));
+const FamilyReminders = lazy(() => import('./family/FamilyReminders'));
+const FamilyCalendar = lazy(() => import('./family/FamilyCalendar'));
+const EnhancedFamilyCalendar = lazy(() => import('./family/EnhancedFamilyCalendar'));
+const FamilyMembers = lazy(() => import('./family/FamilyMembers'));
+const FamilyMessages = lazy(() => import('./family/FamilyMessages'));
+const FamilyStats = lazy(() => import('./family/FamilyStats'));
+const ExchangeRate = lazy(() => import('./ExchangeRate'));
+const DailyEnglish = lazy(() => import('./DailyEnglish'));
+const DailyDataHub = lazy(() => import('./DailyDataHub'));
+const DataExport = lazy(() => import('./DataExport'));
+const UserFeedback = lazy(() => import('./UserFeedback'));
 
-import UserFeedback from './UserFeedback';
+type MeniereRecord = Tables<'meniere_records'>;
 
 interface PageRendererProps {
   currentPage: string;
@@ -49,6 +47,15 @@ interface PageRendererProps {
   onRecordClick?: (record: MeniereRecord) => void;
 }
 
+const PageFallback = () => (
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p className="text-gray-600">加载中...</p>
+    </div>
+  </div>
+);
+
 const PageRenderer = ({
   currentPage,
   selectedRecord,
@@ -57,7 +64,6 @@ const PageRenderer = ({
   onNavigation,
   onRecordClick
 }: PageRendererProps) => {
-  // 家庭管理模块的返回逻辑处理
   const handleFamilyModuleBack = () => {
     onBack('familyDashboard');
   };
@@ -67,174 +73,111 @@ const PageRenderer = ({
     onNavigation
   };
 
-  switch (currentPage) {
-    case 'checkin':
-      return <DailyCheckin 
-        {...commonProps} 
-        onNavigateToRecords={() => onNavigation('record-hub')}
-      />;
-    
-    case 'record-hub':
-      return <RecordHub 
-        onBack={() => onBack()}
-        onNavigate={onNavigation}
-      />;
-    
-    case 'breathing':
-      return <BreathingExercise {...commonProps} />;
-    
-    case 'voice':
-      return <VoiceRecord {...commonProps} />;
-    
-    case 'games':
-      return <Games {...commonProps} />;
-    
-    case 'record-detail':
-      return selectedRecord ? (
-        <RecordDetail
-          record={selectedRecord}
-          onBack={() => onBack('record-hub')}
-        />
-      ) : null;
-    
-    case 'settings':
-      return (
-        <Settings
-          onBack={() => onBack()}
-          onPersonalProfile={() => onNavigation('profile')}
-          onEmergencyContacts={() => onNavigation('emergency-contacts')}
-          onMedicalRecords={() => onNavigation('medical-records')}
-          onEducation={() => onNavigation('education')}
-          onMedicationManagement={() => onNavigation('medications')}
-          onUserManual={() => onNavigation('user-manual')}
-          onUpdateLog={() => onNavigation('update-log')}
-          onAdminPanel={() => onNavigation('admin-panel')}
-          
-          onUserFeedback={() => onNavigation('user-feedback')}
-        />
-      );
-    
-    case 'profile':
-      return <PersonalProfile onBack={() => onBack('settings')} />;
-    
-    
-    case 'medical-records':
-      return <MedicalRecords onBack={() => onBack('settings')} />;
-    
-    case 'emergency-contacts':
-      return <EmergencyContacts onBack={() => onBack('settings')} />;
-    
-    case 'education':
-      return <EducationCenter onBack={() => onBack('settings')} />;
-    
-    case 'medications':
-      return <MedicationManagement onBack={() => onBack('settings')} />;
-    
-    case 'emergency':
-      return <EmergencyMode onBack={() => onBack()} />;
-    
-    case 'user-manual':
-      return <UserManual 
-        onBack={() => {
-          if (navigationSource === 'home') {
-            onBack('home');
-          } else {
-            onBack('settings');
-          }
-        }} 
-        source={navigationSource}
-      />;
-    
-    case 'update-log':
-      return <UpdateLog 
-        onBack={() => {
-          if (navigationSource === 'home') {
-            onBack('home');
-          } else {
-            onBack('settings');
-          }
-        }} 
-        source={navigationSource}
-      />;
-    
-    case 'admin-panel':
-      return <AdminPanel onBack={() => onBack('settings')} />;
-    
-    // 家庭管理中心
-    case 'familyDashboard':
-      return <FamilyDashboard 
-        onBack={() => onBack()}
-        onNavigate={onNavigation}
-      />;
-    
-    // 家庭管理相关页面路由 - 修复返回逻辑
-    case 'family-expenses':
-      return <FamilyExpenses onBack={handleFamilyModuleBack} />;
-    
-    case 'family-reminders':
-      return <FamilyReminders onBack={handleFamilyModuleBack} />;
-    
-    case 'family-calendar':
-      return <FamilyCalendar 
-        onBack={handleFamilyModuleBack}
-        onNavigate={onNavigation}
-      />;
-    
-    // 增强版家庭日历
-    case 'enhanced-family-calendar':
-      return <EnhancedFamilyCalendar 
-        onBack={handleFamilyModuleBack}
-        onNavigate={onNavigation}
-      />;
-    
-    case 'family-members':
-      return <FamilyMembers onBack={handleFamilyModuleBack} />;
-    
-    case 'family-messages':
-      return <FamilyMessages onBack={handleFamilyModuleBack} />;
-    
-    case 'family-stats':
-      return <FamilyStats onBack={handleFamilyModuleBack} />;
-    
-    case 'exchange-rate':
-      return <ExchangeRate {...commonProps} />;
-    
-    case 'english':
-      return <DailyEnglish {...commonProps} />;
-    
-    // 修复 DailyDataHub 的 props - 移除不存在的 onNavigate 属性
-    case 'daily-data':
-      return <DailyDataHub 
-        onBack={() => onBack()}
-        onRecordClick={onRecordClick}
-      />;
-    
-    case 'export':
-      return <DataExport onBack={() => onBack()} />;
-    
-    // 症状记录页面
-    case 'dizziness-record':
-      return <DizzinessRecord onBack={() => onNavigation('record-hub')} onNavigate={onNavigation} />;
-    
-    case 'diabetes-record':
-      return <DiabetesRecord onBack={() => onNavigation('record-hub')} onNavigate={onNavigation} />;
-    
-    case 'lifestyle-record':
-      return <LifestyleRecord onBack={() => onNavigation('record-hub')} onNavigate={onNavigation} />;
-    
-    case 'medication-record':
-      return <MedicationRecord 
-        onBack={() => onNavigation('record-hub')} 
-        onNavigate={onNavigation}
-        onNavigateToMedicationManagement={() => onNavigation('medications')}
-      />;
-    
-    case 'user-feedback':
-      return <UserFeedback onBack={() => onBack('settings')} />;
-    
-    default:
-      return null;
-  }
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'checkin':
+        return <DailyCheckin {...commonProps} onNavigateToRecords={() => onNavigation('record-hub')} />;
+      case 'record-hub':
+        return <RecordHub onBack={() => onBack()} onNavigate={onNavigation} />;
+      case 'breathing':
+        return <BreathingExercise {...commonProps} />;
+      case 'voice':
+        return <VoiceRecord {...commonProps} />;
+      case 'games':
+        return <Games {...commonProps} />;
+      case 'record-detail':
+        return selectedRecord ? (
+          <RecordDetail record={selectedRecord} onBack={() => onBack('record-hub')} />
+        ) : null;
+      case 'settings':
+        return (
+          <Settings
+            onBack={() => onBack()}
+            onPersonalProfile={() => onNavigation('profile')}
+            onEmergencyContacts={() => onNavigation('emergency-contacts')}
+            onMedicalRecords={() => onNavigation('medical-records')}
+            onEducation={() => onNavigation('education')}
+            onMedicationManagement={() => onNavigation('medications')}
+            onUserManual={() => onNavigation('user-manual')}
+            onUpdateLog={() => onNavigation('update-log')}
+            onAdminPanel={() => onNavigation('admin-panel')}
+            onUserFeedback={() => onNavigation('user-feedback')}
+          />
+        );
+      case 'profile':
+        return <PersonalProfile onBack={() => onBack('settings')} />;
+      case 'medical-records':
+        return <MedicalRecords onBack={() => onBack('settings')} />;
+      case 'emergency-contacts':
+        return <EmergencyContacts onBack={() => onBack('settings')} />;
+      case 'education':
+        return <EducationCenter onBack={() => onBack('settings')} />;
+      case 'medications':
+        return <MedicationManagement onBack={() => onBack('settings')} />;
+      case 'emergency':
+        return <EmergencyMode onBack={() => onBack()} />;
+      case 'user-manual':
+        return (
+          <UserManual
+            onBack={() => onBack(navigationSource === 'home' ? 'home' : 'settings')}
+            source={navigationSource}
+          />
+        );
+      case 'update-log':
+        return (
+          <UpdateLog
+            onBack={() => onBack(navigationSource === 'home' ? 'home' : 'settings')}
+            source={navigationSource}
+          />
+        );
+      case 'admin-panel':
+        return <AdminPanel onBack={() => onBack('settings')} />;
+      case 'familyDashboard':
+        return <FamilyDashboard onBack={() => onBack()} onNavigate={onNavigation} />;
+      case 'family-expenses':
+        return <FamilyExpenses onBack={handleFamilyModuleBack} />;
+      case 'family-reminders':
+        return <FamilyReminders onBack={handleFamilyModuleBack} />;
+      case 'family-calendar':
+        return <FamilyCalendar onBack={handleFamilyModuleBack} onNavigate={onNavigation} />;
+      case 'enhanced-family-calendar':
+        return <EnhancedFamilyCalendar onBack={handleFamilyModuleBack} onNavigate={onNavigation} />;
+      case 'family-members':
+        return <FamilyMembers onBack={handleFamilyModuleBack} />;
+      case 'family-messages':
+        return <FamilyMessages onBack={handleFamilyModuleBack} />;
+      case 'family-stats':
+        return <FamilyStats onBack={handleFamilyModuleBack} />;
+      case 'exchange-rate':
+        return <ExchangeRate {...commonProps} />;
+      case 'english':
+        return <DailyEnglish {...commonProps} />;
+      case 'daily-data':
+        return <DailyDataHub onBack={() => onBack()} onRecordClick={onRecordClick} />;
+      case 'export':
+        return <DataExport onBack={() => onBack()} />;
+      case 'dizziness-record':
+        return <DizzinessRecord onBack={() => onNavigation('record-hub')} onNavigate={onNavigation} />;
+      case 'diabetes-record':
+        return <DiabetesRecord onBack={() => onNavigation('record-hub')} onNavigate={onNavigation} />;
+      case 'lifestyle-record':
+        return <LifestyleRecord onBack={() => onNavigation('record-hub')} onNavigate={onNavigation} />;
+      case 'medication-record':
+        return (
+          <MedicationRecord
+            onBack={() => onNavigation('record-hub')}
+            onNavigate={onNavigation}
+            onNavigateToMedicationManagement={() => onNavigation('medications')}
+          />
+        );
+      case 'user-feedback':
+        return <UserFeedback onBack={() => onBack('settings')} />;
+      default:
+        return null;
+    }
+  };
+
+  return <Suspense fallback={<PageFallback />}>{renderPage()}</Suspense>;
 };
 
 export default PageRenderer;

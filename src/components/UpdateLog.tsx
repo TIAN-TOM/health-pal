@@ -18,6 +18,30 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.9.5',
+      date: '2026-04-17',
+      type: '性能优化',
+      icon: Zap,
+      color: 'bg-yellow-50 text-yellow-600 border-yellow-200',
+      items: [
+        {
+          title: '⚡ 全站响应速度大幅提升',
+          description: '路由级和页面级代码分割，仅在访问对应页面时才加载所需代码，首屏加载体积显著减小',
+          type: 'improvement'
+        },
+        {
+          title: '📦 第三方依赖智能分包',
+          description: '将 React、Supabase、Radix UI、图表、图标等大型依赖拆分为独立 chunk，提升缓存命中率',
+          type: 'improvement'
+        },
+        {
+          title: '🔁 数据请求缓存优化',
+          description: 'React Query 默认 5 分钟缓存、关闭窗口聚焦自动刷新，减少重复请求',
+          type: 'improvement'
+        }
+      ]
+    },
+    {
       version: '2.9.4',
       date: '2026-01-31',
       type: '问题修复',
