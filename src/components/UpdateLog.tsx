@@ -18,6 +18,35 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.9.6',
+      date: '2026-04-17',
+      type: '安全加固',
+      icon: Bug,
+      color: 'bg-red-50 text-red-600 border-red-200',
+      items: [
+        {
+          title: '🛡️ 修复积分系统可被篡改的严重漏洞',
+          description: '撤销客户端直接写入积分/库存/购买记录的权限，所有积分变动改由服务端原子函数处理，从根本上杜绝伪造',
+          type: 'fix'
+        },
+        {
+          title: '🔐 五子棋 Realtime 频道授权',
+          description: '为 Realtime 订阅添加授权策略，仅房间参与者可订阅或广播，防止他人窃听对局数据',
+          type: 'fix'
+        },
+        {
+          title: '📦 存储桶策略补全',
+          description: '为打卡照片、语音记录补全 UPDATE/DELETE 策略，用户可正常管理自己的文件',
+          type: 'fix'
+        },
+        {
+          title: '🎂 生日积分领取改为服务端校验',
+          description: '由服务器原子校验生日并发放 666 积分，防止客户端伪造请求重复领取',
+          type: 'fix'
+        }
+      ]
+    },
+    {
       version: '2.9.5',
       date: '2026-04-17',
       type: '性能优化',
