@@ -1286,6 +1286,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      award_checkin_points: {
+        Args: { p_description?: string; p_points?: number }
+        Returns: Json
+      }
       delete_expired_voice_records: { Args: never; Returns: undefined }
       get_effective_user_points: {
         Args: { check_user_id: string }
