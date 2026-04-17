@@ -134,18 +134,18 @@ export const getUserMakeupCards = async (): Promise<number> => {
   return data?.quantity || 0;
 };
 
-// 使用补签卡
+// 使用补签卡（通过服务端 SECURITY DEFINER 函数原子扣减库存）
 export const useMakeupCard = async (): Promise<boolean> => {
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     return false;
   }
 
-  // 获取当前补签卡数量
+  // 找到补签卡的 item_id
   const { data: inventory, error: fetchError } = await supabase
     .from('user_item_inventory')
-    .select('*')
+    .select('item_id, quantity')
     .eq('user_id', user.id)
     .eq('item_type', 'makeup_card')
     .maybeSingle();
@@ -159,19 +159,15 @@ export const useMakeupCard = async (): Promise<boolean> => {
     return false;
   }
 
-  // 减少补签卡数量
-  const { error: updateError } = await supabase
-    .from('user_item_inventory')
-    .update({ 
-      quantity: inventory.quantity - 1,
-      updated_at: getBeijingTimeISO()
-    })
-    .eq('id', inventory.id);
+  const { data, error } = await supabase.rpc('consume_inventory_item', {
+    p_item_id: inventory.item_id,
+    p_quantity: 1,
+  });
 
-  if (updateError) {
-    console.error('使用补签卡失败:', updateError);
+  if (error) {
+    console.error('使用补签卡失败:', error);
     return false;
   }
 
-  return true;
+  return (data as { success: boolean })?.success === true;
 };

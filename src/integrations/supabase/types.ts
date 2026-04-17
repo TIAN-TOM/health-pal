@@ -1286,6 +1286,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      award_birthday_bonus: { Args: never; Returns: Json }
+      award_points_for_checkin: { Args: never; Returns: Json }
+      consume_inventory_item: {
+        Args: { p_item_id: string; p_quantity?: number }
+        Returns: Json
+      }
       delete_expired_voice_records: { Args: never; Returns: undefined }
       get_effective_user_points: {
         Args: { check_user_id: string }
@@ -1301,6 +1307,10 @@ export type Database = {
       is_user_suspended: { Args: { user_id: string }; Returns: boolean }
       purchase_store_item: {
         Args: { p_item_id: string; p_item_price: number }
+        Returns: Json
+      }
+      spend_user_points: {
+        Args: { p_amount: number; p_reason?: string; p_reference_id?: string }
         Returns: Json
       }
     }
