@@ -89,6 +89,36 @@ export const claimBirthdayBonus = async (): Promise<boolean> => {
   return (data as { success: boolean })?.success === true;
 };
 
+/**
+ * 游戏通关奖励积分（服务端校验，每日封顶 100，单次最多 50）
+ */
+export const awardGameCompletionBonus = async (
+  gameId: string,
+  amount: number,
+  description?: string
+): Promise<{ awarded: number; dailyRemaining: number } | null> => {
+  const { data, error } = await supabase.rpc('award_game_completion_bonus', {
+    p_game_id: gameId,
+    p_amount: amount,
+    p_description: description ?? null,
+  });
+  if (error) {
+    console.error('发放游戏奖励积分失败:', error);
+    return null;
+  }
+  const result = data as {
+    success: boolean;
+    points_awarded?: number;
+    daily_remaining?: number;
+    error?: string;
+  };
+  if (!result?.success) return null;
+  return {
+    awarded: result.points_awarded || 0,
+    dailyRemaining: result.daily_remaining ?? 0,
+  };
+};
+
 // 管理员功能
 export const adminUpdateUserPoints = async (
   targetUserId: string,
