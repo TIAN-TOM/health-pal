@@ -302,11 +302,12 @@ const Games = ({ onBack }: GamesProps) => {
                           <div>
                             <p className="mb-2 font-medium text-gray-700">💣 Q版泡泡堂冒险</p>
                             <div className="text-xs text-gray-600 space-y-1">
-                              <p>• 方向键 / WASD 移动小兔子，空格 / Enter 放炸弹</p>
-                              <p>• 手机端使用屏幕下方虚拟按键</p>
-                              <p>• 炸弹 2.5 秒后十字爆炸，可破坏黄色箱子</p>
-                              <p>• 消灭所有 👾 敌人获胜，被炸到则游戏结束</p>
-                              <p>• 同时最多放 2 颗炸弹，可触发链式爆炸</p>
+                              <p>• 方向键 / WASD 移动，空格 / Enter 放炸弹</p>
+                              <p>• 像素风画面，多关卡 + 倒计时挑战</p>
+                              <p>• 道具：💣炸弹+1 🔥范围+1 👟踢炸弹 ⚡速度+</p>
+                              <p>• 敌人 AI 升级：会躲避炸弹、会追击玩家</p>
+                              <p>• 通关保留所有道具，进入下一关挑战</p>
+                              <p>• 通关奖励真实积分（每日上限 100）</p>
                               <p className="text-blue-600 font-medium">💥 经典俯视角解压玩法</p>
                             </div>
                           </div>

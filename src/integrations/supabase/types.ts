@@ -1287,6 +1287,10 @@ export type Database = {
         Returns: boolean
       }
       award_birthday_bonus: { Args: never; Returns: Json }
+      award_game_completion_bonus: {
+        Args: { p_amount: number; p_description?: string; p_game_id: string }
+        Returns: Json
+      }
       award_points_for_checkin: { Args: never; Returns: Json }
       consume_inventory_item: {
         Args: { p_item_id: string; p_quantity?: number }

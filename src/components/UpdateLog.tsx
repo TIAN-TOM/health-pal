@@ -18,6 +18,25 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.9.8',
+      date: '2026-04-18',
+      type: '功能升级',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '🎮 Q版泡泡堂全面升级',
+          description: '新增多关卡 + 倒计时、道具系统（炸弹+1/范围+1/踢炸弹/加速）、智能敌人 AI（躲炸弹/追玩家）、像素风美术替换 emoji 占位',
+          type: 'feature'
+        },
+        {
+          title: '💰 游戏接入积分系统',
+          description: '泡泡堂通关可获得真实积分奖励，关卡越高奖励越多，单次最多 50 分、每日累计上限 100 分（服务端原子校验防刷）',
+          type: 'feature'
+        }
+      ]
+    },
+    {
       version: '2.9.7',
       date: '2026-04-18',
       type: '新增功能',
