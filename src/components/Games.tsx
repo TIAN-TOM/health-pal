@@ -13,6 +13,7 @@ import Game2048 from '@/components/games/Game2048';
 import BubblePopGame from '@/components/games/BubblePopGame';
 import MultiplayerGomoku from '@/components/games/MultiplayerGomoku';
 import TetrisGame from '@/components/games/TetrisGame';
+import BomberPopGame from '@/components/games/BomberPopGame';
 
 interface GamesProps {
   onBack: () => void;
@@ -88,6 +89,13 @@ const Games = ({ onBack }: GamesProps) => {
       description: '经典俄罗斯方块游戏，消除完整行获得高分',
       icon: '🧩',
       component: TetrisGame
+    },
+    {
+      id: 'bomber-pop',
+      name: 'Q版泡泡堂',
+      description: '可爱兔子放炸弹炸毁箱子和敌人，消灭所有敌人获胜',
+      icon: '💣',
+      component: BomberPopGame
     }
   ];
 
