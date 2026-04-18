@@ -18,6 +18,20 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.9.7',
+      date: '2026-04-18',
+      type: '新增功能',
+      icon: Sparkles,
+      color: 'bg-purple-50 text-purple-600 border-purple-200',
+      items: [
+        {
+          title: '💣 新增 Q版泡泡堂小游戏',
+          description: '可爱俯视角放炸弹玩法，移动小兔子放置泡泡炸弹炸毁箱子和敌人，支持键盘和移动端虚拟按键操作',
+          type: 'feature'
+        }
+      ]
+    },
+    {
       version: '2.9.6',
       date: '2026-04-17',
       type: '安全加固',

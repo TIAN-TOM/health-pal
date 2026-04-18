@@ -13,6 +13,7 @@ import Game2048 from '@/components/games/Game2048';
 import BubblePopGame from '@/components/games/BubblePopGame';
 import MultiplayerGomoku from '@/components/games/MultiplayerGomoku';
 import TetrisGame from '@/components/games/TetrisGame';
+import BomberPopGame from '@/components/games/BomberPopGame';
 
 interface GamesProps {
   onBack: () => void;
@@ -88,6 +89,13 @@ const Games = ({ onBack }: GamesProps) => {
       description: '经典俄罗斯方块游戏，消除完整行获得高分',
       icon: '🧩',
       component: TetrisGame
+    },
+    {
+      id: 'bomber-pop',
+      name: 'Q版泡泡堂',
+      description: '可爱兔子放炸弹炸毁箱子和敌人，消灭所有敌人获胜',
+      icon: '💣',
+      component: BomberPopGame
     }
   ];
 
@@ -287,6 +295,19 @@ const Games = ({ onBack }: GamesProps) => {
                               <p>• 速度会随等级提升而加快</p>
                               <p>• 预览下一个方块，提前规划</p>
                               <p className="text-blue-600 font-medium">🏗️ 训练空间想象和快速反应</p>
+                            </div>
+                          </div>
+                        )}
+                        {game.id === 'bomber-pop' && (
+                          <div>
+                            <p className="mb-2 font-medium text-gray-700">💣 Q版泡泡堂冒险</p>
+                            <div className="text-xs text-gray-600 space-y-1">
+                              <p>• 方向键 / WASD 移动小兔子，空格 / Enter 放炸弹</p>
+                              <p>• 手机端使用屏幕下方虚拟按键</p>
+                              <p>• 炸弹 2.5 秒后十字爆炸，可破坏黄色箱子</p>
+                              <p>• 消灭所有 👾 敌人获胜，被炸到则游戏结束</p>
+                              <p>• 同时最多放 2 颗炸弹，可触发链式爆炸</p>
+                              <p className="text-blue-600 font-medium">💥 经典俯视角解压玩法</p>
                             </div>
                           </div>
                         )}
