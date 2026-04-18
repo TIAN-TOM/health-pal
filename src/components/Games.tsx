@@ -298,6 +298,19 @@ const Games = ({ onBack }: GamesProps) => {
                             </div>
                           </div>
                         )}
+                        {game.id === 'bomber-pop' && (
+                          <div>
+                            <p className="mb-2 font-medium text-gray-700">💣 Q版泡泡堂冒险</p>
+                            <div className="text-xs text-gray-600 space-y-1">
+                              <p>• 方向键 / WASD 移动小兔子，空格 / Enter 放炸弹</p>
+                              <p>• 手机端使用屏幕下方虚拟按键</p>
+                              <p>• 炸弹 2.5 秒后十字爆炸，可破坏黄色箱子</p>
+                              <p>• 消灭所有 👾 敌人获胜，被炸到则游戏结束</p>
+                              <p>• 同时最多放 2 颗炸弹，可触发链式爆炸</p>
+                              <p className="text-blue-600 font-medium">💥 经典俯视角解压玩法</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
