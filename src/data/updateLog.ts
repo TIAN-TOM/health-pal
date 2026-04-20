@@ -1,4 +1,4 @@
-import { Calendar, Zap, Bug, Sparkles, type LucideIcon } from 'lucide-react';
+import { Calendar, Zap, Bug, Sparkles, Home, type LucideIcon } from 'lucide-react';
 
 export interface UpdateItem {
   title: string;
