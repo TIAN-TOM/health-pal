@@ -16,6 +16,30 @@ export interface UpdateEntry {
 }
 
 export const updates: UpdateEntry[] = [
+  {
+    version: '2.9.10',
+    date: '2026-04-20',
+    type: '代码重构',
+    icon: Sparkles,
+    color: 'bg-purple-50 text-purple-600 border-purple-200',
+    items: [
+      {
+        title: '🧪 引入 Vitest 测试基础设施',
+        description: '新增 vitest + @testing-library/react，覆盖更新日志和小游戏注册表，重构后行为零变化',
+        type: 'feature',
+      },
+      {
+        title: '📝 更新日志数据外移',
+        description: 'UpdateLog 组件从 958 行瘦身到约 100 行，37 条版本数据迁至 src/data/updateLog.ts，渲染与数据彻底解耦',
+        type: 'improvement',
+      },
+      {
+        title: '🎮 小游戏注册表抽离',
+        description: 'Games 组件从 363 行瘦身到约 144 行，10 个游戏的元数据 + 攻略下沉到 registry，攻略浮层抽成可复用子组件',
+        type: 'improvement',
+      },
+    ],
+  },
     {
       version: '2.9.9',
       date: '2026-04-20',

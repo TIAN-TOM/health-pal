@@ -8,9 +8,9 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.9.9 (performance optimization)", () => {
-    expect(updates[0].version).toBe("2.9.9");
-    expect(updates[0].type).toBe("性能优化");
+  it("latest version is 2.9.10 (refactor)", () => {
+    expect(updates[0].version).toBe("2.9.10");
+    expect(updates[0].type).toBe("代码重构");
   });
 
   it("every entry has required fields", () => {
