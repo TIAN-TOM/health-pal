@@ -1,23 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { ArrowLeft, Gamepad2, Play, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
-import EnhancedFlappyBird from '@/components/games/EnhancedFlappyBird';
-import EnhancedGomoku from '@/components/games/EnhancedGomoku';
-import BreakoutGame from '@/components/games/BreakoutGame';
-import MemoryCardGame from '@/components/games/MemoryCardGame';
-import SnakeGame from '@/components/games/SnakeGame';
-import Game2048 from '@/components/games/Game2048';
-import BubblePopGame from '@/components/games/BubblePopGame';
-import MultiplayerGomoku from '@/components/games/MultiplayerGomoku';
-import TetrisGame from '@/components/games/TetrisGame';
-import BomberPopGame from '@/components/games/BomberPopGame';
+
+// 所有游戏组件懒加载，避免一次性把 7000+ 行游戏代码打入主包
+const EnhancedFlappyBird = lazy(() => import('@/components/games/EnhancedFlappyBird'));
+const EnhancedGomoku = lazy(() => import('@/components/games/EnhancedGomoku'));
+const BreakoutGame = lazy(() => import('@/components/games/BreakoutGame'));
+const MemoryCardGame = lazy(() => import('@/components/games/MemoryCardGame'));
+const SnakeGame = lazy(() => import('@/components/games/SnakeGame'));
+const Game2048 = lazy(() => import('@/components/games/Game2048'));
+const BubblePopGame = lazy(() => import('@/components/games/BubblePopGame'));
+const MultiplayerGomoku = lazy(() => import('@/components/games/MultiplayerGomoku'));
+const TetrisGame = lazy(() => import('@/components/games/TetrisGame'));
+const BomberPopGame = lazy(() => import('@/components/games/BomberPopGame'));
 
 interface GamesProps {
   onBack: () => void;
 }
+
+const GameLoadingFallback = () => (
+  <div className="min-h-[400px] flex items-center justify-center">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+      <p className="text-gray-600 text-sm">游戏加载中...</p>
+    </div>
+  </div>
+);
 
 const Games = ({ onBack }: GamesProps) => {
   const [currentGame, setCurrentGame] = useState<string | null>(null);
@@ -142,7 +153,9 @@ const Games = ({ onBack }: GamesProps) => {
                 />
               </div>
             </div>
-            <GameComponent onBack={handleBackToGames} soundEnabled={soundEnabled} />
+            <Suspense fallback={<GameLoadingFallback />}>
+              <GameComponent onBack={handleBackToGames} soundEnabled={soundEnabled} />
+            </Suspense>
           </div>
         </div>
       );
