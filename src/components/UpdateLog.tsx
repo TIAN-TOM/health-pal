@@ -18,6 +18,30 @@ interface UpdateLogProps {
 const UpdateLog = ({ onBack, source }: UpdateLogProps) => {
   const updates = [
     {
+      version: '2.9.9',
+      date: '2026-04-20',
+      type: '性能优化',
+      icon: Zap,
+      color: 'bg-yellow-50 text-yellow-600 border-yellow-200',
+      items: [
+        {
+          title: '🚀 解压小游戏改为按需加载',
+          description: '将 11 个小游戏组件（约 7000 行）由静态导入改为懒加载，显著降低首次进入相关页面的下载和解析体积',
+          type: 'feature'
+        },
+        {
+          title: '⏱️ 首页时钟拆分独立组件',
+          description: '将每秒滴答的时钟独立为子组件并对齐秒边界，避免每秒重渲染问候语、天气、倒数日等无关模块',
+          type: 'feature'
+        },
+        {
+          title: '🧹 清理高频日志',
+          description: '移除 beijingTime 工具与认证流程中的高频 console.log（每秒数次），降低主线程开销',
+          type: 'fix'
+        }
+      ]
+    },
+    {
       version: '2.9.8',
       date: '2026-04-18',
       type: '功能升级',
