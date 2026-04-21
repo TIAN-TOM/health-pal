@@ -17,6 +17,25 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.9.12',
+    date: '2026-04-21',
+    type: '代码重构',
+    icon: Sparkles,
+    color: 'bg-purple-50 text-purple-600 border-purple-200',
+    items: [
+      {
+        title: '🎮 多人五子棋通信解耦',
+        description: 'MultiplayerGomoku 从 850 行瘦身到约 470 行,Supabase Realtime 频道、presence 在线追踪、broadcast 落子、大厅 postgres_changes 全部抽到 useGomokuRoom hook,UI 与通信彻底分离',
+        type: 'improvement',
+      },
+      {
+        title: '✅ 重构等价性验证',
+        description: '建房 / 加房 / 落子 / 在线状态 / 离线提示 / 游戏结算行为完全保持一致,channel 生命周期由 hook 自动管理',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.9.11',
     date: '2026-04-21',
     type: '代码重构',
@@ -25,17 +44,17 @@ export const updates: UpdateEntry[] = [
     items: [
       {
         title: '💣 泡泡堂模块化拆分',
-        description: 'BomberPopGame 从 969 行瘦身到 694 行，地图生成 / 关卡配置 / 爆炸计算 / 像素美术 / 音效拆为 6 个独立模块，纯函数全部覆盖单元测试',
+        description: 'BomberPopGame 从 969 行瘦身到 694 行,地图生成 / 关卡配置 / 爆炸计算 / 像素美术 / 音效拆为 6 个独立模块,纯函数全部覆盖单元测试',
         type: 'improvement',
       },
       {
         title: '🎙️ 语音记录提取自定义 Hooks',
-        description: 'VoiceRecord 从 809 行瘦身到 558 行，录音逻辑抽到 useVoiceRecorder（185 行），播放逻辑抽到 useVoicePlayback（95 行），主组件聚焦渲染',
+        description: 'VoiceRecord 从 809 行瘦身到 558 行,录音逻辑抽到 useVoiceRecorder(185 行),播放逻辑抽到 useVoicePlayback(95 行),主组件聚焦渲染',
         type: 'improvement',
       },
       {
         title: '✅ 28 个单元测试守护重构',
-        description: '关卡难度、地图生成、爆炸传播、连环引爆、危险格判定均有覆盖，确保重构前后行为完全等价',
+        description: '关卡难度、地图生成、爆炸传播、连环引爆、危险格判定均有覆盖,确保重构前后行为完全等价',
         type: 'feature',
       },
     ],

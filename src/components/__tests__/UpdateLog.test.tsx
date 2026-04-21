@@ -8,8 +8,8 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.9.11 (refactor)", () => {
-    expect(updates[0].version).toBe("2.9.11");
+  it("latest version is 2.9.12 (refactor)", () => {
+    expect(updates[0].version).toBe("2.9.12");
     expect(updates[0].type).toBe("代码重构");
   });
 
