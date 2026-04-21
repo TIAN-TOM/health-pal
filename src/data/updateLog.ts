@@ -17,6 +17,30 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.9.11',
+    date: '2026-04-21',
+    type: '代码重构',
+    icon: Sparkles,
+    color: 'bg-purple-50 text-purple-600 border-purple-200',
+    items: [
+      {
+        title: '💣 泡泡堂模块化拆分',
+        description: 'BomberPopGame 从 969 行瘦身到 694 行，地图生成 / 关卡配置 / 爆炸计算 / 像素美术 / 音效拆为 6 个独立模块，纯函数全部覆盖单元测试',
+        type: 'improvement',
+      },
+      {
+        title: '🎙️ 语音记录提取自定义 Hooks',
+        description: 'VoiceRecord 从 809 行瘦身到 558 行，录音逻辑抽到 useVoiceRecorder（185 行），播放逻辑抽到 useVoicePlayback（95 行），主组件聚焦渲染',
+        type: 'improvement',
+      },
+      {
+        title: '✅ 28 个单元测试守护重构',
+        description: '关卡难度、地图生成、爆炸传播、连环引爆、危险格判定均有覆盖，确保重构前后行为完全等价',
+        type: 'feature',
+      },
+    ],
+  },
+  {
     version: '2.9.10',
     date: '2026-04-20',
     type: '代码重构',

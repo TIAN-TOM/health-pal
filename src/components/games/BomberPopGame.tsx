@@ -6,270 +6,40 @@ import { RotateCcw, Trophy, Bomb, ArrowUp, ArrowDown, ArrowLeft as ArrowLeftIcon
 import { useIsMobile } from '@/hooks/use-mobile';
 import { awardGameCompletionBonus } from '@/services/pointsService';
 import { toast } from '@/hooks/use-toast';
+import {
+  ROWS,
+  COLS,
+  TICK_MS,
+  BOMB_FUSE_TICKS,
+  EXPLOSION_TICKS,
+  PLAYER_BASE_MOVE_TICKS,
+  BOMB_KICK_MOVE_TICKS,
+  POWER_UP_LABEL,
+  type CellType,
+  type Direction,
+  type PowerUp,
+  type BombEntity,
+  type Explosion,
+  type Enemy,
+  type LevelConfig,
+} from '@/components/games/bomberPop/types';
+import { buildLevel } from '@/components/games/bomberPop/levelConfig';
+import { generateMap } from '@/components/games/bomberPop/mapGenerator';
+import { computeExplosionCells, computeDangerCells } from '@/components/games/bomberPop/explosion';
+import { playSound } from '@/components/games/bomberPop/sound';
+import {
+  PixelTile,
+  PixelBomb,
+  PixelExplosion,
+  PixelPlayer,
+  PixelEnemy,
+  PowerUpIcon,
+} from '@/components/games/bomberPop/PixelArt';
 
 interface BomberPopGameProps {
   onBack: () => void;
   soundEnabled: boolean;
 }
-
-type CellType = 'empty' | 'wall' | 'box';
-type Direction = 'up' | 'down' | 'left' | 'right';
-type PowerUpType = 'bomb' | 'range' | 'kick' | 'speed';
-
-interface PowerUp {
-  x: number;
-  y: number;
-  type: PowerUpType;
-}
-
-interface Bomb {
-  id: number;
-  x: number;
-  y: number;
-  timer: number;
-  range: number;
-  ownerId: 'player' | 'enemy';
-  // 踢动状态
-  vx?: number;
-  vy?: number;
-  moveCooldown?: number;
-}
-
-interface Explosion {
-  id: number;
-  cells: { x: number; y: number }[];
-  timer: number;
-}
-
-interface Enemy {
-  id: number;
-  x: number;
-  y: number;
-  dir: Direction;
-  moveCooldown: number;
-  alive: boolean;
-  /** 0=傻瓜随机 1=会躲炸弹 2=会躲会追 */
-  intelligence: 0 | 1 | 2;
-}
-
-const ROWS = 11;
-const COLS = 13;
-const TICK_MS = 100;
-const BOMB_FUSE_TICKS = Math.round(2500 / TICK_MS);
-const EXPLOSION_TICKS = Math.round(450 / TICK_MS);
-const PLAYER_BASE_MOVE_TICKS = 2;
-const BOMB_KICK_MOVE_TICKS = 1;
-
-interface LevelConfig {
-  level: number;
-  enemyCount: number;
-  enemyIntelligence: 0 | 1 | 2;
-  enemyMoveTicks: number;
-  boxRate: number;
-  timeLimitSec: number;
-  powerUpRate: number; // 0~1，每个箱子掉落道具的概率
-}
-
-const buildLevel = (level: number): LevelConfig => {
-  const clamped = Math.max(1, level);
-  const enemyCount = Math.min(2 + Math.floor((clamped - 1) / 1.5), 6);
-  let intelligence: 0 | 1 | 2 = 0;
-  if (clamped >= 2) intelligence = 1;
-  if (clamped >= 4) intelligence = 2;
-  const enemyMoveTicks = Math.max(2, 6 - Math.floor(clamped / 2));
-  const boxRate = Math.min(0.45 + clamped * 0.04, 0.7);
-  const timeLimitSec = Math.max(60, 150 - clamped * 10);
-  const powerUpRate = Math.min(0.2 + clamped * 0.02, 0.4);
-  return { level: clamped, enemyCount, enemyIntelligence: intelligence, enemyMoveTicks, boxRate, timeLimitSec, powerUpRate };
-};
-
-const generateMap = (cfg: LevelConfig, enemyCount: number): { map: CellType[][]; powerUpSpawns: { x: number; y: number; type: PowerUpType }[]; enemyPositions: { x: number; y: number }[] } => {
-  const map: CellType[][] = Array.from({ length: ROWS }, () =>
-    Array.from({ length: COLS }, () => 'empty' as CellType)
-  );
-
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      if (r === 0 || c === 0 || r === ROWS - 1 || c === COLS - 1) {
-        map[r][c] = 'wall';
-      } else if (r % 2 === 0 && c % 2 === 0) {
-        map[r][c] = 'wall';
-      }
-    }
-  }
-
-  // 玩家与敌人安全区
-  const safeZones = [
-    { x: 1, y: 1 }, { x: 2, y: 1 }, { x: 1, y: 2 },
-  ];
-  const enemyCorners: { x: number; y: number }[] = [
-    { x: COLS - 2, y: ROWS - 2 },
-    { x: COLS - 2, y: 1 },
-    { x: 1, y: ROWS - 2 },
-    { x: COLS - 4, y: ROWS - 2 },
-    { x: COLS - 2, y: ROWS - 4 },
-    { x: 3, y: ROWS - 2 },
-  ];
-  const enemyPositions = enemyCorners.slice(0, enemyCount);
-  enemyPositions.forEach(p => {
-    safeZones.push({ x: p.x, y: p.y });
-    [{ dx: 1, dy: 0 }, { dx: -1, dy: 0 }, { dx: 0, dy: 1 }, { dx: 0, dy: -1 }].forEach(({ dx, dy }) => {
-      safeZones.push({ x: p.x + dx, y: p.y + dy });
-    });
-  });
-
-  const isSafe = (x: number, y: number) => safeZones.some(s => s.x === x && s.y === y);
-
-  const boxPositions: { x: number; y: number }[] = [];
-  for (let r = 1; r < ROWS - 1; r++) {
-    for (let c = 1; c < COLS - 1; c++) {
-      if (map[r][c] === 'empty' && !isSafe(c, r) && Math.random() < cfg.boxRate) {
-        map[r][c] = 'box';
-        boxPositions.push({ x: c, y: r });
-      }
-    }
-  }
-
-  // 道具掉落预生成（藏在箱子下面）
-  const powerUpSpawns: { x: number; y: number; type: PowerUpType }[] = [];
-  const types: PowerUpType[] = ['bomb', 'range', 'kick', 'speed'];
-  boxPositions.forEach(({ x, y }) => {
-    if (Math.random() < cfg.powerUpRate) {
-      const type = types[Math.floor(Math.random() * types.length)];
-      powerUpSpawns.push({ x, y, type });
-    }
-  });
-
-  return { map, powerUpSpawns, enemyPositions };
-};
-
-const playSound = (frequency: number, duration: number, type: OscillatorType = 'sine') => {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = frequency;
-    osc.type = type;
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + duration);
-  } catch (e) {
-    // ignore
-  }
-};
-
-// === 像素美术：8x8 SVG 块（无外部资源） ===
-const PixelTile: React.FC<{ kind: 'grass' | 'wall' | 'box' }> = ({ kind }) => {
-  if (kind === 'grass') {
-    return (
-      <svg viewBox="0 0 8 8" className="absolute inset-0 w-full h-full" preserveAspectRatio="none" shapeRendering="crispEdges">
-        <rect width="8" height="8" fill="#a7f3d0" />
-        <rect x="1" y="2" width="1" height="1" fill="#6ee7b7" />
-        <rect x="5" y="1" width="1" height="1" fill="#6ee7b7" />
-        <rect x="3" y="5" width="1" height="1" fill="#6ee7b7" />
-        <rect x="6" y="6" width="1" height="1" fill="#6ee7b7" />
-      </svg>
-    );
-  }
-  if (kind === 'wall') {
-    return (
-      <svg viewBox="0 0 8 8" className="absolute inset-0 w-full h-full" preserveAspectRatio="none" shapeRendering="crispEdges">
-        <rect width="8" height="8" fill="#475569" />
-        <rect x="0" y="0" width="8" height="1" fill="#64748b" />
-        <rect x="0" y="0" width="1" height="8" fill="#64748b" />
-        <rect x="7" y="0" width="1" height="8" fill="#1e293b" />
-        <rect x="0" y="7" width="8" height="1" fill="#1e293b" />
-        <rect x="3" y="3" width="2" height="2" fill="#334155" />
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 8 8" className="absolute inset-0 w-full h-full" preserveAspectRatio="none" shapeRendering="crispEdges">
-      <rect width="8" height="8" fill="#fbbf24" />
-      <rect x="0" y="0" width="8" height="1" fill="#fcd34d" />
-      <rect x="0" y="0" width="1" height="8" fill="#fcd34d" />
-      <rect x="7" y="0" width="1" height="8" fill="#b45309" />
-      <rect x="0" y="7" width="8" height="1" fill="#b45309" />
-      <rect x="2" y="2" width="4" height="1" fill="#92400e" />
-      <rect x="2" y="5" width="4" height="1" fill="#92400e" />
-      <rect x="2" y="3" width="1" height="2" fill="#92400e" />
-      <rect x="5" y="3" width="1" height="2" fill="#92400e" />
-    </svg>
-  );
-};
-
-const PixelBomb: React.FC = () => (
-  <svg viewBox="0 0 8 8" className="absolute inset-1 w-[calc(100%-0.5rem)] h-[calc(100%-0.5rem)] animate-pulse" preserveAspectRatio="xMidYMid meet" shapeRendering="crispEdges">
-    <rect x="2" y="2" width="4" height="4" fill="#1f2937" />
-    <rect x="1" y="3" width="6" height="2" fill="#1f2937" />
-    <rect x="2" y="2" width="1" height="1" fill="#6b7280" />
-    <rect x="3" y="1" width="2" height="1" fill="#374151" />
-    <rect x="4" y="0" width="1" height="1" fill="#f59e0b" />
-  </svg>
-);
-
-const PixelExplosion: React.FC = () => (
-  <svg viewBox="0 0 8 8" className="absolute inset-0 w-full h-full" preserveAspectRatio="none" shapeRendering="crispEdges">
-    <rect width="8" height="8" fill="#fb923c" />
-    <rect x="1" y="1" width="6" height="6" fill="#fde047" />
-    <rect x="2" y="2" width="4" height="4" fill="#fff" opacity="0.8" />
-  </svg>
-);
-
-const PixelPlayer: React.FC = () => (
-  <svg viewBox="0 0 8 8" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet" shapeRendering="crispEdges">
-    {/* 兔耳 */}
-    <rect x="2" y="0" width="1" height="2" fill="#fff" />
-    <rect x="5" y="0" width="1" height="2" fill="#fff" />
-    <rect x="2" y="1" width="1" height="1" fill="#fbcfe8" />
-    <rect x="5" y="1" width="1" height="1" fill="#fbcfe8" />
-    {/* 头 */}
-    <rect x="1" y="2" width="6" height="3" fill="#fff" />
-    <rect x="2" y="3" width="1" height="1" fill="#1f2937" />
-    <rect x="5" y="3" width="1" height="1" fill="#1f2937" />
-    <rect x="3" y="4" width="2" height="1" fill="#f472b6" />
-    {/* 身 */}
-    <rect x="2" y="5" width="4" height="2" fill="#fff" />
-    <rect x="1" y="7" width="2" height="1" fill="#fff" />
-    <rect x="5" y="7" width="2" height="1" fill="#fff" />
-  </svg>
-);
-
-const PixelEnemy: React.FC<{ intelligence: 0 | 1 | 2 }> = ({ intelligence }) => {
-  const colors: Record<number, string> = { 0: '#a78bfa', 1: '#f472b6', 2: '#ef4444' };
-  const color = colors[intelligence] ?? '#a78bfa';
-  return (
-    <svg viewBox="0 0 8 8" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet" shapeRendering="crispEdges">
-      <rect x="2" y="0" width="4" height="1" fill={color} />
-      <rect x="1" y="1" width="6" height="5" fill={color} />
-      <rect x="0" y="6" width="2" height="1" fill={color} />
-      <rect x="3" y="6" width="2" height="1" fill={color} />
-      <rect x="6" y="6" width="2" height="1" fill={color} />
-      {/* 眼 */}
-      <rect x="2" y="2" width="2" height="2" fill="#fff" />
-      <rect x="4" y="2" width="2" height="2" fill="#fff" />
-      <rect x="3" y="3" width="1" height="1" fill="#1f2937" />
-      <rect x="5" y="3" width="1" height="1" fill="#1f2937" />
-    </svg>
-  );
-};
-
-const PowerUpIcon: React.FC<{ type: PowerUpType }> = ({ type }) => {
-  if (type === 'bomb') return <Bomb className="absolute inset-0 m-auto w-3/4 h-3/4 text-red-600 drop-shadow" />;
-  if (type === 'range') return <Flame className="absolute inset-0 m-auto w-3/4 h-3/4 text-orange-600 drop-shadow" />;
-  if (type === 'kick') return <Footprints className="absolute inset-0 m-auto w-3/4 h-3/4 text-blue-600 drop-shadow" />;
-  return <Zap className="absolute inset-0 m-auto w-3/4 h-3/4 text-yellow-600 drop-shadow" />;
-};
-
-const POWER_UP_LABEL: Record<PowerUpType, string> = {
-  bomb: '炸弹+1',
-  range: '范围+1',
-  kick: '获得踢炸弹',
-  speed: '速度提升',
-};
 
 const BomberPopGame = ({ onBack, soundEnabled }: BomberPopGameProps) => {
   // 关卡 / 配置
@@ -281,7 +51,7 @@ const BomberPopGame = ({ onBack, soundEnabled }: BomberPopGameProps) => {
   const [hiddenPowerUps, setHiddenPowerUps] = useState<PowerUp[]>([]);
   const [activePowerUps, setActivePowerUps] = useState<PowerUp[]>([]);
   const [player, setPlayer] = useState({ x: 1, y: 1, alive: true });
-  const [bombs, setBombs] = useState<Bomb[]>([]);
+  const [bombs, setBombs] = useState<BombEntity[]>([]);
   const [explosions, setExplosions] = useState<Explosion[]>([]);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
 
@@ -374,31 +144,6 @@ const BomberPopGame = ({ onBack, soundEnabled }: BomberPopGameProps) => {
     });
   }, [levelNum, score, maxBombs, bombRange, hasKick, speedLevel, startLevel]);
 
-  // === 爆炸计算 ===
-  const computeExplosionCells = useCallback((bomb: Bomb, currentMap: CellType[][], currentBombs: Bomb[]) => {
-    const cells: { x: number; y: number }[] = [{ x: bomb.x, y: bomb.y }];
-    const destroyedBoxes: { x: number; y: number }[] = [];
-    const triggeredBombs: Bomb[] = [];
-    const directions: [number, number][] = [[0, -1], [0, 1], [-1, 0], [1, 0]];
-    for (const [dx, dy] of directions) {
-      for (let i = 1; i <= bomb.range; i++) {
-        const nx = bomb.x + dx * i;
-        const ny = bomb.y + dy * i;
-        if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) break;
-        const cell = currentMap[ny][nx];
-        if (cell === 'wall') break;
-        cells.push({ x: nx, y: ny });
-        const chained = currentBombs.find(b => b.id !== bomb.id && b.x === nx && b.y === ny);
-        if (chained) triggeredBombs.push(chained);
-        if (cell === 'box') {
-          destroyedBoxes.push({ x: nx, y: ny });
-          break;
-        }
-      }
-    }
-    return { cells, destroyedBoxes, triggeredBombs };
-  }, []);
-
   // === 玩家移动 ===
   const tryMovePlayer = useCallback((dir: Direction) => {
     setPlayer(prev => {
@@ -475,26 +220,6 @@ const BomberPopGame = ({ onBack, soundEnabled }: BomberPopGameProps) => {
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, [gameStarted, gameOver, placeBomb]);
-
-  // === 智能 AI 工具：危险格判定 ===
-  const computeDangerCells = useCallback((currentBombs: Bomb[], currentMap: CellType[][]): Set<string> => {
-    const danger = new Set<string>();
-    for (const bomb of currentBombs) {
-      danger.add(`${bomb.x},${bomb.y}`);
-      const directions: [number, number][] = [[0, -1], [0, 1], [-1, 0], [1, 0]];
-      for (const [dx, dy] of directions) {
-        for (let i = 1; i <= bomb.range; i++) {
-          const nx = bomb.x + dx * i;
-          const ny = bomb.y + dy * i;
-          if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) break;
-          if (currentMap[ny][nx] === 'wall') break;
-          danger.add(`${nx},${ny}`);
-          if (currentMap[ny][nx] === 'box') break;
-        }
-      }
-    }
-    return danger;
-  }, []);
 
   // === 主循环 ===
   useEffect(() => {
@@ -677,7 +402,7 @@ const BomberPopGame = ({ onBack, soundEnabled }: BomberPopGameProps) => {
       });
     }, TICK_MS);
     return () => clearInterval(interval);
-  }, [gameStarted, gameOver, map, bombs, player, enemies, hiddenPowerUps, computeExplosionCells, computeDangerCells, tryMovePlayer, sfx, playerMoveTicks]);
+  }, [gameStarted, gameOver, map, bombs, player, enemies, hiddenPowerUps, tryMovePlayer, sfx, playerMoveTicks]);
 
   // === 道具拾取 ===
   useEffect(() => {

@@ -3,13 +3,15 @@ import { ArrowLeft, Mic, Square, Play, Trash2, Download, Pause, Volume2, List, S
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  createVoiceRecord, 
-  uploadVoiceFile, 
-  getUserVoiceRecords, 
-  deleteVoiceRecord, 
+import { useVoiceRecorder } from '@/hooks/useVoiceRecorder';
+import { useVoicePlayback } from '@/hooks/useVoicePlayback';
+import {
+  createVoiceRecord,
+  uploadVoiceFile,
+  getUserVoiceRecords,
+  deleteVoiceRecord,
   deleteVoiceFile,
-  getVoiceFileUrl 
+  getVoiceFileUrl,
 } from '@/services/voiceRecordService';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -19,36 +21,52 @@ interface VoiceRecordProps {
   onBack: () => void;
 }
 
+const formatTime = (seconds: number) => {
+  if (!isFinite(seconds) || isNaN(seconds)) return '00:00';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
+
+const formatDate = (dateString: string) => new Date(dateString).toLocaleString('zh-CN');
+
 const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const [hasRecording, setHasRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string>('');
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [playbackTime, setPlaybackTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
   const [showHistory, setShowHistory] = useState(false);
   const [voiceRecords, setVoiceRecords] = useState<VoiceRecord[]>([]);
   const [note, setNote] = useState('');
   const [playingRecordId, setPlayingRecordId] = useState<string | null>(null);
-  
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const playbackTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+
+  const {
+    isRecording,
+    recordingTime,
+    hasRecording,
+    audioBlob,
+    audioUrl,
+    duration,
+    startRecording,
+    stopRecording,
+    resetRecording,
+  } = useVoiceRecorder();
+
+  const {
+    isPlaying,
+    isPaused,
+    playbackTime,
+    volume,
+    setIsPlaying,
+    setPlaybackTime,
+    playRecording,
+    stopPlayback,
+    seekTo,
+    changeVolume,
+  } = useVoicePlayback(audioRef, audioUrl);
 
   useEffect(() => {
     loadVoiceRecords();
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
-      if (audioUrl) URL.revokeObjectURL(audioUrl);
-    };
   }, []);
 
   const loadVoiceRecords = async () => {
@@ -60,196 +78,17 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
     }
   };
 
-  const getRecordingOptions = (): MediaRecorderOptions => {
-    const options: MediaRecorderOptions = {
-      mimeType: 'audio/webm;codecs=opus',
-      audioBitsPerSecond: 128000
-    };
-    
-    if (!MediaRecorder.isTypeSupported(options.mimeType!)) {
-      if (MediaRecorder.isTypeSupported('audio/webm')) {
-        options.mimeType = 'audio/webm';
-      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-        options.mimeType = 'audio/mp4';
-      } else {
-        delete options.mimeType;
-      }
-    }
-    
-    return options;
-  };
-
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 48000
-        } 
-      });
-      
-      const options = getRecordingOptions();
-      const mediaRecorder = new MediaRecorder(stream, options);
-      const chunks: BlobPart[] = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunks.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        const mimeType = mediaRecorder.mimeType || 'audio/webm';
-        const blob = new Blob(chunks, { type: mimeType });
-        setAudioBlob(blob);
-        const url = URL.createObjectURL(blob);
-        setAudioUrl(url);
-        setHasRecording(true);
-        
-        stream.getTracks().forEach(track => track.stop());
-        
-        const audio = new Audio(url);
-        audio.addEventListener('loadedmetadata', () => {
-          console.log('Audio metadata loaded, duration:', audio.duration);
-          if (isFinite(audio.duration) && !isNaN(audio.duration)) {
-            setDuration(audio.duration);
-          } else {
-            setDuration(recordingTime);
-          }
-        });
-        audio.addEventListener('error', (e) => {
-          console.error('Audio error:', e);
-          setDuration(recordingTime);
-        });
-      };
-
-      mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start(1000);
-      setIsRecording(true);
-      setRecordingTime(0);
-
-      timerRef.current = setInterval(() => {
-        setRecordingTime(prev => {
-          const newTime = prev + 1;
-          if (newTime >= 600) {
-            stopRecording();
-            toast({
-              title: "录音时间已达上限",
-              description: "最长录音时间为10分钟",
-              variant: "destructive"
-            });
-          }
-          return newTime;
-        });
-      }, 1000);
-
-      toast({
-        title: "开始录音",
-        description: "正在录制语音记录...",
-      });
-    } catch (error) {
-      console.error('录音失败:', error);
-      let errorMessage = "无法访问麦克风";
-      
-      if (error instanceof Error) {
-        if (error.name === 'NotAllowedError') {
-          errorMessage = "请允许访问麦克风权限";
-        } else if (error.name === 'NotFoundError') {
-          errorMessage = "未找到可用的麦克风设备";
-        }
-      }
-      
-      toast({
-        title: "录音失败",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-
-      toast({
-        title: "录音完成",
-        description: `录音时长: ${formatTime(recordingTime)}`,
-      });
-    }
-  };
-
-  const playRecording = () => {
-    if (audioUrl && audioRef.current) {
-      if (isPlaying && !isPaused) {
-        audioRef.current.pause();
-        setIsPaused(true);
-        if (playbackTimerRef.current) {
-          clearInterval(playbackTimerRef.current);
-        }
-      } else {
-        audioRef.current.src = audioUrl;
-        audioRef.current.volume = volume;
-        audioRef.current.currentTime = playbackTime;
-        audioRef.current.play();
-        setIsPlaying(true);
-        setIsPaused(false);
-        
-        playbackTimerRef.current = setInterval(() => {
-          if (audioRef.current) {
-            setPlaybackTime(audioRef.current.currentTime);
-          }
-        }, 100);
-        
-        audioRef.current.onended = () => {
-          setIsPlaying(false);
-          setIsPaused(false);
-          setPlaybackTime(0);
-          if (playbackTimerRef.current) {
-            clearInterval(playbackTimerRef.current);
-          }
-        };
-      }
-    }
-  };
-
-  const stopPlayback = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setIsPlaying(false);
-      setIsPaused(false);
-      setPlaybackTime(0);
-      if (playbackTimerRef.current) {
-        clearInterval(playbackTimerRef.current);
-      }
-    }
+  const getEffectiveDuration = () => {
+    if (isFinite(duration) && !isNaN(duration) && duration > 0) return duration;
+    return recordingTime;
   };
 
   const deleteRecording = () => {
-    if (audioUrl) {
-      URL.revokeObjectURL(audioUrl);
-    }
     stopPlayback();
-    setAudioBlob(null);
-    setAudioUrl('');
-    setHasRecording(false);
-    setRecordingTime(0);
+    resetRecording();
     setPlaybackTime(0);
-    setDuration(0);
     setNote('');
-    
-    toast({
-      title: "录音已删除",
-      description: "可以重新开始录音",
-    });
+    toast({ title: '录音已删除', description: '可以重新开始录音' });
   };
 
   const downloadRecording = () => {
@@ -263,21 +102,13 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
-      toast({
-        title: "下载完成",
-        description: "录音文件已保存到您的设备",
-      });
+      toast({ title: '下载完成', description: '录音文件已保存到您的设备' });
     }
   };
 
   const saveRecording = async () => {
     if (!hasRecording || !audioBlob) {
-      toast({
-        title: "没有录音",
-        description: "请先录制语音记录",
-        variant: "destructive"
-      });
+      toast({ title: '没有录音', description: '请先录制语音记录', variant: 'destructive' });
       return;
     }
 
@@ -285,40 +116,26 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
     try {
       const fileName = `voice-${Date.now()}.webm`;
       const filePath = await uploadVoiceFile(audioBlob, fileName);
-      
+
       await createVoiceRecord({
         title: note || `语音记录 - ${formatTime(recordingTime)}`,
         duration: recordingTime,
         file_path: filePath,
         file_size: audioBlob.size,
-        note: note || null
+        note: note || null,
       });
 
-      toast({
-        title: "保存成功",
-        description: "语音记录已成功保存，将保留30天",
-      });
+      toast({ title: '保存成功', description: '语音记录已成功保存，将保留30天' });
 
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
       stopPlayback();
-      setAudioBlob(null);
-      setAudioUrl('');
-      setHasRecording(false);
-      setRecordingTime(0);
+      resetRecording();
       setPlaybackTime(0);
-      setDuration(0);
       setNote('');
-      
+
       loadVoiceRecords();
     } catch (error) {
       console.error('保存记录失败:', error);
-      toast({
-        title: "保存失败",
-        description: "请检查网络连接后重试",
-        variant: "destructive"
-      });
+      toast({ title: '保存失败', description: '请检查网络连接后重试', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -326,35 +143,20 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
 
   const handleDeleteSavedRecord = async (record: VoiceRecord) => {
     try {
-      if (record.file_path) {
-        await deleteVoiceFile(record.file_path);
-      }
+      if (record.file_path) await deleteVoiceFile(record.file_path);
       await deleteVoiceRecord(record.id);
-      
-      toast({
-        title: "记录已删除",
-        description: "语音记录已永久删除",
-      });
-      
+      toast({ title: '记录已删除', description: '语音记录已永久删除' });
       loadVoiceRecords();
     } catch (error) {
       console.error('删除记录失败:', error);
-      toast({
-        title: "删除失败",
-        description: "请稍后重试",
-        variant: "destructive"
-      });
+      toast({ title: '删除失败', description: '请稍后重试', variant: 'destructive' });
     }
   };
 
   const playHistoryRecord = async (record: VoiceRecord) => {
     try {
       if (!record.file_path) {
-        toast({
-          title: "播放失败",
-          description: "语音文件路径不存在",
-          variant: "destructive"
-        });
+        toast({ title: '播放失败', description: '语音文件路径不存在', variant: 'destructive' });
         return;
       }
 
@@ -367,17 +169,15 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
         return;
       }
 
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
+      if (audioRef.current) audioRef.current.pause();
 
       const signedUrl = await getVoiceFileUrl(record.file_path);
-      
+
       if (audioRef.current) {
         audioRef.current.src = signedUrl;
         audioRef.current.volume = volume;
         audioRef.current.currentTime = 0;
-        
+
         audioRef.current.onloadeddata = () => {
           if (audioRef.current) {
             audioRef.current.play();
@@ -385,47 +185,35 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
             setPlayingRecordId(record.id);
           }
         };
-        
+
         audioRef.current.onended = () => {
           setIsPlaying(false);
           setPlayingRecordId(null);
         };
-        
+
         audioRef.current.onerror = () => {
-          toast({
-            title: "播放失败",
-            description: "无法加载语音文件",
-            variant: "destructive"
-          });
+          toast({ title: '播放失败', description: '无法加载语音文件', variant: 'destructive' });
           setIsPlaying(false);
           setPlayingRecordId(null);
         };
       }
     } catch (error) {
       console.error('播放历史记录失败:', error);
-      toast({
-        title: "播放失败",
-        description: "请稍后重试",
-        variant: "destructive"
-      });
+      toast({ title: '播放失败', description: '请稍后重试', variant: 'destructive' });
     }
   };
 
   const downloadHistoryRecord = async (record: VoiceRecord) => {
     try {
       if (!record.file_path) {
-        toast({
-          title: "下载失败",
-          description: "语音文件路径不存在",
-          variant: "destructive"
-        });
+        toast({ title: '下载失败', description: '语音文件路径不存在', variant: 'destructive' });
         return;
       }
 
       const signedUrl = await getVoiceFileUrl(record.file_path);
       const response = await fetch(signedUrl);
       const blob = await response.blob();
-      
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -435,39 +223,12 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
-      toast({
-        title: "下载完成",
-        description: "录音文件已保存到您的设备",
-      });
+
+      toast({ title: '下载完成', description: '录音文件已保存到您的设备' });
     } catch (error) {
       console.error('下载历史记录失败:', error);
-      toast({
-        title: "下载失败",
-        description: "请稍后重试",
-        variant: "destructive"
-      });
+      toast({ title: '下载失败', description: '请稍后重试', variant: 'destructive' });
     }
-  };
-
-  const formatTime = (seconds: number) => {
-    if (!isFinite(seconds) || isNaN(seconds)) {
-      return '00:00';
-    }
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('zh-CN');
-  };
-
-  const getEffectiveDuration = () => {
-    if (isFinite(duration) && !isNaN(duration) && duration > 0) {
-      return duration;
-    }
-    return recordingTime;
   };
 
   if (showHistory) {
@@ -479,7 +240,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
         </div>
 
         <audio ref={audioRef} style={{ display: 'none' }} />
-        
+
         <div className="relative z-10 p-6">
           <div className="mb-8">
             <Button
@@ -588,7 +349,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
       </div>
 
       <audio ref={audioRef} style={{ display: 'none' }} />
-      
+
       <div className="relative z-10 p-6">
         <div className="mb-8 flex justify-between items-center">
           <Button
@@ -599,7 +360,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
             <ArrowLeft className="mr-2 h-5 w-5" />
             返回
           </Button>
-          
+
           <Button
             onClick={() => setShowHistory(true)}
             variant="outline"
@@ -621,7 +382,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
               </CardTitle>
               <p className="text-gray-600 mt-2">记录您的重要语音内容</p>
             </CardHeader>
-            
+
             <CardContent className="space-y-8">
               <div className="text-center">
                 <div className="relative">
@@ -634,7 +395,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="mb-6">
                   {isRecording ? (
                     <div className="flex items-center justify-center space-x-3">
@@ -682,13 +443,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                       min="0"
                       max={getEffectiveDuration() || 0}
                       value={playbackTime}
-                      onChange={(e) => {
-                        const time = parseFloat(e.target.value);
-                        setPlaybackTime(time);
-                        if (audioRef.current) {
-                          audioRef.current.currentTime = time;
-                        }
-                      }}
+                      onChange={(e) => seekTo(parseFloat(e.target.value))}
                       className="w-full h-3 bg-gradient-to-r from-violet-200 to-blue-200 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-br [&::-webkit-slider-thumb]:from-violet-500 [&::-webkit-slider-thumb]:to-blue-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white"
                     />
                     <div className="flex justify-between text-sm text-gray-600 font-medium">
@@ -696,27 +451,27 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                       <span>{formatTime(getEffectiveDuration())}</span>
                     </div>
                   </div>
-                  
+
                   <div className="flex justify-center gap-4">
-                    <Button 
-                      onClick={playRecording} 
-                      variant="outline" 
+                    <Button
+                      onClick={playRecording}
+                      variant="outline"
                       size="lg"
                       className="bg-white/70 border-violet-200 hover:bg-violet-50 hover:border-violet-300 text-violet-600 transition-all duration-200"
                     >
                       {isPlaying && !isPaused ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
                     </Button>
-                    <Button 
-                      onClick={stopPlayback} 
-                      variant="outline" 
+                    <Button
+                      onClick={stopPlayback}
+                      variant="outline"
                       size="lg"
                       className="bg-white/70 border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-blue-600 transition-all duration-200"
                     >
                       <Square className="h-5 w-5" />
                     </Button>
-                    <Button 
-                      onClick={downloadRecording} 
-                      variant="outline" 
+                    <Button
+                      onClick={downloadRecording}
+                      variant="outline"
                       size="lg"
                       className="bg-white/70 border-green-200 hover:bg-green-50 hover:border-green-300 text-green-600 transition-all duration-200"
                     >
@@ -733,13 +488,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                         max="1"
                         step="0.1"
                         value={volume}
-                        onChange={(e) => {
-                          const vol = parseFloat(e.target.value);
-                          setVolume(vol);
-                          if (audioRef.current) {
-                            audioRef.current.volume = vol;
-                          }
-                        }}
+                        onChange={(e) => changeVolume(parseFloat(e.target.value))}
                         className="flex-1 h-2 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-br [&::-webkit-slider-thumb]:from-gray-500 [&::-webkit-slider-thumb]:to-gray-600 [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white"
                       />
                       <span className="text-sm text-gray-600 w-8">{Math.round(volume * 100)}%</span>
@@ -756,7 +505,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                       rows={3}
                     />
                   </div>
-                  
+
                   <div className="space-y-3">
                     <Button
                       onClick={saveRecording}
@@ -766,7 +515,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                       <Save className="mr-2 h-5 w-5" />
                       {isLoading ? '保存中...' : '保存语音记录'}
                     </Button>
-                    
+
                     <Button
                       onClick={deleteRecording}
                       variant="outline"
