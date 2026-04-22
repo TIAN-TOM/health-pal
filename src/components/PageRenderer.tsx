@@ -1,40 +1,66 @@
 import React, { lazy, Suspense } from 'react';
 import type { Tables } from '@/integrations/supabase/types';
 
+// 懒加载包装：遇到陈旧 chunk 时自动刷新一次，避免 "Failed to fetch dynamically imported module" 白屏
+const lazyWithRetry = <T extends React.ComponentType<any>>(
+  factory: () => Promise<{ default: T }>
+) =>
+  lazy(async () => {
+    try {
+      const mod = await factory();
+      sessionStorage.removeItem('__lovable_chunk_reload__');
+      return mod;
+    } catch (err: any) {
+      const msg = String(err?.message || err);
+      if (
+        msg.includes('Failed to fetch dynamically imported module') ||
+        msg.includes('Importing a module script failed')
+      ) {
+        const key = '__lovable_chunk_reload__';
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, '1');
+          window.location.reload();
+          return new Promise<{ default: T }>(() => {});
+        }
+      }
+      throw err;
+    }
+  });
+
 // 全部页面组件懒加载，仅在路由切换到对应页面时才加载对应代码包
-const DailyCheckin = lazy(() => import('./DailyCheckin'));
-const RecordHub = lazy(() => import('./RecordHub'));
-const BreathingExercise = lazy(() => import('./BreathingExercise'));
-const VoiceRecord = lazy(() => import('./VoiceRecord'));
-const Games = lazy(() => import('./Games'));
-const RecordDetail = lazy(() => import('./RecordDetail'));
-const Settings = lazy(() => import('./Settings'));
-const PersonalProfile = lazy(() => import('./PersonalProfile'));
-const MedicalRecords = lazy(() => import('./MedicalRecords'));
-const EmergencyContacts = lazy(() => import('./EmergencyContacts'));
-const EducationCenter = lazy(() => import('./EducationCenter'));
-const MedicationManagement = lazy(() => import('./MedicationManagement'));
-const EmergencyMode = lazy(() => import('./EmergencyMode'));
-const UserManual = lazy(() => import('./UserManual'));
-const UpdateLog = lazy(() => import('./UpdateLog'));
-const AdminPanel = lazy(() => import('./AdminPanel'));
-const DizzinessRecord = lazy(() => import('./DizzinessRecord'));
-const DiabetesRecord = lazy(() => import('./DiabetesRecord'));
-const LifestyleRecord = lazy(() => import('./LifestyleRecord'));
-const MedicationRecord = lazy(() => import('./MedicationRecord'));
-const FamilyDashboard = lazy(() => import('./family/FamilyDashboard'));
-const FamilyExpenses = lazy(() => import('./family/FamilyExpenses'));
-const FamilyReminders = lazy(() => import('./family/FamilyReminders'));
-const FamilyCalendar = lazy(() => import('./family/FamilyCalendar'));
-const EnhancedFamilyCalendar = lazy(() => import('./family/EnhancedFamilyCalendar'));
-const FamilyMembers = lazy(() => import('./family/FamilyMembers'));
-const FamilyMessages = lazy(() => import('./family/FamilyMessages'));
-const FamilyStats = lazy(() => import('./family/FamilyStats'));
-const ExchangeRate = lazy(() => import('./ExchangeRate'));
-const DailyEnglish = lazy(() => import('./DailyEnglish'));
-const DailyDataHub = lazy(() => import('./DailyDataHub'));
-const DataExport = lazy(() => import('./DataExport'));
-const UserFeedback = lazy(() => import('./UserFeedback'));
+const DailyCheckin = lazyWithRetry(() => import('./DailyCheckin'));
+const RecordHub = lazyWithRetry(() => import('./RecordHub'));
+const BreathingExercise = lazyWithRetry(() => import('./BreathingExercise'));
+const VoiceRecord = lazyWithRetry(() => import('./VoiceRecord'));
+const Games = lazyWithRetry(() => import('./Games'));
+const RecordDetail = lazyWithRetry(() => import('./RecordDetail'));
+const Settings = lazyWithRetry(() => import('./Settings'));
+const PersonalProfile = lazyWithRetry(() => import('./PersonalProfile'));
+const MedicalRecords = lazyWithRetry(() => import('./MedicalRecords'));
+const EmergencyContacts = lazyWithRetry(() => import('./EmergencyContacts'));
+const EducationCenter = lazyWithRetry(() => import('./EducationCenter'));
+const MedicationManagement = lazyWithRetry(() => import('./MedicationManagement'));
+const EmergencyMode = lazyWithRetry(() => import('./EmergencyMode'));
+const UserManual = lazyWithRetry(() => import('./UserManual'));
+const UpdateLog = lazyWithRetry(() => import('./UpdateLog'));
+const AdminPanel = lazyWithRetry(() => import('./AdminPanel'));
+const DizzinessRecord = lazyWithRetry(() => import('./DizzinessRecord'));
+const DiabetesRecord = lazyWithRetry(() => import('./DiabetesRecord'));
+const LifestyleRecord = lazyWithRetry(() => import('./LifestyleRecord'));
+const MedicationRecord = lazyWithRetry(() => import('./MedicationRecord'));
+const FamilyDashboard = lazyWithRetry(() => import('./family/FamilyDashboard'));
+const FamilyExpenses = lazyWithRetry(() => import('./family/FamilyExpenses'));
+const FamilyReminders = lazyWithRetry(() => import('./family/FamilyReminders'));
+const FamilyCalendar = lazyWithRetry(() => import('./family/FamilyCalendar'));
+const EnhancedFamilyCalendar = lazyWithRetry(() => import('./family/EnhancedFamilyCalendar'));
+const FamilyMembers = lazyWithRetry(() => import('./family/FamilyMembers'));
+const FamilyMessages = lazyWithRetry(() => import('./family/FamilyMessages'));
+const FamilyStats = lazyWithRetry(() => import('./family/FamilyStats'));
+const ExchangeRate = lazyWithRetry(() => import('./ExchangeRate'));
+const DailyEnglish = lazyWithRetry(() => import('./DailyEnglish'));
+const DailyDataHub = lazyWithRetry(() => import('./DailyDataHub'));
+const DataExport = lazyWithRetry(() => import('./DataExport'));
+const UserFeedback = lazyWithRetry(() => import('./UserFeedback'));
 
 type MeniereRecord = Tables<'meniere_records'>;
 
