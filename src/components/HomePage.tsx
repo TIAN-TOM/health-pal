@@ -1,14 +1,15 @@
-import React, { lazy, Suspense, memo } from 'react';
+import React, { Suspense, memo } from 'react';
 import UserWelcomeWithClock from '@/components/UserWelcomeWithClock';
 import FunctionCards from '@/components/FunctionCards';
 import { Button } from '@/components/ui/button';
 import { BookOpen, History } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { lazyWithRetry } from '@/lib/lazyWithRetry';
 
-const NavigationActions = lazy(() => import('@/components/NavigationActions'));
-const HomeBanner = lazy(() => import('@/components/HomeBanner'));
-const WeatherAlertBanner = lazy(() => import('@/components/WeatherAlertBanner'));
-const AnnouncementDisplay = lazy(() => import('@/components/AnnouncementDisplay'));
+const NavigationActions = lazyWithRetry(() => import('@/components/NavigationActions'));
+const HomeBanner = lazyWithRetry(() => import('@/components/HomeBanner'));
+const WeatherAlertBanner = lazyWithRetry(() => import('@/components/WeatherAlertBanner'));
+const AnnouncementDisplay = lazyWithRetry(() => import('@/components/AnnouncementDisplay'));
 
 const BannerSkeleton = () => (
   <Skeleton className="h-14 w-full rounded-lg" />
