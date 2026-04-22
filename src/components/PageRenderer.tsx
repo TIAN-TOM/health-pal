@@ -7,7 +7,9 @@ const lazyWithRetry = <T extends React.ComponentType<any>>(
 ) =>
   lazy(async () => {
     try {
-      return await factory();
+      const mod = await factory();
+      sessionStorage.removeItem('__lovable_chunk_reload__');
+      return mod;
     } catch (err: any) {
       const msg = String(err?.message || err);
       if (
