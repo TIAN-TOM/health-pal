@@ -9,28 +9,18 @@ interface AdminNotificationData {
 
 export const notifyAdminActivity = async (data: AdminNotificationData): Promise<void> => {
   try {
-    // 获取当前用户信息
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       console.warn('无法获取当前用户信息，跳过管理员通知');
       return;
     }
 
-    // 获取用户资料
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('id', user.id)
-      .single();
-
-    const user_name = profile?.full_name || user.email || '未知用户';
-
-    // 调用通知函数
+    // user_id / user_name are derived server-side from the verified JWT.
     const { error } = await supabase.functions.invoke('notify-admin-activity', {
       body: {
-        user_id: user.id,
-        user_name,
-        ...data
+        activity_type: data.activity_type,
+        activity_description: data.activity_description,
+        module_name: data.module_name,
       }
     });
 

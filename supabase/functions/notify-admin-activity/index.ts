@@ -11,8 +11,10 @@ interface ActivityNotification {
   module_name?: string;
 }
 
-// Whitelisted activity types and modules to prevent injection of misleading content
+// Whitelisted activity types to prevent injection of misleading content
 const ALLOWED_ACTIVITY_TYPES = new Set([
+  'create', 'update', 'delete', 'view', 'upload',
+  'purchase', 'game_play', 'learning', 'export', 'makeup_checkin',
   'data_export', 'record_create', 'record_update', 'record_delete',
   'login', 'profile_update', 'feedback_submit', 'voice_record', 'other'
 ]);
