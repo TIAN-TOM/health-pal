@@ -6,13 +6,12 @@ import { BookOpen, History } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const NavigationActions = lazy(() => import('@/components/NavigationActions'));
-const CountdownDisplay = lazy(() => import('@/components/CountdownDisplay'));
-const WeatherWidget = lazy(() => import('@/components/WeatherWidget'));
+const HomeBanner = lazy(() => import('@/components/HomeBanner'));
 const WeatherAlertBanner = lazy(() => import('@/components/WeatherAlertBanner'));
 const AnnouncementDisplay = lazy(() => import('@/components/AnnouncementDisplay'));
 
-const CardSkeleton = () => (
-  <Skeleton className="h-[110px] w-full rounded-lg" />
+const BannerSkeleton = () => (
+  <Skeleton className="h-14 w-full rounded-lg" />
 );
 interface HomePageProps {
   userDisplayName: string;
@@ -44,15 +43,10 @@ const HomePage = ({
           <AnnouncementDisplay />
         </Suspense>
         
-        {/* 天气和倒数日 */}
-        <div className="grid grid-cols-2 gap-3">
-          <Suspense fallback={<CardSkeleton />}>
-            <WeatherWidget />
-          </Suspense>
-          <Suspense fallback={<CardSkeleton />}>
-            <CountdownDisplay />
-          </Suspense>
-        </div>
+        {/* 天气与倒数日合并的自动滚动横幅 */}
+        <Suspense fallback={<BannerSkeleton />}>
+          <HomeBanner />
+        </Suspense>
         
         <div className="grid grid-cols-2 gap-3">
           <FunctionCards onNavigate={onNavigate} />

@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.9.14',
+    date: '2026-04-22',
+    type: '界面优化',
+    icon: Home,
+    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    items: [
+      {
+        title: '🎠 首页天气与倒数日合并为自动滚动横幅',
+        description: '首页将原本上下两个 110px 高的「天气」和「倒数日」模块合并为一个全宽自动轮播横幅，高度减半至约 56px，每 5 秒自动切换；点击天气幻灯片仍可进入天气详情页',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.9.13',
     date: '2026-04-22',
     type: '安全加固',
