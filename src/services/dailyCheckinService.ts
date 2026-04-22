@@ -62,8 +62,7 @@ export const createCheckin = async (
     console.log('发送通知，使用日期:', checkinDate);
     await supabase.functions.invoke('notify-admin-checkin', {
       body: {
-        user_id: user.id,
-        user_name: profile?.full_name || '未知用户',
+        // user_id / user_name are derived server-side from the verified JWT.
         checkin_date: checkinDate,
         mood_score: moodScore
       }
