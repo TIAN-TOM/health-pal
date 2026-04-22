@@ -17,6 +17,40 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.9.13',
+    date: '2026-04-22',
+    type: '安全加固',
+    icon: Zap,
+    color: 'bg-red-50 text-red-600 border-red-200',
+    items: [
+      {
+        title: '🔐 修复管理员邮件接口身份冒用漏洞',
+        description: 'admin-send-email 不再信任请求体中的 adminId,改为从 JWT 解析真实调用者并校验 admin 角色;邮件正文做 HTML 转义,主题/收件人/正文均加长度与格式校验',
+        type: 'fix',
+      },
+      {
+        title: '🛡️ 修复管理员通知内容可伪造问题',
+        description: 'notify-admin-activity / notify-admin-checkin 忽略客户端传入的 user_id/user_name,改由 JWT 派生真实身份;activity_type 走白名单,描述/模块名做长度限制,mood_score / checkin_date 严格校验',
+        type: 'fix',
+      },
+      {
+        title: '🚫 修复用户角色提权风险',
+        description: '删除缺少 WITH CHECK 的 user_roles 全权限策略,新增显式 INSERT/UPDATE 策略 (要求 admin),并补充用户读取自身角色的策略,杜绝普通用户给自己加 admin 的可能',
+        type: 'fix',
+      },
+      {
+        title: '👤 修复被停用用户无法读取自身资料',
+        description: 'profiles SELECT 策略不再过滤 status=active,被暂停用户也能看到自己的资料;新增显式 INSERT WITH CHECK (auth.uid() = id) 作为 trigger 的纵深防御',
+        type: 'fix',
+      },
+      {
+        title: '📵 隐藏边缘函数内部错误',
+        description: '4 个边缘函数不再向客户端返回 error.message 原文,统一返回通用错误信息,避免泄漏数据库 / 第三方 API 内部细节',
+        type: 'fix',
+      },
+    ],
+  },
+  {
     version: '2.9.12',
     date: '2026-04-21',
     type: '代码重构',
