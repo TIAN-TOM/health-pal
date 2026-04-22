@@ -1,31 +1,6 @@
-import React, { lazy, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import type { Tables } from '@/integrations/supabase/types';
-
-// 懒加载包装：遇到陈旧 chunk 时自动刷新一次，避免 "Failed to fetch dynamically imported module" 白屏
-const lazyWithRetry = <T extends React.ComponentType<any>>(
-  factory: () => Promise<{ default: T }>
-) =>
-  lazy(async () => {
-    try {
-      const mod = await factory();
-      sessionStorage.removeItem('__lovable_chunk_reload__');
-      return mod;
-    } catch (err: any) {
-      const msg = String(err?.message || err);
-      if (
-        msg.includes('Failed to fetch dynamically imported module') ||
-        msg.includes('Importing a module script failed')
-      ) {
-        const key = '__lovable_chunk_reload__';
-        if (!sessionStorage.getItem(key)) {
-          sessionStorage.setItem(key, '1');
-          window.location.reload();
-          return new Promise<{ default: T }>(() => {});
-        }
-      }
-      throw err;
-    }
-  });
+import { lazyWithRetry } from '@/lib/lazyWithRetry';
 
 // 全部页面组件懒加载，仅在路由切换到对应页面时才加载对应代码包
 const DailyCheckin = lazyWithRetry(() => import('./DailyCheckin'));
