@@ -212,14 +212,14 @@ export const useAdminUserDetails = () => {
     }
   };
 
-  const sendEmailToUser = async (userEmail: string, subject: string, message: string, adminId: string) => {
+  const sendEmailToUser = async (userEmail: string, subject: string, message: string, _adminId?: string) => {
     try {
+      // adminId is no longer trusted from client; the edge function derives it from the verified JWT.
       const { data, error } = await supabase.functions.invoke('admin-send-email', {
         body: {
           userEmail,
           subject,
-          message,
-          adminId
+          message
         }
       });
 
