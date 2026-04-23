@@ -1,60 +1,67 @@
-## 合并天气与倒数日为自动滚动横幅
 
-把首页的「天气」+「倒数日」两个 110px 高的方块合并成一个 **全宽自动轮播横幅**，高度压缩到约 **56px**（原一半），点击对应内容跳转到详情页。
+## 横幅悬浮显示手动切换箭头
 
-### 视觉效果
+为首页 `HomeBanner` 增加鼠标悬浮时浮现的左右箭头，支持手动切换天气 / 倒数日幻灯片，且不破坏原有的 5 秒自动轮播。
+
+### 视觉与交互
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│ ☁ 悉尼 17° 多云  💧67%  🌬6.5m/s          ← 横幅自动滚动   │
-└─────────────────────────────────────────────────────────────┘
-        ↓ 5 秒后
-┌─────────────────────────────────────────────────────────────┐
-│ 🎉 距离春节  还有 23 天                                     │
-└─────────────────────────────────────────────────────────────┘
-        ↓ 5 秒后（如有多个倒数日）
-┌─────────────────────────────────────────────────────────────┐
-│ ✨ 距离生日  还有 7 天                                      │
-└─────────────────────────────────────────────────────────────┘
+        hover ↓
+┌─────────────────────────────────────────────────────────┐
+│ ‹  ☁ 悉尼 17° 多云  💧67%  🌬6.5m/s              ›    │
+└─────────────────────────────────────────────────────────┘
+   ↑ 半透明圆形按钮            手动点击 → 切换并重置自动播放计时
 ```
 
-- 高度：`h-14`（约 56px），占满整行（`col-span-2` 等价的全宽）
-- 一行内显示，左侧图标 + 主信息，右侧次要信息（湿度/风速 或 描述）
-- 自动轮播：每 5 秒切换一张，淡入淡出过渡
-- 多张时显示底部小圆点指示器；用户手动滑动可暂停 8 秒
-- 点击天气幻灯片 → 跳转 `/weather`；点击倒数日幻灯片 → 跳转 `/weather`（原倒数日无独立详情页，保持原行为不导航，仅展示）
-- 城市切换器不再放在横幅上（横幅过窄），改为天气详情页内切换（详情页已有同款 Select）
-- 横幅手动左右滑动手势支持
-- 倒数日幻灯片支持点击进入未来的「倒数日详情」页
+- **默认状态**：箭头隐藏（`opacity-0`），保持现有简洁观感
+- **悬浮状态**：左右两个 24×24 圆形按钮淡入（`opacity-100`，150ms 过渡）
+- **位置**：左右边缘内 8px，垂直居中，叠在内容之上（`absolute z-10`）
+- **样式**：半透明黑底 + 白色 chevron（`bg-background/70 backdrop-blur-sm hover:bg-background/90`），符合现有暗色主题
+- **可访问性**：`aria-label="上一张/下一张"`，键盘 Tab 可聚焦
+- **触屏**：移动端不显示箭头（`hidden md:flex`），保留滑动手势
 
-### 改动文件清单
+### 行为细节
 
-1. **新建** `src/components/HomeBanner.tsx`
-  - 内部并行加载天气（调用现有 `getWeatherData` + `useUserPreferences`）和倒数日（`getActiveCountdownEvents`）
-  - 用 `embla-carousel-react`（项目已通过 `@/components/ui/carousel` 引入）做自动轮播
-  - 单行紧凑布局；空数据时仍显示天气幻灯片，只有天气加载失败且无倒数日才显示一条占位
-2. **修改** `src/components/HomePage.tsx`
-  - 删除 `WeatherWidget` 和 `CountdownDisplay` 两个 lazy import 及其 `grid grid-cols-2` 容器
-  - 替换为单个 `<HomeBanner />`（也用 `Suspense` + `Skeleton h-14`）
-3. **保留不动**
-  - `WeatherWidget.tsx` / `CountdownDisplay.tsx` 文件保留（详情页或后台可能引用），但首页不再使用
-  - `weatherService.ts`、`countdownService.ts`、`useUserPreferences.ts` 不改
-4. **更新日志**
-  - `src/data/updateLog.ts` 新增版本 `2.9.14`：「首页天气与倒数日合并为自动滚动横幅，高度减半」
-  - 同步 `src/components/__tests__/UpdateLog.test.tsx` 期望的最新版本号
+- 仅当 `slides.length > 1` 时渲染箭头
+- 点击箭头调用 embla `api.scrollPrev() / scrollNext()`
+- 自动播放配置加 `stopOnMouseEnter: true` + `stopOnInteraction: false`：鼠标移入暂停，移出后恢复 5s 轮播；点击箭头不会永久停掉自动播放
+- 不复用 `CarouselPrevious/Next`（默认样式带边框且定位在容器外 `-left-12`），改为内联自定义按钮放在轮播容器内
 
-### 技术要点
+### 技术实现
 
-- **轮播实现**：直接用现成的 `Carousel/CarouselContent/CarouselItem` + `embla-carousel-autoplay` 插件（已在 carousel 组件依赖中），`opts={{ loop: true }}`，`plugins={[Autoplay({ delay: 5000, stopOnInteraction: false })]}`
-- **数据加载**：横幅内 `Promise.all` 并发拉天气+倒数日，loading 期间显示骨架；任一就绪即可渲染对应幻灯片
-- **避免闪烁**：城市/偏好初始化逻辑沿用 `WeatherWidget` 的 `cityInitialized` 模式
-- **行为等价**：天气点击仍跳 `/weather`；天气自动 30 分钟刷新；倒数日实时秒级刷新逻辑改为分钟级（横幅显示天数即可，无需秒级跳动），降低重渲染开销
+**单文件改动：`src/components/HomeBanner.tsx`**
+
+1. 在外层 wrapper 加 `group relative` 类
+2. Autoplay 插件参数补充：
+   ```ts
+   Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true })
+   ```
+3. 在 `<Carousel>` 内、`<CarouselContent>` 旁新增两个绝对定位按钮：
+   ```tsx
+   {slides.length > 1 && (
+     <>
+       <button
+         onClick={() => api?.scrollPrev()}
+         className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-6 w-6 rounded-full bg-background/70 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex items-center justify-center"
+         aria-label="上一张"
+       >
+         <ChevronLeft className="h-4 w-4" />
+       </button>
+       {/* 右箭头同理，使用 ChevronRight + scrollNext */}
+     </>
+   )}
+   ```
+4. 通过 `setApi` 已暴露的 `api` 引用调用 prev/next（组件已有 `setApi` 逻辑用于圆点指示器）
+
+### 更新日志
+
+按项目规范在 `src/data/updateLog.ts` 顶部新增 `2.9.15` 条目：「首页横幅支持鼠标悬浮显示手动切换箭头」，并同步更新 `src/components/__tests__/UpdateLog.test.tsx` 期望版本号。
 
 ### 验证步骤
 
-1. 首页打开：横幅约 56px 高、占满一行、自动每 5 秒切换天气↔倒数日
-2. 点击天气幻灯片 → 进入 `/weather` 详情
-3. 后台无倒数日时：仅展示天气幻灯片，不轮播
-4. 后台多个倒数日时：天气 + 各倒数日依次轮播，底部圆点同步
-5. 运行 `npm run test` 全部用例通过；TypeScript 无报错
-6. 移动端 375px 宽度下文案不溢出、单行展示
+1. 桌面端打开首页，鼠标悬浮横幅 → 左右箭头淡入，移开 → 淡出
+2. 点击箭头 → 立即切换幻灯片，圆点同步高亮
+3. 鼠标停在横幅上 → 自动轮播暂停；移开 1–5 秒后恢复
+4. 移动端（<768px）→ 不显示箭头，滑动手势仍可用
+5. 仅 1 张幻灯片时（无倒数日）→ 箭头不渲染
+6. `npm run test` 全部通过
