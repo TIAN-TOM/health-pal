@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Autoplay from 'embla-carousel-autoplay';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Droplets, PartyPopper, Sparkles, Wind } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Droplets, PartyPopper, Sparkles, Wind } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -167,7 +167,7 @@ const HomeBanner: React.FC = () => {
   }
 
   return (
-    <div className="relative">
+    <div className="relative group">
       <Carousel
         setApi={setApi}
         opts={{ loop: slides.length > 1, align: 'start' }}
@@ -249,6 +249,27 @@ const HomeBanner: React.FC = () => {
           ))}
         </CarouselContent>
       </Carousel>
+
+      {slides.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={() => api?.scrollPrev()}
+            aria-label="上一张"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-6 w-6 rounded-full bg-background/70 backdrop-blur-sm text-foreground shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/90 hidden md:flex items-center justify-center"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => api?.scrollNext()}
+            aria-label="下一张"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-6 w-6 rounded-full bg-background/70 backdrop-blur-sm text-foreground shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/90 hidden md:flex items-center justify-center"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </>
+      )}
 
       {slides.length > 1 && (
         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 pointer-events-none">

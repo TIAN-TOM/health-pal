@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.9.15',
+    date: '2026-04-23',
+    type: '界面优化',
+    icon: Home,
+    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    items: [
+      {
+        title: '🖱️ 首页横幅悬浮显示手动切换箭头',
+        description: '鼠标移到首页轮播横幅上时，左右两侧会浮现半透明小箭头，可手动切换天气与倒数日；同时鼠标悬停期间自动播放暂停，移开后恢复',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.9.14',
     date: '2026-04-22',
     type: '界面优化',
