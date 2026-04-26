@@ -97,8 +97,8 @@ const Hud: React.FC<Props> = (p) => {
           </span>
         )}
         {p.hasPierce && <Sparkle />}
-        {p.isRemote && <Radio className="h-3.5 w-3.5 text-cyan-500" title="遥控引爆 (R)" />}
-        {p.hasShield && <Shield className="h-3.5 w-3.5 text-sky-500" title="护盾激活" />}
+        {p.isRemote && <Radio className="h-3.5 w-3.5 text-cyan-500" aria-label="遥控引爆" />}
+        {p.hasShield && <Shield className="h-3.5 w-3.5 text-sky-500" aria-label="护盾激活" />}
         {p.freezeTicks > 0 && (
           <span className="flex items-center gap-1 text-cyan-600 font-medium">
             <Snowflake className="h-3.5 w-3.5" /> {Math.ceil(p.freezeTicks / 10)}s
