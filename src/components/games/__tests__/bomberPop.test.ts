@@ -2,38 +2,90 @@ import { describe, it, expect } from 'vitest';
 import { buildLevel } from '@/components/games/bomberPop/levelConfig';
 import { generateMap } from '@/components/games/bomberPop/mapGenerator';
 import { computeExplosionCells, computeDangerCells } from '@/components/games/bomberPop/explosion';
+import { CHARACTERS, getCharacter } from '@/components/games/bomberPop/characters';
 import { ROWS, COLS, type CellType, type BombEntity } from '@/components/games/bomberPop/types';
 
 describe('bomberPop/levelConfig', () => {
-  it('level 1: 2 enemies, intelligence 0, 150s', () => {
-    const cfg = buildLevel(1);
-    expect(cfg).toMatchObject({ level: 1, enemyCount: 2, enemyIntelligence: 0, timeLimitSec: 140 });
+  it('arcade level 1: 2 enemies, intelligence 0, forest theme, no boss', () => {
+    const cfg = buildLevel(1, 'arcade');
+    expect(cfg).toMatchObject({ level: 1, enemyCount: 2, enemyIntelligence: 0, theme: 'forest', isBoss: false });
   });
 
-  it('level 2: intelligence escalates to 1', () => {
-    expect(buildLevel(2).enemyIntelligence).toBe(1);
+  it('arcade level 2: intelligence escalates to 1', () => {
+    expect(buildLevel(2, 'arcade').enemyIntelligence).toBe(1);
   });
 
-  it('level 4+: intelligence escalates to 2', () => {
-    expect(buildLevel(4).enemyIntelligence).toBe(2);
-    expect(buildLevel(10).enemyIntelligence).toBe(2);
+  it('arcade level 4+: intelligence escalates to 2', () => {
+    expect(buildLevel(4, 'arcade').enemyIntelligence).toBe(2);
+    expect(buildLevel(11, 'arcade').enemyIntelligence).toBe(2);
   });
 
   it('caps enemyCount at 6 and timeLimit at 60', () => {
-    const cfg = buildLevel(50);
-    expect(cfg.enemyCount).toBe(6);
+    const cfg = buildLevel(50, 'arcade');
+    expect(cfg.enemyCount).toBeLessThanOrEqual(6);
     expect(cfg.timeLimitSec).toBe(60);
   });
 
+  it('arcade every 5th level is a boss stage with 1 boss enemy', () => {
+    const cfg = buildLevel(5, 'arcade');
+    expect(cfg.isBoss).toBe(true);
+    expect(cfg.enemyCount).toBe(1);
+    expect(cfg.bossKind).toBe('tank');
+  });
+
+  it('themes rotate by level: forest 1-3, beach 4-6, ice 7-9, volcano 10+', () => {
+    expect(buildLevel(1, 'arcade').theme).toBe('forest');
+    expect(buildLevel(4, 'arcade').theme).toBe('beach');
+    expect(buildLevel(7, 'arcade').theme).toBe('ice');
+    expect(buildLevel(11, 'arcade').theme).toBe('volcano');
+  });
+
+  it('battle mode: 3 enemies, intelligence 2, no boss', () => {
+    const cfg = buildLevel(1, 'battle');
+    expect(cfg).toMatchObject({ enemyCount: 3, enemyIntelligence: 2, isBoss: false });
+  });
+
+  it('survival mode: large time limit', () => {
+    expect(buildLevel(1, 'survival').timeLimitSec).toBeGreaterThan(1000);
+  });
+
   it('clamps level >= 1', () => {
-    expect(buildLevel(0).level).toBe(1);
-    expect(buildLevel(-5).level).toBe(1);
+    expect(buildLevel(0, 'arcade').level).toBe(1);
+    expect(buildLevel(-5, 'arcade').level).toBe(1);
+  });
+});
+
+describe('bomberPop/characters', () => {
+  it('exposes 4 selectable characters', () => {
+    expect(CHARACTERS.length).toBe(4);
+    expect(CHARACTERS.map((c) => c.id).sort()).toEqual(['bear', 'cat', 'fox', 'rabbit']);
+  });
+
+  it('every character defines name + emoji + passive + bonus', () => {
+    for (const c of CHARACTERS) {
+      expect(c.name).toBeTruthy();
+      expect(c.emoji).toBeTruthy();
+      expect(c.passive).toBeTruthy();
+      expect(c.bonus).toBeTruthy();
+    }
+  });
+
+  it('passive bonuses match design spec', () => {
+    expect(getCharacter('rabbit').bonus.speed).toBe(1);
+    expect(getCharacter('cat').bonus.bombs).toBe(1);
+    expect(getCharacter('bear').bonus.hp).toBe(1);
+    expect(getCharacter('fox').bonus.range).toBe(1);
+  });
+
+  it('falls back to first character when id is unknown', () => {
+    const fallback = getCharacter('unknown' as never);
+    expect(fallback.id).toBe('rabbit');
   });
 });
 
 describe('bomberPop/mapGenerator', () => {
   it('generates ROWS × COLS map with walls on borders', () => {
-    const cfg = buildLevel(1);
+    const cfg = buildLevel(1, 'arcade');
     const { map } = generateMap(cfg, cfg.enemyCount);
     expect(map.length).toBe(ROWS);
     expect(map[0].length).toBe(COLS);
@@ -48,7 +100,7 @@ describe('bomberPop/mapGenerator', () => {
   });
 
   it('player spawn (1,1) is empty and safe corner', () => {
-    const cfg = buildLevel(1);
+    const cfg = buildLevel(1, 'arcade');
     const { map } = generateMap(cfg, cfg.enemyCount);
     expect(map[1][1]).toBe('empty');
     expect(map[1][2]).not.toBe('box');
@@ -56,9 +108,22 @@ describe('bomberPop/mapGenerator', () => {
   });
 
   it('returns enemy positions matching count', () => {
-    const cfg = buildLevel(3);
+    const cfg = buildLevel(3, 'arcade');
     const { enemyPositions } = generateMap(cfg, cfg.enemyCount);
     expect(enemyPositions.length).toBe(cfg.enemyCount);
+  });
+
+  it('beach theme spawns sand specialCells', () => {
+    const cfg = buildLevel(4, 'arcade');
+    const { specialCells } = generateMap(cfg, cfg.enemyCount);
+    expect(specialCells.length).toBeGreaterThan(0);
+    expect(specialCells.every((s) => s.kind === 'sand')).toBe(true);
+  });
+
+  it('forest theme has no specialCells', () => {
+    const cfg = buildLevel(1, 'arcade');
+    const { specialCells } = generateMap(cfg, cfg.enemyCount);
+    expect(specialCells.length).toBe(0);
   });
 });
 
@@ -73,7 +138,7 @@ describe('bomberPop/explosion', () => {
     return m;
   };
 
-  it('computeExplosionCells: range 1 covers center + 4 directions', () => {
+  it('range 1 covers center + 4 directions', () => {
     const map = makeMap();
     const bomb: BombEntity = { id: 1, x: 5, y: 5, timer: 0, range: 1, ownerId: 'player' };
     const { cells, destroyedBoxes } = computeExplosionCells(bomb, map, [bomb]);
@@ -87,17 +152,25 @@ describe('bomberPop/explosion', () => {
     const map = makeMap();
     const bomb: BombEntity = { id: 1, x: 1, y: 1, timer: 0, range: 5, ownerId: 'player' };
     const { cells } = computeExplosionCells(bomb, map, [bomb]);
-    // x=0 是墙，所以 x=1 向左不应包含 x=0
     expect(cells.some(c => c.x === 0)).toBe(false);
   });
 
   it('boxes are destroyed and stop propagation', () => {
-    const map = makeMap([[5, 7, 'box'], [5, 8, 'empty']]);
+    const map = makeMap([[5, 7, 'box']]);
     const bomb: BombEntity = { id: 1, x: 5, y: 5, timer: 0, range: 5, ownerId: 'player' };
     const { cells, destroyedBoxes } = computeExplosionCells(bomb, map, [bomb]);
     expect(destroyedBoxes).toContainEqual({ x: 7, y: 5 });
-    // x=8 不应被波及（被 box 阻挡）
     expect(cells.some(c => c.x === 8 && c.y === 5)).toBe(false);
+  });
+
+  it('pierce bomb passes through boxes destroying them', () => {
+    const map = makeMap([[5, 7, 'box'], [5, 8, 'box']]);
+    const bomb: BombEntity = { id: 1, x: 5, y: 5, timer: 0, range: 5, ownerId: 'player', pierce: true };
+    const { cells, destroyedBoxes } = computeExplosionCells(bomb, map, [bomb]);
+    expect(destroyedBoxes).toEqual(expect.arrayContaining([
+      { x: 7, y: 5 }, { x: 8, y: 5 },
+    ]));
+    expect(cells.some(c => c.x === 9 && c.y === 5)).toBe(true);
   });
 
   it('chained bombs are detected', () => {

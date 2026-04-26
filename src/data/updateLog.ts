@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.10.0',
+    date: '2026-04-26',
+    type: '新功能',
+    icon: Sparkles,
+    color: 'bg-purple-50 text-purple-600 border-purple-200',
+    items: [
+      {
+        title: '💣 Q版泡泡堂 · Bomb It 4 风格大扩展',
+        description: '新增 4 个可选角色（兔奇/猫蛋/熊大/狐狸阿凯，各带独特被动技能），3 种游戏模式（街机闯关 15 关含 Boss / 竞技对战 vs 3 CPU 三局两胜 / 生存挑战波次刷新），9 种道具（炸弹、范围、踢炸弹、速度、穿透火焰、遥控引爆、护盾、生命、冻结），4 种主题地图（森林/沙滩流沙/冰原滑动/火山喷火），HP 多命系统，关卡过场动画与得分飘字反馈',
+        type: 'feature',
+      },
+    ],
+  },
+  {
     version: '2.9.15',
     date: '2026-04-23',
     type: '界面优化',
