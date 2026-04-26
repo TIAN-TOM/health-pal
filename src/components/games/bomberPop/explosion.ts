@@ -10,18 +10,24 @@ export const computeExplosionCells = (
   const triggeredBombs: BombEntity[] = [];
   const directions: [number, number][] = [[0, -1], [0, 1], [-1, 0], [1, 0]];
   for (const [dx, dy] of directions) {
+    let blockedByBox = false;
     for (let i = 1; i <= bomb.range; i++) {
       const nx = bomb.x + dx * i;
       const ny = bomb.y + dy * i;
       if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) break;
       const cell = currentMap[ny][nx];
       if (cell === 'wall') break;
+      if (blockedByBox) break; // 普通爆炸：穿过 1 个 box 后停下
       cells.push({ x: nx, y: ny });
       const chained = currentBombs.find(b => b.id !== bomb.id && b.x === nx && b.y === ny);
       if (chained) triggeredBombs.push(chained);
       if (cell === 'box') {
         destroyedBoxes.push({ x: nx, y: ny });
-        break;
+        if (bomb.pierce) {
+          // 穿透火焰：箱子破坏后继续传播
+          continue;
+        }
+        blockedByBox = true;
       }
     }
   }
@@ -37,13 +43,18 @@ export const computeDangerCells = (
     danger.add(`${bomb.x},${bomb.y}`);
     const directions: [number, number][] = [[0, -1], [0, 1], [-1, 0], [1, 0]];
     for (const [dx, dy] of directions) {
+      let blockedByBox = false;
       for (let i = 1; i <= bomb.range; i++) {
         const nx = bomb.x + dx * i;
         const ny = bomb.y + dy * i;
         if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) break;
         if (currentMap[ny][nx] === 'wall') break;
+        if (blockedByBox) break;
         danger.add(`${nx},${ny}`);
-        if (currentMap[ny][nx] === 'box') break;
+        if (currentMap[ny][nx] === 'box') {
+          if (bomb.pierce) continue;
+          blockedByBox = true;
+        }
       }
     }
   }
