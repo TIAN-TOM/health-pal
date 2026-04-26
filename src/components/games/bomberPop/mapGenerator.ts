@@ -1,4 +1,15 @@
-import { COLS, ROWS, type CellType, type LevelConfig, type PowerUpType } from './types';
+import { COLS, ROWS, type CellType, type LevelConfig, type PowerUpType, type SpecialCell, type ThemeKind } from './types';
+
+const SAND_COUNT = 4;
+const ICE_COUNT = 8;
+const LAVA_COUNT = 3;
+
+const THEMED_SPECIAL_KIND = (theme: ThemeKind): SpecialCell['kind'] | null => {
+  if (theme === 'beach') return 'sand';
+  if (theme === 'ice') return 'ice';
+  if (theme === 'volcano') return 'lava-vent';
+  return null;
+};
 
 export const generateMap = (
   cfg: LevelConfig,
@@ -7,6 +18,7 @@ export const generateMap = (
   map: CellType[][];
   powerUpSpawns: { x: number; y: number; type: PowerUpType }[];
   enemyPositions: { x: number; y: number }[];
+  specialCells: SpecialCell[];
 } => {
   const map: CellType[][] = Array.from({ length: ROWS }, () =>
     Array.from({ length: COLS }, () => 'empty' as CellType),
@@ -22,8 +34,7 @@ export const generateMap = (
     }
   }
 
-  // 玩家与敌人安全区
-  const safeZones = [
+  const safeZones: { x: number; y: number }[] = [
     { x: 1, y: 1 }, { x: 2, y: 1 }, { x: 1, y: 2 },
   ];
   const enemyCorners: { x: number; y: number }[] = [
@@ -54,15 +65,32 @@ export const generateMap = (
     }
   }
 
-  // 道具掉落预生成（藏在箱子下面）
+  // 道具掉落（高级道具仅在 ≥3 关出现）
   const powerUpSpawns: { x: number; y: number; type: PowerUpType }[] = [];
-  const types: PowerUpType[] = ['bomb', 'range', 'kick', 'speed'];
+  const baseTypes: PowerUpType[] = ['bomb', 'range', 'kick', 'speed', 'shield', 'life'];
+  const advancedTypes: PowerUpType[] = ['pierce', 'remote', 'freeze'];
+  const pool: PowerUpType[] = cfg.level >= 3 ? [...baseTypes, ...advancedTypes] : baseTypes;
   boxPositions.forEach(({ x, y }) => {
     if (Math.random() < cfg.powerUpRate) {
-      const type = types[Math.floor(Math.random() * types.length)];
+      const type = pool[Math.floor(Math.random() * pool.length)];
       powerUpSpawns.push({ x, y, type });
     }
   });
 
-  return { map, powerUpSpawns, enemyPositions };
+  // 主题专属机关：在空地上随机散布（避开玩家出生区）
+  const specialCells: SpecialCell[] = [];
+  const themeKind = THEMED_SPECIAL_KIND(cfg.theme);
+  if (themeKind) {
+    const desired = themeKind === 'sand' ? SAND_COUNT : themeKind === 'ice' ? ICE_COUNT : LAVA_COUNT;
+    const candidates: { x: number; y: number }[] = [];
+    for (let r = 1; r < ROWS - 1; r++) {
+      for (let c = 1; c < COLS - 1; c++) {
+        if (map[r][c] === 'empty' && !isSafe(c, r)) candidates.push({ x: c, y: r });
+      }
+    }
+    candidates.sort(() => Math.random() - 0.5);
+    candidates.slice(0, desired).forEach(({ x, y }) => specialCells.push({ x, y, kind: themeKind }));
+  }
+
+  return { map, powerUpSpawns, enemyPositions, specialCells };
 };
