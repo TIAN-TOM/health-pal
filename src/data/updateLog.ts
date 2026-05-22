@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.10.1',
+    date: '2026-05-22',
+    type: '改进',
+    icon: Zap,
+    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    items: [
+      {
+        title: '🌤️ 天气服务多源回退',
+        description: '主源 Open-Meteo 失败（如配额耗尽 / 429）时自动切换到 wttr.in、MET Norway 备用 API，并叠加 24 小时 localStorage 离线缓存兜底；首页横幅在完全无内容时直接隐藏，不再显示"暂无可显示的横幅内容"占位。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.10.0',
     date: '2026-04-26',
     type: '新功能',
