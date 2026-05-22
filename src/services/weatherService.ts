@@ -1,15 +1,45 @@
 /**
- * 天气服务 - 使用 Open-Meteo 免费API获取天气数据
+ * 天气服务 - Open-Meteo 主源，wttr.in / MET Norway 回退，localStorage 兜底
  */
+import { getCurrentWeather } from './weatherProviders';
 
 // 缓存配置
-const CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
+const CACHE_DURATION = 5 * 60 * 1000; // 5分钟内存缓存
+const PERSIST_CACHE_TTL = 24 * 60 * 60 * 1000; // 24h 持久缓存
+const PERSIST_KEY_PREFIX = 'weather_cache_v1_';
+
 interface CacheEntry {
   data: WeatherData;
   timestamp: number;
 }
 
 const weatherCache = new Map<string, CacheEntry>();
+
+const readPersistedWeather = (cityName: string): WeatherData | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(PERSIST_KEY_PREFIX + cityName);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as CacheEntry;
+    if (!parsed?.data || typeof parsed.timestamp !== 'number') return null;
+    if (Date.now() - parsed.timestamp > PERSIST_CACHE_TTL) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+};
+
+const writePersistedWeather = (cityName: string, data: WeatherData) => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(
+      PERSIST_KEY_PREFIX + cityName,
+      JSON.stringify({ data, timestamp: Date.now() } satisfies CacheEntry)
+    );
+  } catch {
+    /* quota / privacy mode — silently ignore */
+  }
+};
 
 export interface WeatherData {
   temperature: number;
