@@ -249,12 +249,6 @@ export const getWeatherData = async (city: City, includeForecast = true): Promis
       console.error('天气预警检查失败:', error);
     }
 
-    // 更新缓存
-    weatherCache.set(cacheKey, {
-      data: weatherData,
-      timestamp: Date.now()
-    });
-
     // 更新缓存（内存 + 持久）
     weatherCache.set(cacheKey, {
       data: weatherData,
