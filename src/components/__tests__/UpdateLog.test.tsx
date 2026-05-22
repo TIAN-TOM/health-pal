@@ -10,7 +10,7 @@ describe("UpdateLog data", () => {
 
   it("latest version is 2.10.1 (weather multi-provider fallback)", () => {
     expect(updates[0].version).toBe("2.10.1");
-    expect(updates[0].type).toBe("新功能");
+    expect(updates[0].type).toBe("改进");
   });
 
   it("every entry has required fields", () => {
