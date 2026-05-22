@@ -236,8 +236,6 @@ const HomeBanner: React.FC = () => {
                 );
               })()}
 
-                </div>
-              )}
             </CarouselItem>
           ))}
         </CarouselContent>
