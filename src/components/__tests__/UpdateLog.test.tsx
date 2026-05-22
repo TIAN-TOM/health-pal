@@ -8,9 +8,9 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.10.0 (Bomb It expansion)", () => {
-    expect(updates[0].version).toBe("2.10.0");
-    expect(updates[0].type).toBe("新功能");
+  it("latest version is 2.10.1 (weather multi-provider fallback)", () => {
+    expect(updates[0].version).toBe("2.10.1");
+    expect(updates[0].type).toBe("改进");
   });
 
   it("every entry has required fields", () => {

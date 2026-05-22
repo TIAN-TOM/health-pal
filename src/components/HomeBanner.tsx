@@ -146,17 +146,13 @@ const HomeBanner: React.FC = () => {
     const list: Array<
       | { kind: 'weather'; data: WeatherData; city: City }
       | { kind: 'countdown'; data: CountdownEvent }
-      | { kind: 'placeholder' }
     > = [];
     if (weather && selectedCity) {
       list.push({ kind: 'weather', data: weather, city: selectedCity });
     }
     countdowns.forEach((c) => list.push({ kind: 'countdown', data: c }));
-    if (list.length === 0 && !weatherLoading && !countdownLoading) {
-      list.push({ kind: 'placeholder' });
-    }
     return list;
-  }, [weather, selectedCity, countdowns, weatherLoading, countdownLoading]);
+  }, [weather, selectedCity, countdowns]);
 
   if ((weatherLoading && !weather) || (countdownLoading && countdowns.length === 0)) {
     return <Skeleton className="h-14 w-full rounded-lg" />;
@@ -240,11 +236,6 @@ const HomeBanner: React.FC = () => {
                 );
               })()}
 
-              {slide.kind === 'placeholder' && (
-                <div className="h-14 w-full rounded-lg bg-muted flex items-center justify-center">
-                  <span className="text-xs text-muted-foreground">暂无可显示的横幅内容</span>
-                </div>
-              )}
             </CarouselItem>
           ))}
         </CarouselContent>
