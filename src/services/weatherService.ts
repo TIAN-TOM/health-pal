@@ -255,9 +255,35 @@ export const getWeatherData = async (city: City, includeForecast = true): Promis
       timestamp: Date.now()
     });
 
+    // 更新缓存（内存 + 持久）
+    weatherCache.set(cacheKey, {
+      data: weatherData,
+      timestamp: Date.now()
+    });
+    writePersistedWeather(city.name, weatherData);
+
     return weatherData;
   } catch (error) {
-    console.error('Error fetching weather:', error);
+    console.error('Error fetching weather (primary):', error);
+
+    // 回退 1：仅当前天气的多 provider 链
+    try {
+      const current = await getCurrentWeather(city);
+      const fallbackData: WeatherData = { ...current };
+      weatherCache.set(cacheKey, { data: fallbackData, timestamp: Date.now() });
+      writePersistedWeather(city.name, fallbackData);
+      return fallbackData;
+    } catch (fallbackErr) {
+      console.warn('All live weather providers failed:', fallbackErr);
+    }
+
+    // 回退 2：localStorage 持久缓存（最多 24h 内）
+    const persisted = readPersistedWeather(city.name);
+    if (persisted) {
+      console.warn('[weather] serving stale persisted cache for', city.name);
+      return persisted;
+    }
+
     throw error;
   }
 };
