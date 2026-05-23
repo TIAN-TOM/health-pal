@@ -66,7 +66,7 @@ const AdminPanel = ({ onBack }: AdminPanelProps) => {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full gap-2 grid-cols-2 md:grid-cols-4 lg:grid-cols-8 h-auto p-2">
+              <TabsList className="flex w-full overflow-x-auto gap-2 md:grid md:grid-cols-4 lg:grid-cols-8 h-auto p-2">
                 <TabsTrigger value="notifications" className="flex items-center gap-1.5 py-2.5 text-sm">
                   <Bell className="h-4 w-4" />
                   <span className="hidden sm:inline">通知中心</span>
