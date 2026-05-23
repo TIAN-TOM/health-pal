@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.10.2',
+    date: '2026-05-23',
+    type: '改进',
+    icon: Zap,
+    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    items: [
+      {
+        title: '📱 全站响应式优化',
+        description: '引入 ResponsiveContainer 与统一断点（xs/sm/md/lg/xl/2xl），首页功能卡在平板/桌面自动扩展为 3~4 列；记录、设置、签到、汇率、家庭、英语等页面在平板（≥768px）扩到 max-w-2xl、桌面（≥1024px）扩到 max-w-3xl；管理后台 Tabs 在窄屏支持横向滚动；补充 iOS 安全区（safe-area-inset）与 .touch-target 触控目标工具类。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.10.1',
     date: '2026-05-22',
     type: '改进',
