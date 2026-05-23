@@ -1,72 +1,105 @@
-# 修复"暂无可显示的横幅内容" — 方案 C
+# 全站响应式审查与优化计划
 
-## 根因
+## 一、现状诊断
 
-1. Open-Meteo 返回 **429 Too Many Requests**（"Daily API request limit exceeded"），`weather` 始终为 `null`。
-2. 数据库中没有有效的倒数日事件，`countdowns` 为空。
-3. `HomeBanner.slides` 为空 → 走 placeholder 分支显示"暂无可显示的横幅内容"。
+通过对全站布局类的统计，主要问题如下：
 
-## 修复策略
+1. **几乎所有页面写死 `max-w-md`（约 30+ 文件）**
+   - `HomePage`、`PageLayout`、`Settings`、`AuthPage`、`ResetPassword`、所有记录类页面、`DailyDataHub`、`MyPurchases`、`UserManual`、`UpdateLog`、`Games` 等。
+   - 后果：在平板 / 桌面（≥768px）时内容被锁死在约 448px 宽，两侧大片留白，体验非常"手机壳"。
 
-**A. 多 API 顺序回退** → **B. localStorage 持久缓存兜底** → **C. 全部失败则隐藏横幅而不是显示占位**。
+2. **断点几乎未使用**
+   - 全项目 `md:` / `lg:` / `xl:` 使用极少（仅 `AdminPanel`、`Games`、`FamilyDashboard` 等少数处）。
+   - `FunctionCards` 永远 2 列；`Games` 列表桌面也只 2 列；管理后台表格未做横向滚动保护。
 
----
+3. **固定像素 / 不可伸缩组件**
+   - `HomeBanner`、`WeatherAlertBanner` 受 `max-w-md` 限制，但内部使用了固定像素高度。
+   - 部分游戏（`BomberPopGame`、`TetrisGame`、`Game2048`、`MultiplayerGomoku`）画布大小固定，未根据视口缩放。
+   - `BeijingClock`、`UserWelcomeWithClock` 在窄屏可能换行错位（需复核）。
 
-## 1. 新建 `src/services/weatherProviders.ts`
+4. **横向滚动与触控目标**
+   - 管理面板的 `TabsList grid-cols-8` 在 <500px 会挤压；
+   - `CalendarHeader` 按钮组在 320px 可能溢出；
+   - 部分按钮 `size="sm"` 在移动端点击区域 <44px。
 
-抽出"按城市经纬度获取当前天气"的多提供方实现，每个 provider 返回统一的 `WeatherData` 结构（无 forecast / yesterday，仅 current）。
+5. **图片与媒体**
+   - 大多数 `<img>` 未带 `max-w-full h-auto`，依赖外层裁剪；
+   - 暂未发现 `srcSet` / `sizes`，但当前业务图片极少，影响有限。
 
-按顺序尝试：
-1. **Open-Meteo**（现有，主力，免 Key）
-2. **wttr.in**（`https://wttr.in/{lat},{lon}?format=j1`，免 Key，作为 1 级回退；解析 `current_condition[0]`，把 WWO 天气码映射到现有 `weatherCodeMap` 的近似 emoji/描述）
-3. **MET Norway Locationforecast**（`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=..&lon=..`，免 Key，需要 `User-Agent` header；浏览器端会被 UA 限制，作为 2 级回退；若 CORS/UA 失败则跳过）
+6. **横屏 / 安全区**
+   - 没有 `env(safe-area-inset-*)` 处理（iPhone 刘海/底部 Home 条）；
+   - 没有 `landscape:` 适配（横屏时纵向空间不足）。
 
-```text
-getCurrentWeather(city)
-  ├─ try openMeteo  → ok? return
-  ├─ try wttrIn     → ok? return
-  ├─ try metNo      → ok? return
-  └─ throw AllProvidersFailed
+## 二、优化目标
+
+- **手机（<640px）**：保持现有体验，零回归。
+- **平板（≥768px）**：内容区扩到 `max-w-3xl`，关键栅格升级为 2~3 列。
+- **桌面（≥1024px）**：内容区 `max-w-5xl`，首页功能卡 3~4 列，管理后台善用宽屏。
+- **iOS 安全区**：顶/底部留出 `env(safe-area-inset-*)`。
+- **不破坏现有视觉**：移动端 UI 保持一致，仅向上扩展。
+
+## 三、实施方案
+
+### Step 1 — 引入统一响应式容器
+新建 `src/components/layout/ResponsiveContainer.tsx`：
+
+```tsx
+// 取代散落各处的 max-w-md
+<div className="mx-auto w-full px-4 max-w-md md:max-w-3xl lg:max-w-5xl">
 ```
 
-每个 provider 内部 5 秒超时（`AbortController`），避免单个慢响应拖垮整体。
+- 提供 `size` 变体：`narrow`（默认 md/2xl/3xl）、`wide`（md/3xl/5xl）、`full`。
+- 改造 `PageLayout` 内部使用此容器，所有 `PageLayout` 子页面自动获益。
 
-## 2. 改造 `src/services/weatherService.ts`
+### Step 2 — 改造首页与核心入口
+- `HomePage`：外层容器升级；功能卡区域 `grid-cols-2 md:grid-cols-3 lg:grid-cols-4`。
+- `FunctionCards`：保持单卡视觉不变，只调整父级 grid。
+- `UserWelcomeWithClock`：在 ≥md 时分两列（左欢迎语 + 右时钟/SOS）。
+- `HomeBanner` / `WeatherAlertBanner`：宽度跟随容器；轮播图最大高度按断点提升。
 
-- `getWeatherData(city, includeForecast)`：
-  - **当 `includeForecast=false`**（HomeBanner 用）：调用 `getCurrentWeather(city)` 走多 provider 链；任一成功即返回并写入内存缓存 + **localStorage 持久缓存** (`weather_cache_{city}`，含 `timestamp`)。
-  - **当 `includeForecast=true`**（WeatherDetail 用）：仍走 Open-Meteo（含 forecast/yesterday），失败时回退到 `getCurrentWeather` 仅返回当前天气（forecast/yesterday 设 `undefined`，UI 已对 optional 兼容）。
-- 抛错前先尝试 localStorage：若有 24 小时内的旧数据，返回它并加 `stale: true` 标记（写入 console.warn），UI 仍能展示。
-- 真正全部失败才 throw。
+### Step 3 — 列表/数据型页面升级
+- `Games`：`md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`。
+- `MyPurchases`、`UpdateLog`、`UserManual`、`EducationCenter` 等长列表：≥md 切换为两列卡片，长文页保持单列但 `max-w-3xl`。
+- `FamilyDashboard` 已部分响应式，统一到新容器。
 
-## 3. 改造 `src/components/HomeBanner.tsx`
+### Step 4 — 管理后台
+- `AdminPanel` TabsList 在 <md 改为可横向滚动；
+- 表格统一包 `overflow-x-auto`；
+- `EnhancedUserDetailView` 在桌面用 2 列布局。
 
-- `slides` 计算保持现状，但**移除 `placeholder` 分支**。
-- 渲染前：
-  ```ts
-  if (slides.length === 0) return null;
-  ```
-- 顶层早返 `null` 时父级 `HomePage` 自然收起空白（当前已是普通块级，无需额外间距处理）。
-- `weatherLoading` 失败后置为 `false` 即可，无需额外状态。
+### Step 5 — 游戏画布
+- 抽出工具 `useResponsiveCanvasSize(maxWidth)`：监听 `ResizeObserver`，按容器宽度计算 cell/board 尺寸。
+- 改造 `BomberPopGame`、`Game2048`、`TetrisGame`、`MultiplayerGomoku`、`SnakeGame`、`Gomoku`、`BubblePopGame`、`MemoryCardGame` 使其画布在 320–960px 区间平滑缩放，桌面不再"小手机框"。
 
-## 4. 更新 Memory
+### Step 6 — 全局基础设施
+- `index.css`：
+  - `body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }`（或封装到根容器）。
+  - 新增 `.touch-target { @apply min-h-[44px] min-w-[44px]; }` 工具类，针对小图标按钮统一应用。
+- `tailwind.config.ts`：补 `screens.xs: '420px'` 便于细分窄屏。
 
-更新 `mem://features/weather-module`，记录"多 provider 回退顺序 + localStorage 持久兜底，HomeBanner 在无内容时隐藏"。
+### Step 7 — 横屏适配
+- `EmergencyMode`、`BreathingExercise`、所有游戏页：使用 `landscape:` 调整布局（横屏下两列：左控件/右主区）。
 
-## 5. 更新日志
+### Step 8 — 验证
+- 在 320 / 375 / 414 / 768 / 1024 / 1440 六档使用 `browser--set_viewport_size` 截图巡检关键页（Home / Settings / RecordHub / AdminPanel / Games / 游戏内）。
+- 跑 `bunx vitest run` 确认无回归。
+- 控制台无溢出/裁剪警告。
 
-在 `src/data/updateLog.ts` 顶部新增 `2.10.1`：「天气服务接入多源回退（wttr.in / MET Norway），离线缓存兜底，横幅无内容时自动隐藏」。同步修改 `src/components/__tests__/UpdateLog.test.tsx` 期望版本号。
+### Step 9 — 同步更新日志
+- `src/data/updateLog.ts` 增加 `2.10.2` 条目（类型：改进）：「全站响应式优化：引入 ResponsiveContainer，平板/桌面布局升级，游戏画布自适应，补充 iOS 安全区」。
+- 更新 `UpdateLog.test.tsx` 期望版本。
+- 更新 `mem://index.md`（在 Core 中加入"使用 ResponsiveContainer 替代裸 max-w-md"约束）。
 
-## 6. 验证
+## 四、技术要点（开发者向）
 
-1. 模拟 Open-Meteo 失败（DevTools 阻断 `api.open-meteo.com`）→ 横幅仍显示天气（来自 wttr.in）。
-2. 同时阻断 open-meteo 与 wttr.in → 显示 MET Norway 结果或 localStorage 缓存。
-3. 全部阻断且无缓存且无倒数日 → 横幅整体不渲染（不再出现"暂无可显示的横幅内容"）。
-4. WeatherDetail 页正常加载 forecast（主路径未变）。
-5. `npm run test` 通过。
+- 不直接全局替换 `max-w-md`；改 `PageLayout`、`HomePage` 即可覆盖 80% 页面，剩余少数自定义页（`AuthPage`、`ResetPassword`、游戏顶层）单独迁移。
+- 容器宽度建议梯度：`max-w-md` (448) → `md:max-w-3xl` (768) → `lg:max-w-5xl` (1024)。`wide` 变体用于管理后台和数据中心。
+- 游戏画布缩放：保持逻辑网格不变，只改像素 `cellSize`，避免触碰玩法逻辑。
+- 测试集中在视觉层；不修改任何业务逻辑、数据库、Edge Function。
 
-## 技术要点
+## 五、范围与不做的事
 
-- 所有 provider 在浏览器端调用；MET Norway 对 `User-Agent` 有要求，浏览器无法设置 UA，所以**实际可能始终失败 → 放最后并 swallow 错误**，主要靠 Open-Meteo + wttr.in。
-- 不引入 API Key（保持零配置）。如后续要更稳，可考虑接入需 Key 的 OpenWeatherMap，作为后续迭代。
-- localStorage key 命名：`weather_cache_v1_{cityName}`，过期阈值 24h。
+- 不调整配色 / 字体 / 设计 token。
+- 不重构组件 API；只动布局类与少数容器结构。
+- 不动 Supabase / RLS / Edge Function。
+- 不引入新的 UI 库；继续 Tailwind + 现有 shadcn 组件。

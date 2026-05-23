@@ -299,7 +299,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
         <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-60 h-60 bg-gradient-to-br from-purple-200/20 to-pink-200/20 rounded-full blur-2xl"></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-6 max-w-md">
+      <div className="relative z-10 container mx-auto px-4 py-6 max-w-md md:max-w-2xl lg:max-w-3xl">
         {/* 顶部导航 */}
         <div className="flex items-center justify-between mb-8">
           <Button 

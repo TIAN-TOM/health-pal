@@ -8,8 +8,8 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.10.1 (weather multi-provider fallback)", () => {
-    expect(updates[0].version).toBe("2.10.1");
+  it("latest version is 2.10.2 (responsive overhaul)", () => {
+    expect(updates[0].version).toBe("2.10.2");
     expect(updates[0].type).toBe("改进");
   });
 

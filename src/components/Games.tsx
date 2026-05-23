@@ -99,7 +99,7 @@ const Games = ({ onBack }: GamesProps) => {
           <p className="text-gray-600 text-sm">适度游戏有助于缓解压力，保持心理健康</p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {GAMES.map((game) => (
             <Card key={game.id} className="hover:shadow-lg transition-shadow duration-200">
               <CardHeader>
