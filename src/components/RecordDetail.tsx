@@ -66,7 +66,7 @@ const RecordDetail = ({ record, onBack }: RecordDetailProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
-      <div className="container mx-auto max-w-md">
+      <div className="container mx-auto px-4 max-w-md md:max-w-2xl lg:max-w-3xl">
         <div className="flex items-center mb-6">
           <Button variant="ghost" onClick={onBack} className="mr-2">
             <ArrowLeft className="h-4 w-4" />
