@@ -25,7 +25,7 @@ export const updates: UpdateEntry[] = [
     items: [
       {
         title: '📱 全站响应式优化',
-        description: '引入 ResponsiveContainer 与统一断点（xs/sm/md/lg/xl/2xl），首页功能卡在平板/桌面自动扩展为 3~4 列；记录、设置、签到、汇率、家庭、英语等页面在平板（≥768px）扩到 max-w-2xl、桌面（≥1024px）扩到 max-w-3xl；管理后台 Tabs 在窄屏支持横向滚动；补充 iOS 安全区（safe-area-inset）与 .touch-target 触控目标工具类。',
+        description: '引入 ResponsiveContainer 与统一断点（xs/sm/md/lg/xl/2xl），记录、设置、签到、汇率、家庭、英语等页面在平板（≥768px）扩到 max-w-2xl、桌面（≥1024px）扩到 max-w-3xl；管理后台 Tabs 在窄屏支持横向滚动；补充 iOS 安全区（safe-area-inset）与 .touch-target 触控目标工具类。首页布局保持原样不变。',
         type: 'improvement',
       },
     ],
