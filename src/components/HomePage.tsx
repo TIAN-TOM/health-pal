@@ -32,7 +32,7 @@ const HomePage = ({
     window.open('https://www.linkedin.com/in/tom-tian-317580257/', '_blank');
   };
   return <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50" ref={homeRef}>
-      <div className="container mx-auto px-4 py-3 max-w-md md:max-w-3xl lg:max-w-5xl space-y-3">
+      <div className="container mx-auto px-4 py-3 max-w-md space-y-3">
         <UserWelcomeWithClock userDisplayName={userDisplayName} onSettingsClick={onSettingsClick} onEmergencyClick={onEmergencyClick} />
         
        
@@ -49,9 +49,10 @@ const HomePage = ({
           <HomeBanner />
         </Suspense>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <FunctionCards onNavigate={onNavigate} />
         </div>
+
         
         {/* 使用手册和更新日志快速入口 */}
         <div className="grid grid-cols-2 gap-3">
