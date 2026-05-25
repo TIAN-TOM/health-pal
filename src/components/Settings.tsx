@@ -8,6 +8,7 @@ import SystemSettings from './settings/SystemSettings';
 import AccountManagement from './settings/AccountManagement';
 import UserInfo from './settings/UserInfo';
 import PersonalSettingsCard from './settings/PersonalSettingsCard';
+import AppearanceSettings from './settings/AppearanceSettings';
 
 interface SettingsProps {
   onBack: () => void;
@@ -54,6 +55,9 @@ const Settings = ({
 
         <div className="space-y-4">
           <PersonalSettingsCard onPersonalProfile={onPersonalProfile} />
+
+          <AppearanceSettings />
+          
           
           <HealthManagement 
             onMedicationManagement={onMedicationManagement}

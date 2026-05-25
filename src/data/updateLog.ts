@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.10.3',
+    date: '2026-05-25',
+    type: '新功能',
+    icon: Sparkles,
+    color: 'bg-purple-50 text-purple-600 border-purple-200',
+    items: [
+      {
+        title: '🌙 全局深色模式',
+        description: '新增全局深色 / 浅色 / 跟随系统三档主题切换：首页右上角一键切换、设置页"外观主题"卡片精细选择；偏好持久化到本地，首屏防闪烁；暗色下页面渐变背景、半透明白色卡片自动适配。',
+        type: 'feature',
+      },
+    ],
+  },
+  {
     version: '2.10.2',
     date: '2026-05-23',
     type: '改进',

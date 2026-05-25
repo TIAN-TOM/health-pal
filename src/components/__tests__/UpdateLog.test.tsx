@@ -8,9 +8,9 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.10.2 (responsive overhaul)", () => {
-    expect(updates[0].version).toBe("2.10.2");
-    expect(updates[0].type).toBe("改进");
+  it("latest version is 2.10.3 (global dark mode)", () => {
+    expect(updates[0].version).toBe("2.10.3");
+    expect(updates[0].type).toBe("新功能");
   });
 
   it("every entry has required fields", () => {
