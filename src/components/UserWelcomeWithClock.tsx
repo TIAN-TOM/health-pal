@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
-import { Settings, Clock } from 'lucide-react';
+import { Settings, Clock, Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { getBeijingTime } from '@/utils/beijingTime';
@@ -66,6 +67,7 @@ const LiveClock = memo(() => {
 LiveClock.displayName = 'LiveClock';
 
 const UserWelcomeWithClock = ({ userDisplayName, onSettingsClick, onEmergencyClick }: UserWelcomeWithClockProps) => {
+  const { resolvedTheme, toggle } = useTheme();
   // 问候语和 emoji 在挂载时计算一次（按当前小时），不需要每秒重算
   const { greeting, emoji } = useMemo(() => {
     const date = getBeijingTime();
@@ -128,6 +130,15 @@ const UserWelcomeWithClock = ({ userDisplayName, onSettingsClick, onEmergencyCli
               aria-label="我需要帮助"
             >
               🆘 帮助
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggle}
+              className="hover:bg-primary/10"
+              aria-label={resolvedTheme === 'dark' ? '切换浅色模式' : '切换深色模式'}
+            >
+              {resolvedTheme === 'dark' ? <Sun className="h-5 w-5 text-primary" /> : <Moon className="h-5 w-5 text-primary" />}
             </Button>
             <Button
               variant="ghost"
