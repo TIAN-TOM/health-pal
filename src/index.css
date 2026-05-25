@@ -54,41 +54,44 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* 主流暗色规范：避免纯黑（halation），使用偏蓝灰的深色基底；
+       前景色避免纯白，降低眩光；卡片相对背景做 +4% 亮度的"层级提升"。 */
+    --background: 222 20% 10%;          /* #14171f 主背景 */
+    --foreground: 210 16% 90%;          /* #dde2ea 主文本，对背景约 12:1 */
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 222 18% 14%;                /* #1c2029 卡片（比 bg 高一层） */
+    --card-foreground: 210 16% 92%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 222 18% 14%;
+    --popover-foreground: 210 16% 92%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 210 90% 62%;             /* #4ea2f5 高亮蓝，WCAG AA 通过 */
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 222 16% 20%;           /* #2a2f3a 次级表面 */
+    --secondary-foreground: 210 16% 92%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 222 16% 18%;
+    --muted-foreground: 215 14% 68%;    /* #a0a8b6 辅助文本，对 bg 约 5.8:1 */
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 222 16% 22%;
+    --accent-foreground: 210 16% 92%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 70% 55%;           /* #e35454 错误色 */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 222 14% 24%;              /* #353a45 边框（足够可见但不抢戏） */
+    --input: 222 14% 24%;
+    --ring: 210 90% 62%;
+
+    --sidebar-background: 222 22% 8%;
+    --sidebar-foreground: 210 16% 88%;
+    --sidebar-primary: 210 90% 62%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 222 16% 16%;
+    --sidebar-accent-foreground: 210 16% 90%;
+    --sidebar-border: 222 14% 22%;
+    --sidebar-ring: 210 90% 62%;
   }
 }
 
@@ -118,24 +121,126 @@
     background-image: linear-gradient(135deg, hsl(210 100% 97%), hsl(140 60% 95%));
   }
   .dark .app-page-bg {
-    background-image: linear-gradient(135deg, hsl(222 47% 8%), hsl(222 40% 12%));
+    background-image: linear-gradient(135deg, hsl(222 22% 9%), hsl(222 18% 13%));
   }
 }
 
-/* 兼容历史硬编码渐变：暗色下整体反相为深色背景 */
+/* ============== 暗色模式：硬编码 Tailwind 颜色兜底 ============== */
+/* 页面渐变背景（很多页面用 from-blue-50 to-green-50） */
 .dark .bg-gradient-to-br.from-blue-50.to-green-50,
-.dark .bg-gradient-to-br.from-blue-50.via-white.to-green-50 {
-  background-image: linear-gradient(135deg, hsl(222 47% 8%), hsl(222 40% 12%)) !important;
+.dark .bg-gradient-to-br.from-blue-50.via-white.to-green-50,
+.dark .bg-gradient-to-br.from-blue-50,
+.dark .bg-gradient-to-r.from-blue-50.to-green-50 {
+  background-image: linear-gradient(135deg, hsl(222 22% 9%), hsl(222 18% 13%)) !important;
 }
 
-/* 暗色下白色半透明卡片的兜底可读性 */
+/* 白色/浅色卡片背景 */
+.dark .bg-white {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground));
+}
 .dark .bg-white\/70,
 .dark .bg-white\/80,
-.dark .bg-white\/90 {
+.dark .bg-white\/90,
+.dark .bg-white\/50,
+.dark .bg-white\/60 {
   background-color: hsl(var(--card) / 0.85) !important;
   color: hsl(var(--card-foreground));
 }
-.dark .bg-white {
-  background-color: hsl(var(--card));
-  color: hsl(var(--card-foreground));
+
+/* 浅色调色板（blue-50, green-50, yellow-50, red-50, purple-50, gray-50/100）→ 暗色表面 */
+.dark .bg-blue-50,
+.dark .bg-green-50,
+.dark .bg-yellow-50,
+.dark .bg-red-50,
+.dark .bg-orange-50,
+.dark .bg-purple-50,
+.dark .bg-pink-50,
+.dark .bg-indigo-50,
+.dark .bg-cyan-50,
+.dark .bg-teal-50,
+.dark .bg-emerald-50,
+.dark .bg-amber-50,
+.dark .bg-rose-50,
+.dark .bg-slate-50,
+.dark .bg-gray-50,
+.dark .bg-gray-100 {
+  background-color: hsl(222 16% 18%) !important;
+}
+
+/* 灰阶文本 → foreground / muted */
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-zinc-900,
+.dark .text-zinc-800,
+.dark .text-neutral-900,
+.dark .text-neutral-800,
+.dark .text-black {
+  color: hsl(var(--foreground)) !important;
+}
+.dark .text-gray-700,
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-slate-700,
+.dark .text-slate-600,
+.dark .text-slate-500 {
+  color: hsl(var(--muted-foreground)) !important;
+}
+.dark .text-gray-400,
+.dark .text-gray-300,
+.dark .text-slate-400,
+.dark .text-slate-300 {
+  color: hsl(215 14% 58%) !important;
+}
+
+/* 彩色强调文本（保持色相，提高在深底上的明度，避免发闷） */
+.dark .text-blue-700,
+.dark .text-blue-600 { color: hsl(210 95% 72%) !important; }
+.dark .text-green-700,
+.dark .text-green-600,
+.dark .text-emerald-700,
+.dark .text-emerald-600 { color: hsl(150 60% 65%) !important; }
+.dark .text-red-700,
+.dark .text-red-600 { color: hsl(0 80% 70%) !important; }
+.dark .text-yellow-700,
+.dark .text-yellow-600,
+.dark .text-amber-700,
+.dark .text-amber-600 { color: hsl(45 95% 65%) !important; }
+.dark .text-orange-700,
+.dark .text-orange-600 { color: hsl(25 90% 65%) !important; }
+.dark .text-purple-700,
+.dark .text-purple-600 { color: hsl(270 75% 75%) !important; }
+.dark .text-pink-700,
+.dark .text-pink-600 { color: hsl(330 80% 72%) !important; }
+
+/* 彩色浅边框 → 暗色微提亮边框 */
+.dark .border-blue-100,
+.dark .border-blue-200,
+.dark .border-green-100,
+.dark .border-green-200,
+.dark .border-yellow-100,
+.dark .border-yellow-200,
+.dark .border-red-100,
+.dark .border-red-200,
+.dark .border-orange-100,
+.dark .border-orange-200,
+.dark .border-purple-100,
+.dark .border-purple-200,
+.dark .border-pink-100,
+.dark .border-pink-200,
+.dark .border-gray-100,
+.dark .border-gray-200,
+.dark .border-slate-100,
+.dark .border-slate-200 {
+  border-color: hsl(var(--border)) !important;
+}
+
+/* 灰色分隔线 */
+.dark .bg-gray-200,
+.dark .bg-gray-300,
+.dark .bg-slate-200,
+.dark .bg-slate-300 {
+  background-color: hsl(var(--border)) !important;
 }
