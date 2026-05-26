@@ -94,7 +94,7 @@ const WeatherDetail = () => {
   if (loading && !weather) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-md md:max-w-2xl lg:max-w-3xl mx-auto">
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
@@ -121,7 +121,7 @@ const WeatherDetail = () => {
   if (!weather) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-md md:max-w-2xl lg:max-w-3xl mx-auto">
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
@@ -142,7 +142,7 @@ const WeatherDetail = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-md md:max-w-2xl lg:max-w-3xl mx-auto">
         {/* 返回按钮 */}
         <Button
           variant="ghost"
