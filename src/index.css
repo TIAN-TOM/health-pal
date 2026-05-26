@@ -126,12 +126,47 @@
 }
 
 /* ============== 暗色模式：硬编码 Tailwind 颜色兜底 ============== */
-/* 页面渐变背景（很多页面用 from-blue-50 to-green-50） */
-.dark .bg-gradient-to-br.from-blue-50.to-green-50,
-.dark .bg-gradient-to-br.from-blue-50.via-white.to-green-50,
-.dark .bg-gradient-to-br.from-blue-50,
-.dark .bg-gradient-to-r.from-blue-50.to-green-50 {
+/* 页面渐变背景（覆盖各种 from-*-50 / via-*-50 / to-*-50 浅色组合） */
+.dark [class*="bg-gradient-to-"][class*="from-blue-50"],
+.dark [class*="bg-gradient-to-"][class*="from-indigo-50"],
+.dark [class*="bg-gradient-to-"][class*="from-purple-50"],
+.dark [class*="bg-gradient-to-"][class*="from-pink-50"],
+.dark [class*="bg-gradient-to-"][class*="from-green-50"],
+.dark [class*="bg-gradient-to-"][class*="from-emerald-50"],
+.dark [class*="bg-gradient-to-"][class*="from-teal-50"],
+.dark [class*="bg-gradient-to-"][class*="from-cyan-50"],
+.dark [class*="bg-gradient-to-"][class*="from-yellow-50"],
+.dark [class*="bg-gradient-to-"][class*="from-amber-50"],
+.dark [class*="bg-gradient-to-"][class*="from-orange-50"],
+.dark [class*="bg-gradient-to-"][class*="from-red-50"],
+.dark [class*="bg-gradient-to-"][class*="from-rose-50"],
+.dark [class*="bg-gradient-to-"][class*="from-slate-50"],
+.dark [class*="bg-gradient-to-"][class*="from-gray-50"] {
   background-image: linear-gradient(135deg, hsl(222 22% 9%), hsl(222 18% 13%)) !important;
+}
+
+/* 半透明白底（毛玻璃卡片） */
+.dark .bg-white\/10,
+.dark .bg-white\/20,
+.dark .bg-white\/30,
+.dark .bg-white\/40 {
+  background-color: hsl(var(--card) / 0.6) !important;
+  color: hsl(var(--card-foreground));
+}
+
+/* 白色边框（毛玻璃描边） */
+.dark .border-white\/20,
+.dark .border-white\/30,
+.dark .border-white\/40,
+.dark .border-white\/50,
+.dark .border-white\/60 {
+  border-color: hsl(var(--border)) !important;
+}
+
+/* 白底渐变卡片（如 from-white/20 to-white/30） */
+.dark [class*="bg-gradient-to-"][class*="from-white/"],
+.dark [class*="bg-gradient-to-"][class*="to-white/"] {
+  background-image: linear-gradient(135deg, hsl(var(--card) / 0.7), hsl(var(--card) / 0.5)) !important;
 }
 
 /* 白色/浅色卡片背景 */
