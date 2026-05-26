@@ -134,7 +134,7 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
   if (preferencesLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-        <div className="container mx-auto px-4 py-6 max-w-2xl">
+        <div className="container mx-auto px-4 py-6 max-w-md md:max-w-2xl lg:max-w-3xl">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">加载中...</p>
@@ -146,7 +146,7 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <div className="container mx-auto px-4 py-6 max-w-2xl">
+      <div className="container mx-auto px-4 py-6 max-w-md md:max-w-2xl lg:max-w-3xl">
         <div className="flex items-center justify-between mb-6">
           <Button variant="ghost" size="sm" onClick={onBack} className="mr-2">
             <ArrowLeft className="h-4 w-4 mr-1" />

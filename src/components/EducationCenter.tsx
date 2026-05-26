@@ -68,7 +68,7 @@ const EducationCenter = ({ onBack }: EducationCenterProps) => {
           </Button>
         </div>
 
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-md md:max-w-2xl lg:max-w-3xl mx-auto">
           <Card>
             <CardHeader>
               <div className="flex items-center mb-4">
