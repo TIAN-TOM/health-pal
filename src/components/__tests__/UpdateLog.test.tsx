@@ -8,8 +8,8 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.10.3 (global dark mode)", () => {
-    expect(updates[0].version).toBe("2.10.3");
+  it("latest version is 2.10.5 (dark mode pastel gradient fix)", () => {
+    expect(updates[0].version).toBe("2.10.5");
     expect(updates[0].type).toBe("新功能");
   });
 
