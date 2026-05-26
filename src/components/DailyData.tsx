@@ -50,7 +50,7 @@ const DailyData = ({ onBack }: DailyDataProps) => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-md md:max-w-2xl lg:max-w-3xl mx-auto">
         {viewMode === 'calendar' ? (
           <CalendarView />
         ) : (

@@ -253,7 +253,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
             </Button>
           </div>
 
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-md md:max-w-2xl lg:max-w-3xl mx-auto">
             <Card className="mb-8 bg-white/80 backdrop-blur-sm border-white/20 shadow-xl">
               <CardHeader className="text-center pb-6">
                 <div className="mx-auto w-16 h-16 bg-gradient-to-br from-violet-500 to-blue-500 rounded-2xl flex items-center justify-center mb-4">

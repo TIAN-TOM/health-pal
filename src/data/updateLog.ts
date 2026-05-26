@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.10.6',
+    date: '2026-05-26',
+    type: '优化',
+    icon: Zap,
+    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    items: [
+      {
+        title: '📐 统一全站页面宽度（移动优先）',
+        description: '将所有顶层页面容器统一为 max-w-md md:max-w-2xl lg:max-w-3xl，覆盖每日打卡、家庭模块、教育中心、语音记录、天气详情、UpdateLog、UserManual、Games 等页面，确保移动端窗口宽度一致，平板与桌面平滑放大，告别零碎的 max-w-2xl / max-w-4xl 混用。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.10.5',
     date: '2026-05-26',
     type: '修复',
