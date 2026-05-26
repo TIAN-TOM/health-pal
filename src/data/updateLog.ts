@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.10.5',
+    date: '2026-05-26',
+    type: '修复',
+    icon: Bug,
+    color: 'bg-orange-50 text-orange-600 border-orange-200',
+    items: [
+      {
+        title: '🌙 修复呼吸冥想等页面暗色模式偏白问题',
+        description: '扩展暗色模式的全局兜底规则：覆盖所有 from-*-50 / via-*-50 / to-*-50 浅色渐变（indigo/purple/pink/teal/rose 等），以及 bg-white/10~40 等毛玻璃半透明卡片和 border-white/20~60 描边，确保呼吸冥想、家庭仪表盘等使用紫粉渐变的页面在暗色下也是深色基底。',
+        type: 'fix',
+      },
+    ],
+  },
+  {
     version: '2.10.3',
     date: '2026-05-25',
     type: '新功能',
