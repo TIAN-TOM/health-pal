@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.10.7',
+    date: '2026-05-27',
+    type: '性能',
+    icon: Zap,
+    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    items: [
+      {
+        title: '⚡ 首屏加载提速',
+        description: '将 AuthPage 与 PageRenderer 改为按需懒加载，登录后无需再下载登录页代码；关闭 Vite 对动态路由 chunk 的 modulepreload，避免首屏一次性拉取数十个路由分包；通过 optimizeDeps 预构建 React、Supabase、Query、Lucide 等高频依赖，减少开发与生产首屏等待时间。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.10.6',
     date: '2026-05-26',
     type: '优化',
