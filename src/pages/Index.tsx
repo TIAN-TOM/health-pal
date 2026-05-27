@@ -159,13 +159,15 @@ export default function Index() {
   }
 
   return (
-    <PageRenderer
-      currentPage={currentPage}
-      selectedRecord={selectedRecord}
-      navigationSource={navigationSource}
-      onBack={handleBack}
-      onNavigation={handleNavigation}
-      onRecordClick={handleRecordClick}
-    />
+    <Suspense fallback={<RouteFallback />}>
+      <PageRenderer
+        currentPage={currentPage}
+        selectedRecord={selectedRecord}
+        navigationSource={navigationSource}
+        onBack={handleBack}
+        onNavigation={handleNavigation}
+        onRecordClick={handleRecordClick}
+      />
+    </Suspense>
   );
 }
