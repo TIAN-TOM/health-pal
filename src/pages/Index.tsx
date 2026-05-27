@@ -105,7 +105,11 @@ export default function Index() {
   }
 
   if (!user) {
-    return <AuthPage />;
+    return (
+      <Suspense fallback={<RouteFallback />}>
+        <AuthPage />
+      </Suspense>
+    );
   }
 
   if (currentPage === "home") {
