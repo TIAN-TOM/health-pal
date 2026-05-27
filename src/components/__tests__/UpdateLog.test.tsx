@@ -8,8 +8,8 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.10.7 (faster first paint)", () => {
-   expect(updates[0].version).toBe("2.10.7");
+  it("latest version is 2.10.8 (route prefetch)", () => {
+   expect(updates[0].version).toBe("2.10.8");
     expect(updates[0].type).toBe("优化");
   });
 

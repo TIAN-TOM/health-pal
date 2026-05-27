@@ -1,10 +1,11 @@
-import React, { Suspense, memo } from 'react';
+import React, { Suspense, memo, useEffect } from 'react';
 import UserWelcomeWithClock from '@/components/UserWelcomeWithClock';
 import FunctionCards from '@/components/FunctionCards';
 import { Button } from '@/components/ui/button';
 import { BookOpen, History } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { lazyWithRetry } from '@/lib/lazyWithRetry';
+import { prefetchHighTrafficPages } from '@/lib/prefetchPages';
 
 const NavigationActions = lazyWithRetry(() => import('@/components/NavigationActions'));
 const HomeBanner = lazyWithRetry(() => import('@/components/HomeBanner'));
@@ -31,6 +32,12 @@ const HomePage = ({
   const handleDeveloperClick = () => {
     window.open('https://www.linkedin.com/in/tom-tian-317580257/', '_blank');
   };
+
+  // 首页挂载后，浏览器空闲时预取高频子页面的 JS chunk，缩短点击进入时的等待
+  useEffect(() => {
+    prefetchHighTrafficPages();
+  }, []);
+
   return <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50" ref={homeRef}>
       <div className="container mx-auto px-4 py-3 max-w-md space-y-3">
         <UserWelcomeWithClock userDisplayName={userDisplayName} onSettingsClick={onSettingsClick} onEmergencyClick={onEmergencyClick} />
