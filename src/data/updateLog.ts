@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.10.8',
+    date: '2026-05-27',
+    type: '性能',
+    icon: Zap,
+    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    items: [
+      {
+        title: '⚡ 子页面切换提速（路由预取）',
+        description: '新增按需路由预取机制：进入首页后浏览器空闲时分批预取签到、健康记录、设置、家庭管理、呼吸冥想、游戏、汇率、英语等高频页面的 JS 包；同时在功能卡片上 hover/pointerdown 时立即预取对应页面。用户点击进入子页面时大多已无需等待网络下载，几乎瞬开。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.10.7',
     date: '2026-05-27',
     type: '性能',
