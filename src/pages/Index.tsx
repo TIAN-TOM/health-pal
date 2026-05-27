@@ -1,14 +1,22 @@
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useBirthdayWish } from "@/hooks/useBirthdayWish";
-import PageRenderer from "@/components/PageRenderer";
 import HomePage from "@/components/HomePage";
-import AuthPage from "./AuthPage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Gift } from "lucide-react";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import type { Tables } from '@/integrations/supabase/types';
+
+const PageRenderer = lazyWithRetry(() => import("@/components/PageRenderer"));
+const AuthPage = lazyWithRetry(() => import("./AuthPage"));
+
+const RouteFallback = () => (
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  </div>
+);
 
 type MeniereRecord = Tables<'meniere_records'>;
 
