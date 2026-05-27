@@ -2,6 +2,7 @@
 import React from 'react';
 import { ClipboardList, Activity, Heart, Mic, Gamepad2, Wind, Home, DollarSign, BookOpen } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { prefetchPage } from '@/lib/prefetchPages';
 
 interface FunctionCardsProps {
   onNavigate: (page: string, source?: string) => void;
