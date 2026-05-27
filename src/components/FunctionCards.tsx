@@ -83,6 +83,8 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
           key={func.id} 
           className="hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:scale-105 h-full" 
           onClick={() => onNavigate(func.id, 'home')}
+          onPointerDown={() => prefetchPage(func.id)}
+          onMouseEnter={() => prefetchPage(func.id)}
         >
           <CardContent className="p-3 text-center flex flex-col items-center justify-center h-full min-h-[110px]">
             <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${func.color} flex items-center justify-center mx-auto mb-2`}>
