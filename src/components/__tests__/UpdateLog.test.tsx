@@ -8,9 +8,9 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.10.8 (route prefetch)", () => {
-   expect(updates[0].version).toBe("2.10.8");
-    expect(updates[0].type).toBe("优化");
+  it("latest version is 2.10.9 (festival date fix)", () => {
+   expect(updates[0].version).toBe("2.10.9");
+    expect(updates[0].type).toBe("修复");
   });
 
   it("every entry has required fields", () => {
