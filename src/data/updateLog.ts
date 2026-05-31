@@ -17,9 +17,23 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.10.9',
+    date: '2026-05-31',
+    type: '修复',
+    icon: Bug,
+    color: 'bg-red-50 text-red-600 border-red-200',
+    items: [
+      {
+        title: '🐉 修正 2026 年农历节日公历对照表',
+        description: '此前 2026 年农历节日（端午、中秋、七夕、春节、元宵、重阳等）的公历日期填写有误，导致首页问候语在非节日当天误显示节日祝福（如 5 月 31 日误显示端午节）。已根据 2026 农历精确日期重新校对：端午 6 月 19 日、七夕 8 月 19 日、中元 8 月 27 日、中秋 9 月 25 日、重阳 10 月 19 日、龙抬头 3 月 20 日、小年 2 月 10/11 日、腊八 1 月 26 日等。',
+        type: 'fix',
+      },
+    ],
+  },
+  {
     version: '2.10.8',
     date: '2026-05-27',
-    type: '性能',
+    type: '优化',
     icon: Zap,
     color: 'bg-blue-50 text-blue-600 border-blue-200',
     items: [
