@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.11.0',
+    date: '2026-06-07',
+    type: '安全',
+    icon: Sparkles,
+    color: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+    items: [
+      {
+        title: '🔒 加固数据库写入与函数调用权限',
+        description: '为 account_deletions、user_points、user_purchases、user_item_inventory 增加显式写入拦截策略，普通用户无法直接插入/修改/删除相关记录；同时回收触发器与管理员函数对匿名用户的执行权限，缩小后端攻击面，确保积分、库存、购买记录仅能通过受信任的服务端逻辑修改。',
+        type: 'fix',
+      },
+    ],
+  },
+  {
     version: '2.10.9',
     date: '2026-05-31',
     type: '修复',

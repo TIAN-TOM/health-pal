@@ -8,8 +8,8 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.10.9 (festival date fix)", () => {
-   expect(updates[0].version).toBe("2.10.9");
+  it("latest version is 2.11.0 (security hardening)", () => {
+   expect(updates[0].version).toBe("2.11.0");
     expect(updates[0].type).toBe("修复");
   });
 
