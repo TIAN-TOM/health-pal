@@ -29,8 +29,12 @@ const HomePage = ({
   onNavigate,
   homeRef
 }: HomePageProps) => {
-  const handleDeveloperClick = () => {
-    window.open('https://www.linkedin.com/in/tom-tian-317580257/', '_blank');
+  const handleLinkedInClick = () => {
+    window.open('https://www.linkedin.com/in/tomtianys/', '_blank');
+  };
+
+  const handleGithubClick = () => {
+    window.open('https://github.com/TIAN-TOM', '_blank');
   };
 
   // 首页挂载后，浏览器空闲时预取高频子页面的 JS chunk，缩短点击进入时的等待
