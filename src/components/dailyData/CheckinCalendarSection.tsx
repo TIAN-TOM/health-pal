@@ -84,6 +84,7 @@ const CheckinCalendarSection = ({ checkinDates, selectedDate, onDateSelect, onMa
       
       // 刷新数据
       await loadMakeupData();
+      window.dispatchEvent(new CustomEvent('checkin-updated'));
       onMakeupSuccess?.();
       
     } catch (error: any) {

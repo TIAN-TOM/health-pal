@@ -84,6 +84,9 @@ export const useCheckinStreak = () => {
 
   useEffect(() => {
     calculateStreak();
+    const handler = () => calculateStreak();
+    window.addEventListener('checkin-updated', handler);
+    return () => window.removeEventListener('checkin-updated', handler);
   }, []);
 
   return { streakDays, loading, refreshStreak: calculateStreak };
