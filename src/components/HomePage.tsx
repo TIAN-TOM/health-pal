@@ -91,8 +91,13 @@ const HomePage = ({
             <div>如有严重症状请及时就医</div>
             <div className="mt-2">
               开发者：
-              <button onClick={handleDeveloperClick} className="text-blue-600 hover:text-blue-700 hover:underline transition-colors">
+              <button onClick={handleLinkedInClick} className="text-blue-600 hover:text-blue-700 hover:underline transition-colors">
                 田雨顺
+              </button>
+              <span className="mx-1 text-gray-400">|</span>
+              <button onClick={handleGithubClick} className="text-gray-600 hover:text-gray-800 hover:underline transition-colors inline-flex items-center gap-0.5">
+                <Github className="h-3 w-3" />
+                GitHub
               </button>
             </div>
           </div>
