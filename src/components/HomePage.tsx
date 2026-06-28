@@ -2,7 +2,7 @@ import React, { Suspense, memo, useEffect } from 'react';
 import UserWelcomeWithClock from '@/components/UserWelcomeWithClock';
 import FunctionCards from '@/components/FunctionCards';
 import { Button } from '@/components/ui/button';
-import { BookOpen, History } from 'lucide-react';
+import { BookOpen, Github, History, Linkedin } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { lazyWithRetry } from '@/lib/lazyWithRetry';
 import { prefetchHighTrafficPages } from '@/lib/prefetchPages';
@@ -29,8 +29,12 @@ const HomePage = ({
   onNavigate,
   homeRef
 }: HomePageProps) => {
-  const handleDeveloperClick = () => {
-    window.open('https://www.linkedin.com/in/tom-tian-317580257/', '_blank');
+  const handleLinkedInClick = () => {
+    window.open('https://www.linkedin.com/in/tomtianys/', '_blank');
+  };
+
+  const handleGithubClick = () => {
+    window.open('https://github.com/TIAN-TOM', '_blank');
   };
 
   // 首页挂载后，浏览器空闲时预取高频子页面的 JS chunk，缩短点击进入时的等待
@@ -87,8 +91,13 @@ const HomePage = ({
             <div>如有严重症状请及时就医</div>
             <div className="mt-2">
               开发者：
-              <button onClick={handleDeveloperClick} className="text-blue-600 hover:text-blue-700 hover:underline transition-colors">
+              <button onClick={handleLinkedInClick} className="text-blue-600 hover:text-blue-700 hover:underline transition-colors">
                 田雨顺
+              </button>
+              <span className="mx-1 text-gray-400">|</span>
+              <button onClick={handleGithubClick} className="text-gray-600 hover:text-gray-800 hover:underline transition-colors inline-flex items-center gap-0.5">
+                <Github className="h-3 w-3" />
+                GitHub
               </button>
             </div>
           </div>
