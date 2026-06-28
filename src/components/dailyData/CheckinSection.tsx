@@ -59,6 +59,7 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
       onCheckinSuccess(newCheckin);
       setNote('');
       onReloadHistory();
+      window.dispatchEvent(new CustomEvent('checkin-updated'));
       
       toast({
         title: "打卡成功！",
@@ -147,6 +148,7 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
       onCheckinSuccess(null);
       setEarnedPoints(null);
       onReloadHistory();
+      window.dispatchEvent(new CustomEvent('checkin-updated'));
       
       console.log('前端状态已重置，应该可以重新打卡');
       
