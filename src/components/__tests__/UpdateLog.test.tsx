@@ -8,9 +8,9 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.11.0 (security hardening)", () => {
-   expect(updates[0].version).toBe("2.11.0");
-    expect(updates[0].type).toBe("修复");
+  it("latest version is 2.11.1 (streak realtime refresh)", () => {
+   expect(updates[0].version).toBe("2.11.1");
+    expect(updates[0].type).toBe("优化");
   });
 
   it("every entry has required fields", () => {

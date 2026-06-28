@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.11.1',
+    date: '2026-06-28',
+    type: '优化',
+    icon: Zap,
+    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    items: [
+      {
+        title: '🔥 连续打卡天数实时刷新',
+        description: '每日打卡完成或取消后，打卡日历上的"连续打卡 X 天"现在会立即更新，无需手动刷新页面。补签卡使用后也会触发同步刷新。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.11.0',
     date: '2026-06-07',
     type: '安全',
