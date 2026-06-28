@@ -29,13 +29,8 @@ const HomePage = ({
   onNavigate,
   homeRef
 }: HomePageProps) => {
-  const handleLinkedInClick = () => {
-    window.open('https://www.linkedin.com/in/tomtianys/', '_blank');
-  };
+  // 使用原生 <a target="_blank" rel="noopener noreferrer"> 跳转，避免在预览 iframe 内被沙箱拦截
 
-  const handleGithubClick = () => {
-    window.open('https://github.com/TIAN-TOM', '_blank');
-  };
 
   // 首页挂载后，浏览器空闲时预取高频子页面的 JS chunk，缩短点击进入时的等待
   useEffect(() => {
@@ -88,18 +83,18 @@ const HomePage = ({
           <div className="text-xs text-gray-500 space-y-1">
             <div>© 2026 健康生活伴侣 - 专注于日常健康管理</div>
             <div>本应用仅供参考，不能替代专业医疗建议</div>
-            <div>如有严重症状请及时就医</div>
             <div className="mt-2">
               开发者：
-              <button onClick={handleLinkedInClick} className="text-blue-600 hover:text-blue-700 hover:underline transition-colors">
+              <a href="https://www.linkedin.com/in/tomtianys/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 hover:underline transition-colors">
                 田雨顺
-              </button>
+              </a>
               <span className="mx-1 text-gray-400">|</span>
-              <button onClick={handleGithubClick} className="text-gray-600 hover:text-gray-800 hover:underline transition-colors inline-flex items-center gap-0.5">
+              <a href="https://github.com/TIAN-TOM" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-800 hover:underline transition-colors inline-flex items-center gap-0.5">
                 <Github className="h-3 w-3" />
                 GitHub
-              </button>
+              </a>
             </div>
+
           </div>
         </div>
       </div>
