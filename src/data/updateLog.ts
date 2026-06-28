@@ -17,6 +17,25 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.11.3',
+    date: '2026-06-28',
+    type: '修复',
+    icon: Bug,
+    color: 'bg-orange-50 text-orange-600 border-orange-200',
+    items: [
+      {
+        title: '修复开发者链接无法跳转的问题',
+        description: '将首页与设置页的 LinkedIn / GitHub 入口改为原生 <a target="_blank" rel="noopener noreferrer"> 链接，避免在预览 iframe 沙箱内被拦截，确保点击后能正确在新标签页打开。',
+        type: 'fix',
+      },
+      {
+        title: '精简页脚文案',
+        description: '移除页脚中“如有严重症状请及时就医”一行，使版权区域更简洁。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.11.2',
     date: '2026-06-28',
     type: '优化',
@@ -30,6 +49,7 @@ export const updates: UpdateEntry[] = [
       },
     ],
   },
+
   {
     version: '2.11.1',
     date: '2026-06-28',
