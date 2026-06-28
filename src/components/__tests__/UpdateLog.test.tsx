@@ -8,9 +8,10 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.11.2 (developer contact update)", () => {
-   expect(updates[0].version).toBe("2.11.2");
-    expect(updates[0].type).toBe("优化");
+  it("latest version is 2.11.3 (fix developer links)", () => {
+   expect(updates[0].version).toBe("2.11.3");
+    expect(updates[0].type).toBe("修复");
+
   });
 
   it("every entry has required fields", () => {

@@ -33,23 +33,20 @@ const DeveloperContact = () => {
         </Button>
 
         <div className="flex gap-2 mt-3">
-          <Button
-            onClick={() => window.open('https://www.linkedin.com/in/tomtianys/', '_blank')}
-            variant="outline"
-            className="flex-1 justify-start"
-          >
-            <Linkedin className="h-4 w-4 mr-2" />
-            LinkedIn
+          <Button asChild variant="outline" className="flex-1 justify-start">
+            <a href="https://www.linkedin.com/in/tomtianys/" target="_blank" rel="noopener noreferrer">
+              <Linkedin className="h-4 w-4 mr-2" />
+              LinkedIn
+            </a>
           </Button>
-          <Button
-            onClick={() => window.open('https://github.com/TIAN-TOM', '_blank')}
-            variant="outline"
-            className="flex-1 justify-start"
-          >
-            <Github className="h-4 w-4 mr-2" />
-            GitHub
+          <Button asChild variant="outline" className="flex-1 justify-start">
+            <a href="https://github.com/TIAN-TOM" target="_blank" rel="noopener noreferrer">
+              <Github className="h-4 w-4 mr-2" />
+              GitHub
+            </a>
           </Button>
         </div>
+
 
         <p className="text-xs text-gray-500 mt-2">
           如有问题或建议，请发送邮件至 tomtianys@163.com
