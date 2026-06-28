@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.11.2',
+    date: '2026-06-28',
+    type: '优化',
+    icon: Home,
+    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    items: [
+      {
+        title: '更新开发者联系方式',
+        description: '首页与设置页中的开发者 LinkedIn 链接更新为 https://www.linkedin.com/in/tomtianys/，并新增 GitHub 链接 https://github.com/TIAN-TOM。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.11.1',
     date: '2026-06-28',
     type: '优化',
