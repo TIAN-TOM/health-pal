@@ -2,7 +2,7 @@ import React, { Suspense, memo, useEffect } from 'react';
 import UserWelcomeWithClock from '@/components/UserWelcomeWithClock';
 import FunctionCards from '@/components/FunctionCards';
 import { Button } from '@/components/ui/button';
-import { BookOpen, History } from 'lucide-react';
+import { BookOpen, Github, History, Linkedin } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { lazyWithRetry } from '@/lib/lazyWithRetry';
 import { prefetchHighTrafficPages } from '@/lib/prefetchPages';
