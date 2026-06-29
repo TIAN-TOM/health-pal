@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { Droplets, Wind } from 'lucide-react';
+import { Droplets, Wind, Loader2 } from 'lucide-react';
 import { getWeatherData, WeatherData, CITIES, City } from '@/services/weatherService';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useNavigate } from 'react-router-dom';
