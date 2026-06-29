@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.11.4',
+    date: '2026-06-29',
+    type: '修复',
+    icon: Bug,
+    color: 'bg-orange-50 text-orange-600 border-orange-200',
+    items: [
+      {
+        title: '修复预览环境中开发者外链仍被嵌入拦截的问题',
+        description: '将首页页脚与设置页开发者 LinkedIn / GitHub 链接改为 target="_top"，点击时直接跳出预览 iframe，避免外部网站因禁止嵌入而显示 ERR_BLOCKED_BY_RESPONSE。',
+        type: 'fix',
+      },
+    ],
+  },
+  {
     version: '2.11.3',
     date: '2026-06-28',
     type: '修复',

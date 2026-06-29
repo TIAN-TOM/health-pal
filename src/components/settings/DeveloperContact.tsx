@@ -34,13 +34,13 @@ const DeveloperContact = () => {
 
         <div className="flex gap-2 mt-3">
           <Button asChild variant="outline" className="flex-1 justify-start">
-            <a href="https://www.linkedin.com/in/tomtianys/" target="_blank" rel="noopener noreferrer">
+            <a href="https://www.linkedin.com/in/tomtianys/" target="_top">
               <Linkedin className="h-4 w-4 mr-2" />
               LinkedIn
             </a>
           </Button>
           <Button asChild variant="outline" className="flex-1 justify-start">
-            <a href="https://github.com/TIAN-TOM" target="_blank" rel="noopener noreferrer">
+            <a href="https://github.com/TIAN-TOM" target="_top">
               <Github className="h-4 w-4 mr-2" />
               GitHub
             </a>
