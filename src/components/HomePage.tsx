@@ -29,7 +29,7 @@ const HomePage = ({
   onNavigate,
   homeRef
 }: HomePageProps) => {
-  // 使用原生 <a target="_blank" rel="noopener noreferrer"> 跳转，避免在预览 iframe 内被沙箱拦截
+  // 使用 target="_top" 跳出预览 iframe，避免 LinkedIn/GitHub 因禁止被嵌入而显示 ERR_BLOCKED_BY_RESPONSE
 
 
   // 首页挂载后，浏览器空闲时预取高频子页面的 JS chunk，缩短点击进入时的等待
@@ -85,11 +85,11 @@ const HomePage = ({
             <div>本应用仅供参考，不能替代专业医疗建议</div>
             <div className="mt-2">
               开发者：
-              <a href="https://www.linkedin.com/in/tomtianys/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 hover:underline transition-colors">
+              <a href="https://www.linkedin.com/in/tomtianys/" target="_top" className="text-blue-600 hover:text-blue-700 hover:underline transition-colors">
                 田雨顺
               </a>
               <span className="mx-1 text-gray-400">|</span>
-              <a href="https://github.com/TIAN-TOM" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-800 hover:underline transition-colors inline-flex items-center gap-0.5">
+              <a href="https://github.com/TIAN-TOM" target="_top" className="text-gray-600 hover:text-gray-800 hover:underline transition-colors inline-flex items-center gap-0.5">
                 <Github className="h-3 w-3" />
                 GitHub
               </a>
