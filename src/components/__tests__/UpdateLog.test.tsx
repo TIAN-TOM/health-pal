@@ -8,9 +8,9 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.11.4 (fix preview external links)", () => {
-   expect(updates[0].version).toBe("2.11.4");
-    expect(updates[0].type).toBe("修复");
+  it("latest version is 2.11.5 (weather loading spinner)", () => {
+   expect(updates[0].version).toBe("2.11.5");
+    expect(updates[0].type).toBe("优化");
 
   });
 

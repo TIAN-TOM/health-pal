@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.11.5',
+    date: '2026-06-29',
+    type: '优化',
+    icon: Sparkles,
+    color: 'bg-purple-50 text-purple-600 border-purple-200',
+    items: [
+      {
+        title: '优化首页天气加载提示',
+        description: '天气数据加载时显示旋转加载图标与"天气加载中..."文案，替换原本静态占位骨架，提升首屏等待体验。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.11.4',
     date: '2026-06-29',
     type: '修复',
