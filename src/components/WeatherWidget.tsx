@@ -88,12 +88,9 @@ const WeatherWidget = () => {
   if ((loading && !weather) || !selectedCity) {
     return (
       <Card className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white border-0 shadow-lg min-h-[110px]">
-        <div className="p-3 flex items-center justify-center h-full">
-          <div className="animate-pulse">
-            <div className="h-4 bg-white/20 rounded w-20 mb-2"></div>
-            <div className="h-8 bg-white/20 rounded w-16 mb-2"></div>
-            <div className="h-3 bg-white/20 rounded w-24"></div>
-          </div>
+        <div className="p-3 flex flex-col items-center justify-center h-full gap-2">
+          <Loader2 className="h-6 w-6 animate-spin text-white" />
+          <div className="text-xs opacity-90">天气加载中...</div>
         </div>
       </Card>
     );
