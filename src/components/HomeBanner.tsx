@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Autoplay from 'embla-carousel-autoplay';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, ChevronLeft, ChevronRight, Droplets, PartyPopper, Sparkles, Wind } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Droplets, Loader2, PartyPopper, Sparkles, Wind } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   type CarouselApi,
 } from '@/components/ui/carousel';
-import { Skeleton } from '@/components/ui/skeleton';
 import { CITIES, City, getWeatherData, WeatherData } from '@/services/weatherService';
 import { CountdownEvent, getActiveCountdownEvents } from '@/services/countdownService';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -155,7 +154,12 @@ const HomeBanner: React.FC = () => {
   }, [weather, selectedCity, countdowns]);
 
   if ((weatherLoading && !weather) || (countdownLoading && countdowns.length === 0)) {
-    return <Skeleton className="h-14 w-full rounded-lg" />;
+    return (
+      <div className="h-14 w-full rounded-lg bg-blue-500 text-white shadow-md flex items-center justify-center gap-2" role="status" aria-label="天气加载中">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <span className="text-xs font-medium">天气加载中...</span>
+      </div>
+    );
   }
 
   if (slides.length === 0) {

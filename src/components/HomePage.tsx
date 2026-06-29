@@ -2,8 +2,7 @@ import React, { Suspense, memo, useEffect } from 'react';
 import UserWelcomeWithClock from '@/components/UserWelcomeWithClock';
 import FunctionCards from '@/components/FunctionCards';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Github, History, Linkedin } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { BookOpen, Github, History, Loader2 } from 'lucide-react';
 import { lazyWithRetry } from '@/lib/lazyWithRetry';
 import { prefetchHighTrafficPages } from '@/lib/prefetchPages';
 
@@ -13,7 +12,10 @@ const WeatherAlertBanner = lazyWithRetry(() => import('@/components/WeatherAlert
 const AnnouncementDisplay = lazyWithRetry(() => import('@/components/AnnouncementDisplay'));
 
 const BannerSkeleton = () => (
-  <Skeleton className="h-14 w-full rounded-lg" />
+  <div className="h-14 w-full rounded-lg bg-blue-500 text-white shadow-md flex items-center justify-center gap-2" role="status" aria-label="首页横幅加载中">
+    <Loader2 className="h-4 w-4 animate-spin" />
+    <span className="text-xs font-medium">天气加载中...</span>
+  </div>
 );
 interface HomePageProps {
   userDisplayName: string;

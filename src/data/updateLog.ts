@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.11.6',
+    date: '2026-06-29',
+    type: '修复',
+    icon: Bug,
+    color: 'bg-orange-50 text-orange-600 border-orange-200',
+    items: [
+      {
+        title: '修复首页天气加载提示未生效',
+        description: '首页实际展示的是天气与倒数日合并横幅，已同步优化该横幅的懒加载与数据加载状态，进入首页时直接显示旋转加载图标和“天气加载中...”提示。',
+        type: 'fix',
+      },
+    ],
+  },
+  {
     version: '2.11.5',
     date: '2026-06-29',
     type: '优化',
