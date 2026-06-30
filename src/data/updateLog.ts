@@ -17,6 +17,40 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.12.0',
+    date: '2026-06-30',
+    type: '新功能',
+    icon: Sparkles,
+    color: 'bg-green-50 text-green-600 border-green-200',
+    items: [
+      {
+        title: '上线合规三件套：隐私政策 / 服务协议 / 医疗免责声明',
+        description: '新增 /privacy、/terms、/disclaimer 三个独立路由，支持中英文一键切换；首页页脚增加链接入口，方便用户与应用商店/合规方审阅。',
+        type: 'feature',
+      },
+      {
+        title: '首次启动强制医疗免责确认',
+        description: '新用户首次进入应用会弹出免责确认弹窗，必须勾选同意才能继续使用，确认结果保存在本地，避免重复打扰。',
+        type: 'feature',
+      },
+      {
+        title: '注册流程加入协议同意复选框',
+        description: '注册页面新增"同意《服务协议》《隐私政策》《医疗免责声明》"勾选项，未勾选将无法提交注册，满足 GDPR / 个人信息保护法的明示同意要求。',
+        type: 'feature',
+      },
+      {
+        title: '账号注销改为服务端 Edge Function 完整删除',
+        description: '新增 delete-account Edge Function：使用 service role 按用户 ID 删除所有业务表、清理 voice-records/checkin-photos 存储桶下的对象，并真正删除 auth.users 账号，写入 account_deletions 审计记录。',
+        type: 'feature',
+      },
+      {
+        title: '接入轻量错误上报骨架',
+        description: '新增 errorReporter，捕获 window.onerror 与 unhandledrejection 并保留最近 50 条供调试，后续可平滑替换为 Sentry 等正式服务，不引入额外依赖。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.11.6',
     date: '2026-06-29',
     type: '修复',
@@ -25,7 +59,7 @@ export const updates: UpdateEntry[] = [
     items: [
       {
         title: '修复首页天气加载提示未生效',
-        description: '首页实际展示的是天气与倒数日合并横幅，已同步优化该横幅的懒加载与数据加载状态，进入首页时直接显示旋转加载图标和“天气加载中...”提示。',
+        description: '首页实际展示的是天气与倒数日合并横幅，已同步优化该横幅的懒加载与数据加载状态，进入首页时直接显示旋转加载图标和"天气加载中..."提示。',
         type: 'fix',
       },
     ],

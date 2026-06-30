@@ -8,10 +8,9 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.11.6 (home banner loading spinner)", () => {
-    expect(updates[0].version).toBe("2.11.6");
-    expect(updates[0].type).toBe("修复");
-
+  it("latest version is 2.12.0 (compliance pages + account deletion edge function)", () => {
+    expect(updates[0].version).toBe("2.12.0");
+    expect(updates[0].type).toBe("新功能");
   });
 
   it("every entry has required fields", () => {
