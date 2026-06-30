@@ -12,6 +12,10 @@ import Index from "./pages/Index";
 const NotFound = lazy(() => import("./pages/NotFound"));
 const WeatherDetail = lazy(() => import("./pages/WeatherDetail"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const MedicalDisclaimer = lazy(() => import("./pages/MedicalDisclaimer"));
+import DisclaimerGate from "@/components/legal/DisclaimerGate";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,11 +43,15 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <DisclaimerGate />
               <Suspense fallback={<RouteFallback />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/weather" element={<WeatherDetail />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
+                  <Route path="/disclaimer" element={<MedicalDisclaimer />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
