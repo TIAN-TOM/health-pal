@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Heart, Shield, Activity, Eye, EyeOff, CheckCircle, AlertCircle, Mail, Lock, User } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
@@ -21,7 +22,8 @@ export default function AuthPage() {
   const [emailValid, setEmailValid] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [activeTab, setActiveTab] = useState('signin');
-  
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
 
@@ -147,6 +149,16 @@ export default function AuthPage() {
       });
       return;
     }
+
+    if (!agreedToTerms) {
+      toast({
+        title: '请先同意协议',
+        description: '注册前需阅读并同意《服务协议》《隐私政策》《医疗免责声明》',
+        variant: 'destructive',
+      });
+      return;
+    }
+
 
     setLoading(true);
     
@@ -501,10 +513,26 @@ export default function AuthPage() {
                   )}
                 </div>
                 
-                <Button 
-                  type="submit" 
-                  className="w-full transition-all duration-200 hover:scale-105" 
-                  disabled={loading || !emailValid || passwordStrength < 2 || !fullName.trim()}
+                <div className="flex items-start gap-2 pt-2">
+                  <Checkbox
+                    id="agreeTerms"
+                    checked={agreedToTerms}
+                    onCheckedChange={(c) => setAgreedToTerms(c === true)}
+                    disabled={loading}
+                  />
+                  <label htmlFor="agreeTerms" className="text-xs text-gray-600 leading-snug cursor-pointer">
+                    我已阅读并同意
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline mx-0.5">《服务协议》</a>
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline mx-0.5">《隐私政策》</a>
+                    与
+                    <a href="/disclaimer" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline mx-0.5">《医疗免责声明》</a>
+                  </label>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full transition-all duration-200 hover:scale-105"
+                  disabled={loading || !emailValid || passwordStrength < 2 || !fullName.trim() || !agreedToTerms}
                 >
                   {loading ? '注册中...' : '注册'}
                 </Button>

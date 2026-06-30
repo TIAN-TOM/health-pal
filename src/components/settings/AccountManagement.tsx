@@ -47,51 +47,31 @@ const AccountManagement = () => {
 
     setIsDeleting(true);
     try {
-      // 首先删除用户的所有数据
-      const deletePromises = [
-        supabase.from('meniere_records').delete().eq('user_id', user.id),
-        supabase.from('daily_checkins').delete().eq('user_id', user.id),
-        supabase.from('emergency_contacts').delete().eq('user_id', user.id),
-        supabase.from('medical_records').delete().eq('user_id', user.id),
-        supabase.from('user_medications').delete().eq('user_id', user.id),
-        supabase.from('user_roles').delete().eq('user_id', user.id),
-        supabase.from('profiles').delete().eq('id', user.id)
-      ];
+      // 调用服务端 Edge Function，使用 service role 完整删除账号、业务数据与认证记录
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        body: {
+          confirm: 'DELETE_MY_ACCOUNT',
+          reason: deleteReason,
+        },
+      });
 
-      await Promise.all(deletePromises);
-
-      // 记录删除操作（如果表存在）
-      try {
-        await supabase
-          .from('account_deletions')
-          .insert({
-            user_id: user.id,
-            user_email: user.email || '',
-            deletion_reason: deleteReason,
-            deleted_by: user.id
-          });
-      } catch (insertError) {
-        console.log('账号删除记录插入失败，但继续删除流程:', insertError);
-      }
-
-      // 删除认证账号
-      const { error: authError } = await supabase.auth.signOut();
-      if (authError) {
-        console.error('退出登录失败:', authError);
+      if (error || !data?.success) {
+        throw new Error(error?.message || data?.error || '删除失败');
       }
 
       toast({
-        title: "账号已删除",
-        description: "您的账号和所有相关数据已被删除"
+        title: "账号已注销",
+        description: "您的账号和全部相关数据已永久删除",
       });
 
-      // 强制刷新页面到登录状态
-      window.location.reload();
+      // 清理本地登录态并刷新
+      await supabase.auth.signOut();
+      window.location.replace('/');
     } catch (error: any) {
       console.error('删除账号失败:', error);
       toast({
         title: "删除失败",
-        description: "删除过程中出现错误，请联系客服处理",
+        description: error?.message || "删除过程中出现错误，请稍后重试或联系开发者",
         variant: "destructive"
       });
     } finally {
