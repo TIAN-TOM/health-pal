@@ -21,7 +21,8 @@ export default function AuthPage() {
   const [emailValid, setEmailValid] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [activeTab, setActiveTab] = useState('signin');
-  
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
 
@@ -147,6 +148,16 @@ export default function AuthPage() {
       });
       return;
     }
+
+    if (!agreedToTerms) {
+      toast({
+        title: '请先同意协议',
+        description: '注册前需阅读并同意《服务协议》《隐私政策》《医疗免责声明》',
+        variant: 'destructive',
+      });
+      return;
+    }
+
 
     setLoading(true);
     

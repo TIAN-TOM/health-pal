@@ -85,6 +85,13 @@ const HomePage = ({
           <div className="text-xs text-gray-500 space-y-1">
             <div>© 2026 健康生活伴侣 - 专注于日常健康管理</div>
             <div>本应用仅供参考，不能替代专业医疗建议</div>
+            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+              <a href="/privacy" className="text-blue-600 hover:underline">隐私政策</a>
+              <span className="text-gray-400">·</span>
+              <a href="/terms" className="text-blue-600 hover:underline">服务协议</a>
+              <span className="text-gray-400">·</span>
+              <a href="/disclaimer" className="text-blue-600 hover:underline">医疗免责</a>
+            </div>
             <div className="mt-2">
               开发者：
               <a href="https://www.linkedin.com/in/tomtianys/" target="_top" className="text-blue-600 hover:text-blue-700 hover:underline transition-colors">
