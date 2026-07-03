@@ -8,10 +8,11 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.12.1 (PWA manifest + unit tests)", () => {
-    expect(updates[0].version).toBe("2.12.1");
-    expect(updates[0].type).toBe("优化");
+  it("latest version is 2.12.2 (onboarding + font size)", () => {
+    expect(updates[0].version).toBe("2.12.2");
+    expect(updates[0].type).toBe("新功能");
   });
+
 
   it("every entry has required fields", () => {
     for (const u of updates) {
