@@ -17,6 +17,30 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.12.2',
+    date: '2026-07-03',
+    type: '新功能',
+    icon: Sparkles,
+    color: 'bg-green-50 text-green-600 border-green-200',
+    items: [
+      {
+        title: '新手引导：首次登录自动展示 4 步功能导览',
+        description: '新用户登录后弹出引导浮层，介绍打卡、紧急联系人、积分商城与教育中心等核心能力，按用户 ID 记录一次性状态，避免重复干扰。',
+        type: 'feature',
+      },
+      {
+        title: '全局字号切换：标准 / 大 / 特大',
+        description: '设置 → 外观主题中新增字号选择，通过 FontSizeContext 调整根字号，Tailwind 的 rem 单位随之放大，让整个界面同步适配视力不便的用户；配合 index.html 内联脚本消除刷新时闪烁。',
+        type: 'feature',
+      },
+      {
+        title: '统一空状态组件 EmptyState',
+        description: '新增 src/components/common/EmptyState，支持自定义图标、标题、说明与主要 CTA，后续列表/日历/商城首次进入将逐步替换为一致的空状态展示。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.12.1',
     date: '2026-07-03',
     type: '优化',
@@ -35,6 +59,7 @@ export const updates: UpdateEntry[] = [
       },
     ],
   },
+
   {
     version: '2.12.0',
     date: '2026-06-30',
