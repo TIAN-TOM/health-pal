@@ -17,6 +17,25 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.12.1',
+    date: '2026-07-03',
+    type: '优化',
+    icon: Zap,
+    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    items: [
+      {
+        title: 'PWA 可安装：新增 manifest 与主题色',
+        description: '新增 /manifest.webmanifest 与 theme-color / apple-touch-icon 头部元数据，用户可将网站添加到主屏幕、以独立窗口启动，具备原生应用般的入口体验；未启用 Service Worker，避免缓存陈旧导致的更新问题。',
+        type: 'feature',
+      },
+      {
+        title: '核心服务补齐单元测试',
+        description: '为 pointsService / dailyCheckinService / makeupCheckinService / meniereRecordService / weatherProviders 补充关键路径的单元测试，涵盖成功、失败、参数校验与回退分支，提升关键业务链路的回归防护能力。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.12.0',
     date: '2026-06-30',
     type: '新功能',
