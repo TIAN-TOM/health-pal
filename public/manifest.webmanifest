@@ -1,0 +1,27 @@
+{
+  "name": "健康生活伴侣",
+  "short_name": "健康伴侣",
+  "description": "专业的中文健康管理应用：记录血糖、症状、用药与生活方式，提供家庭健康协作、天气提醒、每日打卡和健康教育。",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "categories": ["health", "medical", "lifestyle"],
+  "icons": [
+    {
+      "src": "/placeholder.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/placeholder.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
