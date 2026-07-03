@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { FontSizeProvider } from "@/contexts/FontSizeContext";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 
@@ -16,6 +17,8 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const MedicalDisclaimer = lazy(() => import("./pages/MedicalDisclaimer"));
 import DisclaimerGate from "@/components/legal/DisclaimerGate";
+import OnboardingModal from "@/components/onboarding/OnboardingModal";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
