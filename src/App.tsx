@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { FontSizeProvider } from "@/contexts/FontSizeContext";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 
@@ -16,6 +17,8 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const MedicalDisclaimer = lazy(() => import("./pages/MedicalDisclaimer"));
 import DisclaimerGate from "@/components/legal/DisclaimerGate";
+import OnboardingModal from "@/components/onboarding/OnboardingModal";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,30 +40,34 @@ const RouteFallback = () => (
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <AuthProvider>
-        <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <DisclaimerGate />
-              <Suspense fallback={<RouteFallback />}>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/weather" element={<WeatherDetail />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/privacy" element={<PrivacyPolicy />} />
-                  <Route path="/terms" element={<TermsOfService />} />
-                  <Route path="/disclaimer" element={<MedicalDisclaimer />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </TooltipProvider>
-        </LanguageProvider>
-      </AuthProvider>
+      <FontSizeProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <DisclaimerGate />
+                <OnboardingModal />
+                <Suspense fallback={<RouteFallback />}>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/weather" element={<WeatherDetail />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/privacy" element={<PrivacyPolicy />} />
+                    <Route path="/terms" element={<TermsOfService />} />
+                    <Route path="/disclaimer" element={<MedicalDisclaimer />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </BrowserRouter>
+            </TooltipProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </FontSizeProvider>
     </ThemeProvider>
   </QueryClientProvider>
+
 );
 
 export default App;

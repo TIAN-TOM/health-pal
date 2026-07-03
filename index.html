@@ -84,9 +84,14 @@
             document.documentElement.classList.add('dark');
             document.documentElement.style.colorScheme = 'dark';
           }
+          var fs = localStorage.getItem('font_size') || 'standard';
+          var map = { standard: '16px', large: '18px', xlarge: '20px' };
+          document.documentElement.dataset.fontSize = fs;
+          document.documentElement.style.fontSize = map[fs] || '16px';
         } catch (e) {}
       })();
     </script>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
