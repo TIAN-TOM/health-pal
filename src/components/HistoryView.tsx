@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Thermometer, Droplets, Pill, RefreshCw, Search, Filter, Clock } from 'lucide-react';
+import { Calendar, Thermometer, Droplets, Pill, RefreshCw, Search, Filter, Clock, FileText } from 'lucide-react';
 import { getRecentRecords, getRecordsForPeriod } from '@/services/meniereRecordService';
 import type { Tables } from '@/integrations/supabase/types';
 import RecordDelete from '@/components/RecordDelete';
+import EmptyState from '@/components/common/EmptyState';
 
 type MeniereRecord = Tables<'meniere_records'>;
 
