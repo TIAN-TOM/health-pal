@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.12.3',
+    date: '2026-07-04',
+    type: '优化',
+    icon: Sparkles,
+    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    items: [
+      {
+        title: '症状历史与我的订单启用统一空状态',
+        description: '将 HistoryView（症状记录列表）与 MyPurchases（积分商城订单）替换为统一的 EmptyState 组件，首次进入时展示一致的图标、标题与说明，减少界面割裂感。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.12.2',
     date: '2026-07-03',
     type: '新功能',
