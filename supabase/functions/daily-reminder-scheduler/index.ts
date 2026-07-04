@@ -14,6 +14,16 @@ Deno.serve(async (req) => {
 
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
   const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  // 仅接受 service_role 调用（pg_cron），拒绝匿名/普通用户
+  const authHeader = req.headers.get('Authorization') ?? '';
+  if (authHeader.replace('Bearer ', '') !== SERVICE_ROLE) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
   const todayCST = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 10);
