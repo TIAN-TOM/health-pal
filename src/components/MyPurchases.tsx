@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Calendar, Package, Search, Filter, Star, Trophy, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getUserPurchasesWithPagination, type UserPurchase } from '@/services/pointsStoreService';
+import EmptyState from '@/components/common/EmptyState';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import {
