@@ -108,11 +108,11 @@ const MyPurchases = () => {
 
       {/* 购买记录列表 */}
       {filteredPurchases.length === 0 ? (
-        <div className="text-center py-12">
-          <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-          <p className="text-muted-foreground text-lg mb-2">暂无购买记录</p>
-          <p className="text-sm text-muted-foreground">去商城看看有什么好东西吧</p>
-        </div>
+        <EmptyState
+          icon={Package}
+          title="暂无购买记录"
+          description="去商城逛逛，用积分换点实用好物吧"
+        />
       ) : (
         <>
           <div className="space-y-3">
