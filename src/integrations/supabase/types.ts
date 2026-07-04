@@ -71,6 +71,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_weekly_reports: {
+        Row: {
+          data_points_count: number
+          generated_at: string
+          id: string
+          suggestions: Json
+          summary: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          data_points_count?: number
+          generated_at?: string
+          id?: string
+          suggestions?: Json
+          summary: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          data_points_count?: number
+          generated_at?: string
+          id?: string
+          suggestions?: Json
+          summary?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       announcements: {
         Row: {
           author_id: string
@@ -1037,6 +1067,42 @@ export type Database = {
           frequency?: string | null
           id?: string
           name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_notification_preferences: {
+        Row: {
+          checkin_streak: boolean
+          created_at: string
+          email_reminders_enabled: boolean
+          family_calendar: boolean
+          last_reminder_sent_at: string | null
+          medical_followup: boolean
+          medication: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checkin_streak?: boolean
+          created_at?: string
+          email_reminders_enabled?: boolean
+          family_calendar?: boolean
+          last_reminder_sent_at?: string | null
+          medical_followup?: boolean
+          medication?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checkin_streak?: boolean
+          created_at?: string
+          email_reminders_enabled?: boolean
+          family_calendar?: boolean
+          last_reminder_sent_at?: string | null
+          medical_followup?: boolean
+          medication?: boolean
           updated_at?: string
           user_id?: string
         }

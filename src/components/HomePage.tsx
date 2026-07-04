@@ -10,6 +10,7 @@ const NavigationActions = lazyWithRetry(() => import('@/components/NavigationAct
 const HomeBanner = lazyWithRetry(() => import('@/components/HomeBanner'));
 const WeatherAlertBanner = lazyWithRetry(() => import('@/components/WeatherAlertBanner'));
 const AnnouncementDisplay = lazyWithRetry(() => import('@/components/AnnouncementDisplay'));
+const WeeklyReportCard = lazyWithRetry(() => import('@/components/WeeklyReportCard'));
 
 const BannerSkeleton = () => (
   <div className="h-14 w-full rounded-lg bg-blue-500 text-white shadow-md flex items-center justify-center gap-2" role="status" aria-label="首页横幅加载中">
@@ -47,7 +48,11 @@ const HomePage = ({
         <Suspense fallback={null}>
           <WeatherAlertBanner />
         </Suspense>
-        
+
+        <Suspense fallback={null}>
+          <WeeklyReportCard />
+        </Suspense>
+
         <Suspense fallback={null}>
           <AnnouncementDisplay />
         </Suspense>

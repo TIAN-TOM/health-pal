@@ -17,6 +17,30 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.13.0',
+    date: '2026-07-04',
+    type: '新功能',
+    icon: Sparkles,
+    color: 'bg-purple-50 text-purple-600 border-purple-200',
+    items: [
+      {
+        title: '邮件提醒：连续未打卡 / 用药 / 复诊 / 家庭日程',
+        description: '每天早 8 点（北京时间）扫描一次全体启用用户，聚合当日 4 类待办后通过 Resend 一封邮件送达；同一用户 24 小时内至多一封，避免打扰。设置 → 通知偏好 中提供总开关与四个分类开关。',
+        type: 'feature',
+      },
+      {
+        title: 'AI 健康周报',
+        description: '基于过去 7 天的眩晕、血糖、打卡心情等记录，用 Lovable AI 生成 180 字摘要 + 3 条可执行建议，周日在首页顶部出现可折叠卡片；每周每人一份，本人可反复查看。免费，无付费墙。',
+        type: 'feature',
+      },
+      {
+        title: 'PWA 图标与元数据完善',
+        description: '生成 192/512 PNG 图标与 apple-touch-icon，manifest 与 index.html 同步引用，为后续应用市场素材与"添加到主屏"打好基础。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.12.3',
     date: '2026-07-04',
     type: '优化',
