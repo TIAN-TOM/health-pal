@@ -9,6 +9,7 @@ import AccountManagement from './settings/AccountManagement';
 import UserInfo from './settings/UserInfo';
 import PersonalSettingsCard from './settings/PersonalSettingsCard';
 import AppearanceSettings from './settings/AppearanceSettings';
+import NotificationPreferences from './settings/NotificationPreferences';
 
 interface SettingsProps {
   onBack: () => void;
@@ -57,6 +58,8 @@ const Settings = ({
           <PersonalSettingsCard onPersonalProfile={onPersonalProfile} />
 
           <AppearanceSettings />
+
+          <NotificationPreferences />
           
           
           <HealthManagement 
