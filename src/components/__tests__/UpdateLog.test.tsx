@@ -8,9 +8,9 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.12.3 (empty state adoption)", () => {
-    expect(updates[0].version).toBe("2.12.3");
-    expect(updates[0].type).toBe("优化");
+  it("latest version is 2.13.0 (email reminders + AI weekly report)", () => {
+    expect(updates[0].version).toBe("2.13.0");
+    expect(updates[0].type).toBe("新功能");
   });
 
 
