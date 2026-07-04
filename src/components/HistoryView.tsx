@@ -344,9 +344,11 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
         ))}
 
         {filteredRecords.length === 0 && !loading && (
-          <div className="text-center py-8 text-gray-500">
-            {searchQuery ? '没有找到匹配的记录' : '还没有记录，开始记录您的症状吧'}
-          </div>
+          <EmptyState
+            icon={FileText}
+            title={searchQuery ? '没有找到匹配的记录' : '还没有记录'}
+            description={searchQuery ? '换个关键词或调整筛选条件试试' : '开始记录您的症状，让每一次变化都被看见'}
+          />
         )}
       </CardContent>
     </Card>
