@@ -2,3 +2,12 @@ project_id = "ihwgygkrmwpcyrxcyzgh"
 
 [functions.delete-account]
 verify_jwt = true
+
+[functions.daily-reminder-scheduler]
+verify_jwt = false
+
+[functions.send-reminder-email]
+verify_jwt = false
+
+[functions.generate-weekly-report]
+verify_jwt = false
