@@ -16,6 +16,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const MedicalDisclaimer = lazy(() => import("./pages/MedicalDisclaimer"));
+const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 import DisclaimerGate from "@/components/legal/DisclaimerGate";
 import OnboardingModal from "@/components/onboarding/OnboardingModal";
 
@@ -57,6 +58,7 @@ const App = () => (
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />
                     <Route path="/disclaimer" element={<MedicalDisclaimer />} />
+                    <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
