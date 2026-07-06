@@ -8,8 +8,8 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.13.0 (email reminders + AI weekly report)", () => {
-    expect(updates[0].version).toBe("2.13.0");
+  it("latest version is 2.14.0 (MCP agent integrations)", () => {
+    expect(updates[0].version).toBe("2.14.0");
     expect(updates[0].type).toBe("新功能");
   });
 
