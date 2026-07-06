@@ -17,6 +17,20 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.14.0',
+    date: '2026-07-06',
+    type: '新功能',
+    icon: Sparkles,
+    color: 'bg-purple-50 text-purple-600 border-purple-200',
+    items: [
+      {
+        title: 'MCP 智能体接入（Agent integrations）',
+        description: '把 Health Pal 暴露为 MCP 服务器，ChatGPT / Claude / Cursor 等助手可通过 Supabase OAuth 以你的身份读取打卡、眩晕、血糖、用药与 AI 周报。工具全部只读且严格按登录用户隔离。',
+        type: 'feature',
+      },
+    ],
+  },
+  {
     version: '2.13.0',
     date: '2026-07-04',
     type: '新功能',
