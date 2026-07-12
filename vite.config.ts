@@ -20,6 +20,8 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // 生产构建剥离 console/debugger（管理端曾把整表用户资料打进控制台）
+  esbuild: mode === 'development' ? undefined : { drop: ['console', 'debugger'] },
   build: {
     target: 'es2020',
     cssCodeSplit: true,

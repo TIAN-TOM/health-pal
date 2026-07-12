@@ -268,7 +268,7 @@ const BreakoutGame = ({ onBack, soundEnabled = true }: BreakoutGameProps) => {
     paddle.width += (targetWidth - paddle.width) * 0.1;
 
     // 移动挡板
-    let paddleSpeed = 5;
+    const paddleSpeed = 5;
     if (keys.left && paddle.x > 0) {
       paddle.x -= paddleSpeed;
     }

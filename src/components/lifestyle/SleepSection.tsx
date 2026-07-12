@@ -41,7 +41,7 @@ const SleepSection = ({
       const [bedHour, bedMinute] = bedTime.split(':').map(Number);
       const [wakeHour, wakeMinute] = wakeTime.split(':').map(Number);
       
-      let bedTimeMinutes = bedHour * 60 + bedMinute;
+      const bedTimeMinutes = bedHour * 60 + bedMinute;
       let wakeTimeMinutes = wakeHour * 60 + wakeMinute;
       
       // 如果起床时间早于睡觉时间，说明跨了一天

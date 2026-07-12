@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
+import { requireUserId } from '@/utils/auth';
 
 type VoiceRecord = Tables<'voice_records'>;
 type VoiceRecordInsert = TablesInsert<'voice_records'>;
@@ -11,7 +12,7 @@ export const createVoiceRecord = async (data: Omit<VoiceRecordInsert, 'user_id'>
     .from('voice_records')
     .insert({
       ...data,
-      user_id: (await supabase.auth.getUser()).data.user?.id!
+      user_id: await requireUserId()
     })
     .select()
     .single();

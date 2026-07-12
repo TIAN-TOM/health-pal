@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { getBeijingTimeISO } from '@/utils/beijingTime';
+import { requireUserId } from '@/utils/auth';
 import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
 
 export interface MeniereRecord {
@@ -87,7 +88,7 @@ export const saveDizzinessRecord = async (record: {
       severity: record.severity,
       symptoms: record.symptoms,
       data: record,
-      user_id: (await supabase.auth.getUser()).data.user?.id!,
+      user_id: await requireUserId(),
       timestamp: beijingTime,
       created_at: beijingTime,
       updated_at: beijingTime
@@ -114,7 +115,7 @@ export const saveLifestyleRecord = async (record: {
       stress: record.stress,
       note: record.manualInput,
       data: record,
-      user_id: (await supabase.auth.getUser()).data.user?.id!,
+      user_id: await requireUserId(),
       timestamp: beijingTime,
       created_at: beijingTime,
       updated_at: beijingTime
@@ -139,7 +140,7 @@ export const saveMedicationRecord = async (record: {
       dosage: record.dosage,
       note: record.manualInput,
       data: record,
-      user_id: (await supabase.auth.getUser()).data.user?.id!,
+      user_id: await requireUserId(),
       timestamp: beijingTime,
       created_at: beijingTime,
       updated_at: beijingTime
@@ -161,7 +162,7 @@ export const saveVoiceRecord = async (record: {
       type: 'voice',
       note: record.note,
       data: record,
-      user_id: (await supabase.auth.getUser()).data.user?.id!,
+      user_id: await requireUserId(),
       timestamp: beijingTime,
       created_at: beijingTime,
       updated_at: beijingTime

@@ -11,7 +11,7 @@ import { getBeijingTime } from '@/utils/beijingTime';
 import { zhCN } from 'date-fns/locale';
 import { Flame, Calendar as CalendarIcon, Ticket } from 'lucide-react';
 import { useCheckinStreak } from '@/hooks/useCheckinStreak';
-import { getUserMakeupCards, createMakeupCheckin, getAvailableMakeupDates, useMakeupCard } from '@/services/makeupCheckinService';
+import { getUserMakeupCards, createMakeupCheckin, getAvailableMakeupDates, consumeMakeupCard } from '@/services/makeupCheckinService';
 import { useToast } from '@/hooks/use-toast';
 
 interface CheckinCalendarSectionProps {
@@ -58,7 +58,7 @@ const CheckinCalendarSection = ({ checkinDates, selectedDate, onDateSelect, onMa
       setMakeupLoading(true);
       
       // 使用补签卡
-      const cardUsed = await useMakeupCard();
+      const cardUsed = await consumeMakeupCard();
       if (!cardUsed) {
         toast({
           title: "补签卡不足",

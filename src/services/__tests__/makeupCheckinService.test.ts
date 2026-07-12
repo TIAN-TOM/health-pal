@@ -23,7 +23,7 @@ vi.mock("@/services/adminNotificationService", () => ({
 import {
   createMakeupCheckin,
   getUserMakeupCards,
-  useMakeupCard,
+  consumeMakeupCard,
 } from "../makeupCheckinService";
 
 const makeBuilder = (final: unknown) => {
@@ -73,22 +73,22 @@ describe("makeupCheckinService", () => {
     await expect(getUserMakeupCards()).resolves.toBe(0);
   });
 
-  it("useMakeupCard false when no inventory", async () => {
+  it("consumeMakeupCard false when no inventory", async () => {
     getUserMock.mockResolvedValue({ data: { user: { id: "u1" } } });
     fromMock.mockReturnValueOnce(
       makeBuilder({ data: { item_id: "i1", quantity: 0 }, error: null })
     );
-    await expect(useMakeupCard()).resolves.toBe(false);
+    await expect(consumeMakeupCard()).resolves.toBe(false);
     expect(rpcMock).not.toHaveBeenCalled();
   });
 
-  it("useMakeupCard calls consume_inventory_item and returns success", async () => {
+  it("consumeMakeupCard calls consume_inventory_item and returns success", async () => {
     getUserMock.mockResolvedValue({ data: { user: { id: "u1" } } });
     fromMock.mockReturnValueOnce(
       makeBuilder({ data: { item_id: "i1", quantity: 2 }, error: null })
     );
     rpcMock.mockResolvedValue({ data: { success: true }, error: null });
-    await expect(useMakeupCard()).resolves.toBe(true);
+    await expect(consumeMakeupCard()).resolves.toBe(true);
     expect(rpcMock).toHaveBeenCalledWith("consume_inventory_item", {
       p_item_id: "i1",
       p_quantity: 1,

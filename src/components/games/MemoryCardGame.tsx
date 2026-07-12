@@ -236,7 +236,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     })));
   };
 
-  const usePowerUp = (powerUpId: string) => {
+  const activatePowerUp = (powerUpId: string) => {
     const powerUp = powerUps.find(p => p.id === powerUpId);
     if (!powerUp || powerUp.currentCooldown > 0 || totalCoins < powerUp.cost) return;
 
@@ -266,11 +266,11 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         }, 3000);
         break;
         
-      case 'hint':
+      case 'hint': {
         const unmatchedCards = cards.filter(card => !card.isMatched);
         const values = new Set();
         const pairs: GameCard[] = [];
-        
+
         for (const card of unmatchedCards) {
           if (values.has(card.value)) {
             const pair = unmatchedCards.find(c => c.value === card.value && c.id !== card.id);
@@ -282,10 +282,10 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
             values.add(card.value);
           }
         }
-        
+
         if (pairs.length === 2) {
-          setCards(prev => prev.map(card => 
-            pairs.some(p => p.id === card.id) 
+          setCards(prev => prev.map(card =>
+            pairs.some(p => p.id === card.id)
               ? { ...card, isHinted: true }
               : card
           ));
@@ -294,12 +294,12 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
           }, 2000);
         }
         break;
-        
-      case 'shuffle':
-        const matchedCards = cards.filter(card => card.isMatched);
+      }
+
+      case 'shuffle': {
         const unmatchedValues = cards.filter(card => !card.isMatched).map(card => card.value);
         const shuffledValues = [...unmatchedValues].sort(() => Math.random() - 0.5);
-        
+
         let shuffleIndex = 0;
         setCards(prev => prev.map(card => {
           if (card.isMatched) return card;
@@ -311,6 +311,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         }));
         setFlippedCards([]);
         break;
+      }
     }
   };
 
@@ -524,7 +525,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
         {powerUps.map(powerUp => (
           <Button
             key={powerUp.id}
-            onClick={() => usePowerUp(powerUp.id)}
+            onClick={() => activatePowerUp(powerUp.id)}
             disabled={powerUp.currentCooldown > 0 || totalCoins < powerUp.cost}
             variant="outline"
             size="sm"

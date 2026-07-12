@@ -23,7 +23,10 @@ export default tseslint.config(
         "warn",
         { allowConstantExport: true },
       ],
+      // 存量约 110 处，降为 warn 逐步清理；新代码不应再引入
+      "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": "off",
+      "no-console": ["warn", { allow: ["warn", "error"] }],
     },
   }
 );

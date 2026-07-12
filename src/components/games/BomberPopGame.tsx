@@ -596,7 +596,7 @@ const BomberPopGame = ({ onBack, soundEnabled }: BomberPopGameProps) => {
         const danger = computeDangerCells(bombs, map);
         setCpus(prev => prev.map(cpu => {
           if (!cpu.alive) return cpu;
-          let nextCpu = { ...cpu };
+          const nextCpu = { ...cpu };
           // 放炸弹决策
           nextCpu.bombCooldown -= 1;
           if (nextCpu.bombCooldown <= 0) {

@@ -24,7 +24,7 @@ const dispatch = (err: ReportedError) => {
   if (recent.length > RECENT_CAP) recent.shift();
   // 生产环境也保留 console 输出，便于早期排查；
   // 接入正式服务后可在此处转发。
-  // eslint-disable-next-line no-console
+   
   console.error('[errorReporter]', err);
 };
 

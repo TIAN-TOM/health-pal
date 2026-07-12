@@ -135,7 +135,7 @@ export const getUserMakeupCards = async (): Promise<number> => {
 };
 
 // 使用补签卡（通过服务端 SECURITY DEFINER 函数原子扣减库存）
-export const useMakeupCard = async (): Promise<boolean> => {
+export const consumeMakeupCard = async (): Promise<boolean> => {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
