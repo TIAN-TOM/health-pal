@@ -3,8 +3,6 @@
 -- seat via a crafted PostgREST update. Enforce row integrity with a trigger:
 -- host_id is immutable, and an occupied guest seat can only be vacated or
 -- kept, never transferred directly to another player.
---
--- NOTE: not yet applied to the live project.
 CREATE OR REPLACE FUNCTION public.protect_gomoku_room_integrity()
 RETURNS trigger
 LANGUAGE plpgsql
