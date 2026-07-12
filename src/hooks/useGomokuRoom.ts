@@ -7,6 +7,7 @@ import {
   GomokuRoom,
   GomokuGameState,
 } from '@/services/gomokuRoomService';
+import { checkWin } from '@/lib/gomoku';
 
 export type GomokuPlayerRole = 'host' | 'guest';
 export type GomokuConnectionStatus = 'connected' | 'disconnected' | 'connecting';
@@ -23,32 +24,6 @@ interface UseGomokuRoomParams {
   onMoveReceived?: (newState: GomokuGameState) => void;
   onLobbyStarted?: (room: GomokuRoom) => void;
 }
-
-const checkWinner = (
-  board: (string | null)[][],
-  row: number,
-  col: number,
-  player: string,
-): boolean => {
-  const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
-  for (const [dx, dy] of directions) {
-    let count = 1;
-    for (let i = 1; i < 5; i++) {
-      const r = row + dx * i;
-      const c = col + dy * i;
-      if (r >= 0 && r < 15 && c >= 0 && c < 15 && board[r][c] === player) count++;
-      else break;
-    }
-    for (let i = 1; i < 5; i++) {
-      const r = row - dx * i;
-      const c = col - dy * i;
-      if (r >= 0 && r < 15 && c >= 0 && c < 15 && board[r][c] === player) count++;
-      else break;
-    }
-    if (count >= 5) return true;
-  }
-  return false;
-};
 
 const playSound = (frequency: number, duration: number, enabled: boolean) => {
   if (!enabled) return;
@@ -154,7 +129,7 @@ export const useGomokuRoom = ({
       const newBoard = currentState.board.map((r) => [...r]);
       newBoard[row][col] = player;
 
-      const isWin = checkWinner(newBoard, row, col, player);
+      const isWin = checkWin(newBoard, row, col, player).isWin;
       const isBoardFull = newBoard.every((r) => r.every((cell) => cell !== null));
 
       const newGameState: GomokuGameState = {
@@ -263,7 +238,7 @@ export const useGomokuRoom = ({
       setIsMyTurn(false);
       const newBoard = current.board.map((r) => [...r]);
       newBoard[row][col] = playerRole;
-      const isWin = checkWinner(newBoard, row, col, playerRole);
+      const isWin = checkWin(newBoard, row, col, playerRole).isWin;
       const isBoardFull = newBoard.every((r) => r.every((cell) => cell !== null));
 
       const newGameState: GomokuGameState = {

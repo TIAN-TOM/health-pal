@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,45 +20,66 @@ interface HistoryViewProps {
   onBack?: () => void;
 }
 
+// 每页显示的记录条数，避免"全部时间"一次渲染上百条
+const PAGE_SIZE = 30;
+
+const fetchRecordsForFilter = async (dateFilter: string): Promise<MeniereRecord[]> => {
+  if (dateFilter === 'all') {
+    return (await getRecordsForPeriod(365)) || [];
+  }
+  if (dateFilter === 'recent') {
+    return (await getRecentRecords(5)) || [];
+  }
+  return (await getRecordsForPeriod(parseInt(dateFilter))) || [];
+};
+
+const getRecordIcon = (type: string) => {
+  switch (type) {
+    case 'dizziness': return <Thermometer className="h-4 w-4 text-red-500" />;
+    case 'lifestyle': return <Droplets className="h-4 w-4 text-blue-500" />;
+    case 'medication': return <Pill className="h-4 w-4 text-purple-500" />;
+    default: return <Calendar className="h-4 w-4 text-gray-500" />;
+  }
+};
+
+const getRecordTitle = (record: MeniereRecord) => {
+  switch (record.type) {
+    case 'dizziness': return '眩晕记录';
+    case 'lifestyle': return '生活方式记录';
+    case 'medication': return '用药记录';
+    default: return '其他记录';
+  }
+};
+
+const getRecordSubtitle = (record: MeniereRecord) => {
+  const date = new Date(record.timestamp).toLocaleDateString('zh-CN');
+  const time = new Date(record.timestamp).toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  let subtitle = `${date} ${time}`;
+
+  if (record.type === 'dizziness' && record.severity) {
+    const severityMap = { mild: '轻微', moderate: '中等', severe: '严重' };
+    subtitle += ` • ${severityMap[record.severity as keyof typeof severityMap] || record.severity}`;
+  }
+
+  return subtitle;
+};
+
 const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: HistoryViewProps) => {
-  const [records, setRecords] = useState<MeniereRecord[]>([]);
-  const [filteredRecords, setFilteredRecords] = useState<MeniereRecord[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('recent');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  useEffect(() => {
-    loadHistory();
-  }, [dateFilter]);
+  const { data: records = [], isLoading, refetch } = useQuery({
+    queryKey: ['history-records', dateFilter],
+    queryFn: () => fetchRecordsForFilter(dateFilter),
+  });
 
-  useEffect(() => {
-    filterRecords();
-  }, [records, searchQuery, typeFilter, dateFilter]);
-
-  const loadHistory = async () => {
-    try {
-      setLoading(true);
-      let recordsData;
-      
-      if (dateFilter === 'all') {
-        recordsData = await getRecordsForPeriod(365);
-      } else if (dateFilter === 'recent') {
-        recordsData = await getRecentRecords(5);
-      } else {
-        const days = parseInt(dateFilter);
-        recordsData = await getRecordsForPeriod(days);
-      }
-      
-      setRecords(recordsData || []);
-    } catch (error) {
-      console.error('加载历史记录失败:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterRecords = () => {
+  const filteredRecords = useMemo(() => {
     let filtered = records;
 
     if (typeFilter !== 'all') {
@@ -70,7 +92,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(record => 
+      filtered = filtered.filter(record =>
         record.note?.toLowerCase().includes(query) ||
         record.symptoms?.some(symptom => symptom.toLowerCase().includes(query)) ||
         record.medications?.some(med => med.toLowerCase().includes(query)) ||
@@ -78,49 +100,31 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
       );
     }
 
-    setFilteredRecords(filtered);
-  };
+    return filtered;
+  }, [records, searchQuery, typeFilter, dateFilter]);
 
-  const getRecordIcon = (type: string) => {
-    switch (type) {
-      case 'dizziness': return <Thermometer className="h-4 w-4 text-red-500" />;
-      case 'lifestyle': return <Droplets className="h-4 w-4 text-blue-500" />;
-      case 'medication': return <Pill className="h-4 w-4 text-purple-500" />;
-      default: return <Calendar className="h-4 w-4 text-gray-500" />;
-    }
-  };
+  // 筛选条件变化时回到第一页
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchQuery, typeFilter, dateFilter]);
 
-  const getRecordTitle = (record: MeniereRecord) => {
-    switch (record.type) {
-      case 'dizziness': return '眩晕记录';
-      case 'lifestyle': return '生活方式记录';
-      case 'medication': return '用药记录';
-      default: return '其他记录';
-    }
-  };
+  const visibleRecords = useMemo(
+    () =>
+      filteredRecords.slice(0, visibleCount).map(record => ({
+        record,
+        title: getRecordTitle(record),
+        subtitle: getRecordSubtitle(record),
+      })),
+    [filteredRecords, visibleCount]
+  );
 
-  const getRecordSubtitle = (record: MeniereRecord) => {
-    const date = new Date(record.timestamp).toLocaleDateString('zh-CN');
-    const time = new Date(record.timestamp).toLocaleTimeString('zh-CN', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-    
-    let subtitle = `${date} ${time}`;
-    
-    if (record.type === 'dizziness' && record.severity) {
-      const severityMap = { mild: '轻微', moderate: '中等', severe: '严重' };
-      subtitle += ` • ${severityMap[record.severity as keyof typeof severityMap] || record.severity}`;
-    }
-    
-    return subtitle;
-  };
+  const remainingCount = filteredRecords.length - visibleRecords.length;
 
   const handleRecordDeleted = () => {
-    loadHistory();
+    refetch();
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Card className="mb-6">
         <CardContent className="p-6 text-center">
@@ -130,6 +134,55 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
       </Card>
     );
   }
+
+  const recordList = (
+    <>
+      {visibleRecords.map(({ record, title, subtitle }) => (
+        <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">
+          <div
+            className="flex items-center space-x-3 flex-1 cursor-pointer"
+            onClick={() => onRecordClick(record)}
+          >
+            {getRecordIcon(record.type)}
+            <div className="flex-1 min-w-0">
+              <div className="font-medium">{title}</div>
+              <div className="text-sm text-gray-600 truncate">
+                {subtitle}
+              </div>
+              {record.note && (
+                <div className="text-xs text-gray-500 truncate mt-1">
+                  {record.note}
+                </div>
+              )}
+            </div>
+          </div>
+          <RecordDelete
+            recordId={record.id}
+            recordType="meniere_records"
+            onDeleted={handleRecordDeleted}
+          />
+        </div>
+      ))}
+
+      {remainingCount > 0 && (
+        <Button
+          variant="outline"
+          onClick={() => setVisibleCount(count => count + PAGE_SIZE)}
+          className="w-full min-h-[48px] text-base"
+        >
+          加载更多（还有 {remainingCount} 条）
+        </Button>
+      )}
+
+      {filteredRecords.length === 0 && !isLoading && (
+        <EmptyState
+          icon={FileText}
+          title={searchQuery ? '没有找到匹配的记录' : '还没有记录'}
+          description={searchQuery ? '换个关键词或调整筛选条件试试' : '开始记录您的症状，让每一次变化都被看见'}
+        />
+      )}
+    </>
+  );
 
   // 如果是独立页面模式，渲染完整页面
   if (onBack) {
@@ -143,7 +196,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
             </Button>
             <h1 className="text-xl font-bold">最近记录</h1>
             <Button
-              onClick={loadHistory}
+              onClick={() => refetch()}
               variant="ghost"
               size="sm"
               className="text-blue-600 hover:text-blue-800"
@@ -165,7 +218,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
                     className="pl-10"
                   />
                 </div>
-                
+
                 {/* 筛选器 */}
                 <div className="flex space-x-3">
                   <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -180,7 +233,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
                       <SelectItem value="medication">用药记录</SelectItem>
                     </SelectContent>
                   </Select>
-                  
+
                   <Select value={dateFilter} onValueChange={setDateFilter}>
                     <SelectTrigger className="w-32">
                       <Clock className="h-4 w-4 mr-2" />
@@ -195,7 +248,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 {/* 统计信息 */}
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <span>共 {filteredRecords.length} 条记录</span>
@@ -205,42 +258,9 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
                 </div>
               </div>
             </CardHeader>
-            
-            <CardContent className="space-y-3">
-              {filteredRecords.map((record) => (
-                <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">
-                  <div 
-                    className="flex items-center space-x-3 flex-1 cursor-pointer"
-                    onClick={() => onRecordClick(record)}
-                  >
-                    {getRecordIcon(record.type)}
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium">{getRecordTitle(record)}</div>
-                      <div className="text-sm text-gray-600 truncate">
-                        {getRecordSubtitle(record)}
-                      </div>
-                      {record.note && (
-                        <div className="text-xs text-gray-500 truncate mt-1">
-                          {record.note}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <RecordDelete
-                    recordId={record.id}
-                    recordType="meniere_records"
-                    onDeleted={handleRecordDeleted}
-                  />
-                </div>
-              ))}
 
-              {filteredRecords.length === 0 && !loading && (
-                <EmptyState
-                  icon={FileText}
-                  title={searchQuery ? '没有找到匹配的记录' : '还没有记录'}
-                  description={searchQuery ? '换个关键词或调整筛选条件试试' : '开始记录您的症状，让每一次变化都被看见'}
-                />
-              )}
+            <CardContent className="space-y-3">
+              {recordList}
             </CardContent>
           </Card>
         </div>
@@ -255,7 +275,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
         <CardTitle className="flex items-center justify-between">
           <span>最近记录</span>
           <Button
-            onClick={loadHistory}
+            onClick={() => refetch()}
             variant="ghost"
             size="sm"
             className="text-blue-600 hover:text-blue-800"
@@ -263,7 +283,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
             <RefreshCw className="h-4 w-4" />
           </Button>
         </CardTitle>
-        
+
         {showEnhancedFeatures && (
           <div className="space-y-4 mt-4">
             <div className="relative">
@@ -275,7 +295,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
                 className="pl-10"
               />
             </div>
-            
+
             <div className="flex space-x-3">
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="w-32">
@@ -289,7 +309,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
                   <SelectItem value="medication">用药记录</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <Select value={dateFilter} onValueChange={setDateFilter}>
                 <SelectTrigger className="w-32">
                   <Clock className="h-4 w-4 mr-2" />
@@ -304,7 +324,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="flex items-center justify-between text-sm text-gray-600">
               <span>共 {filteredRecords.length} 条记录</span>
               {searchQuery && (
@@ -314,42 +334,9 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
           </div>
         )}
       </CardHeader>
-      
-      <CardContent className="space-y-3">
-        {filteredRecords.map((record) => (
-          <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">
-            <div 
-              className="flex items-center space-x-3 flex-1 cursor-pointer"
-              onClick={() => onRecordClick(record)}
-            >
-              {getRecordIcon(record.type)}
-              <div className="flex-1 min-w-0">
-                <div className="font-medium">{getRecordTitle(record)}</div>
-                <div className="text-sm text-gray-600 truncate">
-                  {getRecordSubtitle(record)}
-                </div>
-                {record.note && (
-                  <div className="text-xs text-gray-500 truncate mt-1">
-                    {record.note}
-                  </div>
-                )}
-              </div>
-            </div>
-            <RecordDelete
-              recordId={record.id}
-              recordType="meniere_records"
-              onDeleted={handleRecordDeleted}
-            />
-          </div>
-        ))}
 
-        {filteredRecords.length === 0 && !loading && (
-          <EmptyState
-            icon={FileText}
-            title={searchQuery ? '没有找到匹配的记录' : '还没有记录'}
-            description={searchQuery ? '换个关键词或调整筛选条件试试' : '开始记录您的症状，让每一次变化都被看见'}
-          />
-        )}
+      <CardContent className="space-y-3">
+        {recordList}
       </CardContent>
     </Card>
   );
