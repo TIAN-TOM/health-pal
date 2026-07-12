@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import type { Tables } from '@/integrations/supabase/types';
+import type { PageId } from '@/lib/pageRegistry';
 import { lazyWithRetry } from '@/lib/lazyWithRetry';
 
 // 全部页面组件懒加载，仅在路由切换到对应页面时才加载对应代码包
@@ -39,7 +40,7 @@ const UserFeedback = lazyWithRetry(() => import('./UserFeedback'));
 type MeniereRecord = Tables<'meniere_records'>;
 
 interface PageRendererProps {
-  currentPage: string;
+  currentPage: PageId;
   selectedRecord?: MeniereRecord | null;
   navigationSource?: string;
   onBack: (targetPage?: string) => void;
@@ -155,15 +156,15 @@ const PageRenderer = ({
       case 'export':
         return <DataExport onBack={() => onBack()} />;
       case 'dizziness-record':
-        return <DizzinessRecord onBack={() => onNavigation('record-hub')} onNavigate={onNavigation} />;
+        return <DizzinessRecord onBack={() => onBack('record-hub')} onNavigate={onNavigation} />;
       case 'diabetes-record':
-        return <DiabetesRecord onBack={() => onNavigation('record-hub')} onNavigate={onNavigation} />;
+        return <DiabetesRecord onBack={() => onBack('record-hub')} onNavigate={onNavigation} />;
       case 'lifestyle-record':
-        return <LifestyleRecord onBack={() => onNavigation('record-hub')} onNavigate={onNavigation} />;
+        return <LifestyleRecord onBack={() => onBack('record-hub')} onNavigate={onNavigation} />;
       case 'medication-record':
         return (
           <MedicationRecord
-            onBack={() => onNavigation('record-hub')}
+            onBack={() => onBack('record-hub')}
             onNavigate={onNavigation}
             onNavigateToMedicationManagement={() => onNavigation('medications')}
           />

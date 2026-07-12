@@ -1,12 +1,14 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useBirthdayWish } from "@/hooks/useBirthdayWish";
 import HomePage from "@/components/HomePage";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Gift } from "lucide-react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
+import { isPageId, getPageTitle, type PageId } from "@/lib/pageRegistry";
 import type { Tables } from '@/integrations/supabase/types';
 
 const PageRenderer = lazyWithRetry(() => import("@/components/PageRenderer"));
@@ -21,17 +23,22 @@ const RouteFallback = () => (
 type MeniereRecord = Tables<'meniere_records'>;
 
 export default function Index() {
-  const { user, userProfile, userRole, loading } = useAuth();
+  const { user, userProfile, loading } = useAuth();
   const { showBirthdayWish, birthdayAge, handleBirthdayWishClose } = useBirthdayWish();
-  const [currentPage, setCurrentPage] = useState<string>("home");
+
+  // currentPage 由 URL 驱动（?page=xxx）：系统返回键、刷新恢复、深链、收藏都随之可用。
+  // 非法/缺失的 page 参数一律落回首页。
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rawPage = searchParams.get("page") ?? "home";
+  const currentPage: PageId = isPageId(rawPage) ? rawPage : "home";
+
   const [selectedRecord, setSelectedRecord] = useState<MeniereRecord | null>(null);
   const [navigationSource, setNavigationSource] = useState<string>("home");
-  
-  // 用于记忆页面滚动位置
+
+  // 页面滚动位置记忆（Index 常驻，ref 在页面切换间存活）
   const scrollPositions = useRef<Record<string, number>>({});
   const homeRef = useRef<HTMLDivElement>(null);
 
-  // 保存当前页面的滚动位置
   const saveScrollPosition = (page: string) => {
     if (page === "home" && homeRef.current) {
       scrollPositions.current[page] = homeRef.current.scrollTop;
@@ -40,57 +47,77 @@ export default function Index() {
     }
   };
 
-  // 恢复页面的滚动位置
+  // 懒加载页面挂载后再恢复滚动位置，需等一帧内容撑开
   const restoreScrollPosition = (page: string) => {
     setTimeout(() => {
+      const savedPosition = scrollPositions.current[page] ?? 0;
       if (page === "home" && homeRef.current) {
-        // 保存的位置存在时使用保存的位置，否则滚动到功能卡片区域（大约380px）
-        const savedPosition = scrollPositions.current[page];
-        const targetPosition = savedPosition !== undefined ? savedPosition : 380;
-        homeRef.current.scrollTo({ top: targetPosition, behavior: 'smooth' });
+        homeRef.current.scrollTo({ top: savedPosition, behavior: "smooth" });
       } else {
-        const savedPosition = scrollPositions.current[page] || 0;
-        window.scrollTo({ top: savedPosition, behavior: 'smooth' });
+        window.scrollTo({ top: savedPosition, behavior: "smooth" });
       }
     }, 100);
   };
 
+  const goTo = (page: PageId, { replace = false } = {}) => {
+    if (page === "home") {
+      setSearchParams({}, { replace });
+    } else {
+      setSearchParams({ page }, { replace });
+    }
+  };
+
+  // 前进导航：压入历史记录，系统返回键可逐级回退
   const handleNavigation = (page: string, source: string = "home") => {
+    if (!isPageId(page)) {
+      console.warn(`未注册的页面 ID: ${page}`);
+      return;
+    }
     saveScrollPosition(currentPage);
-    setCurrentPage(page);
     setNavigationSource(source);
     setSelectedRecord(null);
-    
+    goTo(page);
     if (page !== "home") {
       window.scrollTo(0, 0);
     }
   };
 
+  // 应用内返回按钮：replace 而非 push，避免历史栈越按越深
   const handleBack = (targetPage: string = "home") => {
+    if (!isPageId(targetPage)) return;
     saveScrollPosition(currentPage);
-    setCurrentPage(targetPage);
-    if (targetPage === "home") {
-      restoreScrollPosition(targetPage);
-    } else {
-      restoreScrollPosition(targetPage);
-    }
+    goTo(targetPage, { replace: true });
+    restoreScrollPosition(targetPage);
   };
 
   const handleRecordClick = (record: MeniereRecord) => {
     saveScrollPosition(currentPage);
     setSelectedRecord(record);
-    setCurrentPage("record-detail");
+    goTo("record-detail");
   };
 
   const handleEmergencyClick = () => {
     saveScrollPosition(currentPage);
-    setCurrentPage("emergency");
+    goTo("emergency");
   };
+
+  // 刷新/深链进入 record-detail 时没有选中的记录，落回数据页
+  useEffect(() => {
+    if (currentPage === "record-detail" && !selectedRecord) {
+      goTo("daily-data", { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, selectedRecord]);
+
+  useEffect(() => {
+    document.title = getPageTitle(currentPage);
+  }, [currentPage]);
 
   useEffect(() => {
     if (currentPage === "home") {
       restoreScrollPosition("home");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
   if (loading) {
@@ -122,7 +149,7 @@ export default function Index() {
           onNavigate={handleNavigation}
           homeRef={homeRef}
         />
-        
+
         {/* 生日祝福弹窗 */}
         <Dialog open={showBirthdayWish} onOpenChange={() => handleBirthdayWishClose()}>
           <DialogContent className="max-w-md">
@@ -146,7 +173,7 @@ export default function Index() {
                 <p className="text-yellow-600 text-sm">为您送上666积分作为生日祝福！</p>
               </div>
             </div>
-            <Button 
+            <Button
               onClick={handleBirthdayWishClose}
               className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
             >
