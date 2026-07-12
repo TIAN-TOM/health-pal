@@ -293,7 +293,7 @@ const AdminEducationManagement = () => {
 
       {loading ? (
         <div className="text-center py-8">
-          <p className="text-gray-500">加载中...</p>
+          <p className="text-gray-600">加载中...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
@@ -340,7 +340,7 @@ const AdminEducationManagement = () => {
           ))}
 
           {articles.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-600">
               暂无文章
             </div>
           )}

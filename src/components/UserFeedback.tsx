@@ -249,7 +249,7 @@ const UserFeedbackComponent = ({ onBack }: UserFeedbackProps) => {
                     <p className="text-gray-600">加载中...</p>
                   </div>
                 ) : feedbackList.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-gray-600">
                     <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>暂无反馈记录</p>
                   </div>
@@ -277,7 +277,7 @@ const UserFeedbackComponent = ({ onBack }: UserFeedbackProps) => {
                             </p>
                           </div>
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-gray-500">
                           提交时间：{new Date(feedback.created_at).toLocaleString('zh-CN')}
                         </div>
                       </div>

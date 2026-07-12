@@ -82,7 +82,7 @@ const AdminEmailModal = ({
               maxLength={100}
               className="w-full"
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-600">
               {subject.length}/100 字符
             </p>
           </div>
@@ -101,7 +101,7 @@ const AdminEmailModal = ({
               maxLength={2000}
               className="w-full resize-none"
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-600">
               {message.length}/2000 字符
             </p>
           </div>

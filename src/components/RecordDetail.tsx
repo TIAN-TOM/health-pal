@@ -80,7 +80,7 @@ const RecordDetail = ({ record, onBack }: RecordDetailProps) => {
               {getRecordIcon(record.type)}
               <span className="ml-2">{getTypeTitle(record.type)}</span>
             </CardTitle>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-600">
               {formatDateTime(record.timestamp)}
             </p>
           </CardHeader>

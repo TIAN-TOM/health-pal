@@ -135,7 +135,7 @@ const EmergencySMS = ({ contacts, userName }: EmergencySMSProps) => {
         </div>
 
         {location && (
-          <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
+          <div className="text-xs text-gray-600 p-2 bg-gray-50 rounded">
             <Clock className="h-3 w-3 inline mr-1" />
             位置精度: {Math.round(location.accuracy)}米 | 
             获取时间: {new Date(location.timestamp).toLocaleTimeString('zh-CN')}
@@ -172,7 +172,7 @@ const EmergencySMS = ({ contacts, userName }: EmergencySMSProps) => {
           </div>
         )}
 
-        <div className="text-xs text-gray-500 p-2 bg-yellow-50 rounded">
+        <div className="text-xs text-gray-600 p-2 bg-yellow-50 rounded">
           💡 提示：点击发送后会自动打开短信应用，消息内容已预填好，您只需点击发送即可
         </div>
       </CardContent>

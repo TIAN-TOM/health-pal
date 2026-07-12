@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Autoplay from 'embla-carousel-autoplay';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, ChevronLeft, ChevronRight, Droplets, Loader2, PartyPopper, Sparkles, Wind } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Droplets, Loader2, PartyPopper, Pause, Play, Sparkles, Wind } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -55,11 +55,22 @@ const HomeBanner: React.FC = () => {
 
   const [api, setApi] = useState<CarouselApi | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
 
   const autoplay = useMemo(
     () => Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true }),
     []
   );
+
+  const toggleAutoplay = () => {
+    if (autoplay.isPlaying()) {
+      autoplay.stop();
+      setIsPlaying(false);
+    } else {
+      autoplay.play();
+      setIsPlaying(true);
+    }
+  };
 
   // 初始化城市
   useEffect(() => {
@@ -141,6 +152,19 @@ const HomeBanner: React.FC = () => {
     };
   }, [api]);
 
+  // 自动播放被插件停止/恢复时（如拖动、鼠标悬停），同步暂停/播放按钮状态
+  useEffect(() => {
+    if (!api) return;
+    const onStop = () => setIsPlaying(false);
+    const onPlay = () => setIsPlaying(true);
+    api.on('autoplay:stop', onStop);
+    api.on('autoplay:play', onPlay);
+    return () => {
+      api.off('autoplay:stop', onStop);
+      api.off('autoplay:play', onPlay);
+    };
+  }, [api]);
+
   const slides = useMemo(() => {
     const list: Array<
       | { kind: 'weather'; data: WeatherData; city: City }
@@ -166,12 +190,16 @@ const HomeBanner: React.FC = () => {
     return null;
   }
 
+  const hasMultipleSlides = slides.length > 1;
+  // 多张轮播时给两侧留出空间，避免内容被始终可见的箭头遮挡
+  const slidePadding = hasMultipleSlides ? 'px-12' : 'px-4';
+
   return (
-    <div className="relative group">
+    <div className="relative">
       <Carousel
         setApi={setApi}
-        opts={{ loop: slides.length > 1, align: 'start' }}
-        plugins={slides.length > 1 ? [autoplay] : []}
+        opts={{ loop: hasMultipleSlides, align: 'start' }}
+        plugins={hasMultipleSlides ? [autoplay] : []}
         className="w-full"
       >
         <CarouselContent className="ml-0">
@@ -181,7 +209,7 @@ const HomeBanner: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/weather')}
-                  className="h-14 w-full rounded-lg bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg transition-shadow flex items-center justify-between px-4"
+                  className={`h-14 w-full rounded-lg bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg transition-shadow flex items-center justify-between ${slidePadding}`}
                   aria-label={`查看 ${slide.city.name} 天气详情`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
@@ -217,7 +245,7 @@ const HomeBanner: React.FC = () => {
                 const Icon = isToday ? PartyPopper : isSoon ? Sparkles : Calendar;
                 return (
                   <div
-                    className={`h-14 w-full rounded-lg ${bg} shadow-md flex items-center justify-between px-4`}
+                    className={`h-14 w-full rounded-lg ${bg} shadow-md flex items-center justify-between ${slidePadding}`}
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <Icon className={`h-5 w-5 shrink-0 ${textColor} ${isToday ? 'animate-bounce' : isSoon ? 'animate-pulse' : ''}`} />
@@ -245,28 +273,28 @@ const HomeBanner: React.FC = () => {
         </CarouselContent>
       </Carousel>
 
-      {slides.length > 1 && (
+      {hasMultipleSlides && (
         <>
           <button
             type="button"
             onClick={() => api?.scrollPrev()}
             aria-label="上一张"
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-6 w-6 rounded-full bg-background/70 backdrop-blur-sm text-foreground shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/90 hidden md:flex items-center justify-center"
+            className="absolute left-1 top-1/2 -translate-y-1/2 z-10 h-11 w-11 rounded-full bg-background/80 backdrop-blur-sm text-foreground shadow-md transition-colors hover:bg-background active:bg-background flex items-center justify-center"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-6 w-6" />
           </button>
           <button
             type="button"
             onClick={() => api?.scrollNext()}
             aria-label="下一张"
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-6 w-6 rounded-full bg-background/70 backdrop-blur-sm text-foreground shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/90 hidden md:flex items-center justify-center"
+            className="absolute right-1 top-1/2 -translate-y-1/2 z-10 h-11 w-11 rounded-full bg-background/80 backdrop-blur-sm text-foreground shadow-md transition-colors hover:bg-background active:bg-background flex items-center justify-center"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-6 w-6" />
           </button>
         </>
       )}
 
-      {slides.length > 1 && (
+      {hasMultipleSlides && (
         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 pointer-events-none">
           {slides.map((_, i) => (
             <span
@@ -276,6 +304,20 @@ const HomeBanner: React.FC = () => {
               }`}
             />
           ))}
+        </div>
+      )}
+
+      {hasMultipleSlides && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={toggleAutoplay}
+            aria-label={isPlaying ? '暂停轮播' : '播放轮播'}
+            className="mt-1 flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-full px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            <span>{isPlaying ? '暂停' : '播放'}</span>
+          </button>
         </div>
       )}
     </div>

@@ -31,6 +31,7 @@ const MedicationRecord = ({ onBack, onNavigate, onNavigateToMedicationManagement
   const [dosageTimeOpen, setDosageTimeOpen] = useState(false);
   const [effectSideEffectOpen, setEffectSideEffectOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
+  const [medicationError, setMedicationError] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -96,22 +97,28 @@ const MedicationRecord = ({ onBack, onNavigate, onNavigateToMedicationManagement
   };
 
   const toggleMedication = (medication: string) => {
-    setMedications(prev => 
-      prev.includes(medication) 
-        ? prev.filter(m => m !== medication)
-        : [...prev, medication]
-    );
+    const next = medications.includes(medication)
+      ? medications.filter(m => m !== medication)
+      : [...medications, medication];
+    setMedications(next);
+    if (next.length > 0) {
+      setMedicationError('');
+    }
   };
 
   const handleSave = async () => {
     if (medications.length === 0) {
+      setMedicationError('请至少选择一种药物');
       toast({
         title: "请选择药物",
         description: "请至少选择一种药物",
         variant: "destructive"
       });
+      // 保存按钮在页面底部，把药物选择卡片滚回视野内
+      document.getElementById('medication-select-group')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
+    setMedicationError('');
 
     setIsLoading(true);
     try {
@@ -237,15 +244,23 @@ const MedicationRecord = ({ onBack, onNavigate, onNavigateToMedicationManagement
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-3">
+                  <div
+                    id="medication-select-group"
+                    role="group"
+                    aria-label="选择药物"
+                    aria-invalid={medicationError ? true : undefined}
+                    aria-describedby={medicationError ? 'medications-error' : undefined}
+                    className="grid gap-3"
+                  >
                     {userMedications.map((medication, index) => (
                       <Button
                         key={medication.id || index}
                         onClick={() => toggleMedication(medication.name)}
                         variant={medications.includes(medication.name) ? "default" : "outline"}
+                        aria-pressed={medications.includes(medication.name)}
                         className={`w-full py-4 text-lg ${
                           medications.includes(medication.name)
-                            ? 'bg-purple-500 hover:bg-purple-600 text-white' 
+                            ? 'bg-purple-500 hover:bg-purple-600 text-white'
                             : 'border-2 hover:border-purple-300'
                         }`}
                       >
@@ -261,6 +276,12 @@ const MedicationRecord = ({ onBack, onNavigate, onNavigateToMedicationManagement
                       </Button>
                     ))}
                   </div>
+                  {medicationError && (
+                    <p id="medications-error" className="mt-3 flex items-center gap-1 text-sm text-red-600">
+                      <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      {medicationError}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 

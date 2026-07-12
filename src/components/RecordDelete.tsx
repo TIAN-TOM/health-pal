@@ -47,6 +47,7 @@ const RecordDelete = ({ recordId, recordType, onDeleted, className = "" }: Recor
   return (
     <Button
       onClick={handleDelete}
+      aria-label="删除记录"
       variant="ghost"
       size="sm"
       className={`text-red-600 hover:text-red-800 hover:bg-red-50 ${className}`}

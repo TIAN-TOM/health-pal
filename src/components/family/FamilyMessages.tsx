@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Send, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import EmptyState from '@/components/common/EmptyState';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { familyMessagesService, type FamilyMessage as ServiceMessage } from '@/services/familyMessagesService';
@@ -26,6 +27,7 @@ const FamilyMessages = ({ onBack }: FamilyMessagesProps) => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(true);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user, userProfile } = useAuth();
 
@@ -158,6 +160,14 @@ const FamilyMessages = ({ onBack }: FamilyMessagesProps) => {
                 <div className="flex justify-center items-center h-32">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
                 </div>
+              ) : messages.length === 0 ? (
+                <EmptyState
+                  icon={MessageCircle}
+                  title="还没有留言"
+                  description="给家人写第一条留言吧"
+                  actionLabel="写留言"
+                  onAction={() => inputRef.current?.focus()}
+                />
               ) : (
                 <div className="space-y-4">
                   {messages.map((message) => (
@@ -197,6 +207,7 @@ const FamilyMessages = ({ onBack }: FamilyMessagesProps) => {
           <CardContent className="p-4">
             <form onSubmit={handleSendMessage} className="flex space-x-2">
               <Input
+                ref={inputRef}
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="输入消息..."

@@ -83,7 +83,7 @@ const UserListView = ({
   if (loading) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">加载中...</p>
+        <p className="text-gray-600">加载中...</p>
       </div>
     );
   }
@@ -123,9 +123,9 @@ const UserListView = ({
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="font-medium text-lg">{user.full_name}</h3>
-                  <p className="text-gray-500">{user.email}</p>
-                  <p className="text-gray-500">角色: {user.role}</p>
-                  <p className="text-gray-500">
+                  <p className="text-gray-600">{user.email}</p>
+                  <p className="text-gray-600">角色: {user.role}</p>
+                  <p className="text-gray-600">
                     注册时间: {formatBeijingTime(user.created_at)}
                   </p>
                 </div>
@@ -161,7 +161,7 @@ const UserListView = ({
       </div>
 
       {filteredUsers.length === 0 && !loading && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-600">
           {users.length === 0 ? '暂无用户数据' : '没有找到匹配的用户'}
         </div>
       )}

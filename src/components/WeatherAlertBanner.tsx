@@ -80,6 +80,7 @@ const WeatherAlertBanner = () => {
                 size="icon"
                 className="h-6 w-6"
                 onClick={() => handleDismiss(alert.id)}
+                aria-label="关闭天气预警"
               >
                 <X className="h-4 w-4" />
               </Button>

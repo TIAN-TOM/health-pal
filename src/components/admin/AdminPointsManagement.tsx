@@ -219,7 +219,7 @@ const AdminPointsManagement = () => {
           </CardHeader>
           <CardContent>
             {transactions.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-600">
                 <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>暂无积分交易记录</p>
               </div>
@@ -241,7 +241,7 @@ const AdminPointsManagement = () => {
                       {transaction.description && (
                         <p className="text-xs text-gray-600">{transaction.description}</p>
                       )}
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-600 mt-1">
                         {new Date(transaction.created_at).toLocaleString('zh-CN')}
                       </p>
                     </div>

@@ -51,13 +51,13 @@ const LegalPage = ({ title, titleEn, content, contentEn, onBack }: LegalPageProp
           <h1 className="text-xl md:text-2xl font-bold mb-4">
             {lang === 'zh' ? title : titleEn}
           </h1>
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="text-xs text-gray-600 mb-4">
             {lang === 'zh' ? '最后更新：2026-06-30' : 'Last updated: 2026-06-30'}
           </p>
           {lang === 'zh' ? content : contentEn}
         </article>
 
-        <div className="text-center text-xs text-gray-500 mt-6 pb-6">
+        <div className="text-center text-xs text-gray-600 mt-6 pb-6">
           © 2026 健康生活伴侣 · Health Pal
         </div>
       </div>

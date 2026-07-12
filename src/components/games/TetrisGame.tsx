@@ -394,15 +394,15 @@ const TetrisGame = ({ onBack }: { onBack: () => void }) => {
             {/* Game Stats */}
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="bg-white p-2 rounded-lg shadow">
-                <div className="text-xs text-gray-500">得分</div>
+                <div className="text-xs text-gray-600">得分</div>
                 <div className="font-bold">{score}</div>
               </div>
               <div className="bg-white p-2 rounded-lg shadow">
-                <div className="text-xs text-gray-500">等级</div>
+                <div className="text-xs text-gray-600">等级</div>
                 <div className="font-bold">{level}</div>
               </div>
               <div className="bg-white p-2 rounded-lg shadow">
-                <div className="text-xs text-gray-500">行数</div>
+                <div className="text-xs text-gray-600">行数</div>
                 <div className="font-bold">{lines}</div>
               </div>
             </div>

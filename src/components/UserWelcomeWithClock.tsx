@@ -121,12 +121,11 @@ const UserWelcomeWithClock = ({ userDisplayName, onSettingsClick, onEmergencyCli
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Button
               variant="ghost"
-              size="sm"
               onClick={onEmergencyClick}
-              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 h-8 text-xs font-medium"
+              className="bg-red-500 hover:bg-red-600 active:bg-red-700 text-white min-h-[48px] px-4 text-base font-bold shadow-md"
               aria-label="我需要帮助"
             >
               🆘 帮助

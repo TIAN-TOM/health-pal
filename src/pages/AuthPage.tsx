@@ -65,17 +65,31 @@ export default function AuthPage() {
     switch (passwordStrength) {
       case 0:
       case 1:
-        return { text: '密码强度：弱', color: 'text-red-500' };
+        return { text: '密码强度：弱', color: 'text-red-600', Icon: AlertCircle };
       case 2:
       case 3:
-        return { text: '密码强度：中等', color: 'text-yellow-500' };
+        return { text: '密码强度：中等', color: 'text-yellow-600', Icon: AlertCircle };
       case 4:
       case 5:
-        return { text: '密码强度：强', color: 'text-green-500' };
+        return { text: '密码强度：强', color: 'text-green-600', Icon: CheckCircle };
       default:
-        return { text: '', color: '' };
+        return { text: '', color: '', Icon: AlertCircle };
     }
   };
+
+  const passwordStrengthInfo = getPasswordStrengthText();
+
+  // 注册尚未完成的条件，实时更新，用于注册按钮上方的提示清单
+  const signupMissingItems = [
+    !fullName.trim() ? '请填写姓名' : null,
+    !email ? '请填写邮箱地址' : !emailValid ? '请输入正确的邮箱地址' : null,
+    !password
+      ? '请设置密码（至少8位）'
+      : passwordStrength < 2
+        ? '密码强度不足（至少8位，包含大小写字母和数字）'
+        : null,
+    !agreedToTerms ? '请勾选同意《服务协议》等条款' : null,
+  ].filter((item): item is string => item !== null);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -353,6 +367,8 @@ export default function AuthPage() {
                       className="pl-10 transition-all duration-200 focus:scale-105"
                       required
                       disabled={loading}
+                      aria-invalid={email ? !emailValid : undefined}
+                      aria-describedby={email && !emailValid ? 'email-error' : undefined}
                     />
                     {email && (
                       <div className="absolute right-3 top-3">
@@ -365,7 +381,10 @@ export default function AuthPage() {
                     )}
                   </div>
                   {email && !emailValid && (
-                    <p className="text-xs text-red-500">请输入正确的邮箱格式</p>
+                    <p id="email-error" className="flex items-center gap-1 text-xs text-red-600">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      请输入正确的邮箱格式
+                    </p>
                   )}
                 </div>
                 
@@ -386,16 +405,17 @@ export default function AuthPage() {
                       type="button"
                       className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? '隐藏密码' : '显示密码'}
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Button 
-                    type="submit" 
-                    className="w-full transition-all duration-200 hover:scale-105" 
+                  <Button
+                    type="submit"
+                    className="w-full transition-all duration-200 hover:scale-105"
                     disabled={loading || !emailValid}
                   >
                     {loading ? '登录中...' : '登录'}
@@ -454,6 +474,8 @@ export default function AuthPage() {
                       className="pl-10 transition-all duration-200 focus:scale-105"
                       required
                       disabled={loading}
+                      aria-invalid={email ? !emailValid : undefined}
+                      aria-describedby={email && !emailValid ? 'signupEmail-error' : undefined}
                     />
                     {email && (
                       <div className="absolute right-3 top-3">
@@ -466,7 +488,10 @@ export default function AuthPage() {
                     )}
                   </div>
                   {email && !emailValid && (
-                    <p className="text-xs text-red-500">请输入正确的邮箱格式</p>
+                    <p id="signupEmail-error" className="flex items-center gap-1 text-xs text-red-600">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      请输入正确的邮箱格式
+                    </p>
                   )}
                 </div>
                 
@@ -483,22 +508,26 @@ export default function AuthPage() {
                       className="pl-10 pr-10 transition-all duration-200 focus:scale-105"
                       required
                       disabled={loading}
+                      aria-invalid={password ? passwordStrength < 2 : undefined}
+                      aria-describedby={password ? 'signupPassword-hint' : undefined}
                     />
                     <button
                       type="button"
                       className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? '隐藏密码' : '显示密码'}
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   {password && (
-                    <div className="space-y-1">
-                      <div className={`text-xs ${getPasswordStrengthText().color}`}>
-                        {getPasswordStrengthText().text}
+                    <div id="signupPassword-hint" className="space-y-1">
+                      <div className={`flex items-center gap-1 text-xs ${passwordStrengthInfo.color}`}>
+                        <passwordStrengthInfo.Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        {passwordStrengthInfo.text}
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-1">
-                        <div 
+                        <div
                           className={`h-1 rounded-full transition-all duration-300 ${
                             passwordStrength <= 1 ? 'bg-red-500' :
                             passwordStrength <= 3 ? 'bg-yellow-500' : 'bg-green-500'
@@ -529,10 +558,25 @@ export default function AuthPage() {
                   </label>
                 </div>
 
+                {signupMissingItems.length > 0 && (
+                  <div id="signup-missing-hint" className="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+                    <p className="text-sm font-medium text-yellow-700 mb-1">完成以下内容后即可注册：</p>
+                    <ul className="space-y-1">
+                      {signupMissingItems.map((item) => (
+                        <li key={item} className="flex items-start gap-1 text-sm text-yellow-700">
+                          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" aria-hidden="true" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <Button
                   type="submit"
                   className="w-full transition-all duration-200 hover:scale-105"
                   disabled={loading || !emailValid || passwordStrength < 2 || !fullName.trim() || !agreedToTerms}
+                  aria-describedby={signupMissingItems.length > 0 ? 'signup-missing-hint' : undefined}
                 >
                   {loading ? '注册中...' : '注册'}
                 </Button>

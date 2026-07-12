@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { familyExpensesService, type FamilyExpense, type ExpenseStats, EXPENSE_CATEGORIES } from '@/services/familyExpensesService';
+import EmptyState from '@/components/common/EmptyState';
 import { getBeijingDateString } from '@/utils/beijingTime';
 
 interface FamilyExpensesProps {
@@ -328,9 +329,13 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
             </Card>
           ))}
           {expenses.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              暂无支出记录
-            </div>
+            <EmptyState
+              icon={DollarSign}
+              title="暂无支出记录"
+              description="记下第一笔家庭支出，方便日后查看"
+              actionLabel="记一笔"
+              onAction={() => setShowAddForm(true)}
+            />
           )}
         </div>
       </div>

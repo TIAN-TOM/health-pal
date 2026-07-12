@@ -144,7 +144,7 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">正在加载今日英语内容...</p>
-          <p className="text-sm text-gray-500 mt-2">确保每天内容都不重样</p>
+          <p className="text-sm text-gray-600 mt-2">确保每天内容都不重样</p>
         </div>
       </div>
     );
@@ -188,7 +188,7 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
               {currentDate}
               {isToday && <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">今日</span>}
             </div>
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-gray-600 mt-1">
               北京时间: {beijingTime.toLocaleTimeString('zh-CN', { hour12: false })}
             </div>
           </div>
@@ -218,7 +218,7 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
                 <CardTitle className="flex items-center">
                   <Book className="h-5 w-5 mr-2 text-blue-600" />
                   每日名言 
-                  <span className="text-sm text-gray-500 ml-2">(每日更新)</span>
+                  <span className="text-sm text-gray-600 ml-2">(每日更新)</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -245,14 +245,14 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
                         <p className="text-sm font-medium text-gray-600">
                           — {dailyQuote.author}
                           {dailyQuote.author_translation && (
-                            <span className="text-gray-500 ml-1">({dailyQuote.author_translation})</span>
+                            <span className="text-gray-600 ml-1">({dailyQuote.author_translation})</span>
                           )}
                         </p>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-center py-8">暂无名言内容</p>
+                  <p className="text-gray-600 text-center py-8">暂无名言内容</p>
                 )}
               </CardContent>
             </Card>
@@ -300,7 +300,7 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
               </Card>
             ))}
             {dailyWords.length === 0 && (
-              <p className="text-gray-500 text-center py-8">暂无单词内容</p>
+              <p className="text-gray-600 text-center py-8">暂无单词内容</p>
             )}
           </TabsContent>
 
@@ -351,7 +351,7 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
               </Card>
             ))}
             {phrases.length === 0 && (
-              <p className="text-gray-500 text-center py-8">暂无短语内容</p>
+              <p className="text-gray-600 text-center py-8">暂无短语内容</p>
             )}
           </TabsContent>
 
@@ -385,7 +385,7 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
                     <p className="text-gray-700">{text.translation}</p>
                   </div>
                   {text.estimated_duration && (
-                    <div className="text-xs text-gray-500 text-center">
+                    <div className="text-xs text-gray-600 text-center">
                       预计听力时长：{text.estimated_duration}秒
                     </div>
                   )}
@@ -393,7 +393,7 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
               </Card>
             ))}
             {listeningTexts.length === 0 && (
-              <p className="text-gray-500 text-center py-8">暂无听力内容</p>
+              <p className="text-gray-600 text-center py-8">暂无听力内容</p>
             )}
           </TabsContent>
         </Tabs>

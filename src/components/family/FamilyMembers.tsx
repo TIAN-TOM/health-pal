@@ -248,7 +248,7 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
                       <div className="text-sm font-medium text-pink-600">
                         {member.daysUntil === 0 ? '今天' : `${member.daysUntil}天后`}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-600">
                         {member.nextBirthday.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })}
                       </div>
                     </div>
@@ -263,14 +263,14 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
         {loading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <div className="text-gray-500">加载中...</div>
+            <div className="text-gray-600">加载中...</div>
           </div>
         ) : members.length === 0 ? (
           // 空状态
           <Card>
             <CardContent className="p-8 text-center">
-              <div className="text-gray-400 mb-4">暂无家庭成员</div>
-              <p className="text-sm text-gray-500 mb-6">
+              <div className="text-gray-500 mb-4">暂无家庭成员</div>
+              <p className="text-sm text-gray-600 mb-6">
                 添加您的家庭成员，方便管理生日提醒和联系信息
               </p>
               <Button onClick={() => setShowAddForm(true)}>
@@ -325,12 +325,13 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleEditMember(member)}
+                            aria-label="编辑成员"
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="outline">
+                              <Button size="sm" variant="outline" aria-label="删除成员">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </AlertDialogTrigger>
@@ -367,7 +368,7 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
                             <Calendar className="h-4 w-4 mr-2 text-gray-400" />
                             {member.birthday}
                             {calculateAge(member.birthday) && (
-                              <span className="ml-2 text-gray-500">
+                              <span className="ml-2 text-gray-600">
                                 ({calculateAge(member.birthday)}岁)
                               </span>
                             )}

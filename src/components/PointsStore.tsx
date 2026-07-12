@@ -11,6 +11,7 @@ import { getEffectiveUserPoints } from '@/services/pointsService';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import MyPurchases from './MyPurchases';
+import EmptyState from '@/components/common/EmptyState';
 
 const PointsStore = () => {
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
@@ -122,10 +123,10 @@ const PointsStore = () => {
   };
 
   if (loading) {
+    // 骨架屏：占位与加载完成后的“积分商城”按钮同尺寸，避免布局跳动
     return (
-      <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">加载中...</p>
+      <div role="status" aria-label="加载中" className="animate-pulse">
+        <div className="h-10 w-full rounded-md bg-muted" />
       </div>
     );
   }
@@ -235,10 +236,11 @@ const PointsStore = () => {
             </div>
 
             {storeItems.length === 0 && (
-              <div className="text-center py-8">
-                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                <p className="text-muted-foreground">暂无商品</p>
-              </div>
+              <EmptyState
+                icon={Package}
+                title="暂无商品"
+                description="商品正在上架中，过几天再来看看吧"
+              />
             )}
           </TabsContent>
           

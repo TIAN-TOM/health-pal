@@ -121,7 +121,7 @@ const SleepSection = ({
                 className="bg-gray-50"
                 readOnly
               />
-              <p className="text-xs text-gray-500 mt-1">根据入睡和起床时间自动计算</p>
+              <p className="text-xs text-gray-600 mt-1">根据入睡和起床时间自动计算</p>
             </div>
 
             <div>

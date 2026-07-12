@@ -178,7 +178,7 @@ const CheckinCalendarSection = ({ checkinDates, selectedDate, onDateSelect, onMa
                         <span className="font-medium">{getMoodText(moodScore)}</span>
                       </div>
                       <div className="flex items-center space-x-2 mt-2">
-                        <span className="text-sm text-gray-500">1</span>
+                        <span className="text-sm text-gray-600">1</span>
                         <input
                           type="range"
                           min="1"
@@ -187,7 +187,7 @@ const CheckinCalendarSection = ({ checkinDates, selectedDate, onDateSelect, onMa
                           onChange={(e) => setMoodScore(Number(e.target.value))}
                           className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
-                        <span className="text-sm text-gray-500">5</span>
+                        <span className="text-sm text-gray-600">5</span>
                       </div>
                     </div>
 

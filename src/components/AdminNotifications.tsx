@@ -157,7 +157,7 @@ const AdminNotifications = () => {
 
       {loading ? (
         <div className="text-center py-8">
-          <p className="text-gray-500">加载中...</p>
+          <p className="text-gray-600">加载中...</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -181,7 +181,7 @@ const AdminNotifications = () => {
                     <p className={`text-sm ${notification.is_read ? 'text-gray-500' : 'text-gray-700'}`}>
                       {notification.message}
                     </p>
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-xs text-gray-500 mt-2">
                       {formatBeijingTime(notification.created_at)} (北京时间)
                     </p>
                   </div>
@@ -200,7 +200,7 @@ const AdminNotifications = () => {
           ))}
 
           {notifications.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-600">
               暂无通知
             </div>
           )}

@@ -15,8 +15,16 @@ const themeOptions: { value: Theme; label: string; icon: typeof Sun }[] = [
 const fontOptions: { value: FontSize; label: string; sample: string }[] = [
   { value: 'standard', label: '标准', sample: 'Aa' },
   { value: 'large', label: '大', sample: 'Aa' },
-  { value: 'xlarge', label: '特大', sample: 'Aa' },
+  { value: 'xlarge', label: '加大', sample: 'Aa' },
+  { value: 'xxlarge', label: '特大', sample: 'Aa' },
 ];
+
+const sampleSizeClass: Record<FontSize, string> = {
+  standard: 'text-base',
+  large: 'text-lg',
+  xlarge: 'text-xl',
+  xxlarge: 'text-2xl',
+};
 
 const AppearanceSettings = () => {
   const { theme, setTheme } = useTheme();
@@ -55,11 +63,10 @@ const AppearanceSettings = () => {
             <Type className="h-4 w-4 mr-1.5" />
             全局字号
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {fontOptions.map(({ value, label, sample }) => {
               const active = fontSize === value;
-              const sizeClass =
-                value === 'standard' ? 'text-base' : value === 'large' ? 'text-lg' : 'text-xl';
+              const sizeClass = sampleSizeClass[value];
               return (
                 <Button
                   key={value}

@@ -393,7 +393,7 @@ const EnhancedGomoku = ({ onBack, soundEnabled = true }: EnhancedGomokuProps) =>
                 </SelectContent>
               </Select>
               {!skinUnlocked && (
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-gray-600 mt-2">
                   前往积分商城购买"五子棋经典皮肤"解锁更多皮肤选项
                 </p>
               )}

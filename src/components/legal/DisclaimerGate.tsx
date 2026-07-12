@@ -57,7 +57,7 @@ const DisclaimerGate = () => {
             <li>请勿仅依据本应用自行调整、停用任何处方药物。</li>
             <li>出现胸痛、呼吸困难、严重眩晕、低血糖晕厥等急症请立即拨打急救电话或前往急诊。</li>
           </ul>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-600">
             完整内容请阅读{' '}
             <a href="/disclaimer" className="text-blue-600 underline">医疗免责声明</a>、{' '}
             <a href="/privacy" className="text-blue-600 underline">隐私政策</a>、{' '}

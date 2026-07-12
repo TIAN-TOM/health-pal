@@ -146,9 +146,48 @@ const MedicalRecords = ({ onBack }: MedicalRecordsProps) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-lg text-gray-600">加载中...</div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
+        <div className="mb-6">
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            className="text-gray-600 hover:text-gray-800"
+          >
+            <ArrowLeft className="mr-2 h-5 w-5" />
+            返回
+          </Button>
+        </div>
+
+        {/* 骨架屏：模拟标题、添加按钮与历史记录卡片布局 */}
+        <div
+          role="status"
+          aria-label="加载中"
+          className="max-w-md md:max-w-2xl lg:max-w-3xl mx-auto animate-pulse"
+        >
+          <Card>
+            <CardHeader>
+              <div className="h-8 w-1/2 mx-auto rounded bg-muted" />
+            </CardHeader>
+            <CardContent>
+              <div className="h-11 w-full rounded-md bg-muted mb-6" />
+              <div className="space-y-4">
+                <div className="h-6 w-24 rounded bg-muted" />
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Card key={i}>
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="h-6 w-20 rounded bg-muted" />
+                        <div className="h-6 w-16 rounded bg-muted" />
+                      </div>
+                      <div className="h-5 w-1/3 rounded bg-muted" />
+                      <div className="h-4 w-2/3 rounded bg-muted" />
+                      <div className="h-4 w-1/2 rounded bg-muted" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );

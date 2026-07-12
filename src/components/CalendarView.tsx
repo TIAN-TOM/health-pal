@@ -80,7 +80,7 @@ const CalendarView = () => {
         {loading ? (
           <div className="text-center py-8">
             <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-            <p className="text-gray-500">加载中...</p>
+            <p className="text-gray-600">加载中...</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -88,7 +88,7 @@ const CalendarView = () => {
             <CalendarLegend />
             
             {/* 当前时间显示 */}
-            <div className="pt-2 border-t text-xs text-gray-500 text-center">
+            <div className="pt-2 border-t text-xs text-gray-600 text-center">
               当前北京时间: {formatBeijingTimeDisplay()}
             </div>
           </div>

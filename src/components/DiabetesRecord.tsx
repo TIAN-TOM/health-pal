@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Activity, Clock, Save } from 'lucide-react';
+import { ArrowLeft, Activity, AlertCircle, Clock, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -24,18 +24,22 @@ const DiabetesRecord = ({ onBack, onNavigate }: DiabetesRecordProps) => {
   const [exercise, setExercise] = useState('');
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
+  const [bloodSugarError, setBloodSugarError] = useState('');
   const { toast } = useToast();
 
   const currentTime = getBeijingTime();
 
   const handleSubmit = async () => {
     if (!bloodSugar) {
+      setBloodSugarError('请填写血糖值');
       toast({
         title: "请填写血糖值",
         variant: "destructive",
       });
+      document.getElementById('bloodSugar')?.focus();
       return;
     }
+    setBloodSugarError('');
 
     try {
       setLoading(true);
@@ -103,9 +107,23 @@ const DiabetesRecord = ({ onBack, onNavigate }: DiabetesRecordProps) => {
                   type="number"
                   step="0.1"
                   value={bloodSugar}
-                  onChange={(e) => setBloodSugar(e.target.value)}
+                  onChange={(e) => {
+                    setBloodSugar(e.target.value);
+                    if (e.target.value) {
+                      setBloodSugarError('');
+                    }
+                  }}
                   placeholder="例如: 6.5"
+                  aria-invalid={!!bloodSugarError}
+                  aria-describedby={bloodSugarError ? 'bloodSugar-error' : undefined}
+                  className={bloodSugarError ? 'border-red-500' : undefined}
                 />
+                {bloodSugarError && (
+                  <p id="bloodSugar-error" className="mt-1 flex items-center gap-1 text-sm text-red-600">
+                    <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {bloodSugarError}
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="measurementTime">测量时机</Label>

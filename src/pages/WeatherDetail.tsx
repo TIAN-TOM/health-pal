@@ -132,7 +132,7 @@ const WeatherDetail = () => {
           </Button>
           <Card>
             <CardContent className="p-8 text-center">
-              <p className="text-gray-500">天气加载失败</p>
+              <p className="text-gray-600">天气加载失败</p>
             </CardContent>
           </Card>
         </div>
@@ -216,7 +216,7 @@ const WeatherDetail = () => {
                 <div className="flex items-center gap-4 flex-1">
                   <div className="w-24">
                     <p className="font-medium">昨天</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-600">
                       {parseLocalDate(weather.yesterday.date).toLocaleDateString('zh-CN', {
                         weekday: 'short',
                       })}
@@ -235,7 +235,7 @@ const WeatherDetail = () => {
                     <p className="text-lg font-semibold text-gray-900">
                       {weather.yesterday.tempMax}°
                     </p>
-                    <p className="text-sm text-gray-500">{weather.yesterday.tempMin}°</p>
+                    <p className="text-sm text-gray-600">{weather.yesterday.tempMin}°</p>
                   </div>
 
                   <div className="flex items-center gap-1 text-blue-600 min-w-[60px]">
@@ -273,7 +273,7 @@ const WeatherDetail = () => {
                       <div className="flex items-center gap-4 flex-1">
                         <div className="w-24">
                           <p className="font-medium">{dateInfo.date}</p>
-                          <p className="text-sm text-gray-500">{dateInfo.weekday}</p>
+                          <p className="text-sm text-gray-600">{dateInfo.weekday}</p>
                         </div>
 
                         <div className="text-3xl">{day.icon}</div>
@@ -288,7 +288,7 @@ const WeatherDetail = () => {
                           <p className="text-lg font-semibold text-gray-900">
                             {day.tempMax}°
                           </p>
-                          <p className="text-sm text-gray-500">{day.tempMin}°</p>
+                          <p className="text-sm text-gray-600">{day.tempMin}°</p>
                         </div>
 
                         <div className="flex items-center gap-1 text-blue-600 min-w-[60px]">

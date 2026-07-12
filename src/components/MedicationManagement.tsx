@@ -192,7 +192,7 @@ const MedicationManagement = ({ onBack }: MedicationManagementProps) => {
             <div className="space-y-3">
               <h3 className="text-lg font-medium text-gray-800">常用药物列表</h3>
               {medications.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-600">
                   还没有添加常用药物
                 </div>
               ) : (
@@ -211,6 +211,7 @@ const MedicationManagement = ({ onBack }: MedicationManagementProps) => {
                         </div>
                         <Button
                           onClick={() => handleDelete(medication.id)}
+                          aria-label="删除药物"
                           variant="ghost"
                           size="sm"
                           className="text-red-600 hover:text-red-800"

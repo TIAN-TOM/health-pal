@@ -360,7 +360,7 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
                       }`}>
                         {date.getDate()}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-600">
                         {lunarDate}
                       </div>
                     </div>
@@ -400,7 +400,7 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
                       
                       {/* 更多事件指示 */}
                       {(dayEvents.length + birthdays.length > 2) && (
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-600">
                           +{dayEvents.length + birthdays.length - 2} 更多
                         </div>
                       )}
@@ -586,6 +586,7 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
                       size="sm"
                       variant="ghost"
                       onClick={() => handleEdit(event)}
+                      aria-label="编辑事件"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -593,6 +594,7 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
                       size="sm"
                       variant="ghost"
                       onClick={() => handleDelete(event.id)}
+                      aria-label="删除事件"
                       className="text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -602,7 +604,7 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
               ))}
               
               {events.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-600">
                   <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                   <p>本月暂无事件</p>
                   <p className="text-sm">点击日期添加新事件</p>

@@ -186,7 +186,7 @@ const FamilyMemberForm = ({ member, onSuccess, onCancel }: FamilyMemberFormProps
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           {member ? '编辑成员' : '添加成员'}
-          <Button variant="ghost" size="sm" onClick={onCancel}>
+          <Button variant="ghost" size="sm" onClick={onCancel} aria-label="关闭">
             <X className="h-4 w-4" />
           </Button>
         </CardTitle>

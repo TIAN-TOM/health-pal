@@ -125,7 +125,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
       <Card className="mb-6">
         <CardContent className="p-6 text-center">
           <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-          <p className="text-gray-500">加载历史记录中...</p>
+          <p className="text-gray-600">加载历史记录中...</p>
         </CardContent>
       </Card>
     );
@@ -197,7 +197,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
                 </div>
                 
                 {/* 统计信息 */}
-                <div className="flex items-center justify-between text-sm text-gray-500">
+                <div className="flex items-center justify-between text-sm text-gray-600">
                   <span>共 {filteredRecords.length} 条记录</span>
                   {searchQuery && (
                     <span>搜索到 {filteredRecords.length} 条结果</span>
@@ -216,11 +216,11 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
                     {getRecordIcon(record.type)}
                     <div className="flex-1 min-w-0">
                       <div className="font-medium">{getRecordTitle(record)}</div>
-                      <div className="text-sm text-gray-500 truncate">
+                      <div className="text-sm text-gray-600 truncate">
                         {getRecordSubtitle(record)}
                       </div>
                       {record.note && (
-                        <div className="text-xs text-gray-400 truncate mt-1">
+                        <div className="text-xs text-gray-500 truncate mt-1">
                           {record.note}
                         </div>
                       )}
@@ -305,7 +305,7 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
               </Select>
             </div>
             
-            <div className="flex items-center justify-between text-sm text-gray-500">
+            <div className="flex items-center justify-between text-sm text-gray-600">
               <span>共 {filteredRecords.length} 条记录</span>
               {searchQuery && (
                 <span>搜索到 {filteredRecords.length} 条结果</span>
@@ -325,11 +325,11 @@ const HistoryView = ({ onRecordClick, showEnhancedFeatures = false, onBack }: Hi
               {getRecordIcon(record.type)}
               <div className="flex-1 min-w-0">
                 <div className="font-medium">{getRecordTitle(record)}</div>
-                <div className="text-sm text-gray-500 truncate">
+                <div className="text-sm text-gray-600 truncate">
                   {getRecordSubtitle(record)}
                 </div>
                 {record.note && (
-                  <div className="text-xs text-gray-400 truncate mt-1">
+                  <div className="text-xs text-gray-500 truncate mt-1">
                     {record.note}
                   </div>
                 )}

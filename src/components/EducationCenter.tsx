@@ -104,9 +104,53 @@ const EducationCenter = ({ onBack }: EducationCenterProps) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-lg text-gray-600">加载中...</div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
+        <div className="mb-6">
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            className="text-gray-600 hover:text-gray-800"
+          >
+            <ArrowLeft className="mr-2 h-5 w-5" />
+            返回
+          </Button>
+        </div>
+
+        {/* 骨架屏：模拟分类按钮与文章卡片布局 */}
+        <div
+          role="status"
+          aria-label="加载中"
+          className="max-w-md md:max-w-2xl lg:max-w-3xl mx-auto animate-pulse"
+        >
+          <Card>
+            <CardHeader>
+              <div className="h-8 w-2/3 mx-auto rounded bg-muted" />
+              <div className="h-4 w-1/2 mx-auto mt-3 rounded bg-muted" />
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-20 rounded-md bg-muted" />
+                ))}
+              </div>
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Card key={i}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start space-x-4">
+                        <div className="w-12 h-12 rounded-lg bg-muted flex-shrink-0" />
+                        <div className="flex-1 space-y-3">
+                          <div className="h-5 w-3/4 rounded bg-muted" />
+                          <div className="h-4 w-full rounded bg-muted" />
+                          <div className="h-4 w-1/2 rounded bg-muted" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );

@@ -123,15 +123,15 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-gray-500">邮箱地址</p>
+                <p className="text-sm text-gray-600">邮箱地址</p>
                 <p className="font-medium">{user.email}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">注册时间</p>
+                <p className="text-sm text-gray-600">注册时间</p>
                 <p className="font-medium">{format(new Date(user.created_at), 'yyyy-MM-dd HH:mm')}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">最后更新</p>
+                <p className="text-sm text-gray-600">最后更新</p>
                 <p className="font-medium">{format(new Date(user.updated_at), 'yyyy-MM-dd HH:mm')}</p>
               </div>
             </div>
@@ -295,7 +295,7 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
                                  <p className="text-sm text-gray-700 leading-relaxed">"{checkin.note}"</p>
                                </div>
                              ) : (
-                               <p className="text-xs text-gray-400 italic mt-2">该用户当日未填写感想</p>
+                               <p className="text-xs text-gray-500 italic mt-2">该用户当日未填写感想</p>
                              )}
                              
                              {checkin.photo_url && (
@@ -311,8 +311,8 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
                 ) : (
                   <div className="text-center py-12">
                     <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 text-lg">该用户暂无打卡记录</p>
-                    <p className="text-gray-400 text-sm mt-2">用户开始使用打卡功能后，记录将显示在这里</p>
+                    <p className="text-gray-600 text-lg">该用户暂无打卡记录</p>
+                    <p className="text-gray-500 text-sm mt-2">用户开始使用打卡功能后，记录将显示在这里</p>
                   </div>
                 )}
               </CardContent>
@@ -328,7 +328,7 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
                 {userDetails?.preferences ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-500">性别</p>
+                      <p className="text-sm text-gray-600">性别</p>
                       <p className="font-medium">
                         {userDetails.preferences.gender === 'male' ? '男' : 
                          userDetails.preferences.gender === 'female' ? '女' : 
@@ -337,7 +337,7 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">生日/年龄</p>
+                      <p className="text-sm text-gray-600">生日/年龄</p>
                       <p className="font-medium">
                         {userDetails.preferences.birthday ? (
                           <>
@@ -357,24 +357,24 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">身高</p>
+                      <p className="text-sm text-gray-600">身高</p>
                       <p className="font-medium">{userDetails.preferences.height ? `${userDetails.preferences.height}cm` : '未设置'}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">体重</p>
+                      <p className="text-sm text-gray-600">体重</p>
                       <p className="font-medium">{userDetails.preferences.weight ? `${userDetails.preferences.weight}kg` : '未设置'}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">紧急联系人</p>
+                      <p className="text-sm text-gray-600">紧急联系人</p>
                       <p className="font-medium">{userDetails.preferences.emergency_contact_name || '未设置'}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">紧急联系电话</p>
+                      <p className="text-sm text-gray-600">紧急联系电话</p>
                       <p className="font-medium">{userDetails.preferences.emergency_contact_phone || '未设置'}</p>
                     </div>
                     {userDetails.preferences.medical_history?.length > 0 && (
                       <div className="md:col-span-2">
-                        <p className="text-sm text-gray-500 mb-2">病史</p>
+                        <p className="text-sm text-gray-600 mb-2">病史</p>
                         <div className="flex flex-wrap gap-2">
                           {userDetails.preferences.medical_history.map((history: string, index: number) => (
                             <Badge key={index} variant="secondary">{history}</Badge>
@@ -384,7 +384,7 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
                     )}
                     {userDetails.preferences.allergies?.length > 0 && (
                       <div className="md:col-span-2">
-                        <p className="text-sm text-gray-500 mb-2">过敏史</p>
+                        <p className="text-sm text-gray-600 mb-2">过敏史</p>
                         <div className="flex flex-wrap gap-2">
                           {userDetails.preferences.allergies.map((allergy: string, index: number) => (
                             <Badge key={index} variant="destructive">{allergy}</Badge>
@@ -394,7 +394,7 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
                     )}
                     {userDetails.preferences.family_medical_history?.length > 0 && (
                       <div className="md:col-span-2">
-                        <p className="text-sm text-gray-500 mb-2">家族病史</p>
+                        <p className="text-sm text-gray-600 mb-2">家族病史</p>
                         <div className="flex flex-wrap gap-2">
                           {userDetails.preferences.family_medical_history.map((history: string, index: number) => (
                             <Badge key={index} variant="outline">{history}</Badge>
@@ -404,7 +404,7 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
                     )}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-center py-8">用户尚未设置偏好信息</p>
+                  <p className="text-gray-600 text-center py-8">用户尚未设置偏好信息</p>
                 )}
               </CardContent>
             </Card>
@@ -416,7 +416,7 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
                 <CardTitle>活动日志</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-500 text-center py-8">活动日志功能开发中...</p>
+                <p className="text-gray-600 text-center py-8">活动日志功能开发中...</p>
               </CardContent>
             </Card>
           </TabsContent>

@@ -273,7 +273,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                     <FileAudio className="h-12 w-12 text-gray-500" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-700 mb-2">暂无语音记录</h3>
-                  <p className="text-gray-500">开始录制您的第一条语音记录吧</p>
+                  <p className="text-gray-600">开始录制您的第一条语音记录吧</p>
                 </CardContent>
               </Card>
             ) : (
@@ -308,11 +308,13 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                             variant="outline"
                             size="sm"
                             className="text-violet-600 border-violet-200 hover:bg-violet-50 hover:border-violet-300 transition-all duration-200"
+                            aria-label={playingRecordId === record.id && isPlaying ? '暂停播放' : '播放录音'}
                           >
                             {playingRecordId === record.id && isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                           </Button>
                           <Button
                             onClick={() => downloadHistoryRecord(record)}
+                            aria-label="下载录音"
                             variant="outline"
                             size="sm"
                             className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
@@ -321,6 +323,7 @@ const VoiceRecord = ({ onBack }: VoiceRecordProps) => {
                           </Button>
                           <Button
                             onClick={() => handleDeleteSavedRecord(record)}
+                            aria-label="删除录音"
                             variant="outline"
                             size="sm"
                             className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 transition-all duration-200"

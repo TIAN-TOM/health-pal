@@ -263,7 +263,7 @@ const AnnouncementManagement = () => {
                     </span>
                   </div>
                   <p className="text-gray-600 text-sm mb-2">{announcement.content}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-600">
                     发布时间: {new Date(announcement.created_at).toLocaleString('zh-CN', { 
                       timeZone: 'Asia/Shanghai',
                       year: 'numeric',
@@ -293,6 +293,7 @@ const AnnouncementManagement = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => toggleStatus(announcement.id, announcement.is_active)}
+                    aria-label={announcement.is_active ? '停用公告' : '发布公告'}
                   >
                     {announcement.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
@@ -300,6 +301,7 @@ const AnnouncementManagement = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleEdit(announcement)}
+                    aria-label="编辑公告"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -307,6 +309,7 @@ const AnnouncementManagement = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(announcement.id)}
+                    aria-label="删除公告"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -317,7 +320,7 @@ const AnnouncementManagement = () => {
         ))}
 
         {announcements.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-600">
             暂无公告
           </div>
         )}

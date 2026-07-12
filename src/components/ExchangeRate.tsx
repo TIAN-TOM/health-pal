@@ -269,12 +269,12 @@ const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
                 </div>
               </div>
 
-              <div className="text-center text-sm text-gray-500">
+              <div className="text-center text-sm text-gray-600">
                 {calculatorAmount} {calculatorFrom} = {calculateResult()} {calculatorTo}
               </div>
               
               {allRates.base !== 'USD' && (
-                <div className="text-xs text-gray-400 text-center">
+                <div className="text-xs text-gray-500 text-center">
                   * 通过 {allRates.base} 基准汇率计算
                 </div>
               )}

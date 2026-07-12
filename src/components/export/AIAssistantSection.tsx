@@ -109,7 +109,7 @@ ${exportedData || '请先导出数据，然后复制完整内容'}`;
             </Button>
           </div>
           
-          <p className="text-xs text-gray-500 text-center">
+          <p className="text-xs text-gray-600 text-center">
             1. 先点击"复制AI分析提示词"复制完整分析请求
             <br />
             2. 再点击AI平台链接打开对话界面

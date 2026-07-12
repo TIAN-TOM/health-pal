@@ -187,8 +187,8 @@ const EmergencyContacts = ({ onBack }: EmergencyContactsProps) => {
             <Card>
               <CardContent className="p-6 text-center">
                 <Phone className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">还没有添加紧急联系人</p>
-                <p className="text-sm text-gray-400 mt-2">点击右上角的"添加"按钮来添加联系人</p>
+                <p className="text-gray-600">还没有添加紧急联系人</p>
+                <p className="text-sm text-gray-500 mt-2">点击右上角的"添加"按钮来添加联系人</p>
               </CardContent>
             </Card>
           ) : (
@@ -207,6 +207,7 @@ const EmergencyContacts = ({ onBack }: EmergencyContactsProps) => {
                       <Button
                         size="sm"
                         onClick={() => callContact(contact.phone)}
+                        aria-label="拨打电话"
                         className="bg-green-600 hover:bg-green-700"
                       >
                         <Phone className="h-4 w-4" />
@@ -215,6 +216,7 @@ const EmergencyContacts = ({ onBack }: EmergencyContactsProps) => {
                         size="sm"
                         variant="outline"
                         onClick={() => handleEdit(contact)}
+                        aria-label="编辑联系人"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -222,6 +224,7 @@ const EmergencyContacts = ({ onBack }: EmergencyContactsProps) => {
                         size="sm"
                         variant="destructive"
                         onClick={() => handleDelete(contact.id)}
+                        aria-label="删除联系人"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

@@ -69,6 +69,7 @@ const AnnouncementDisplay = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => dismissAnnouncement(announcement.id)}
+                aria-label="关闭公告"
                 className="ml-2"
               >
                 <X className="h-4 w-4" />

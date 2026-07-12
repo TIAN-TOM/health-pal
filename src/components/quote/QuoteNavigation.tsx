@@ -24,18 +24,20 @@ const QuoteNavigation = ({
         variant="ghost"
         size="sm"
         onClick={onPrevious}
+        aria-label="上一条名言"
         className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-100"
         disabled={isAnimating}
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
-      <span className="text-xs text-gray-500">
+      <span className="text-xs text-gray-600">
         {currentIndex + 1}/{totalQuotes}
       </span>
       <Button
         variant="ghost"
         size="sm"
         onClick={onNext}
+        aria-label="下一条名言"
         className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-100"
         disabled={isAnimating}
       >

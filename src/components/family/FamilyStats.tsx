@@ -159,7 +159,7 @@ const FamilyStats = ({ onBack }: FamilyStatsProps) => {
                           <span className="text-sm font-medium">{category.category}</span>
                           <div className="text-right">
                             <div className="text-sm font-bold">{formatCurrency(category.amount)}</div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-600">
                               {formatPercentage(category.amount, expenseStats.totalThisMonth)}
                             </div>
                           </div>

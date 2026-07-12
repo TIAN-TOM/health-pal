@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { ClipboardList, Activity, Heart, Mic, Gamepad2, Wind, Home, DollarSign, BookOpen } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { prefetchPage } from '@/lib/prefetchPages';
 
 interface FunctionCardsProps {
@@ -79,21 +78,22 @@ const FunctionCards = ({ onNavigate }: FunctionCardsProps) => {
   return (
     <>
       {functions.map(func => (
-        <Card 
-          key={func.id} 
-          className="hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:scale-105 h-full" 
+        <button
+          key={func.id}
+          type="button"
+          aria-label={func.title}
+          className="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:scale-105 h-full min-h-[110px] p-3 text-center flex flex-col items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           onClick={() => onNavigate(func.id, 'home')}
           onPointerDown={() => prefetchPage(func.id)}
           onMouseEnter={() => prefetchPage(func.id)}
+          onFocus={() => prefetchPage(func.id)}
         >
-          <CardContent className="p-3 text-center flex flex-col items-center justify-center h-full min-h-[110px]">
-            <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${func.color} flex items-center justify-center mx-auto mb-2`}>
-              <func.icon className="h-6 w-6 text-white" />
-            </div>
-            <h3 className={`font-medium ${func.textColor} mb-1 text-sm`}>{func.title}</h3>
-            <p className="text-xs text-gray-600">{func.description}</p>
-          </CardContent>
-        </Card>
+          <span className={`w-12 h-12 rounded-full bg-gradient-to-r ${func.color} flex items-center justify-center mb-2`}>
+            <func.icon className="h-6 w-6 text-white" />
+          </span>
+          <span className={`font-medium ${func.textColor} mb-1 text-sm`}>{func.title}</span>
+          <span className="text-sm text-gray-600">{func.description}</span>
+        </button>
       ))}
     </>
   );

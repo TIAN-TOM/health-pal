@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -29,8 +29,6 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
   const [userPoints, setUserPoints] = useState<UserPoints | null>(null);
   const [earnedPoints, setEarnedPoints] = useState<{ points: number; streak: number } | null>(null);
   const [showRecordDialog, setShowRecordDialog] = useState(false);
-  const [countdown, setCountdown] = useState(6);
-  const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const { userRole } = useAuth();
   const queryClient = useQueryClient();
@@ -71,31 +69,8 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
           : "今日打卡已完成，继续保持好习惯！",
       });
 
-      // 打卡成功后显示记录询问弹窗
+      // 打卡成功后显示记录询问弹窗，等待用户自行选择，不自动跳转
       setShowRecordDialog(true);
-      setCountdown(6);
-      
-      // 开始倒计时
-      countdownRef.current = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            // 倒计时结束，自动选择"去记录"
-            if (countdownRef.current) {
-              clearInterval(countdownRef.current);
-            }
-            setShowRecordDialog(false);
-            // 确保导航到记录页面 - 使用setTimeout确保状态更新完成后再跳转
-            setTimeout(() => {
-              console.log('倒计时结束，跳转到记录页面');
-              if (onNavigateToRecords) {
-                onNavigateToRecords();
-              }
-            }, 100);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
     } catch (error: any) {
       toast({
         title: "打卡失败",
@@ -129,13 +104,6 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
     if (streak >= 7) return { emoji: '🔥', text: '一周连击！', color: 'text-orange-600' };
     if (streak >= 3) return { emoji: '⭐', text: '连续打卡', color: 'text-blue-600' };
     return null;
-  };
-
-  const handleDialogClose = (open: boolean) => {
-    if (!open && countdownRef.current) {
-      clearInterval(countdownRef.current);
-    }
-    setShowRecordDialog(open);
   };
 
   const handleCancelCheckin = async () => {
@@ -239,17 +207,27 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
                   <span className="text-2xl">{getMoodEmoji(moodScore)}</span>
                   <span className="font-medium">{getMoodText(moodScore)}</span>
                 </div>
-                <div className="flex items-center justify-center space-x-2">
-                  <span className="text-sm text-gray-500">1</span>
-                  <input
-                    type="range"
-                    min="1"
-                    max="5"
-                    value={moodScore}
-                    onChange={(e) => setMoodScore(Number(e.target.value))}
-                    className="w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  />
-                  <span className="text-sm text-gray-500">5</span>
+                <div className="flex justify-center gap-2" role="group" aria-label="心情评分">
+                  {[1, 2, 3, 4, 5].map((score) => {
+                    const selected = moodScore === score;
+                    return (
+                      <button
+                        key={score}
+                        type="button"
+                        onClick={() => setMoodScore(score)}
+                        aria-label={`心情 ${score} 分`}
+                        aria-pressed={selected}
+                        className={`flex min-h-[44px] min-w-[44px] flex-col items-center justify-center rounded-lg border-2 px-2 py-1 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+                          selected
+                            ? 'scale-110 border-blue-600 bg-blue-50 ring-2 ring-blue-600'
+                            : 'border-gray-200 bg-white'
+                        }`}
+                      >
+                        <span className="text-2xl" aria-hidden="true">{getMoodEmoji(score)}</span>
+                        <span className={selected ? 'text-sm font-bold text-blue-700' : 'text-sm text-gray-600'}>{score}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -298,8 +276,8 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
       {/* 积分商城 */}
       <PointsStore />
 
-      {/* 记录询问弹窗 */}
-      <Dialog open={showRecordDialog} onOpenChange={handleDialogClose}>
+      {/* 记录询问弹窗：停留至用户自行选择，不自动跳转 */}
+      <Dialog open={showRecordDialog} onOpenChange={setShowRecordDialog}>
         <DialogContent className="w-[95vw] max-w-sm mx-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center text-center">
@@ -311,30 +289,22 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                if (countdownRef.current) {
-                  clearInterval(countdownRef.current);
-                }
-                setShowRecordDialog(false);
-              }}
-              className="w-full sm:w-auto"
+            <Button
+              variant="outline"
+              onClick={() => setShowRecordDialog(false)}
+              className="w-full min-h-[48px] sm:w-auto"
             >
               暂不记录
             </Button>
-            <Button 
+            <Button
               onClick={() => {
-                if (countdownRef.current) {
-                  clearInterval(countdownRef.current);
-                }
                 setShowRecordDialog(false);
                 onNavigateToRecords?.();
               }}
-              className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
+              className="bg-green-600 hover:bg-green-700 w-full min-h-[48px] sm:w-auto"
             >
               <Activity className="h-4 w-4 mr-2" />
-              去记录 {countdown > 0 && `(${countdown}s)`}
+              去记录
             </Button>
           </DialogFooter>
         </DialogContent>

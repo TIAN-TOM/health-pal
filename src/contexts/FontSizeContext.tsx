@@ -1,6 +1,11 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
-export type FontSize = 'standard' | 'large' | 'xlarge';
+const FONT_SIZES = ['standard', 'large', 'xlarge', 'xxlarge'] as const;
+
+export type FontSize = (typeof FONT_SIZES)[number];
+
+const isFontSize = (v: string | null): v is FontSize =>
+  v !== null && (FONT_SIZES as readonly string[]).includes(v);
 
 interface FontSizeContextValue {
   fontSize: FontSize;
@@ -18,6 +23,7 @@ const apply = (s: FontSize) => {
     standard: '16px',
     large: '18px',
     xlarge: '20px',
+    xxlarge: '24px',
   };
   root.style.fontSize = pxMap[s];
 };
@@ -25,7 +31,13 @@ const apply = (s: FontSize) => {
 export const FontSizeProvider = ({ children }: { children: React.ReactNode }) => {
   const [fontSize, setFontSizeState] = useState<FontSize>(() => {
     if (typeof window === 'undefined') return 'standard';
-    return ((localStorage.getItem(STORAGE_KEY) as FontSize) || 'standard');
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      // 未知或过期的存储值一律回退到标准字号，避免渲染异常
+      return isFontSize(stored) ? stored : 'standard';
+    } catch {
+      return 'standard';
+    }
   });
 
   useEffect(() => {

@@ -40,7 +40,7 @@ const QuickExportSection = ({ loading, copiedFormat, onExport }: QuickExportSect
                 <option.icon className="h-4 w-4 mr-3" />
                 <div className="text-left flex-1">
                   <div className="font-medium">{option.label}</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-600">
                     整理为易读格式
                   </div>
                 </div>

@@ -284,6 +284,7 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
                         size="sm"
                         variant="ghost"
                         onClick={() => handleToggleComplete(reminder.id, !reminder.is_completed)}
+                        aria-label={reminder.is_completed ? '标记为未完成' : '标记为已完成'}
                         className={reminder.is_completed ? 'text-green-600' : 'text-gray-400'}
                       >
                         <CheckCircle className="h-4 w-4" />
@@ -318,6 +319,7 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
                       size="sm"
                       variant="ghost"
                       onClick={() => handleEdit(reminder)}
+                      aria-label="编辑提醒"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -325,6 +327,7 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
                       size="sm"
                       variant="ghost"
                       onClick={() => handleDelete(reminder.id)}
+                      aria-label="删除提醒"
                       className="text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -335,7 +338,7 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
             </Card>
           ))}
           {reminders.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-600">
               暂无提醒
             </div>
           )}

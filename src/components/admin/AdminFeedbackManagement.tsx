@@ -182,7 +182,7 @@ const AdminFeedbackManagement = () => {
           <CardContent className="p-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-              <div className="text-sm text-gray-500">总反馈数</div>
+              <div className="text-sm text-gray-600">总反馈数</div>
             </div>
           </CardContent>
         </Card>
@@ -190,7 +190,7 @@ const AdminFeedbackManagement = () => {
           <CardContent className="p-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">{stats.pending}</div>
-              <div className="text-sm text-gray-500">待处理</div>
+              <div className="text-sm text-gray-600">待处理</div>
             </div>
           </CardContent>
         </Card>
@@ -198,7 +198,7 @@ const AdminFeedbackManagement = () => {
           <CardContent className="p-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">{stats.inProgress}</div>
-              <div className="text-sm text-gray-500">处理中</div>
+              <div className="text-sm text-gray-600">处理中</div>
             </div>
           </CardContent>
         </Card>
@@ -206,7 +206,7 @@ const AdminFeedbackManagement = () => {
           <CardContent className="p-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">{stats.resolved}</div>
-              <div className="text-sm text-gray-500">已解决</div>
+              <div className="text-sm text-gray-600">已解决</div>
             </div>
           </CardContent>
         </Card>
@@ -255,10 +255,10 @@ const AdminFeedbackManagement = () => {
           {loading ? (
             <div className="text-center py-8">
               <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-              <p className="text-gray-500">加载中...</p>
+              <p className="text-gray-600">加载中...</p>
             </div>
           ) : filteredFeedback.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-600">
               暂无符合条件的反馈
             </div>
           ) : (
@@ -281,7 +281,7 @@ const AdminFeedbackManagement = () => {
                       </div>
                       <h3 className="font-medium text-gray-900">{feedback.title}</h3>
                       <p className="text-sm text-gray-600">{feedback.content}</p>
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <div className="flex items-center gap-4 text-xs text-gray-600">
                         <span>
                           用户: {feedback.profiles?.full_name || feedback.profiles?.email || '未知用户'}
                         </span>

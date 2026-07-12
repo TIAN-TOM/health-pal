@@ -162,7 +162,7 @@ const CountdownManagement = () => {
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <p className="text-gray-500">加载中...</p>
+          <p className="text-gray-600">加载中...</p>
         </CardContent>
       </Card>
     );
@@ -185,7 +185,7 @@ const CountdownManagement = () => {
         </CardHeader>
         <CardContent>
           {countdowns.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-600">
               <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
               <p>暂无倒数日</p>
               <p className="text-sm mt-2">点击"添加倒数日"创建第一个倒数日</p>
@@ -210,7 +210,7 @@ const CountdownManagement = () => {
                       目标日期: {formatDate(countdown.target_date)}
                     </p>
                     {countdown.description && (
-                      <p className="text-sm text-gray-500">{countdown.description}</p>
+                      <p className="text-sm text-gray-600">{countdown.description}</p>
                     )}
                   </div>
                   <div className="flex gap-2 ml-4">
@@ -218,6 +218,7 @@ const CountdownManagement = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleOpenDialog(countdown)}
+                      aria-label="编辑倒计时"
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
@@ -225,6 +226,7 @@ const CountdownManagement = () => {
                       size="sm"
                       variant="destructive"
                       onClick={() => handleDelete(countdown.id)}
+                      aria-label="删除倒计时"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -291,7 +293,7 @@ const CountdownManagement = () => {
                 onChange={(e) => setFormData({ ...formData, background_image: e.target.value })}
                 placeholder="https://..."
               />
-              <p className="text-xs text-gray-500">输入图片URL以设置自定义背景</p>
+              <p className="text-xs text-gray-600">输入图片URL以设置自定义背景</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">描述（可选）</Label>

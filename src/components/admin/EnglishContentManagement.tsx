@@ -415,7 +415,7 @@ const EnglishContentManagement = () => {
                         <div className="flex-1">
                           <p className="font-medium">{quote.quote_text}</p>
                           <p className="text-sm text-gray-600">{quote.quote_translation}</p>
-                          <p className="text-xs text-gray-500">— {quote.author}</p>
+                          <p className="text-xs text-gray-600">— {quote.author}</p>
                         </div>
                         <div className="flex gap-2">
                           <Button
@@ -425,6 +425,7 @@ const EnglishContentManagement = () => {
                               setEditingItem(quote.id);
                               setEditForm(quote);
                             }}
+                            aria-label="编辑名言"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -432,6 +433,7 @@ const EnglishContentManagement = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDeleteQuote(quote.id)}
+                            aria-label="删除名言"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -466,9 +468,9 @@ const EnglishContentManagement = () => {
                     ) : (
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <p className="font-medium">{word.word} <span className="text-sm text-gray-500">{word.pronunciation}</span></p>
+                          <p className="font-medium">{word.word} <span className="text-sm text-gray-600">{word.pronunciation}</span></p>
                           <p className="text-sm text-gray-600">{word.meaning}</p>
-                          <p className="text-xs text-gray-500">{word.example_sentence}</p>
+                          <p className="text-xs text-gray-600">{word.example_sentence}</p>
                         </div>
                         <div className="flex gap-2">
                           <Button
@@ -478,6 +480,7 @@ const EnglishContentManagement = () => {
                               setEditingItem(word.id);
                               setEditForm(word);
                             }}
+                            aria-label="编辑单词"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -485,6 +488,7 @@ const EnglishContentManagement = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDeleteWord(word.id)}
+                            aria-label="删除单词"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -521,7 +525,7 @@ const EnglishContentManagement = () => {
                         <div className="flex-1">
                           <p className="font-medium">{phrase.phrase_english}</p>
                           <p className="text-sm text-gray-600">{phrase.phrase_chinese}</p>
-                          <p className="text-xs text-gray-500">{phrase.meaning_explanation}</p>
+                          <p className="text-xs text-gray-600">{phrase.meaning_explanation}</p>
                         </div>
                         <div className="flex gap-2">
                           <Button
@@ -531,6 +535,7 @@ const EnglishContentManagement = () => {
                               setEditingItem(phrase.id);
                               setEditForm(phrase);
                             }}
+                            aria-label="编辑短语"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -538,6 +543,7 @@ const EnglishContentManagement = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDeletePhrase(phrase.id)}
+                            aria-label="删除短语"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -574,7 +580,7 @@ const EnglishContentManagement = () => {
                         <div className="flex-1">
                           <p className="font-medium">{item.title}</p>
                           <p className="text-sm text-gray-600 mt-1">{item.content.substring(0, 100)}...</p>
-                          <p className="text-xs text-gray-500 mt-1">主题: {item.topic || '通用'}</p>
+                          <p className="text-xs text-gray-600 mt-1">主题: {item.topic || '通用'}</p>
                         </div>
                         <div className="flex gap-2">
                           <Button
@@ -584,6 +590,7 @@ const EnglishContentManagement = () => {
                               setEditingItem(item.id);
                               setEditForm(item);
                             }}
+                            aria-label="编辑听力内容"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -591,6 +598,7 @@ const EnglishContentManagement = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDeleteListening(item.id)}
+                            aria-label="删除听力内容"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

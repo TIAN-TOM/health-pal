@@ -1024,25 +1024,25 @@ const BomberPopGame = ({ onBack, soundEnabled }: BomberPopGameProps) => {
             <div className="flex items-center justify-between gap-4">
               <div className="grid grid-cols-3 gap-1">
                 <div />
-                <Button variant="outline" size="icon"
+                <Button variant="outline" size="icon" aria-label="向上移动"
                   onTouchStart={(e) => { e.preventDefault(); heldKeyRef.current = 'up'; }}
                   onTouchEnd={() => { heldKeyRef.current = null; }}>
                   <ArrowUp className="h-5 w-5" />
                 </Button>
                 <div />
-                <Button variant="outline" size="icon"
+                <Button variant="outline" size="icon" aria-label="向左移动"
                   onTouchStart={(e) => { e.preventDefault(); heldKeyRef.current = 'left'; }}
                   onTouchEnd={() => { heldKeyRef.current = null; }}>
                   <ArrowLeftIcon className="h-5 w-5" />
                 </Button>
                 <div />
-                <Button variant="outline" size="icon"
+                <Button variant="outline" size="icon" aria-label="向右移动"
                   onTouchStart={(e) => { e.preventDefault(); heldKeyRef.current = 'right'; }}
                   onTouchEnd={() => { heldKeyRef.current = null; }}>
                   <ArrowRightIcon className="h-5 w-5" />
                 </Button>
                 <div />
-                <Button variant="outline" size="icon"
+                <Button variant="outline" size="icon" aria-label="向下移动"
                   onTouchStart={(e) => { e.preventDefault(); heldKeyRef.current = 'down'; }}
                   onTouchEnd={() => { heldKeyRef.current = null; }}>
                   <ArrowDown className="h-5 w-5" />
@@ -1052,13 +1052,13 @@ const BomberPopGame = ({ onBack, soundEnabled }: BomberPopGameProps) => {
               <div className="flex flex-col gap-2">
                 <Button size="lg"
                   className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg"
-                  onClick={placeBomb}>
+                  onClick={placeBomb} aria-label="放置炸弹">
                   <Bomb className="h-7 w-7" />
                 </Button>
                 {isRemote && (
                   <Button size="lg"
                     className="h-12 w-16 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-lg"
-                    onClick={detonateRemote}>
+                    onClick={detonateRemote} aria-label="引爆遥控炸弹">
                     <Radio className="h-5 w-5" />
                   </Button>
                 )}

@@ -11,7 +11,7 @@ const UserInfo = ({ userEmail, userRole }: UserInfoProps) => {
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="text-center text-sm text-gray-500">
+        <div className="text-center text-sm text-gray-600">
           <p>当前用户: {userEmail}</p>
           <p className="mt-1">角色: {userRole === 'admin' ? '管理员' : '普通用户'}</p>
         </div>

@@ -18,6 +18,19 @@ const BannerSkeleton = () => (
     <span className="text-xs font-medium">天气加载中...</span>
   </div>
 );
+
+// 懒加载组件的占位骨架：固定高度避免组件加载完成时页面跳动
+// bg-gray-100 在 index.css 中已有暗色模式兜底映射
+const WidgetSkeleton = ({ heightClass }: { heightClass: string }) => (
+  <div className={`${heightClass} w-full rounded-lg animate-pulse bg-gray-100`} aria-hidden="true" />
+);
+
+const NavigationActionsSkeleton = () => (
+  <div className="space-y-4" aria-hidden="true">
+    <div className="min-h-[64px] w-full rounded-lg animate-pulse bg-gray-100" />
+    <div className="min-h-[64px] w-full rounded-lg animate-pulse bg-gray-100" />
+  </div>
+);
 interface HomePageProps {
   userDisplayName: string;
   onSettingsClick: () => void;
@@ -45,15 +58,15 @@ const HomePage = ({
         <UserWelcomeWithClock userDisplayName={userDisplayName} onSettingsClick={onSettingsClick} onEmergencyClick={onEmergencyClick} />
         
        
-        <Suspense fallback={null}>
+        <Suspense fallback={<WidgetSkeleton heightClass="h-16" />}>
           <WeatherAlertBanner />
         </Suspense>
 
-        <Suspense fallback={null}>
+        <Suspense fallback={<WidgetSkeleton heightClass="h-16" />}>
           <WeeklyReportCard />
         </Suspense>
 
-        <Suspense fallback={null}>
+        <Suspense fallback={<WidgetSkeleton heightClass="h-24" />}>
           <AnnouncementDisplay />
         </Suspense>
         
@@ -80,7 +93,7 @@ const HomePage = ({
           </Button>
         </div>
         
-        <Suspense fallback={null}>
+        <Suspense fallback={<NavigationActionsSkeleton />}>
           <NavigationActions onDataExport={() => onNavigate("export")} onDailyData={() => onNavigate("daily-data")} />
         </Suspense>
         

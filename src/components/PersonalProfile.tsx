@@ -175,7 +175,7 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
                   disabled
                   className="bg-gray-100"
                 />
-                <p className="text-xs text-gray-500 mt-1">邮箱地址不可修改</p>
+                <p className="text-xs text-gray-600 mt-1">邮箱地址不可修改</p>
               </div>
               
               <div>
@@ -200,7 +200,7 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
                     onChange={(e) => handleFieldChange('birthday', e.target.value)}
                   />
                   {calculatedAge !== null && (
-                    <p className="text-xs text-gray-500 mt-1">年龄：{calculatedAge}岁</p>
+                    <p className="text-xs text-gray-600 mt-1">年龄：{calculatedAge}岁</p>
                   )}
                 </div>
                 
