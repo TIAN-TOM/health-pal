@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { RotateCcw, Trophy, Clock, Zap, Eye, Shuffle, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -37,6 +37,75 @@ interface CardTheme {
     hard: string[];
   };
 }
+
+const cardThemes: CardTheme[] = [
+  {
+    id: 'animals',
+    name: '可爱动物',
+    description: '萌萌的小动物们',
+    cards: {
+      easy: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊'],
+      medium: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐼', '🐨', '🐸', '🐵'],
+      hard: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐼', '🐨', '🐸', '🐵', '🦁', '🐯', '🐷', '🐮', '🐺', '🦝']
+    }
+  },
+  {
+    id: 'fruits',
+    name: '新鲜水果',
+    description: '营养美味的水果',
+    cards: {
+      easy: ['🍎', '🍌', '🍊', '🍇', '🍓', '🥝'],
+      medium: ['🍎', '🍌', '🍊', '🍇', '🍓', '🥝', '🍑', '🍒', '🥭', '🍍'],
+      hard: ['🍎', '🍌', '🍊', '🍇', '🍓', '🥝', '🍑', '🍒', '🥭', '🍍', '🥑', '🍈', '🍉', '🫐', '🥥', '🍋']
+    }
+  },
+  {
+    id: 'nature',
+    name: '自然风光',
+    description: '美丽的自然景象',
+    cards: {
+      easy: ['🌸', '🌺', '🌻', '🌷', '🌹', '🌼'],
+      medium: ['🌸', '🌺', '🌻', '🌷', '🌹', '🌼', '🌿', '🍀', '🌳', '🌲'],
+      hard: ['🌸', '🌺', '🌻', '🌷', '🌹', '🌼', '🌿', '🍀', '🌳', '🌲', '⭐', '🌙', '☀️', '🌈', '⚡', '❄️']
+    }
+  },
+  {
+    id: 'food',
+    name: '美味食物',
+    description: '令人垂涎的美食',
+    cards: {
+      easy: ['🍕', '🍔', '🌮', '🍝', '🍜', '🍱'],
+      medium: ['🍕', '🍔', '🌮', '🍝', '🍜', '🍱', '🍰', '🍪', '🍩', '🧁'],
+      hard: ['🍕', '🍔', '🌮', '🍝', '🍜', '🍱', '🍰', '🍪', '🍩', '🧁', '🍦', '🍧', '🥐', '🥞', '🧀', '🥨']
+    }
+  },
+  {
+    id: 'sports',
+    name: '运动器材',
+    description: '各种运动用品',
+    cards: {
+      easy: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐'],
+      medium: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏓', '🏸', '🥎', '🏑'],
+      hard: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏓', '🏸', '🥎', '🏑', '🥍', '🏒', '🏹', '⛳', '🥊', '🥋']
+    }
+  },
+  {
+    id: 'music',
+    name: '音乐艺术',
+    description: '美妙的音乐世界',
+    cards: {
+      easy: ['🎵', '🎶', '🎼', '🎹', '🎸', '🥁'],
+      medium: ['🎵', '🎶', '🎼', '🎹', '🎸', '🥁', '🎺', '🎷', '🎻', '🪕'],
+      hard: ['🎵', '🎶', '🎼', '🎹', '🎸', '🥁', '🎺', '🎷', '🎻', '🪕', '🎯', '🎪', '🎭', '🎨', '🖼️', '🎬']
+    }
+  }
+];
+
+const gridSizes = {
+  easy: { pairs: 6, cols: 4 },
+  medium: { pairs: 10, cols: 5 },
+  hard: { pairs: 16, cols: 8 }
+};
 
 const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
   const [cards, setCards] = useState<GameCard[]>([]);
@@ -85,77 +154,8 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
 
-  const cardThemes: CardTheme[] = [
-    {
-      id: 'animals',
-      name: '可爱动物',
-      description: '萌萌的小动物们',
-      cards: {
-        easy: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊'],
-        medium: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐼', '🐨', '🐸', '🐵'],
-        hard: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐼', '🐨', '🐸', '🐵', '🦁', '🐯', '🐷', '🐮', '🐺', '🦝']
-      }
-    },
-    {
-      id: 'fruits',
-      name: '新鲜水果',
-      description: '营养美味的水果',
-      cards: {
-        easy: ['🍎', '🍌', '🍊', '🍇', '🍓', '🥝'],
-        medium: ['🍎', '🍌', '🍊', '🍇', '🍓', '🥝', '🍑', '🍒', '🥭', '🍍'],
-        hard: ['🍎', '🍌', '🍊', '🍇', '🍓', '🥝', '🍑', '🍒', '🥭', '🍍', '🥑', '🍈', '🍉', '🫐', '🥥', '🍋']
-      }
-    },
-    {
-      id: 'nature',
-      name: '自然风光',
-      description: '美丽的自然景象',
-      cards: {
-        easy: ['🌸', '🌺', '🌻', '🌷', '🌹', '🌼'],
-        medium: ['🌸', '🌺', '🌻', '🌷', '🌹', '🌼', '🌿', '🍀', '🌳', '🌲'],
-        hard: ['🌸', '🌺', '🌻', '🌷', '🌹', '🌼', '🌿', '🍀', '🌳', '🌲', '⭐', '🌙', '☀️', '🌈', '⚡', '❄️']
-      }
-    },
-    {
-      id: 'food',
-      name: '美味食物',
-      description: '令人垂涎的美食',
-      cards: {
-        easy: ['🍕', '🍔', '🌮', '🍝', '🍜', '🍱'],
-        medium: ['🍕', '🍔', '🌮', '🍝', '🍜', '🍱', '🍰', '🍪', '🍩', '🧁'],
-        hard: ['🍕', '🍔', '🌮', '🍝', '🍜', '🍱', '🍰', '🍪', '🍩', '🧁', '🍦', '🍧', '🥐', '🥞', '🧀', '🥨']
-      }
-    },
-    {
-      id: 'sports',
-      name: '运动器材',
-      description: '各种运动用品',
-      cards: {
-        easy: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐'],
-        medium: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏓', '🏸', '🥎', '🏑'],
-        hard: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏓', '🏸', '🥎', '🏑', '🥍', '🏒', '🏹', '⛳', '🥊', '🥋']
-      }
-    },
-    {
-      id: 'music',
-      name: '音乐艺术',
-      description: '美妙的音乐世界',
-      cards: {
-        easy: ['🎵', '🎶', '🎼', '🎹', '🎸', '🥁'],
-        medium: ['🎵', '🎶', '🎼', '🎹', '🎸', '🥁', '🎺', '🎷', '🎻', '🪕'],
-        hard: ['🎵', '🎶', '🎼', '🎹', '🎸', '🥁', '🎺', '🎷', '🎻', '🪕', '🎯', '🎪', '🎭', '🎨', '🖼️', '🎬']
-      }
-    }
-  ];
-
-  const gridSizes = {
-    easy: { pairs: 6, cols: 4 },
-    medium: { pairs: 10, cols: 5 },
-    hard: { pairs: 16, cols: 8 }
-  };
-
   // 播放音效
-  const playSound = (type: 'flip' | 'match' | 'complete' | 'combo' | 'powerup') => {
+  const playSound = useCallback((type: 'flip' | 'match' | 'complete' | 'combo' | 'powerup') => {
     if (!soundEnabled) return;
     
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -199,10 +199,10 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
     
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + duration);
-  };
+  }, [soundEnabled]);
 
   // 初始化游戏
-  const initializeGame = () => {
+  const initializeGame = useCallback(() => {
     const { pairs } = gridSizes[difficulty];
     const currentTheme = cardThemes.find(theme => theme.id === selectedTheme);
     const selectedEmojis = currentTheme?.cards[difficulty].slice(0, pairs) || [];
@@ -234,7 +234,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
       ...powerUp,
       currentCooldown: 0
     })));
-  };
+  }, [difficulty, selectedTheme]);
 
   const activatePowerUp = (powerUpId: string) => {
     const powerUp = powerUps.find(p => p.id === powerUpId);
@@ -351,7 +351,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
       
       playSound('complete');
     }
-  }, [matches, difficulty, isGameActive, gameTime, moves, maxCombo]);
+  }, [matches, difficulty, isGameActive, gameTime, moves, maxCombo, playSound]);
 
   const handleCardClick = (cardId: number) => {
     if (!isGameActive || isGameComplete) {
@@ -440,7 +440,7 @@ const MemoryCardGame = ({ onBack, soundEnabled }: MemoryCardGameProps) => {
 
   useEffect(() => {
     initializeGame();
-  }, [difficulty, selectedTheme]);
+  }, [initializeGame]);
 
   const { cols } = gridSizes[difficulty];
   const currentTheme = cardThemes.find(theme => theme.id === selectedTheme);

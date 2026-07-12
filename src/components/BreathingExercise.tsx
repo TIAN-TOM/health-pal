@@ -1,14 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ArrowLeft, Play, Pause, RotateCcw, Heart, Wind, Info, CheckCircle, Timer, Settings, Star, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { getNextBreathingPhase } from '@/lib/breathing';
 
 interface BreathingExerciseProps {
   onBack: () => void;
 }
+
+const patterns = {
+  '4-4-4-4': {
+    inhale: 4, hold1: 4, exhale: 4, hold2: 4,
+    name: '平衡呼吸法',
+    description: '四四拍呼吸法，有助于平衡自律神经系统，适合日常减压和放松'
+  },
+  '4-7-8-0': {
+    inhale: 4, hold1: 7, exhale: 8, hold2: 0,
+    name: '4-7-8 放松法',
+    description: '由安德鲁·韦尔博士推广的经典呼吸法，特别有效于快速入睡和深度放松'
+  },
+  '6-0-6-0': {
+    inhale: 6, hold1: 0, exhale: 6, hold2: 0,
+    name: '深度呼吸法',
+    description: '简单的深呼吸练习，增加肺活量，改善血氧含量，适合初学者'
+  }
+};
 
 const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
   const [isActive, setIsActive] = useState(false);
@@ -28,25 +47,14 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
   const progressRef = useRef<number>(0);
   const { toast } = useToast();
 
-  const patterns = {
-    '4-4-4-4': { 
-      inhale: 4, hold1: 4, exhale: 4, hold2: 4, 
-      name: '平衡呼吸法',
-      description: '四四拍呼吸法，有助于平衡自律神经系统，适合日常减压和放松'
-    },
-    '4-7-8-0': { 
-      inhale: 4, hold1: 7, exhale: 8, hold2: 0, 
-      name: '4-7-8 放松法',
-      description: '由安德鲁·韦尔博士推广的经典呼吸法，特别有效于快速入睡和深度放松'
-    },
-    '6-0-6-0': { 
-      inhale: 6, hold1: 0, exhale: 6, hold2: 0, 
-      name: '深度呼吸法',
-      description: '简单的深呼吸练习，增加肺活量，改善血氧含量，适合初学者'
-    }
-  };
-
   const currentPattern = patterns[breathingPattern as keyof typeof patterns];
+
+  // Latest countdown for the rAF loop: the self-scheduling draw closure would
+  // otherwise keep the value from when the effect last ran.
+  const countdownRef = useRef(countdown);
+  useEffect(() => {
+    countdownRef.current = countdown;
+  }, [countdown]);
 
   const startSession = () => {
     setIsActive(true);
@@ -87,7 +95,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
   };
 
   // 绘制更流畅的呼吸动画
-  const drawBreathingAnimation = () => {
+  const drawBreathingAnimation = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
@@ -103,7 +111,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
     const totalTime = currentPattern[phase];
     let targetProgress = 0;
     if (totalTime > 0) {
-      targetProgress = (totalTime - countdown) / totalTime;
+      targetProgress = (totalTime - countdownRef.current) / totalTime;
     }
     
     // 使用缓动函数让动画更自然
@@ -212,38 +220,25 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
     ctx.stroke();
 
     animationRef.current = requestAnimationFrame(drawBreathingAnimation);
-  };
+  }, [phase, currentPattern]);
 
   useEffect(() => {
     if (isActive) {
       drawBreathingAnimation();
-      
+
+      // 每次相位切换该 effect 都会重建 interval，闭包里的 phase 始终是当前相位
       intervalRef.current = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            setPhase(currentPhase => {
-              const phases: Array<'inhale' | 'hold1' | 'exhale' | 'hold2'> = ['inhale', 'hold1', 'exhale', 'hold2'];
-              const currentIndex = phases.indexOf(currentPhase);
-              let nextIndex = (currentIndex + 1) % phases.length;
-              
-              while (currentPattern[phases[nextIndex]] === 0) {
-                nextIndex = (nextIndex + 1) % phases.length;
-              }
-              
-              const nextPhase = phases[nextIndex];
-              
-              if (nextPhase === 'inhale') {
-                setCompletedCycles(cycles => cycles + 1);
-              }
-              
-              return nextPhase;
-            });
-            
-            return currentPattern[phase] || 4;
+        if (countdownRef.current <= 1) {
+          const nextPhase = getNextBreathingPhase(currentPattern, phase);
+          if (nextPhase === 'inhale') {
+            setCompletedCycles(cycles => cycles + 1);
           }
-          return prev - 1;
-        });
-        
+          setPhase(nextPhase);
+          setCountdown(currentPattern[nextPhase]);
+        } else {
+          setCountdown(prev => prev - 1);
+        }
+
         setSessionTime(time => time + 1);
       }, 1000);
     } else {
@@ -259,7 +254,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
       }
       cancelAnimationFrame(animationRef.current);
     };
-  }, [isActive, phase, currentPattern]);
+  }, [isActive, phase, currentPattern, drawBreathingAnimation]);
 
   // 自动结束会话并显示完成提示
   useEffect(() => {
@@ -272,7 +267,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
         description: `恭喜您完成了${sessionDuration}分钟的呼吸冥想，共完成${completedCycles}个呼吸周期`,
       });
     }
-  }, [sessionTime, sessionDuration, completedCycles]);
+  }, [sessionTime, sessionDuration, completedCycles, isActive, toast]);
 
   const getPhaseText = () => {
     switch (phase) {

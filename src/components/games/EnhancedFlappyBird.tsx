@@ -412,13 +412,15 @@ const EnhancedFlappyBird = ({ onBack, soundEnabled = true }: EnhancedFlappyBirdP
   }, [initClouds]);
 
   useEffect(() => {
+    // gameRef.current 从不被整体替换，捕获同一对象引用即可在 cleanup 读到最新 animationId
+    const game = gameRef.current;
     if (gameState === 'playing') {
       gameLoop();
     } else {
-      cancelAnimationFrame(gameRef.current.animationId);
+      cancelAnimationFrame(game.animationId);
     }
 
-    return () => cancelAnimationFrame(gameRef.current.animationId);
+    return () => cancelAnimationFrame(game.animationId);
   }, [gameState, gameLoop]);
 
   useEffect(() => {

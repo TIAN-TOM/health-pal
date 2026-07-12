@@ -71,11 +71,14 @@ export const useGomokuRoom = ({
     gameStateRef.current = gameState;
   }, [gameState]);
 
-  // Sync external room game_state into local state when room changes
+  // Seed local state from the room snapshot ONLY when the room identity
+  // changes: in-game updates arrive via the broadcast channel, and re-syncing
+  // on every game_state change would fight it.
   useEffect(() => {
     if (room?.game_state) {
       setGameState(room.game_state);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room?.id]);
 
   // Realtime in-game channel (presence + broadcast)

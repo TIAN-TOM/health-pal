@@ -41,6 +41,13 @@ const SnakeGame = ({ onBack, soundEnabled }: SnakeGameProps) => {
   const gameLoopRef = useRef<NodeJS.Timeout>();
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  // 道具时效由独立的 100ms interval 递减；moveSnake 只在方向/食物/速度变化时重建，
+  // 读 state 会拿到过期的道具状态（如已过期仍判无敌），所以从 ref 读最新值
+  const powerUpsRef = useRef(powerUps);
+  useEffect(() => {
+    powerUpsRef.current = powerUps;
+  }, [powerUps]);
   const isMobile = useIsMobile();
 
   const generateFood = useCallback((snakeBody: Position[]) => {
@@ -135,7 +142,7 @@ const SnakeGame = ({ onBack, soundEnabled }: SnakeGameProps) => {
       }
 
       // 检查墙壁碰撞
-      const isInvincible = powerUps.some(p => p.type === 'invincible' && p.active);
+      const isInvincible = powerUpsRef.current.some(p => p.type === 'invincible' && p.active);
       if (!isInvincible && (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE)) {
         setGameOver(true);
         setIsPlaying(false);
@@ -168,7 +175,7 @@ const SnakeGame = ({ onBack, soundEnabled }: SnakeGameProps) => {
 
       // 检查是否吃到食物
       if (head.x === food.x && head.y === food.y) {
-        const isDoubleScore = powerUps.some(p => p.type === 'double_score' && p.active);
+        const isDoubleScore = powerUpsRef.current.some(p => p.type === 'double_score' && p.active);
         let points = 10;
         
         // 根据食物类型计算分数
@@ -242,7 +249,7 @@ const SnakeGame = ({ onBack, soundEnabled }: SnakeGameProps) => {
 
       return newSnake;
     });
-  }, [direction, food, gameOver, isPlaying, speed, generateFood]);
+  }, [direction, food, gameOver, isPlaying, speed, generateFood, foodEaten, walls]);
 
   useEffect(() => {
     if (isPlaying && !gameOver) {

@@ -205,7 +205,7 @@ const BreakoutGame = ({ onBack, soundEnabled = true }: BreakoutGameProps) => {
         }
         break;
     }
-  }, []);
+  }, [playSound]);
 
   const handleKeyUp = useCallback((e: KeyboardEvent) => {
     switch (e.key) {
@@ -251,7 +251,7 @@ const BreakoutGame = ({ onBack, soundEnabled = true }: BreakoutGameProps) => {
       });
       playSound(600, 0.1, 'square');
     }
-  }, []);
+  }, [playSound]);
 
   const gameLoop = useCallback(() => {
     if (gameState !== 'playing') return;
@@ -653,13 +653,15 @@ const BreakoutGame = ({ onBack, soundEnabled = true }: BreakoutGameProps) => {
   }, [gameState, initBricks, lives, isMobile, playSound, addParticles]);
 
   useEffect(() => {
+    // gameRef.current 从不被整体替换，捕获同一对象引用即可在 cleanup 读到最新 animationId
+    const game = gameRef.current;
     if (gameState === 'playing') {
       gameLoop();
     } else {
-      cancelAnimationFrame(gameRef.current.animationId);
+      cancelAnimationFrame(game.animationId);
     }
 
-    return () => cancelAnimationFrame(gameRef.current.animationId);
+    return () => cancelAnimationFrame(game.animationId);
   }, [gameState, gameLoop]);
 
   useEffect(() => {

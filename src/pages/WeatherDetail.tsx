@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,6 +54,8 @@ const WeatherDetail = () => {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCity, setSelectedCity] = useState<City>(CITIES[0]);
+  // 切换城市时保留已展示的数据、不闪 loading；只有从未拿到数据才显示加载态
+  const hasWeatherRef = useRef(false);
 
   useEffect(() => {
     if (preferences?.preferred_weather_city) {
@@ -66,14 +68,14 @@ const WeatherDetail = () => {
 
   useEffect(() => {
     const fetchWeather = async () => {
-      // 只在首次加载或没有数据时显示loading
-      if (!weather) {
+      if (!hasWeatherRef.current) {
         setLoading(true);
       }
-      
+
       try {
         const data = await getWeatherData(selectedCity, true);
         setWeather(data);
+        hasWeatherRef.current = true;
       } catch (error) {
         console.error('获取天气失败:', error);
       } finally {
