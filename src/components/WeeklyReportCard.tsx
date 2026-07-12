@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Sparkles, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,62 +21,70 @@ interface Report {
 const WeeklyReportCard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [report, setReport] = useState<Report | null>(null);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState(false);
-  const [checked, setChecked] = useState(false);
 
   const isSunday = new Date().getDay() === 0;
 
-  useEffect(() => {
-    if (!user) return;
-    (async () => {
-      const { data } = await supabase
+  const reportQueryKey = ['weekly-report', user?.id] as const;
+
+  const { data: report, isPending } = useQuery({
+    queryKey: reportQueryKey,
+    queryFn: async (): Promise<Report | null> => {
+      if (!user) return null;
+      const { data, error } = await supabase
         .from('ai_weekly_reports')
         .select('*')
         .eq('user_id', user.id)
         .order('week_start', { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (data) {
-        setReport({
-          id: data.id,
-          week_start: data.week_start,
-          summary: data.summary,
-          suggestions: (data.suggestions as string[]) ?? [],
-          generated_at: data.generated_at,
-        });
-      }
-      setChecked(true);
-    })();
-  }, [user]);
+      if (error) throw error;
+      if (!data) return null;
+      return {
+        id: data.id,
+        week_start: data.week_start,
+        summary: data.summary,
+        suggestions: (data.suggestions as string[]) ?? [],
+        generated_at: data.generated_at,
+      };
+    },
+    enabled: !!user,
+  });
 
-  const generate = async () => {
-    setLoading(true);
-    try {
+  const generateMutation = useMutation({
+    mutationFn: async (): Promise<{ report: Report; cached: boolean }> => {
       const { data, error } = await supabase.functions.invoke('generate-weekly-report');
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const r = data.report;
-      setReport({
-        id: r.id,
-        week_start: r.week_start,
-        summary: r.summary,
-        suggestions: (r.suggestions as string[]) ?? [],
-        generated_at: r.generated_at,
-      });
+      return {
+        report: {
+          id: r.id,
+          week_start: r.week_start,
+          summary: r.summary,
+          suggestions: (r.suggestions as string[]) ?? [],
+          generated_at: r.generated_at,
+        },
+        cached: Boolean(data.cached),
+      };
+    },
+    onSuccess: ({ report: newReport, cached }) => {
+      // 直接写入查询缓存，卡片立即展示最新周报
+      queryClient.setQueryData(reportQueryKey, newReport);
       setExpanded(true);
-      toast({ title: data.cached ? '已加载本周周报' : '本周周报已生成' });
-    } catch (err: unknown) {
+      toast({ title: cached ? '已加载本周周报' : '本周周报已生成' });
+    },
+    onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : '生成失败';
       toast({ title: '生成失败', description: msg, variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
-  // 仅在周日或已有本周报表时显示
-  if (!checked) return null;
+  const loading = generateMutation.isPending;
+
+  // 未登录或首次查询完成前不显示；仅在周日或已有本周报表时显示
+  if (!user || isPending) return null;
   if (!isSunday && !report) return null;
 
   return (
@@ -103,7 +112,7 @@ const WeeklyReportCard = () => {
               {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
           ) : (
-            <Button size="sm" onClick={generate} disabled={loading}>
+            <Button size="sm" onClick={() => generateMutation.mutate()} disabled={loading}>
               {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : '生成本周'}
             </Button>
           )}

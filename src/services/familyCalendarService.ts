@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { getBeijingDateString } from '@/utils/beijingTime';
 
 export interface FamilyCalendarEvent {
   id: string;
@@ -14,6 +15,11 @@ export interface FamilyCalendarEvent {
   created_at: string;
   updated_at: string;
 }
+
+// 注意：supabase-js 的 insert/update 会忽略值为 undefined 的字段，
+// 需要清空数据库列时（如全天事件清除 start_time/end_time）必须显式传入 null
+export type FamilyCalendarEventInput = Omit<FamilyCalendarEvent, 'id' | 'user_id' | 'created_at' | 'updated_at'>;
+export type FamilyCalendarEventUpdate = Partial<FamilyCalendarEventInput>;
 
 export const familyCalendarService = {
   // 获取日历事件
@@ -52,14 +58,14 @@ export const familyCalendarService = {
     return this.getFamilyCalendarEvents(startDate, endDate);
   },
 
-  // 获取今日事件
+  // 获取今日事件（按北京日界）
   async getTodayEvents(): Promise<FamilyCalendarEvent[]> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getBeijingDateString();
     return this.getFamilyCalendarEvents(today, today);
   },
 
   // 添加日历事件
-  async addFamilyCalendarEvent(event: Omit<FamilyCalendarEvent, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<FamilyCalendarEvent> {
+  async addFamilyCalendarEvent(event: FamilyCalendarEventInput): Promise<FamilyCalendarEvent> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('用户未登录');
 
@@ -78,7 +84,7 @@ export const familyCalendarService = {
   },
 
   // 更新日历事件
-  async updateFamilyCalendarEvent(id: string, updates: Partial<FamilyCalendarEvent>): Promise<FamilyCalendarEvent> {
+  async updateFamilyCalendarEvent(id: string, updates: FamilyCalendarEventUpdate): Promise<FamilyCalendarEvent> {
     const { data, error } = await supabase
       .from('family_calendar_events')
       .update(updates)

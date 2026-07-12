@@ -13,6 +13,8 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 vi.mock("@/utils/beijingTime", () => ({
   getBeijingTimeISO: () => "2026-07-03T00:00:00+08:00",
+  getBeijingDateString: () => "2026-07-03",
+  getBeijingTime: () => new Date("2026-07-03T00:00:00"),
 }));
 vi.mock("@/services/adminNotificationService", () => ({
   notifyAdminActivity: vi.fn().mockResolvedValue(undefined),

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, useCallback, useMemo, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -29,34 +29,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userRole, setUserRole] = useState<'admin' | 'user' | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      setUserProfile(profile);
-    } catch (error) {
-      console.error('获取用户资料失败:', error);
-    }
-  };
+  const fetchUserProfile = useCallback(async (userId: string) => {
+    // supabase-js 不会抛出异常，必须显式检查返回的 error
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
 
-  const fetchUserRole = async (userId: string) => {
-    try {
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .single();
-      
-      setUserRole(roles?.role || 'user');
-    } catch (error) {
-      console.error('获取用户角色失败:', error);
-      setUserRole('user');
+    if (error) {
+      console.error('获取用户资料失败:', error);
+      setUserProfile(null);
+      return;
     }
-  };
+
+    setUserProfile(profile);
+  }, []);
+
+  const fetchUserRole = useCallback(async (userId: string) => {
+    const { data: roles, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('获取用户角色失败:', error);
+      setUserRole(null);
+      return;
+    }
+
+    // 没有角色记录时默认普通用户
+    setUserRole(roles?.role ?? 'user');
+  }, []);
 
   useEffect(() => {
     // 设置认证状态监听器
@@ -90,11 +95,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchUserProfile, fetchUserRole]);
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signUp = useCallback(async (email: string, password: string, fullName?: string) => {
     const redirectUrl = `${window.location.origin}/`;
-    
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -105,34 +110,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
     });
-    
-    return { error };
-  };
 
-  const signIn = async (email: string, password: string) => {
+    return { error };
+  }, []);
+
+  const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
-    
-    return { error };
-  };
 
-  const signOut = async () => {
+    return { error };
+  }, []);
+
+  const signOut = useCallback(async () => {
     await supabase.auth.signOut();
-  };
+  }, []);
+
+  // 缓存 context value，避免每次渲染都让所有消费组件重新渲染
+  const value = useMemo(() => ({
+    user,
+    session,
+    userProfile,
+    userRole,
+    loading,
+    signUp,
+    signIn,
+    signOut
+  }), [user, session, userProfile, userRole, loading, signUp, signIn, signOut]);
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      session,
-      userProfile,
-      userRole,
-      loading,
-      signUp,
-      signIn,
-      signOut
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

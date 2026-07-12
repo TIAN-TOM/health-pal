@@ -169,19 +169,25 @@ export const useUserManagement = () => {
     try {
       setLoading(true);
       
-      // 首先删除用户角色记录
-      await supabase
+      // 首先删除用户角色记录，失败时立即中止，避免留下不一致数据
+      const { error: rolesError } = await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', userId);
-      
+
+      if (rolesError) {
+        throw new Error(`删除用户角色失败: ${rolesError.message}`);
+      }
+
       // 然后删除用户档案
-      const { error } = await supabase
+      const { error: profileError } = await supabase
         .from('profiles')
         .delete()
         .eq('id', userId);
 
-      if (error) throw error;
+      if (profileError) {
+        throw new Error(`删除用户档案失败: ${profileError.message}`);
+      }
 
       setUsers(prevUsers => prevUsers.filter(u => u.id !== userId));
       // 清除用户的缓存数据

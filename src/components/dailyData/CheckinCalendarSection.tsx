@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useQueryClient } from '@tanstack/react-query';
 import { getBeijingTime } from '@/utils/beijingTime';
 import { zhCN } from 'date-fns/locale';
 import { Flame, Calendar as CalendarIcon, Ticket } from 'lucide-react';
@@ -24,6 +25,7 @@ interface CheckinCalendarSectionProps {
 const CheckinCalendarSection = ({ checkinDates, selectedDate, onDateSelect, onMakeupSuccess }: CheckinCalendarSectionProps) => {
   const { streakDays, loading } = useCheckinStreak();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [makeupCardsCount, setMakeupCardsCount] = useState(0);
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [showMakeupDialog, setShowMakeupDialog] = useState(false);
@@ -82,9 +84,9 @@ const CheckinCalendarSection = ({ checkinDates, selectedDate, onDateSelect, onMa
       setNote('');
       setShowMakeupDialog(false);
       
-      // 刷新数据
+      // 刷新数据：失效打卡历史查询，让日历和连续打卡天数自动刷新
       await loadMakeupData();
-      window.dispatchEvent(new CustomEvent('checkin-updated'));
+      queryClient.invalidateQueries({ queryKey: ['checkin-history'] });
       onMakeupSuccess?.();
       
     } catch (error: any) {

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { getBeijingDateString, getBeijingTime } from '@/utils/beijingTime';
 
 export interface FamilyReminder {
   id: string;
@@ -13,6 +14,11 @@ export interface FamilyReminder {
   created_at: string;
   updated_at: string;
 }
+
+// 注意：supabase-js 的 insert/update 会忽略值为 undefined 的字段，
+// 需要清空数据库列时（如取消重复后清除 recurring_pattern）必须显式传入 null
+export type FamilyReminderInput = Omit<FamilyReminder, 'id' | 'user_id' | 'created_at' | 'updated_at'>;
+export type FamilyReminderUpdate = Partial<FamilyReminderInput>;
 
 export const familyRemindersService = {
   // 获取提醒事项
@@ -31,10 +37,10 @@ export const familyRemindersService = {
     return data || [];
   },
 
-  // 获取今日待办
+  // 获取今日待办（按北京日界，避免 UTC 日期在北京 00:00-08:00 差一天）
   async getTodayReminders(): Promise<FamilyReminder[]> {
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const today = getBeijingDateString();
+    const tomorrow = getBeijingDateString(new Date(getBeijingTime().getTime() + 24 * 60 * 60 * 1000));
 
     const { data, error } = await supabase
       .from('family_reminders')
@@ -53,7 +59,7 @@ export const familyRemindersService = {
   },
 
   // 添加提醒事项
-  async addFamilyReminder(reminder: Omit<FamilyReminder, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<FamilyReminder> {
+  async addFamilyReminder(reminder: FamilyReminderInput): Promise<FamilyReminder> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('用户未登录');
 
@@ -72,7 +78,7 @@ export const familyRemindersService = {
   },
 
   // 更新提醒事项
-  async updateFamilyReminder(id: string, updates: Partial<FamilyReminder>): Promise<FamilyReminder> {
+  async updateFamilyReminder(id: string, updates: FamilyReminderUpdate): Promise<FamilyReminder> {
     const { data, error } = await supabase
       .from('family_reminders')
       .update(updates)

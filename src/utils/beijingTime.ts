@@ -1,5 +1,11 @@
 
 // 北京时间工具函数 - 统一时间处理
+// 原则：时间戳（created_at/updated_at 等）存真 UTC，展示层再按北京时间格式化；
+// 日期字段（checkin_date 等）统一使用北京日历日（getBeijingDateString）。
+
+// 获取"北京墙上时钟"的伪时间对象：把当前时刻平移，使本地 getters
+// （getFullYear/getMonth/getDate/getHours...）读出北京时间的年月日时分。
+// 仅用于历法计算和展示，不能调用 toISOString() 或当作真实时间戳存储。
 export const getBeijingTime = () => {
   const now = new Date();
   // 获取北京时间（UTC+8）
@@ -7,6 +13,8 @@ export const getBeijingTime = () => {
 };
 
 // 获取北京时间的日期字符串 (YYYY-MM-DD)
+// 不传参：返回当前的北京日历日（任何设备时区下都正确）；
+// 传参：读取该 Date 的本地历法字段（配合 getBeijingTime 的伪时间或本地历法日期做日期运算）
 export const getBeijingDateString = (date?: Date) => {
   const targetDate = date || getBeijingTime();
   
@@ -17,10 +25,11 @@ export const getBeijingDateString = (date?: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-// 获取北京时间的ISO字符串
-export const getBeijingTimeISO = (date?: Date) => {
-  const targetDate = date || getBeijingTime();
-  return targetDate.toISOString();
+// 获取当前时刻的 ISO 时间戳（真 UTC）
+// 存真 UTC，展示层用北京时间（formatBeijingTime 等）格式化。
+// 注意：以前这里对伪时间调用 toISOString()，在非 UTC+8 设备上会偏差 (8h - 设备时区偏移)。
+export const getBeijingTimeISO = () => {
+  return new Date().toISOString();
 };
 
 // 格式化北京时间显示 - 统一格式
@@ -103,7 +112,9 @@ export const deleteAllCheckins = async () => {
 };
 
 // 统一的北京时间显示格式
-export const formatBeijingDateTime = (date: Date = getBeijingTime()) => {
+// 传入真实时间戳即可，timeZone 选项负责换算北京时间；
+// 不要传入 getBeijingTime() 的伪时间，否则会双重偏移。
+export const formatBeijingDateTime = (date: Date = new Date()) => {
   return date.toLocaleString('zh-CN', {
     timeZone: 'Asia/Shanghai',
     year: 'numeric',

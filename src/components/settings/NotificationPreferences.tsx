@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Bell, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,30 +36,42 @@ const NotificationPreferences = () => {
   const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
 
-  useEffect(() => {
+  const loadPrefs = useCallback(async () => {
     if (!user) return;
-    (async () => {
-      const { data } = await supabase
-        .from('user_notification_preferences')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (data) {
-        setPrefs({
-          email_reminders_enabled: data.email_reminders_enabled,
-          checkin_streak: data.checkin_streak,
-          medication: data.medication,
-          medical_followup: data.medical_followup,
-          family_calendar: data.family_calendar,
-        });
-      }
+    setLoading(true);
+    setLoadFailed(false);
+    const { data, error } = await supabase
+      .from('user_notification_preferences')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (error) {
+      // 加载失败时禁止写入，否则会用默认值覆盖用户已保存的偏好
+      console.error('加载通知偏好失败:', error);
+      setLoadFailed(true);
       setLoading(false);
-    })();
+      return;
+    }
+    if (data) {
+      setPrefs({
+        email_reminders_enabled: data.email_reminders_enabled,
+        checkin_streak: data.checkin_streak,
+        medication: data.medication,
+        medical_followup: data.medical_followup,
+        family_calendar: data.family_calendar,
+      });
+    }
+    setLoading(false);
   }, [user]);
 
+  useEffect(() => {
+    loadPrefs();
+  }, [loadPrefs]);
+
   const update = async (patch: Partial<Prefs>) => {
-    if (!user) return;
+    if (!user || loadFailed) return;
     const next = { ...prefs, ...patch };
     setPrefs(next);
     setSaving(true);
@@ -81,6 +94,16 @@ const NotificationPreferences = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {loadFailed && (
+          <div className="flex items-center justify-between gap-3 rounded-md border border-destructive/50 bg-destructive/10 p-3">
+            <p className="text-sm text-destructive">
+              通知偏好加载失败，为避免覆盖已保存的设置，暂时无法修改。
+            </p>
+            <Button variant="outline" size="sm" onClick={loadPrefs}>
+              重试
+            </Button>
+          </div>
+        )}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
             <div className="font-medium text-sm">邮件提醒总开关</div>
@@ -90,7 +113,7 @@ const NotificationPreferences = () => {
           </div>
           <Switch
             checked={prefs.email_reminders_enabled}
-            disabled={loading}
+            disabled={loading || loadFailed}
             onCheckedChange={(v) => update({ email_reminders_enabled: v })}
             aria-label="邮件提醒总开关"
           />
@@ -105,7 +128,7 @@ const NotificationPreferences = () => {
               </div>
               <Switch
                 checked={prefs[row.key] as boolean}
-                disabled={loading || !prefs.email_reminders_enabled}
+                disabled={loading || loadFailed || !prefs.email_reminders_enabled}
                 onCheckedChange={(v) => update({ [row.key]: v } as Partial<Prefs>)}
                 aria-label={row.label}
               />

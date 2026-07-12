@@ -58,7 +58,9 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
         reminder_date: formData.reminder_date,
         assigned_to: formData.assigned_to,
         is_recurring: formData.is_recurring,
-        recurring_pattern: formData.is_recurring ? formData.recurring_pattern : undefined,
+        // 必须传 null 而非 undefined：supabase 的 update 会忽略 undefined 字段，
+        // 否则取消重复提醒后数据库中会残留旧的 recurring_pattern
+        recurring_pattern: formData.is_recurring ? formData.recurring_pattern || null : null,
         is_completed: false
       };
 

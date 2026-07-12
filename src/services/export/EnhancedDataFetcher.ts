@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { getBeijingDateString } from '@/utils/beijingTime';
 import { getMeniereRecords } from '@/services/meniereRecordService';
 import { getDailyCheckins } from '@/services/dailyCheckinService';
 import { getDiabetesRecords } from '@/services/diabetesRecordService';
@@ -17,8 +18,10 @@ export interface ExportData {
 
 export const getRecordsByDateRange = async (startDate: Date, endDate: Date): Promise<ExportData> => {
   try {
-    const startDateStr = startDate.toISOString().split('T')[0];
-    const endDateStr = endDate.toISOString().split('T')[0];
+    // 读取历法字段生成日期边界（调用方传入 getBeijingTime 伪时间或本地历法日期），
+    // 避免 toISOString 落回 UTC 日导致边界差一天
+    const startDateStr = getBeijingDateString(startDate);
+    const endDateStr = getBeijingDateString(endDate);
     
     console.log('获取数据范围:', startDateStr, '到', endDateStr);
     

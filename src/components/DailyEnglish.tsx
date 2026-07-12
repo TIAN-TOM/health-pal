@@ -1,22 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Book, Volume2, VolumeX, Award, Lightbulb, Globe, Calendar, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
-import { getRandomQuote, getRandomWords, getRandomPhrases, getListeningTexts, getDailyEnglishContent } from '@/services/englishService';
+import { getDailyEnglishContent } from '@/services/englishService';
 import { getBeijingDateString, getBeijingTime } from '@/utils/beijingTime';
-import type { Tables } from '@/integrations/supabase/types';
 
 interface DailyEnglishProps {
   onBack: () => void;
 }
-
-type EnglishQuote = Tables<'english_quotes'>;
-type EnglishWord = Tables<'english_words'>;
-type EnglishPhrase = Tables<'english_phrases'>;
-type EnglishListening = Tables<'english_listening'>;
 
 const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
   const [soundEnabled, setSoundEnabled] = useState(() => {
@@ -24,14 +19,23 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
     return saved !== null ? JSON.parse(saved) : true;
   });
 
-  const [dailyQuote, setDailyQuote] = useState<EnglishQuote | null>(null);
-  const [dailyWords, setDailyWords] = useState<EnglishWord[]>([]);
-  const [phrases, setPhrases] = useState<EnglishPhrase[]>([]);
-  const [listeningTexts, setListeningTexts] = useState<EnglishListening[]>([]);
-  const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(getBeijingDateString());
-  const [lastLoadedDate, setLastLoadedDate] = useState<string>('');
-  const [contentCache, setContentCache] = useState<Map<string, any>>(new Map());
+
+  // 按日期缓存每日英语内容：缓存放在 QueryClientProvider 中，切换页面后依然有效
+  const {
+    data: content,
+    isLoading: loading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ['daily-english', currentDate],
+    queryFn: () => getDailyEnglishContent(currentDate),
+  });
+
+  const dailyQuote = content?.quote ?? null;
+  const dailyWords = content?.words ?? [];
+  const phrases = content?.phrases ?? [];
+  const listeningTexts = content?.listening ?? [];
 
   // 停止所有朗读的函数
   const stopAllSpeech = () => {
@@ -41,24 +45,12 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
   };
 
   useEffect(() => {
-    loadEnglishContent();
-    
     // 通知管理员用户开始学习英语
     notifyAdminActivity({
       activity_type: ACTIVITY_TYPES.LEARNING,
       activity_description: '开始学习每日英语',
       module_name: MODULE_NAMES.ENGLISH_LEARNING
     });
-    
-    // 设置更精确的时间检查 - 每分钟检查一次是否跨天
-    const interval = setInterval(() => {
-      const now = getBeijingDateString();
-      if (now !== currentDate) {
-        console.log(`检测到日期变化: ${currentDate} -> ${now}`);
-        setCurrentDate(now);
-        setLastLoadedDate(''); // 清除缓存，强制重新加载
-      }
-    }, 60000); // 每分钟检查一次
 
     // 页面卸载时停止朗读
     const handleBeforeUnload = () => {
@@ -68,81 +60,29 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      clearInterval(interval);
       stopAllSpeech();
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [currentDate]);
-
-  // 组件卸载时也要停止朗读
-  useEffect(() => {
-    return () => {
-      stopAllSpeech();
-    };
   }, []);
 
-  const loadEnglishContent = async (forceReload: boolean = false) => {
-    const targetDate = currentDate;
-    
-    // 检查缓存，避免重复加载同一天的内容
-    if (!forceReload && lastLoadedDate === targetDate && contentCache.has(targetDate)) {
-      const cachedContent = contentCache.get(targetDate);
-      setDailyQuote(cachedContent.quote);
-      setDailyWords(cachedContent.words);
-      setPhrases(cachedContent.phrases);
-      setListeningTexts(cachedContent.listening);
-      setLoading(false);
-      console.log(`使用缓存的 ${targetDate} 内容`);
-      return;
-    }
+  useEffect(() => {
+    // 设置更精确的时间检查 - 每分钟检查一次是否跨天
+    // 跨天后 currentDate 变化，queryKey 随之变化，react-query 会自动加载新一天的内容
+    const interval = setInterval(() => {
+      const now = getBeijingDateString();
+      if (now !== currentDate) {
+        console.log(`检测到日期变化: ${currentDate} -> ${now}`);
+        setCurrentDate(now);
+      }
+    }, 60000); // 每分钟检查一次
 
-    try {
-      setLoading(true);
-      console.log(`开始加载 ${targetDate} 的英语内容`);
-      
-      // 使用改进的服务获取内容
-      const content = await getDailyEnglishContent(targetDate);
-
-      // 更新状态
-      setDailyQuote(content.quote);
-      setDailyWords(content.words);
-      setPhrases(content.phrases);
-      setListeningTexts(content.listening);
-      
-      // 缓存内容
-      setContentCache(prev => {
-        const newCache = new Map(prev);
-        newCache.set(targetDate, content);
-        // 只保留最近7天的缓存
-        if (newCache.size > 7) {
-          const oldestKey = Array.from(newCache.keys())[0];
-          newCache.delete(oldestKey);
-        }
-        return newCache;
-      });
-      
-      setLastLoadedDate(targetDate);
-      
-      console.log(`成功加载 ${targetDate} 的英语内容:`, {
-        quote: content.quote?.quote_text?.substring(0, 30) + '...',
-        wordsCount: content.words.length,
-        phrasesCount: content.phrases.length,
-        listeningCount: content.listening.length
-      });
-      
-    } catch (error) {
-      console.error(`加载 ${targetDate} 英语内容失败:`, error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => clearInterval(interval);
+  }, [currentDate]);
 
   // 手动刷新内容
   const refreshContent = () => {
     console.log('手动刷新内容');
-    setContentCache(new Map()); // 清除所有缓存
-    setLastLoadedDate(''); 
-    loadEnglishContent(true);
+    refetch();
   };
 
   const playSound = (text: string) => {
@@ -205,6 +145,26 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">正在加载今日英语内容...</p>
           <p className="text-sm text-gray-500 mt-2">确保每天内容都不重样</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center px-4">
+          <p className="text-gray-600 mb-4">加载英语内容失败，请检查网络后重试</p>
+          <div className="flex items-center justify-center gap-2">
+            <Button onClick={() => refetch()}>
+              <RefreshCw className="h-4 w-4 mr-1" />
+              重新加载
+            </Button>
+            <Button variant="ghost" onClick={handleBack}>
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              返回
+            </Button>
+          </div>
         </div>
       </div>
     );

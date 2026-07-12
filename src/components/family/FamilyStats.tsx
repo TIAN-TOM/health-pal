@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { familyExpensesService, type ExpenseStats } from '@/services/familyExpensesService';
 import { familyRemindersService } from '@/services/familyRemindersService';
 import { familyCalendarService } from '@/services/familyCalendarService';
+import { getBeijingDateString } from '@/utils/beijingTime';
 
 interface FamilyStatsProps {
   onBack: () => void;
@@ -49,7 +50,7 @@ const FamilyStats = ({ onBack }: FamilyStatsProps) => {
 
       // 加载日历统计
       const events = await familyCalendarService.getFamilyCalendarEvents();
-      const today = new Date().toISOString().split('T')[0];
+      const today = getBeijingDateString();
       const todayEvents = events.filter(e => e.event_date === today).length;
       const upcomingEvents = events.filter(e => e.event_date > today).length;
       

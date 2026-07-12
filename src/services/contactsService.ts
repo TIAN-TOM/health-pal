@@ -150,12 +150,16 @@ export const deleteContact = async (id: string): Promise<void> => {
       throw new Error('无效的联系人ID格式');
     }
 
-    // 先删除相关的SMS日志记录（因为外键约束）
-    await supabase
+    // 先删除相关的SMS日志记录（因为外键约束），失败时中止，避免后续删除联系人时违反外键约束
+    const { error: smsLogsError } = await supabase
       .from('emergency_sms_logs')
       .delete()
       .eq('contact_id', realId)
       .eq('user_id', user.id);
+
+    if (smsLogsError) {
+      throw new Error('删除相关短信记录失败');
+    }
 
     // 再删除联系人记录
     const { error: contactError, count } = await supabase

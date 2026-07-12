@@ -92,8 +92,8 @@ export const getTodayCheckin = async (): Promise<DailyCheckin | null> => {
     .maybeSingle();
 
   if (error) {
-    console.error('获取今日打卡记录失败:', error);
-    return null;
+    // 读取失败时抛错，供 react-query 捕获并进入 error 状态
+    throw new Error(`获取今日打卡记录失败: ${error.message}`);
   }
 
   return data;
@@ -114,8 +114,8 @@ export const getRecentCheckins = async (limit: number = 10): Promise<DailyChecki
     .limit(limit);
 
   if (error) {
-    console.error('获取打卡记录失败:', error);
-    return [];
+    // 读取失败时抛错，供 react-query 捕获并进入 error 状态
+    throw new Error(`获取打卡记录失败: ${error.message}`);
   }
 
   return data || [];
@@ -140,8 +140,8 @@ export const getCheckinsByDateRange = async (
     .order('checkin_date', { ascending: false });
 
   if (error) {
-    console.error('获取时间范围内打卡记录失败:', error);
-    return [];
+    // 读取失败时抛错，供 react-query 捕获并进入 error 状态
+    throw new Error(`获取时间范围内打卡记录失败: ${error.message}`);
   }
 
   return data || [];

@@ -7,18 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, Edit, Trash2, Megaphone, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { getBeijingTimeISO } from '@/utils/beijingTime';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Announcement = Tables<'announcements'>;
-
-// 获取正确的北京时间ISO字符串
-const getBeijingTimeISO = () => {
-  const now = new Date();
-  // 获取UTC时间戳，然后加上8小时（北京时间是UTC+8）
-  const utcTime = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
-  const beijingTime = new Date(utcTime + (8 * 60 * 60 * 1000));
-  return beijingTime.toISOString();
-};
 
 const AnnouncementManagement = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -70,7 +62,7 @@ const AnnouncementManagement = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('用户未登录');
 
-      const beijingTime = getBeijingTimeISO();
+      const nowISO = getBeijingTimeISO();
 
       if (editingId) {
         const { error } = await supabase
@@ -79,7 +71,7 @@ const AnnouncementManagement = () => {
             title: formData.title,
             content: formData.content,
             is_active: formData.is_active,
-            updated_at: beijingTime
+            updated_at: nowISO
           })
           .eq('id', editingId);
 
@@ -96,8 +88,8 @@ const AnnouncementManagement = () => {
             content: formData.content,
             author_id: user.id,
             is_active: formData.is_active,
-            created_at: beijingTime,
-            updated_at: beijingTime
+            created_at: nowISO,
+            updated_at: nowISO
           });
 
         if (error) throw error;
@@ -158,13 +150,13 @@ const AnnouncementManagement = () => {
 
   const toggleStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const beijingTime = getBeijingTimeISO();
-      
+      const nowISO = getBeijingTimeISO();
+
       const { error } = await supabase
         .from('announcements')
-        .update({ 
+        .update({
           is_active: !currentStatus,
-          updated_at: beijingTime
+          updated_at: nowISO
         })
         .eq('id', id);
 

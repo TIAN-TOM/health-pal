@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { getBeijingDateString } from '@/utils/beijingTime';
 
 export interface FamilyExpense {
   id: string;
@@ -94,9 +95,13 @@ export const familyExpensesService = {
 
   // 获取支出统计
   async getExpenseStats(): Promise<ExpenseStats> {
-    const today = new Date().toISOString().split('T')[0];
-    const thisMonth = new Date().toISOString().slice(0, 7);
-    const thisYear = new Date().getFullYear().toString();
+    // 以北京日历日为基准计算今日/本月/本年（expense_date 存的是北京日期）
+    const today = getBeijingDateString();
+    const thisMonth = today.slice(0, 7);
+    const thisYear = today.slice(0, 4);
+    const [year, month] = thisMonth.split('-').map(Number);
+    // 下月1日：用本地历法构造 Date，getBeijingDateString 只读取历法字段
+    const nextMonthStart = getBeijingDateString(new Date(year, month, 1));
 
     // 获取今日支出
     const { data: todayData } = await supabase
@@ -109,7 +114,7 @@ export const familyExpensesService = {
       .from('family_expenses')
       .select('amount')
       .gte('expense_date', thisMonth + '-01')
-      .lt('expense_date', new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString().split('T')[0]);
+      .lt('expense_date', nextMonthStart);
 
     // 获取本年支出
     const { data: yearData } = await supabase

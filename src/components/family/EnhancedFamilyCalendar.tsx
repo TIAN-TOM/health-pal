@@ -71,8 +71,10 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
         title: formData.title,
         description: formData.description,
         event_date: formData.event_date,
-        start_time: formData.is_all_day ? undefined : formData.start_time,
-        end_time: formData.is_all_day ? undefined : formData.end_time,
+        // 必须传 null 而非 undefined：supabase 的 update 会忽略 undefined 字段，
+        // 否则把事件改为全天后数据库中会残留旧的开始/结束时间
+        start_time: formData.is_all_day ? null : formData.start_time || null,
+        end_time: formData.is_all_day ? null : formData.end_time || null,
         participants: formData.participants ? formData.participants.split(',').map(p => p.trim()) : [],
         is_all_day: formData.is_all_day,
         color: formData.color

@@ -115,10 +115,13 @@ export const useDataExport = () => {
     try {
       console.log('自定义导出参数:', { startDate, endDate, format });
       
-      const startDateObj = new Date(startDate);
-      const endDateObj = new Date(endDate);
-      
-      const records = await getRecordsByDateRange(startDateObj, endDateObj);
+      // 'YYYY-MM-DD' 需按历法字段构造（new Date(str) 会解析为 UTC 午夜，
+      // 在 UTC 以西的设备上历法字段会读到前一天）
+      const toCalendarDate = (s: string) => {
+        const [y, m, d] = s.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      };
+      const records = await getRecordsByDateRange(toCalendarDate(startDate), toCalendarDate(endDate));
       console.log('获取到的记录:', records);
 
       let formattedData = '';

@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Calendar, Heart, MessageCircle, Check, Award, Activity } from 'lucide-react';
-import { createCheckin, getTodayCheckin, cancelCheckin } from '@/services/dailyCheckinService';
+import { useQueryClient } from '@tanstack/react-query';
+import { createCheckin, cancelCheckin } from '@/services/dailyCheckinService';
 import { updatePointsForCheckin, getUserPoints, type UserPoints } from '@/services/pointsService';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,6 +33,7 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const { userRole } = useAuth();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     loadUserPoints();
@@ -59,7 +61,8 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
       onCheckinSuccess(newCheckin);
       setNote('');
       onReloadHistory();
-      window.dispatchEvent(new CustomEvent('checkin-updated'));
+      // 失效打卡历史查询，让日历和连续打卡天数自动刷新
+      queryClient.invalidateQueries({ queryKey: ['checkin-history'] });
       
       toast({
         title: "打卡成功！",
@@ -148,7 +151,8 @@ const CheckinSection = ({ todayCheckin, onCheckinSuccess, onReloadHistory, onNav
       onCheckinSuccess(null);
       setEarnedPoints(null);
       onReloadHistory();
-      window.dispatchEvent(new CustomEvent('checkin-updated'));
+      // 失效打卡历史查询，让日历和连续打卡天数自动刷新
+      queryClient.invalidateQueries({ queryKey: ['checkin-history'] });
       
       console.log('前端状态已重置，应该可以重新打卡');
       

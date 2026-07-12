@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { familyExpensesService, type FamilyExpense, type ExpenseStats, EXPENSE_CATEGORIES } from '@/services/familyExpensesService';
+import { getBeijingDateString } from '@/utils/beijingTime';
 
 interface FamilyExpensesProps {
   onBack: () => void;
@@ -23,7 +24,7 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
     amount: '',
     category: '',
     description: '',
-    expense_date: new Date().toISOString().split('T')[0],
+    expense_date: getBeijingDateString(),
     payer: ''
   });
   const [loading, setLoading] = useState(true);
@@ -121,7 +122,7 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
       amount: '',
       category: '',
       description: '',
-      expense_date: new Date().toISOString().split('T')[0],
+      expense_date: getBeijingDateString(),
       payer: ''
     });
     setShowAddForm(false);

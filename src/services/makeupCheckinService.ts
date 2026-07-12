@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { getBeijingTimeISO } from '@/utils/beijingTime';
+import { getBeijingTime, getBeijingDateString, getBeijingTimeISO } from '@/utils/beijingTime';
 import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -29,8 +29,8 @@ export const createMakeupCheckin = async (
     throw new Error('该日期已有打卡记录');
   }
 
-  // 检查是否是未来日期
-  const today = new Date().toISOString().split('T')[0];
+  // 检查是否是未来日期（checkin_date 是北京日历日，比较基准也用北京"今天"）
+  const today = getBeijingDateString();
   if (targetDate > today) {
     throw new Error('不能补签未来的日期');
   }
@@ -76,13 +76,17 @@ export const getAvailableMakeupDates = async (): Promise<string[]> => {
     return [];
   }
 
-  // 获取过去30天的日期范围
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - 30);
+  // 以北京日历日为基准，生成过去30天（不含今天）的候选日期，最近的日期在前
+  const beijingNow = getBeijingTime();
+  const candidateDates: string[] = [];
+  for (let i = 1; i <= 30; i++) {
+    const day = new Date(beijingNow);
+    day.setDate(beijingNow.getDate() - i);
+    candidateDates.push(getBeijingDateString(day));
+  }
 
-  const startDateStr = startDate.toISOString().split('T')[0];
-  const endDateStr = endDate.toISOString().split('T')[0];
+  const startDateStr = candidateDates[candidateDates.length - 1];
+  const endDateStr = candidateDates[0];
 
   // 获取该时间范围内的所有打卡记录
   const { data: checkins } = await supabase
@@ -93,22 +97,8 @@ export const getAvailableMakeupDates = async (): Promise<string[]> => {
     .lte('checkin_date', endDateStr);
 
   const checkedDates = new Set((checkins || []).map(c => c.checkin_date));
-  
-  // 生成所有可能的日期
-  const allDates: string[] = [];
-  const current = new Date(startDate);
-  
-  while (current <= endDate) {
-    if (current < new Date()) { // 不包括今天
-      const dateStr = current.toISOString().split('T')[0];
-      if (!checkedDates.has(dateStr)) {
-        allDates.push(dateStr);
-      }
-    }
-    current.setDate(current.getDate() + 1);
-  }
 
-  return allDates.reverse(); // 最近的日期在前
+  return candidateDates.filter(dateStr => !checkedDates.has(dateStr));
 };
 
 // 检查用户是否有补签卡
