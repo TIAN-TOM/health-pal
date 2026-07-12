@@ -55,7 +55,15 @@ const WeeklyReportCard = () => {
   const generateMutation = useMutation({
     mutationFn: async (): Promise<{ report: Report; cached: boolean }> => {
       const { data, error } = await supabase.functions.invoke('generate-weekly-report');
-      if (error) throw error;
+      if (error) {
+        // 非 2xx 时 FunctionsHttpError.message 是通用字符串，真正的中文提示在响应体里
+        const context = (error as { context?: Response }).context;
+        if (context && typeof context.json === 'function') {
+          const body = await context.json().catch(() => null);
+          if (body?.error) throw new Error(body.error);
+        }
+        throw error;
+      }
       if (data?.error) throw new Error(data.error);
       const r = data.report;
       return {

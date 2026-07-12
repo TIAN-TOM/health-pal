@@ -86,7 +86,7 @@
             document.documentElement.style.colorScheme = 'dark';
           }
           var fs = localStorage.getItem('font_size') || 'standard';
-          var map = { standard: '16px', large: '18px', xlarge: '20px' };
+          var map = { standard: '16px', large: '18px', xlarge: '20px', xxlarge: '24px' };
           document.documentElement.dataset.fontSize = fs;
           document.documentElement.style.fontSize = map[fs] || '16px';
         } catch (e) {}

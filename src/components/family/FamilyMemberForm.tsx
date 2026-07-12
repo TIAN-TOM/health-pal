@@ -136,7 +136,8 @@ const FamilyMemberForm = ({ member, onSuccess, onCancel }: FamilyMemberFormProps
       
       const memberData = {
         ...formData,
-        birthday: formData.birthday ? format(formData.birthday, 'yyyy-MM-dd') : undefined
+        // 必须传 null 而非 undefined：supabase update 会忽略 undefined，导致清空生日无效
+        birthday: formData.birthday ? format(formData.birthday, 'yyyy-MM-dd') : null
       };
 
       if (member) {

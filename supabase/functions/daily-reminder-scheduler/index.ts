@@ -112,7 +112,9 @@ Deno.serve(async (req) => {
             .gte('checkin_date', threeDaysAgoCST)
         : Promise.resolve(emptyResult),
       medIds.length > 0
-        ? admin.from('user_medications').select('user_id, name').in('user_id', medIds)
+        // order + 显式上限：避免 PostgREST 默认 1000 行截断时非确定性丢用户
+        // （每页最多 100 用户，每人用药数很小，2000 远超实际）
+        ? admin.from('user_medications').select('user_id, name').in('user_id', medIds).order('user_id').limit(2000)
         : Promise.resolve(emptyResult),
       followupIds.length > 0
         ? admin

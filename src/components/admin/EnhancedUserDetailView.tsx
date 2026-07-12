@@ -264,10 +264,10 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
                              <div className="flex items-center gap-2 mb-2">
                                <Calendar className="h-4 w-4 text-green-600" />
                                <p className="font-semibold text-gray-800">
-                                 {format(new Date(checkin.checkin_date), 'yyyy年MM月dd日')}
+                                 {format(new Date(checkin.checkin_date + 'T00:00:00'), 'yyyy年MM月dd日')}
                                </p>
                                <Badge variant="secondary" className="text-xs">
-                                 {format(new Date(checkin.created_at), 'HH:mm')} 打卡
+                                 {new Date(checkin.created_at).toLocaleTimeString('zh-CN', { timeZone: 'Asia/Shanghai', hour: '2-digit', minute: '2-digit', hour12: false })} 打卡
                                </Badge>
                              </div>
                              

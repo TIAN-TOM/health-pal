@@ -52,8 +52,10 @@ const getRecordTitle = (record: MeniereRecord) => {
 };
 
 const getRecordSubtitle = (record: MeniereRecord) => {
-  const date = new Date(record.timestamp).toLocaleDateString('zh-CN');
+  // timestamp 存真 UTC，显示统一按北京时区
+  const date = new Date(record.timestamp).toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' });
   const time = new Date(record.timestamp).toLocaleTimeString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
     hour: '2-digit',
     minute: '2-digit'
   });

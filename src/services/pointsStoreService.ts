@@ -198,10 +198,11 @@ export const purchaseItem = async (itemId: string, itemPrice: number): Promise<b
       return false;
     }
 
-    // Get item name for notification
+    // Get item name + authoritative price for notification
+    // （RPC 以库内 price_points 结算，客户端传入的 itemPrice 不可信，通知里也用库内价）
     const { data: item } = await supabase
       .from('points_store_items')
-      .select('item_name')
+      .select('item_name, price_points')
       .eq('id', itemId)
       .single();
 
@@ -209,7 +210,7 @@ export const purchaseItem = async (itemId: string, itemPrice: number): Promise<b
     if (item) {
       await notifyAdminActivity({
         activity_type: ACTIVITY_TYPES.PURCHASE,
-        activity_description: `购买了商品 "${item.item_name}" (${itemPrice}积分)`,
+        activity_description: `购买了商品 "${item.item_name}" (${item.price_points}积分)`,
         module_name: MODULE_NAMES.POINTS_STORE
       });
     }

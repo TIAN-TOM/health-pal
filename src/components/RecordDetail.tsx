@@ -34,7 +34,8 @@ const RecordDetail = ({ record, onBack }: RecordDetailProps) => {
   };
 
   const formatDateTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString('zh-CN');
+    // timestamp 存真 UTC，显示按北京时区
+    return new Date(timestamp).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
   };
 
   const getSeverityText = (severity?: string) => {

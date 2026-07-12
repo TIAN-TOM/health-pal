@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { getDailyCheckins } from '@/services/dailyCheckinService';
 import { getMeniereRecords } from '@/services/meniereRecordService';
 import { useToast } from '@/hooks/use-toast';
-import { getBeijingTime, getBeijingDateString, getMonthRange, getTodayBeijingDate, deleteAllCheckins } from '@/utils/beijingTime';
+import { getBeijingTime, getBeijingDateString, getBeijingDayOf, getMonthRange, getTodayBeijingDate, deleteAllCheckins } from '@/utils/beijingTime';
 
 interface DayData {
   date: string;
@@ -48,9 +48,8 @@ export const useCalendarData = () => {
         
         const dayRecords = records.filter(r => {
           if (!r.timestamp) return false;
-          const recordDate = new Date(r.timestamp);
-          const recordDateString = getBeijingDateString(recordDate);
-          return recordDateString === date;
+          // r.timestamp 是真 UTC，按北京日归桶（不能用读本地字段的 getBeijingDateString）
+          return getBeijingDayOf(r.timestamp) === date;
         });
         
         const totalRecordsCount = dayRecords.length;

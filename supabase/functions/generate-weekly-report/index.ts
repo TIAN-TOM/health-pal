@@ -56,22 +56,27 @@ Deno.serve(async (req) => {
 
     // 拉取近 7 天数据
     const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
+    // 必须显式按 user_id 过滤：管理员的 RLS 策略可读所有人记录，
+    // 缺少此过滤会让管理员的周报聚合全体用户数据（隐私泄露）
     const [meniere, diabetes, checkins] = await Promise.all([
       supabase
         .from('meniere_records')
         .select('type, timestamp, severity, note')
+        .eq('user_id', userId)
         .gte('timestamp', sevenDaysAgo)
         .order('timestamp', { ascending: false })
         .limit(50),
       supabase
         .from('diabetes_records')
         .select('timestamp, blood_sugar, measurement_time, note')
+        .eq('user_id', userId)
         .gte('timestamp', sevenDaysAgo)
         .order('timestamp', { ascending: false })
         .limit(50),
       supabase
         .from('daily_checkins')
         .select('checkin_date, mood_score')
+        .eq('user_id', userId)
         .gte('checkin_date', sevenDaysAgo.slice(0, 10))
         .order('checkin_date', { ascending: false })
         .limit(14),

@@ -32,6 +32,22 @@ export const getBeijingTimeISO = () => {
   return new Date().toISOString();
 };
 
+// 把任意真实时间戳（UTC）换算为北京日历日 YYYY-MM-DD。
+// 与 getBeijingDateString(date) 不同：后者读本地历法字段，只适用于伪时间；
+// 这个函数用于对存库的真 UTC timestamp 归桶到北京日，任何设备时区都正确。
+export const getBeijingDayOf = (timestamp: string | Date): string => {
+  const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
+  // en-CA 输出 YYYY-MM-DD
+  return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Shanghai' });
+};
+
+// 北京日 YYYY-MM-DD 对应的 UTC 时间窗口（含首尾），用于对 timestamptz 列做范围查询。
+// 北京日 D = [D 00:00 +08:00, D 23:59:59.999 +08:00]。
+export const beijingDayToUtcRange = (startDay: string, endDay: string) => ({
+  startUtc: `${startDay}T00:00:00.000+08:00`,
+  endUtc: `${endDay}T23:59:59.999+08:00`,
+});
+
 // 格式化北京时间显示 - 统一格式
 export const formatBeijingTime = (dateString: string) => {
   try {

@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { getBeijingTimeISO } from '@/utils/beijingTime';
+import { getBeijingTimeISO, beijingDayToUtcRange } from '@/utils/beijingTime';
 import { notifyAdminActivity, ACTIVITY_TYPES, MODULE_NAMES } from '@/services/adminNotificationService';
 
 export interface DiabetesRecord {
@@ -68,8 +68,9 @@ export const getDiabetesRecords = async (startDate?: string, endDate?: string): 
       .eq('user_id', user.id);
 
     if (startDate && endDate) {
-      query = query.gte('timestamp', startDate + 'T00:00:00.000Z')
-                  .lte('timestamp', endDate + 'T23:59:59.999Z');
+      // startDate/endDate 是北京日；timestamp 存真 UTC，按北京日窗口换算
+      const { startUtc, endUtc } = beijingDayToUtcRange(startDate, endDate);
+      query = query.gte('timestamp', startUtc).lte('timestamp', endUtc);
     }
 
     const { data, error } = await query.order('timestamp', { ascending: false });
