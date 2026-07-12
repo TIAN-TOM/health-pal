@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, BookOpen, Heart, Brain, Pill, Home, Smile } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
 import { EducationArticle, getEducationArticles } from '@/services/educationService';
 
 interface EducationCenterProps {
@@ -11,11 +11,14 @@ interface EducationCenterProps {
 }
 
 const EducationCenter = ({ onBack }: EducationCenterProps) => {
-  const [articles, setArticles] = useState<EducationArticle[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedArticle, setSelectedArticle] = useState<EducationArticle | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+
+  // getEducationArticles 失败时返回内置默认文章，不会 reject，无需错误分支
+  const { data: articles = [], isPending: isLoading } = useQuery({
+    queryKey: ['education-articles'],
+    queryFn: getEducationArticles,
+  });
 
   const categories = [
     { value: 'all', label: '全部', icon: BookOpen, color: 'bg-gray-500' },
@@ -26,27 +29,7 @@ const EducationCenter = ({ onBack }: EducationCenterProps) => {
     { value: 'psychology', label: '心理支持', icon: Smile, color: 'bg-purple-500' }
   ];
 
-  useEffect(() => {
-    loadArticles();
-  }, []);
-
-  const loadArticles = async () => {
-    try {
-      const data = await getEducationArticles();
-      setArticles(data);
-    } catch (error) {
-      console.error('加载科普文章失败:', error);
-      toast({
-        title: "加载失败",
-        description: "请检查网络连接后重试",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const filteredArticles = selectedCategory === 'all' 
+  const filteredArticles = selectedCategory === 'all'
     ? articles 
     : articles.filter(article => article.category === selectedCategory);
 

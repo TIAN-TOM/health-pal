@@ -1,45 +1,73 @@
 
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Pill, Trash2, Edit } from 'lucide-react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, Plus, Pill, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Medication, getMedications, saveMedication, deleteMedication } from '@/services/medicationsService';
+import { getMedications, saveMedication, deleteMedication } from '@/services/medicationsService';
 
 interface MedicationManagementProps {
   onBack: () => void;
 }
 
 const MedicationManagement = ({ onBack }: MedicationManagementProps) => {
-  const [medications, setMedications] = useState<Medication[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMedication, setNewMedication] = useState({
     name: '',
     frequency: 'daily'
   });
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadMedications();
-  }, []);
+  const medicationsQuery = useQuery({
+    queryKey: ['medications'],
+    queryFn: getMedications,
+  });
+  const medications = medicationsQuery.data ?? [];
 
-  const loadMedications = async () => {
-    try {
-      const data = await getMedications();
-      setMedications(data);
-    } catch (error) {
-      console.error('加载药物失败:', error);
+  const addMutation = useMutation({
+    mutationFn: saveMedication,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['medications'] });
+      setNewMedication({ name: '', frequency: 'daily' });
+      setShowAddForm(false);
       toast({
-        title: "加载失败",
+        title: "添加成功",
+        description: "药物已添加到常用列表",
+      });
+    },
+    onError: (error) => {
+      console.error('添加失败:', error);
+      toast({
+        title: "添加失败",
         description: "请检查网络连接后重试",
         variant: "destructive"
       });
-    }
-  };
+    },
+  });
 
-  const handleAdd = async () => {
+  const deleteMutation = useMutation({
+    mutationFn: deleteMedication,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['medications'] });
+      toast({
+        title: "删除成功",
+        description: "药物已从常用列表中删除",
+      });
+    },
+    onError: (error) => {
+      console.error('删除失败:', error);
+      toast({
+        title: "删除失败",
+        description: "请检查网络连接后重试",
+        variant: "destructive"
+      });
+    },
+  });
+
+  const handleAdd = () => {
     if (!newMedication.name.trim()) {
       toast({
         title: "请输入药物名称",
@@ -47,49 +75,14 @@ const MedicationManagement = ({ onBack }: MedicationManagementProps) => {
       });
       return;
     }
-
-    setIsLoading(true);
-    try {
-      await saveMedication(newMedication);
-      await loadMedications();
-      setNewMedication({ name: '', frequency: 'daily' });
-      setShowAddForm(false);
-      toast({
-        title: "添加成功",
-        description: "药物已添加到常用列表",
-      });
-    } catch (error) {
-      console.error('添加失败:', error);
-      toast({
-        title: "添加失败",
-        description: "请检查网络连接后重试",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    addMutation.mutate(newMedication);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!window.confirm('确定要删除这个药物吗？')) {
       return;
     }
-
-    try {
-      await deleteMedication(id);
-      await loadMedications();
-      toast({
-        title: "删除成功",
-        description: "药物已从常用列表中删除",
-      });
-    } catch (error) {
-      console.error('删除失败:', error);
-      toast({
-        title: "删除失败",
-        description: "请检查网络连接后重试",
-        variant: "destructive"
-      });
-    }
+    deleteMutation.mutate(id);
   };
 
   const getFrequencyLabel = (frequency: string) => {
@@ -172,10 +165,10 @@ const MedicationManagement = ({ onBack }: MedicationManagementProps) => {
                   <div className="flex gap-3">
                     <Button
                       onClick={handleAdd}
-                      disabled={isLoading}
+                      disabled={addMutation.isPending}
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                     >
-                      {isLoading ? '添加中...' : '保存'}
+                      {addMutation.isPending ? '添加中...' : '保存'}
                     </Button>
                     <Button
                       onClick={() => setShowAddForm(false)}
@@ -191,7 +184,18 @@ const MedicationManagement = ({ onBack }: MedicationManagementProps) => {
 
             <div className="space-y-3">
               <h3 className="text-lg font-medium text-gray-800">常用药物列表</h3>
-              {medications.length === 0 ? (
+              {medicationsQuery.isPending ? (
+                <div className="text-center py-8 text-gray-600" role="status">
+                  加载中...
+                </div>
+              ) : medicationsQuery.isError ? (
+                <div className="text-center py-8 space-y-3" role="alert">
+                  <p className="text-gray-600">药物列表加载失败，请检查网络后重试</p>
+                  <Button variant="outline" onClick={() => medicationsQuery.refetch()}>
+                    重新加载
+                  </Button>
+                </div>
+              ) : medications.length === 0 ? (
                 <div className="text-center py-8 text-gray-600">
                   还没有添加常用药物
                 </div>

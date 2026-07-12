@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,40 +16,27 @@ import {
   PaginationContent,
   PaginationItem,
   PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
 } from '@/components/ui/pagination';
 
 const MyPurchases = () => {
-  const [purchases, setPurchases] = useState<UserPurchase[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedPurchase, setSelectedPurchase] = useState<UserPurchase | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
   const pageSize = 10;
 
-  useEffect(() => {
-    loadPurchases();
-  }, [currentPage, statusFilter]);
-
-  const loadPurchases = async () => {
-    setLoading(true);
-    try {
-      const { data, count } = await getUserPurchasesWithPagination(
+  const { data: purchasesPage, isPending: loading, isError, refetch } = useQuery({
+    queryKey: ['user-purchases', currentPage, statusFilter],
+    queryFn: () =>
+      getUserPurchasesWithPagination(
         currentPage,
         pageSize,
         statusFilter === 'all' ? undefined : statusFilter === 'active'
-      );
-      setPurchases(data);
-      setTotalCount(count || 0);
-    } catch (error) {
-      console.error('加载购买记录失败:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      ),
+  });
+
+  const purchases = purchasesPage?.data ?? [];
+  const totalCount = purchasesPage?.count ?? 0;
 
   const getItemIcon = (itemType: string, itemName: string) => {
     if (itemName?.includes('皮肤')) return '🎨';
@@ -77,6 +65,17 @@ const MyPurchases = () => {
       <div className="text-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
         <p className="text-muted-foreground">加载中...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-8 space-y-4" role="alert">
+        <p className="text-muted-foreground">购买记录加载失败，请检查网络后重试</p>
+        <Button variant="outline" onClick={() => refetch()}>
+          重新加载
+        </Button>
       </div>
     );
   }
