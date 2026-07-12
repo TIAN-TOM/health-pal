@@ -68,6 +68,24 @@ export interface Enemy {
   hitCooldown: number;
 }
 
+/** 竞技模式的电脑对手。*/
+export interface Cpu {
+  id: number;
+  x: number;
+  y: number;
+  dir: Direction;
+  alive: boolean;
+  moveCooldown: number;
+  bombCooldown: number;
+}
+
+/** AI/炸弹碰撞判定只需要玩家的位置与存活状态。*/
+export interface PlayerPos {
+  x: number;
+  y: number;
+  alive: boolean;
+}
+
 export interface LevelConfig {
   level: number;
   enemyCount: number;

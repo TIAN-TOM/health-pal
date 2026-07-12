@@ -2,25 +2,27 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
-  RotateCcw, Trophy, Bomb, ArrowUp, ArrowDown,
+  RotateCcw, Bomb, ArrowUp, ArrowDown,
   ArrowLeft as ArrowLeftIcon, ArrowRight as ArrowRightIcon,
-  Flame, Coins, Radio, Snowflake, Home,
+  Flame, Coins, Radio, Home,
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { awardGameCompletionBonus } from '@/services/pointsService';
 import { toast } from '@/hooks/use-toast';
 import {
   ROWS, COLS, TICK_MS, BOMB_FUSE_TICKS, EXPLOSION_TICKS,
-  PLAYER_BASE_MOVE_TICKS, BOMB_KICK_MOVE_TICKS,
+  PLAYER_BASE_MOVE_TICKS,
   FREEZE_DURATION_TICKS, LAVA_INTERVAL_TICKS, HP_MAX,
   POWER_UP_LABEL,
   type CellType, type Direction, type PowerUp, type BombEntity,
-  type Explosion, type Enemy, type LevelConfig, type GameMode,
+  type Explosion, type Enemy, type Cpu, type LevelConfig, type GameMode,
   type CharacterId, type SpecialCell, type FloatingText,
 } from '@/components/games/bomberPop/types';
 import { buildLevel } from '@/components/games/bomberPop/levelConfig';
 import { generateMap } from '@/components/games/bomberPop/mapGenerator';
-import { computeExplosionCells, computeDangerCells } from '@/components/games/bomberPop/explosion';
+import { computeDangerCells } from '@/components/games/bomberPop/explosion';
+import { stepEnemy, stepCpu } from '@/components/games/bomberPop/ai';
+import { stepKickedBombs, resolveDetonations } from '@/components/games/bomberPop/bombs';
 import { playSfx } from '@/components/games/bomberPop/sound';
 import { findSpecial } from '@/components/games/bomberPop/specialCells';
 import { ARCADE_TOTAL_LEVELS, BATTLE_BEST_OF, SURVIVAL_WAVE_INTERVAL_SEC } from '@/components/games/bomberPop/modes';
@@ -36,16 +38,6 @@ import FloatingTextLayer from '@/components/games/bomberPop/FloatingText';
 interface BomberPopGameProps {
   onBack: () => void;
   soundEnabled: boolean;
-}
-
-interface Cpu {
-  id: number;
-  x: number;
-  y: number;
-  dir: Direction;
-  alive: boolean;
-  moveCooldown: number;
-  bombCooldown: number;
 }
 
 const SPAWN_PLAYER = { x: 1, y: 1 };
@@ -444,213 +436,64 @@ const BomberPopGame = ({ onBack, soundEnabled }: BomberPopGameProps) => {
       }
 
       // 处理被踢动的炸弹移动
-      setBombs(prevBombs => prevBombs.map(b => {
-        if (!b.vx && !b.vy) return b;
-        const cd = (b.moveCooldown ?? 0) - 1;
-        if (cd > 0) return { ...b, moveCooldown: cd };
-        const nx = b.x + (b.vx ?? 0);
-        const ny = b.y + (b.vy ?? 0);
-        if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS || map[ny][nx] !== 'empty') {
-          return { ...b, vx: 0, vy: 0, moveCooldown: 0 };
-        }
-        if (prevBombs.some(o => o.id !== b.id && o.x === nx && o.y === ny)) {
-          return { ...b, vx: 0, vy: 0, moveCooldown: 0 };
-        }
-        if (player.alive && player.x === nx && player.y === ny) {
-          return { ...b, vx: 0, vy: 0, moveCooldown: 0 };
-        }
-        if (enemies.some(e => e.alive && e.x === nx && e.y === ny)) {
-          return { ...b, vx: 0, vy: 0, moveCooldown: 0 };
-        }
-        return { ...b, x: nx, y: ny, moveCooldown: BOMB_KICK_MOVE_TICKS };
-      }));
+      setBombs(prevBombs => stepKickedBombs(prevBombs, { map, player, enemies }));
 
       // 炸弹倒计时 + 引爆（遥控弹由 detonateRemote 触发）
       setBombs(prevBombs => {
-        let workingBombs = prevBombs.map(b => b.remote ? b : { ...b, timer: b.timer - 1 });
-        let workingMap = map;
-        const newExplosions: Explosion[] = [];
-        let totalBoxes = 0;
-        const revealedPowerUps: PowerUp[] = [];
-
-        const toDetonate = new Set<number>();
-        workingBombs.filter(b => b.timer <= 0).forEach(b => toDetonate.add(b.id));
-
-        let changed = true;
-        while (changed) {
-          changed = false;
-          for (const bombId of Array.from(toDetonate)) {
-            const bomb = workingBombs.find(b => b.id === bombId);
-            if (!bomb) continue;
-            const { cells, destroyedBoxes, triggeredBombs } = computeExplosionCells(bomb, workingMap, workingBombs);
-            const newMap = workingMap.map(row => [...row]);
-            destroyedBoxes.forEach(({ x, y }) => {
-              newMap[y][x] = 'empty';
-              const hidden = hiddenPowerUps.find(p => p.x === x && p.y === y);
-              if (hidden) revealedPowerUps.push(hidden);
-            });
-            workingMap = newMap;
-            totalBoxes += destroyedBoxes.length;
-            explosionIdRef.current += 1;
-            newExplosions.push({
-              id: explosionIdRef.current,
-              cells,
-              timer: EXPLOSION_TICKS,
-            });
-            triggeredBombs.forEach(cb => {
-              if (!toDetonate.has(cb.id)) {
-                toDetonate.add(cb.id);
-                changed = true;
-              }
-            });
-          }
-        }
-
-        if (toDetonate.size > 0) {
+        const result = resolveDetonations(prevBombs, map, hiddenPowerUps, () => {
+          explosionIdRef.current += 1;
+          return explosionIdRef.current;
+        });
+        if (result.detonated) {
           sfx('explode');
-          setMap(workingMap);
-          setExplosions(prev => [...prev, ...newExplosions]);
-          if (totalBoxes > 0) setScore(s => s + totalBoxes * 10);
-          if (revealedPowerUps.length > 0) {
-            setActivePowerUps(prev => [...prev, ...revealedPowerUps]);
-            setHiddenPowerUps(prev => prev.filter(p => !revealedPowerUps.some(r => r.x === p.x && r.y === p.y)));
+          setMap(result.newMap);
+          setExplosions(prev => [...prev, ...result.newExplosions]);
+          if (result.destroyedBoxCount > 0) setScore(s => s + result.destroyedBoxCount * 10);
+          if (result.revealedPowerUps.length > 0) {
+            setActivePowerUps(prev => [...prev, ...result.revealedPowerUps]);
+            setHiddenPowerUps(prev => prev.filter(p => !result.revealedPowerUps.some(r => r.x === p.x && r.y === p.y)));
           }
-          workingBombs = workingBombs.filter(b => !toDetonate.has(b.id));
         }
-        return workingBombs;
+        return result.remainingBombs;
       });
 
       setExplosions(prev => prev.map(e => ({ ...e, timer: e.timer - 1 })).filter(e => e.timer > 0));
 
       // === 智能敌人（冻结时跳过） ===
       if (freezeTicks <= 0) {
-        setEnemies(prev => {
-          const danger = computeDangerCells(bombs, map);
-          return prev.map(enemy => {
-            if (!enemy.alive) return enemy;
-            const moveTicks = enemy.kind === 'fast'
-              ? Math.max(1, levelCfgRef.current.enemyMoveTicks - 2)
-              : enemy.kind === 'tank'
-                ? levelCfgRef.current.enemyMoveTicks + 2
-                : levelCfgRef.current.enemyMoveTicks;
-            if (enemy.moveCooldown > 0) return { ...enemy, moveCooldown: enemy.moveCooldown - 1, hitCooldown: Math.max(0, enemy.hitCooldown - 1) };
-
-            const tryDir = (dir: Direction) => {
-              let nx = enemy.x, ny = enemy.y;
-              if (dir === 'up') ny--;
-              else if (dir === 'down') ny++;
-              else if (dir === 'left') nx--;
-              else if (dir === 'right') nx++;
-              if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) return null;
-              if (map[ny][nx] !== 'empty') return null;
-              if (bombs.some(b => b.x === nx && b.y === ny)) return null;
-              return { x: nx, y: ny };
-            };
-            const allDirs: Direction[] = ['up', 'down', 'left', 'right'];
-
-            if (enemy.intelligence >= 1 && danger.has(`${enemy.x},${enemy.y}`)) {
-              const safeOptions = allDirs
-                .map(d => ({ d, pos: tryDir(d) }))
-                .filter(o => o.pos && !danger.has(`${o.pos.x},${o.pos.y}`));
-              if (safeOptions.length > 0) {
-                const choice = safeOptions[Math.floor(Math.random() * safeOptions.length)];
-                return { ...enemy, dir: choice.d, x: choice.pos!.x, y: choice.pos!.y, moveCooldown: moveTicks, hitCooldown: Math.max(0, enemy.hitCooldown - 1) };
-              }
-            }
-            if (enemy.intelligence >= 2 && player.alive) {
-              const dx = player.x - enemy.x;
-              const dy = player.y - enemy.y;
-              const preferred: Direction[] = [];
-              if (Math.abs(dx) > Math.abs(dy)) {
-                if (dx !== 0) preferred.push(dx > 0 ? 'right' : 'left');
-                if (dy !== 0) preferred.push(dy > 0 ? 'down' : 'up');
-              } else {
-                if (dy !== 0) preferred.push(dy > 0 ? 'down' : 'up');
-                if (dx !== 0) preferred.push(dx > 0 ? 'right' : 'left');
-              }
-              for (const d of preferred) {
-                const pos = tryDir(d);
-                if (pos && !danger.has(`${pos.x},${pos.y}`)) {
-                  return { ...enemy, dir: d, x: pos.x, y: pos.y, moveCooldown: moveTicks, hitCooldown: Math.max(0, enemy.hitCooldown - 1) };
-                }
-              }
-            }
-            const current = tryDir(enemy.dir);
-            if (current && (enemy.intelligence === 0 || !danger.has(`${current.x},${current.y}`))) {
-              return { ...enemy, x: current.x, y: current.y, moveCooldown: moveTicks, hitCooldown: Math.max(0, enemy.hitCooldown - 1) };
-            }
-            const shuffled = [...allDirs].sort(() => Math.random() - 0.5);
-            for (const d of shuffled) {
-              const pos = tryDir(d);
-              if (pos && (enemy.intelligence === 0 || !danger.has(`${pos.x},${pos.y}`))) {
-                return { ...enemy, dir: d, x: pos.x, y: pos.y, moveCooldown: moveTicks, hitCooldown: Math.max(0, enemy.hitCooldown - 1) };
-              }
-            }
-            return { ...enemy, hitCooldown: Math.max(0, enemy.hitCooldown - 1) };
-          });
-        });
+        const danger = computeDangerCells(bombs, map);
+        const enemyMoveTicks = levelCfgRef.current.enemyMoveTicks;
+        setEnemies(prev => prev.map(enemy =>
+          stepEnemy(enemy, { map, bombs, danger, player, enemyMoveTicks })
+        ));
       }
 
       // === CPU（竞技模式） ===
       if (mode === 'battle') {
         const danger = computeDangerCells(bombs, map);
-        setCpus(prev => prev.map(cpu => {
-          if (!cpu.alive) return cpu;
-          const nextCpu = { ...cpu };
-          // 放炸弹决策
-          nextCpu.bombCooldown -= 1;
-          if (nextCpu.bombCooldown <= 0) {
-            const cnt = bombs.filter(b => b.ownerId === 'enemy').length;
-            if (cnt < 3 && !bombs.some(b => b.x === cpu.x && b.y === cpu.y)) {
-              bombIdRef.current += 1;
-              setBombs(bs => [...bs, {
-                id: bombIdRef.current, x: cpu.x, y: cpu.y,
-                timer: BOMB_FUSE_TICKS, range: 2, ownerId: 'enemy',
-              }]);
-              nextCpu.bombCooldown = 40 + Math.floor(Math.random() * 30);
-            } else {
-              nextCpu.bombCooldown = 10;
-            }
-          }
-          // 移动
-          if (nextCpu.moveCooldown > 0) {
-            nextCpu.moveCooldown -= 1;
+        // setBombs 必须嵌套在 setCpus 更新器内：函数式更新器在 render 阶段才执行，
+        // 若在外部同步读取放弹结果会永远为空（CPU 因此从不放炸弹）。用最新的 prev 决策。
+        setCpus(prev => {
+          const bombsToPlace: { x: number; y: number }[] = [];
+          const nextCpus = prev.map(cpu => {
+            const { cpu: nextCpu, placeBomb } = stepCpu(cpu, { map, bombs, danger });
+            if (placeBomb) bombsToPlace.push({ x: cpu.x, y: cpu.y });
             return nextCpu;
+          });
+          if (bombsToPlace.length > 0) {
+            setBombs(bs => [
+              ...bs,
+              ...bombsToPlace.map(pos => {
+                bombIdRef.current += 1;
+                return {
+                  id: bombIdRef.current, x: pos.x, y: pos.y,
+                  timer: BOMB_FUSE_TICKS, range: 2, ownerId: 'enemy' as const,
+                };
+              }),
+            ]);
           }
-          const tryDir = (dir: Direction) => {
-            let nx = cpu.x, ny = cpu.y;
-            if (dir === 'up') ny--;
-            else if (dir === 'down') ny++;
-            else if (dir === 'left') nx--;
-            else if (dir === 'right') nx++;
-            if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) return null;
-            if (map[ny][nx] !== 'empty') return null;
-            if (bombs.some(b => b.x === nx && b.y === ny)) return null;
-            return { x: nx, y: ny };
-          };
-          const allDirs: Direction[] = ['up', 'down', 'left', 'right'];
-          // 优先躲危险
-          if (danger.has(`${cpu.x},${cpu.y}`)) {
-            const safe = allDirs.map(d => ({ d, pos: tryDir(d) }))
-              .filter(o => o.pos && !danger.has(`${o.pos.x},${o.pos.y}`));
-            if (safe.length > 0) {
-              const c = safe[Math.floor(Math.random() * safe.length)];
-              return { ...nextCpu, dir: c.d, x: c.pos!.x, y: c.pos!.y, moveCooldown: 3 };
-            }
-          }
-          const current = tryDir(cpu.dir);
-          if (current && !danger.has(`${current.x},${current.y}`)) {
-            return { ...nextCpu, x: current.x, y: current.y, moveCooldown: 3 };
-          }
-          const shuffled = [...allDirs].sort(() => Math.random() - 0.5);
-          for (const d of shuffled) {
-            const pos = tryDir(d);
-            if (pos && !danger.has(`${pos.x},${pos.y}`)) {
-              return { ...nextCpu, dir: d, x: pos.x, y: pos.y, moveCooldown: 3 };
-            }
-          }
-          return nextCpu;
-        }));
+          return nextCpus;
+        });
       }
 
       // === 火山喷口 ===
