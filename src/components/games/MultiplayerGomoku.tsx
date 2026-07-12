@@ -14,6 +14,7 @@ import {
   GomokuRoom,
 } from '@/services/gomokuRoomService';
 import { useGomokuRoom, GomokuPlayerRole } from '@/hooks/useGomokuRoom';
+import { BOARD_SIZE } from '@/lib/gomoku';
 
 interface MultiplayerGomokuProps {
   onBack: () => void;
@@ -21,8 +22,6 @@ interface MultiplayerGomokuProps {
 }
 
 type GameMode = 'menu' | 'lobby' | 'game';
-
-const BOARD_SIZE = 15;
 
 const MultiplayerGomoku = ({ onBack, soundEnabled = true }: MultiplayerGomokuProps) => {
   const [gameMode, setGameMode] = useState<GameMode>('menu');

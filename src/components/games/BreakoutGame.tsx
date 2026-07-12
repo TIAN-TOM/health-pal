@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Play, RotateCcw, Pause } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useHighScore } from '@/hooks/useHighScore';
 
 interface BreakoutGameProps {
   onBack: () => void;
@@ -27,9 +28,7 @@ const BreakoutGame = ({ onBack, soundEnabled = true }: BreakoutGameProps) => {
   const [score, setScore] = useState(0);
   const [level, setLevel] = useState(1);
   const [lives, setLives] = useState(3);
-  const [highScore, setHighScore] = useState(() => {
-    return parseInt(localStorage.getItem('breakout-high-score') || '0');
-  });
+  const { highScore, reportScore } = useHighScore('breakout-high-score');
 
   const gameRef = useRef({
     paddle: { x: CANVAS_WIDTH / 2 - PADDLE_WIDTH / 2, y: CANVAS_HEIGHT - 25, width: PADDLE_WIDTH },
@@ -664,11 +663,10 @@ const BreakoutGame = ({ onBack, soundEnabled = true }: BreakoutGameProps) => {
   }, [gameState, gameLoop]);
 
   useEffect(() => {
-    if (gameState === 'gameOver' && score > highScore) {
-      setHighScore(score);
-      localStorage.setItem('breakout-high-score', score.toString());
+    if (gameState === 'gameOver') {
+      reportScore(score);
     }
-  }, [gameState, score, highScore]);
+  }, [gameState, score, reportScore]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);

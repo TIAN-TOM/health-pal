@@ -5,7 +5,8 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist"] },
+  // supabase/functions/mcp/index.ts 由 @lovable.dev/mcp-js 从 src/lib/mcp/ 打包生成，不参与 lint
+  { ignores: ["dist", "supabase/functions/mcp/index.ts"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

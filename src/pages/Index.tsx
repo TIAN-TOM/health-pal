@@ -117,7 +117,6 @@ export default function Index() {
     if (currentPage === "home") {
       restoreScrollPosition("home");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
   if (loading) {

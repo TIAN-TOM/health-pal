@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, RotateCcw, Star } from 'lucide-react';
+import { useHighScore } from '@/hooks/useHighScore';
 
 interface BubblePopGameProps {
   onBack: () => void;
@@ -39,10 +40,7 @@ const BubblePopGame = ({ onBack, soundEnabled }: BubblePopGameProps) => {
   const [lastPopTime, setLastPopTime] = useState(0);
   const [powerUps, setPowerUps] = useState<string[]>([]);
   const [animatingBubbles, setAnimatingBubbles] = useState<number[]>([]);
-  const [highScore, setHighScore] = useState(() => {
-    const saved = localStorage.getItem('bubble-pop-high-score');
-    return saved ? parseInt(saved) : 0;
-  });
+  const { highScore, reportScore } = useHighScore('bubble-pop-high-score');
 
   const generateBubble = useCallback((id: number): Bubble => {
     const isSpecial = Math.random() < 0.1; // 10% 特殊气泡
@@ -233,11 +231,8 @@ const BubblePopGame = ({ onBack, soundEnabled }: BubblePopGameProps) => {
 
   // 保存最高分
   useEffect(() => {
-    if (score > highScore) {
-      setHighScore(score);
-      localStorage.setItem('bubble-pop-high-score', score.toString());
-    }
-  }, [score, highScore]);
+    reportScore(score);
+  }, [score, reportScore]);
 
   return (
     <div className="max-w-md mx-auto p-4">

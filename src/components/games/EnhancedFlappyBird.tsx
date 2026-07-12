@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Play, RotateCcw } from 'lucide-react';
+import { useHighScore } from '@/hooks/useHighScore';
 
 interface EnhancedFlappyBirdProps {
   onBack: () => void;
@@ -13,9 +14,7 @@ const EnhancedFlappyBird = ({ onBack, soundEnabled = true }: EnhancedFlappyBirdP
   const audioContextRef = useRef<AudioContext | null>(null);
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'gameOver'>('idle');
   const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(() => {
-    return parseInt(localStorage.getItem('flappy-bird-high-score') || '0');
-  });
+  const { highScore, reportScore } = useHighScore('flappy-bird-high-score');
 
   const gameRef = useRef({
     bird: { x: 50, y: 200, velocity: 0 },
@@ -424,12 +423,9 @@ const EnhancedFlappyBird = ({ onBack, soundEnabled = true }: EnhancedFlappyBirdP
 
   useEffect(() => {
     if (gameState === 'gameOver') {
-      if (score > highScore) {
-        setHighScore(score);
-        localStorage.setItem('flappy-bird-high-score', score.toString());
-      }
+      reportScore(score);
     }
-  }, [gameState, score, highScore]);
+  }, [gameState, score, reportScore]);
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {

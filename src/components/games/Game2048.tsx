@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, RotateCcw, Trophy } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useHighScore } from '@/hooks/useHighScore';
 
 interface Game2048Props {
   onBack: () => void;
@@ -16,10 +17,7 @@ type Direction = 'up' | 'down' | 'left' | 'right';
 const Game2048 = ({ onBack, soundEnabled }: Game2048Props) => {
   const [board, setBoard] = useState<Board>(() => initializeBoard());
   const [score, setScore] = useState(0);
-  const [bestScore, setBestScore] = useState(() => {
-    const saved = localStorage.getItem('2048-best-score');
-    return saved ? parseInt(saved) : 0;
-  });
+  const { highScore: bestScore, reportScore } = useHighScore('2048-best-score');
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
@@ -129,10 +127,7 @@ const Game2048 = ({ onBack, soundEnabled }: Game2048Props) => {
       const newScore = score + scoreIncrease;
       setScore(newScore);
       
-      if (newScore > bestScore) {
-        setBestScore(newScore);
-        localStorage.setItem('2048-best-score', newScore.toString());
-      }
+      reportScore(newScore);
 
       // Check for 2048 tile
       if (!won && newBoard.some(row => row.some(cell => cell === 2048))) {
@@ -144,7 +139,7 @@ const Game2048 = ({ onBack, soundEnabled }: Game2048Props) => {
         setGameOver(true);
       }
     }
-  }, [board, score, bestScore, gameOver, won]);
+  }, [board, score, reportScore, gameOver, won]);
 
   function canMove(board: Board): boolean {
     // Check for empty cells

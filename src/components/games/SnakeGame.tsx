@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, RotateCcw, Play, Pause } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useHighScore } from '@/hooks/useHighScore';
 
 interface SnakeGameProps {
   onBack: () => void;
@@ -31,10 +32,7 @@ const SnakeGame = ({ onBack, soundEnabled }: SnakeGameProps) => {
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [speed, setSpeed] = useState(200);
-  const [highScore, setHighScore] = useState(() => {
-    const saved = localStorage.getItem('snake-high-score');
-    return saved ? parseInt(saved) : 0;
-  });
+  const { highScore, reportScore } = useHighScore('snake-high-score');
   const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
   const [specialEffects, setSpecialEffects] = useState<string[]>([]);
   const [foodEaten, setFoodEaten] = useState(0);
@@ -316,11 +314,8 @@ const SnakeGame = ({ onBack, soundEnabled }: SnakeGameProps) => {
 
   // 保存最高分
   useEffect(() => {
-    if (score > highScore) {
-      setHighScore(score);
-      localStorage.setItem('snake-high-score', score.toString());
-    }
-  }, [score, highScore]);
+    reportScore(score);
+  }, [score, reportScore]);
 
   const resetGame = () => {
     setSnake(INITIAL_SNAKE);
