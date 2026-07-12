@@ -2,12 +2,14 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
+// Week boundary follows Asia/Shanghai, matching the rest of the app
+// (check-in dates and the points RPCs all use the Beijing day).
 function mondayOf(date: Date): string {
-  const d = new Date(date);
-  const day = d.getUTCDay();
+  const beijing = new Date(date.getTime() + 8 * 3600_000);
+  const day = beijing.getUTCDay();
   const diff = day === 0 ? -6 : 1 - day;
-  d.setUTCDate(d.getUTCDate() + diff);
-  return d.toISOString().slice(0, 10);
+  beijing.setUTCDate(beijing.getUTCDate() + diff);
+  return beijing.toISOString().slice(0, 10);
 }
 
 Deno.serve(async (req) => {
@@ -63,17 +65,26 @@ Deno.serve(async (req) => {
         .limit(50),
       supabase
         .from('diabetes_records')
-        .select('measurement_time, glucose_value, meal_context, notes')
-        .gte('measurement_time', sevenDaysAgo)
-        .order('measurement_time', { ascending: false })
+        .select('timestamp, blood_sugar, measurement_time, note')
+        .gte('timestamp', sevenDaysAgo)
+        .order('timestamp', { ascending: false })
         .limit(50),
       supabase
         .from('daily_checkins')
-        .select('checkin_date, mood')
+        .select('checkin_date, mood_score')
         .gte('checkin_date', sevenDaysAgo.slice(0, 10))
         .order('checkin_date', { ascending: false })
         .limit(14),
     ]);
+
+    const queryError = meniere.error ?? diabetes.error ?? checkins.error;
+    if (queryError) {
+      console.error('data query error', queryError);
+      return new Response(JSON.stringify({ error: '读取健康数据失败' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const dataPoints =
       (meniere.data?.length ?? 0) +
@@ -111,21 +122,50 @@ ${JSON.stringify(diabetes.data ?? [])}
 每日打卡心情 (${checkins.data?.length ?? 0} 条)：
 ${JSON.stringify(checkins.data ?? [])}`;
 
-    const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: '你只返回严格的 JSON，字段：summary (string), suggestions (string[])。' },
-          { role: 'user', content: prompt },
-        ],
-        response_format: { type: 'json_object' },
-      }),
-    });
+    // 再查一次缓存，缩小并发窗口（两个请求同时通过顶部缓存检查时，
+    // 只有更慢的那个会在这里看到对方已写入的行）
+    const { data: recheck } = await supabase
+      .from('ai_weekly_reports')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('week_start', weekStart)
+      .maybeSingle();
+    if (recheck) {
+      return new Response(JSON.stringify({ cached: true, report: recheck }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const abort = new AbortController();
+    const timeout = setTimeout(() => abort.abort(), 30_000);
+    let aiResp: Response;
+    try {
+      aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { role: 'system', content: '你只返回严格的 JSON，字段：summary (string), suggestions (string[])。' },
+            { role: 'user', content: prompt },
+          ],
+          response_format: { type: 'json_object' },
+        }),
+        signal: abort.signal,
+      });
+    } catch (fetchErr) {
+      console.error('AI fetch failed/timeout', fetchErr);
+      return new Response(JSON.stringify({ error: 'AI 请求超时，请稍后再试' }), {
+        status: 504,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (aiResp.status === 429) {
       return new Response(JSON.stringify({ error: 'AI 请求过多，请稍后再试' }), {
@@ -174,6 +214,21 @@ ${JSON.stringify(checkins.data ?? [])}`;
       .select()
       .single();
     if (insertErr) {
+      // 23505 = unique_violation：并发请求先写入了本周的行，返回那一份而不是 500
+      if (insertErr.code === '23505') {
+        const { data: winner } = await supabase
+          .from('ai_weekly_reports')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('week_start', weekStart)
+          .maybeSingle();
+        if (winner) {
+          return new Response(JSON.stringify({ cached: true, report: winner }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
       console.error('insert error', insertErr);
       return new Response(JSON.stringify({ error: '保存周报失败' }), {
         status: 500,

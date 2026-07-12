@@ -1,7 +1,6 @@
 // Send a single reminder email through Resend Gateway.
 // Called by the daily-reminder-scheduler; not exposed directly to the browser.
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3.23.8';
 
 const BodySchema = z.object({
@@ -26,15 +25,24 @@ const TITLE_MAP: Record<string, string> = {
   family_calendar: '👨‍👩‍👧 家庭日程',
 };
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function renderHtml(userName: string, items: z.infer<typeof BodySchema>['reminders']) {
   const rows = items
     .map(
       (r) => `
         <tr>
           <td style="padding:12px 16px;border-bottom:1px solid #eef2f7;vertical-align:top;">
-            <div style="font-size:14px;color:#1f2937;font-weight:600;">${TITLE_MAP[r.type] ?? r.type}</div>
-            <div style="font-size:14px;color:#111827;margin-top:4px;">${r.title}</div>
-            ${r.detail ? `<div style="font-size:12px;color:#6b7280;margin-top:4px;">${r.detail}</div>` : ''}
+            <div style="font-size:14px;color:#1f2937;font-weight:600;">${TITLE_MAP[r.type] ?? escapeHtml(r.type)}</div>
+            <div style="font-size:14px;color:#111827;margin-top:4px;">${escapeHtml(r.title)}</div>
+            ${r.detail ? `<div style="font-size:12px;color:#6b7280;margin-top:4px;">${escapeHtml(r.detail)}</div>` : ''}
           </td>
         </tr>`,
     )
@@ -44,7 +52,7 @@ function renderHtml(userName: string, items: z.infer<typeof BodySchema>['reminde
       <div style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);">
         <div style="padding:20px 20px 12px;background:linear-gradient(135deg,#3b82f6,#10b981);color:#fff;">
           <div style="font-size:18px;font-weight:700;">健康生活伴侣 · 今日提醒</div>
-          <div style="font-size:13px;opacity:.92;margin-top:4px;">${userName}，以下事项别忘记 👇</div>
+          <div style="font-size:13px;opacity:.92;margin-top:4px;">${escapeHtml(userName)}，以下事项别忘记 👇</div>
         </div>
         <table style="width:100%;border-collapse:collapse;">${rows}</table>
         <div style="padding:16px 20px;text-align:center;">
@@ -69,22 +77,15 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    // Allow either a valid user JWT or the service_role key (used by the scheduler).
+    // Only the daily-reminder-scheduler (service_role) may call this function.
+    // A user-JWT path here would let any account send arbitrary mail to any
+    // address, bypassing the scheduler's dedup and recipient logic.
     const token = authHeader.replace('Bearer ', '');
-    const isService = token === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    if (!isService) {
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_ANON_KEY')!,
-        { global: { headers: { Authorization: authHeader } } },
-      );
-      const { data, error } = await supabase.auth.getClaims(token);
-      if (error || !data?.claims) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+    if (token !== Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
