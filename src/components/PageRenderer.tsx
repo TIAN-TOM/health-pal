@@ -26,7 +26,6 @@ const MedicationRecord = lazyWithRetry(() => import('./MedicationRecord'));
 const FamilyDashboard = lazyWithRetry(() => import('./family/FamilyDashboard'));
 const FamilyExpenses = lazyWithRetry(() => import('./family/FamilyExpenses'));
 const FamilyReminders = lazyWithRetry(() => import('./family/FamilyReminders'));
-const FamilyCalendar = lazyWithRetry(() => import('./family/FamilyCalendar'));
 const EnhancedFamilyCalendar = lazyWithRetry(() => import('./family/EnhancedFamilyCalendar'));
 const FamilyMembers = lazyWithRetry(() => import('./family/FamilyMembers'));
 const FamilyMessages = lazyWithRetry(() => import('./family/FamilyMessages'));
@@ -139,8 +138,6 @@ const PageRenderer = ({
         return <FamilyExpenses onBack={handleFamilyModuleBack} />;
       case 'family-reminders':
         return <FamilyReminders onBack={handleFamilyModuleBack} />;
-      case 'family-calendar':
-        return <FamilyCalendar onBack={handleFamilyModuleBack} onNavigate={onNavigation} />;
       case 'enhanced-family-calendar':
         return <EnhancedFamilyCalendar onBack={handleFamilyModuleBack} onNavigate={onNavigation} />;
       case 'family-members':

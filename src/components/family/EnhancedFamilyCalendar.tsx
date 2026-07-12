@@ -71,8 +71,8 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
         title: formData.title,
         description: formData.description,
         event_date: formData.event_date,
-        start_time: formData.is_all_day ? null : formData.start_time,
-        end_time: formData.is_all_day ? null : formData.end_time,
+        start_time: formData.is_all_day ? undefined : formData.start_time,
+        end_time: formData.is_all_day ? undefined : formData.end_time,
         participants: formData.participants ? formData.participants.split(',').map(p => p.trim()) : [],
         is_all_day: formData.is_all_day,
         color: formData.color
@@ -174,7 +174,7 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
     
-    const days = [];
+    const days: { date: Date; isCurrentMonth: boolean }[] = [];
     
     // 添加上个月的日期（灰色显示）
     const prevMonth = month === 0 ? 11 : month - 1;

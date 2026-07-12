@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 interface UserInfoProps {
   userEmail?: string;
-  userRole: string;
+  userRole: string | null;
 }
 
 const UserInfo = ({ userEmail, userRole }: UserInfoProps) => {

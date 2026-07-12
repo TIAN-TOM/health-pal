@@ -7,11 +7,11 @@ export interface DiabetesRecord {
   id?: string;
   blood_sugar: number;
   measurement_time: string;
-  insulin_dose?: string;
-  medication?: string;
-  diet?: string;
-  exercise?: string;
-  note?: string;
+  insulin_dose?: string | null;
+  medication?: string | null;
+  diet?: string | null;
+  exercise?: string | null;
+  note?: string | null;
   timestamp?: string;
 }
 

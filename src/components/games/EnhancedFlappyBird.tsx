@@ -40,7 +40,7 @@ const EnhancedFlappyBird = ({ onBack, soundEnabled = true }: EnhancedFlappyBirdP
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    const clouds = [];
+    const clouds: Array<{ x: number; y: number; speed: number; size: number }> = [];
     for (let i = 0; i < 5; i++) {
       clouds.push({
         x: Math.random() * 400,

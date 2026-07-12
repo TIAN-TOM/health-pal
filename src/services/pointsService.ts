@@ -68,7 +68,7 @@ export const spendPoints = async (
   const { data, error } = await supabase.rpc('spend_user_points', {
     p_amount: amount,
     p_reason: description,
-    p_reference_id: referenceId ?? null
+    p_reference_id: referenceId
   });
   if (error) {
     console.error('消费积分失败:', error);
@@ -100,7 +100,7 @@ export const awardGameCompletionBonus = async (
   const { data, error } = await supabase.rpc('award_game_completion_bonus', {
     p_game_id: gameId,
     p_amount: amount,
-    p_description: description ?? null,
+    p_description: description,
   });
   if (error) {
     console.error('发放游戏奖励积分失败:', error);

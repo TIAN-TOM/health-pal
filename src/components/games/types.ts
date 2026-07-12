@@ -11,7 +11,7 @@ export interface GameStrategy {
 
 export interface GameComponentProps {
   onBack: () => void;
-  soundEnabled?: boolean;
+  soundEnabled: boolean;
 }
 
 export interface GameMeta {

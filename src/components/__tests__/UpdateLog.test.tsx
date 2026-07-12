@@ -54,11 +54,20 @@ describe("UpdateLog component", () => {
     expect(screen.getByRole("button", { name: /返回/ })).toBeInTheDocument();
   });
 
-  it("renders all version cards", () => {
+  it("renders the 10 most recent version cards and a load-more button", () => {
     render(<UpdateLog onBack={() => {}} />);
-    for (const u of updates) {
+    for (const u of updates.slice(0, 10)) {
       expect(screen.getByText(`版本 ${u.version}`)).toBeInTheDocument();
     }
+    expect(screen.queryByText(`版本 ${updates[10].version}`)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /查看更早的版本/ })).toBeInTheDocument();
+  });
+
+  it("reveals older versions when load-more is clicked", async () => {
+    const { fireEvent } = await import("@testing-library/react");
+    render(<UpdateLog onBack={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: /查看更早的版本/ }));
+    expect(screen.getByText(`版本 ${updates[10].version}`)).toBeInTheDocument();
   });
 
   it("renders the latest version's item titles", () => {

@@ -56,8 +56,8 @@ export const useCalendarData = () => {
         const totalRecordsCount = dayRecords.length;
         const hasAnySymptoms = dayRecords.some(r => {
           if (r.type === 'dizziness' && r.symptoms && r.symptoms.length > 0) return true;
-          if (r.type === 'lifestyle' && (r.diet?.length > 0 || r.sleep || r.stress)) return true;
-          if (r.type === 'medication' && r.medications?.length > 0) return true;
+          if (r.type === 'lifestyle' && ((r.diet?.length ?? 0) > 0 || r.sleep || r.stress)) return true;
+          if (r.type === 'medication' && (r.medications?.length ?? 0) > 0) return true;
           if (r.type === 'voice' && r.note) return true;
           return false;
         });

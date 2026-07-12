@@ -4,11 +4,11 @@ export interface FamilyCalendarEvent {
   id: string;
   user_id: string;
   title: string;
-  description?: string;
+  description?: string | null;
   event_date: string;
-  start_time?: string;
-  end_time?: string;
-  participants?: string[];
+  start_time?: string | null;
+  end_time?: string | null;
+  participants?: string[] | null;
   color: string;
   is_all_day: boolean;
   created_at: string;
@@ -38,7 +38,8 @@ export const familyCalendarService = {
       throw error;
     }
 
-    return data || [];
+    // 数据库中 color 可能为空，回退到默认蓝色
+    return (data || []).map((event) => ({ ...event, color: event.color ?? '#3B82F6' }));
   },
 
   // 获取当月事件
@@ -73,7 +74,7 @@ export const familyCalendarService = {
       throw error;
     }
 
-    return data;
+    return { ...data, color: data.color ?? '#3B82F6' };
   },
 
   // 更新日历事件
@@ -90,7 +91,7 @@ export const familyCalendarService = {
       throw error;
     }
 
-    return data;
+    return { ...data, color: data.color ?? '#3B82F6' };
   },
 
   // 删除日历事件

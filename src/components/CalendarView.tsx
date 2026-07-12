@@ -24,7 +24,7 @@ const CalendarView = () => {
   const startingDayOfWeek = firstDayOfMonth.getDay();
 
   // 创建日历网格
-  const calendarDays = [];
+  const calendarDays: ((typeof monthData)[number] | null)[] = [];
   
   // 添加空白格子（上个月的天数）
   for (let i = 0; i < startingDayOfWeek; i++) {

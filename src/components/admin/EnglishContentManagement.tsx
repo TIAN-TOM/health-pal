@@ -59,6 +59,7 @@ const EnglishContentManagement = () => {
         setShowNewForm(null);
         setNewItemForm({});
       } else {
+        if (!editingItem) return;
         const { error } = await supabase.from('english_quotes').update(data).eq('id', editingItem);
         if (error) throw error;
         toast({ title: '更新成功', description: '名言已更新' });
@@ -81,6 +82,7 @@ const EnglishContentManagement = () => {
         setShowNewForm(null);
         setNewItemForm({});
       } else {
+        if (!editingItem) return;
         const { error } = await supabase.from('english_words').update(data).eq('id', editingItem);
         if (error) throw error;
         toast({ title: '更新成功', description: '单词已更新' });
@@ -103,6 +105,7 @@ const EnglishContentManagement = () => {
         setShowNewForm(null);
         setNewItemForm({});
       } else {
+        if (!editingItem) return;
         const { error } = await supabase.from('english_phrases').update(data).eq('id', editingItem);
         if (error) throw error;
         toast({ title: '更新成功', description: '短语已更新' });
@@ -125,6 +128,7 @@ const EnglishContentManagement = () => {
         setShowNewForm(null);
         setNewItemForm({});
       } else {
+        if (!editingItem) return;
         const { error } = await supabase.from('english_listening').update(data).eq('id', editingItem);
         if (error) throw error;
         toast({ title: '更新成功', description: '听力内容已更新' });

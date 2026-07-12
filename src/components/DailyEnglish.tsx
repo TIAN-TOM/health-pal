@@ -379,7 +379,7 @@ const DailyEnglish = ({ onBack }: DailyEnglishProps) => {
                           variant="ghost"
                           size="sm"
                           className="mt-2"
-                          onClick={() => playSound(phrase.example_sentence)}
+                          onClick={() => playSound(phrase.example_sentence ?? '')}
                         >
                           <Volume2 className="h-3 w-3 mr-1" />
                           朗读例句

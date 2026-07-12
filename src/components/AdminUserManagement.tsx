@@ -14,7 +14,6 @@ interface UserWithProfile {
   role: UserRole;
   created_at: string;
   updated_at: string;
-  auth_id: string;
 }
 
 const AdminUserManagement = () => {

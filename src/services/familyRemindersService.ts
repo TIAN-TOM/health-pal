@@ -4,12 +4,12 @@ export interface FamilyReminder {
   id: string;
   user_id: string;
   title: string;
-  description?: string;
+  description?: string | null;
   reminder_date: string;
-  assigned_to?: string;
+  assigned_to?: string | null;
   is_completed: boolean;
   is_recurring: boolean;
-  recurring_pattern?: string;
+  recurring_pattern?: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -1,11 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, BookOpen, ChevronRight } from 'lucide-react';
+import {
+  Activity, Apple, ArrowLeft, Bell, BookOpen, Brain, Calendar, ChevronRight,
+  Clock, Database, DollarSign, Download, FileText, Gamepad2, Heart, Home,
+  Layout, Mic, Moon, Pill, Settings, Shield, ShoppingCart, Star, Target,
+  TrendingUp, Wind, type LucideIcon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { manualSections, type ManualSection } from '@/data/manualContent';
-import * as Icons from 'lucide-react';
+
+// 静态映射 manualContent 用到的图标；此前的 `import * as Icons` 会把整个
+// lucide-react（1400+ 图标，约 700KB）打进本页 chunk
+const ICON_MAP: Record<string, LucideIcon> = {
+  Activity, Apple, Bell, BookOpen, Brain, Calendar, Clock, Database,
+  DollarSign, Download, FileText, Gamepad2, Heart, Home, Layout, Mic, Moon,
+  Pill, Settings, Shield, ShoppingCart, Star, Target, TrendingUp, Wind,
+};
 
 interface UserManualProps {
   onBack: () => void;
@@ -42,8 +54,7 @@ const UserManual = ({ onBack, source }: UserManualProps) => {
   };
 
   const getIcon = (iconName?: string) => {
-    if (!iconName) return <BookOpen className="h-5 w-5" />;
-    const IconComponent = (Icons as any)[iconName];
+    const IconComponent = iconName ? ICON_MAP[iconName] : undefined;
     return IconComponent ? <IconComponent className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />;
   };
 

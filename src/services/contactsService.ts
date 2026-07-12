@@ -85,8 +85,8 @@ export const updateContact = async (id: string, contact: Partial<Contact>): Prom
         .from('emergency_contacts')
         .select('*')
         .eq('user_id', user.id)
-        .eq('name', contact.name)
-        .eq('phone', contact.phone);
+        .eq('name', contact.name ?? '')
+        .eq('phone', contact.phone ?? '');
 
       if (existingContacts && existingContacts.length > 0) {
         id = existingContacts[0].id;

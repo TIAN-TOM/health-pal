@@ -4,7 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { FontSizeProvider } from "@/contexts/FontSizeContext";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -43,28 +42,26 @@ const App = () => (
     <ThemeProvider>
       <FontSizeProvider>
         <AuthProvider>
-          <LanguageProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <DisclaimerGate />
-                <OnboardingModal />
-                <Suspense fallback={<RouteFallback />}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/weather" element={<WeatherDetail />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/privacy" element={<PrivacyPolicy />} />
-                    <Route path="/terms" element={<TermsOfService />} />
-                    <Route path="/disclaimer" element={<MedicalDisclaimer />} />
-                    <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-              </BrowserRouter>
-            </TooltipProvider>
-          </LanguageProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <DisclaimerGate />
+              <OnboardingModal />
+              <Suspense fallback={<RouteFallback />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/weather" element={<WeatherDetail />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
+                  <Route path="/disclaimer" element={<MedicalDisclaimer />} />
+                  <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </TooltipProvider>
         </AuthProvider>
       </FontSizeProvider>
     </ThemeProvider>

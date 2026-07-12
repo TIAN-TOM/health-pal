@@ -58,7 +58,7 @@ const FamilyReminders = ({ onBack }: FamilyRemindersProps) => {
         reminder_date: formData.reminder_date,
         assigned_to: formData.assigned_to,
         is_recurring: formData.is_recurring,
-        recurring_pattern: formData.is_recurring ? formData.recurring_pattern : null,
+        recurring_pattern: formData.is_recurring ? formData.recurring_pattern : undefined,
         is_completed: false
       };
 

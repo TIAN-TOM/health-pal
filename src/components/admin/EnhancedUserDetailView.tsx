@@ -17,7 +17,6 @@ interface UserWithProfile {
   role: 'admin' | 'user';
   created_at: string;
   updated_at: string;
-  auth_id: string;
 }
 
 interface EnhancedUserDetailViewProps {
@@ -428,7 +427,7 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
           isOpen={isEmailModalOpen}
           onClose={() => setIsEmailModalOpen(false)}
           userEmail={user.email}
-          userName={user.full_name}
+          userName={user.full_name ?? ''}
           onSend={handleSendEmail}
           loading={loading}
         />

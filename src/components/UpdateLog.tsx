@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowLeft, Sparkles, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +10,14 @@ interface UpdateLogProps {
   source?: string;
 }
 
+// 66+ 个历史版本一次性渲染会在低端手机上卡顿，默认只展示最近几版
+const INITIAL_VISIBLE = 10;
+const LOAD_MORE_STEP = 20;
+
 const UpdateLog = ({ onBack }: UpdateLogProps) => {
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
+  const visibleUpdates = updates.slice(0, visibleCount);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <div className="container mx-auto px-4 py-6 max-w-md md:max-w-2xl lg:max-w-3xl">
@@ -33,7 +40,7 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
 
         {/* 更新列表 */}
         <div className="space-y-6">
-          {updates.map((update) => {
+          {visibleUpdates.map((update) => {
             const IconComponent = update.icon;
             return (
               <Card key={update.version} className="overflow-hidden">
@@ -85,6 +92,21 @@ const UpdateLog = ({ onBack }: UpdateLogProps) => {
             );
           })}
         </div>
+
+        {/* 加载更多历史版本 */}
+        {visibleCount < updates.length && (
+          <div className="mt-6 text-center">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setVisibleCount((c) => c + LOAD_MORE_STEP)}
+              className="min-h-[48px]"
+            >
+              <ChevronDown className="h-4 w-4 mr-2" />
+              查看更早的版本（还有 {updates.length - visibleCount} 个）
+            </Button>
+          </div>
+        )}
 
         {/* 底部说明 */}
         <div className="mt-12 text-center">

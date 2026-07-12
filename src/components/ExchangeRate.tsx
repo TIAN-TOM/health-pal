@@ -47,7 +47,7 @@ const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
       const allRatesData = await exchangeRateService.getAllRates('USD');
       
       // 计算变化
-      let change = undefined;
+      let change: number | undefined = undefined;
       if (data) {
         change = exchangeRateService.calculateChange(newData.rate, data.rate);
       }

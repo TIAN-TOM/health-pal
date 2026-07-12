@@ -44,17 +44,17 @@ export const useUserPreferences = () => {
         const mappedData: UserPreferences = {
           id: data.id,
           gender: data.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say',
-          birthday: data.birthday,
-          height: data.height,
-          weight: data.weight,
-          medical_history: data.medical_history,
-          allergies: data.allergies,
-          family_medical_history: data.family_medical_history,
-          emergency_contact_name: data.emergency_contact_name,
-          emergency_contact_phone: data.emergency_contact_phone,
-          last_birthday_wish_year: data.last_birthday_wish_year,
-          preferred_weather_city: data.preferred_weather_city,
-          preferred_weather_city2: data.preferred_weather_city2,
+          birthday: data.birthday ?? undefined,
+          height: data.height ?? undefined,
+          weight: data.weight ?? undefined,
+          medical_history: data.medical_history ?? undefined,
+          allergies: data.allergies ?? undefined,
+          family_medical_history: data.family_medical_history ?? undefined,
+          emergency_contact_name: data.emergency_contact_name ?? undefined,
+          emergency_contact_phone: data.emergency_contact_phone ?? undefined,
+          last_birthday_wish_year: data.last_birthday_wish_year ?? undefined,
+          preferred_weather_city: data.preferred_weather_city ?? undefined,
+          preferred_weather_city2: data.preferred_weather_city2 ?? undefined,
         };
         setPreferences(mappedData);
       } else {

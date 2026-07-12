@@ -34,7 +34,7 @@ const Game2048 = ({ onBack, soundEnabled }: Game2048Props) => {
   }
 
   function addRandomTile(board: Board): void {
-    const emptyCells = [];
+    const emptyCells: { row: number; col: number }[] = [];
     for (let i = 0; i < 4; i++) {
       for (let j = 0; j < 4; j++) {
         if (board[i][j] === 0) {
@@ -58,7 +58,7 @@ const Game2048 = ({ onBack, soundEnabled }: Game2048Props) => {
 
     function slideArray(arr: number[]): { array: number[], score: number, moved: boolean } {
       const filtered = arr.filter(num => num !== 0);
-      const merged = [];
+      const merged: number[] = [];
       let arrayMoved = false;
       let arrayScore = 0;
 

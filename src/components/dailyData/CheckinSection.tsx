@@ -15,7 +15,7 @@ type DailyCheckin = Tables<'daily_checkins'>;
 
 interface CheckinSectionProps {
   todayCheckin: DailyCheckin | null;
-  onCheckinSuccess: (checkin: DailyCheckin) => void;
+  onCheckinSuccess: (checkin: DailyCheckin | null) => void;
   onReloadHistory: () => void;
   onNavigateToRecords?: () => void;
 }

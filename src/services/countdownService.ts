@@ -1,14 +1,15 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 
-export interface CountdownEvent {
-  id: string;
-  title: string;
-  target_date: string;
-  description?: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
+type CountdownEventRow = Tables<'countdown_events'>;
+
+// 数据库行中 is_active 可能为 null，服务层统一归一为 boolean
+export type CountdownEvent = Omit<CountdownEventRow, 'is_active'> & { is_active: boolean };
+
+const toCountdownEvent = (row: CountdownEventRow): CountdownEvent => ({
+  ...row,
+  is_active: row.is_active ?? false,
+});
 
 export const getActiveCountdownEvent = async (): Promise<CountdownEvent | null> => {
   const { data, error } = await supabase
@@ -27,7 +28,7 @@ export const getActiveCountdownEvent = async (): Promise<CountdownEvent | null> 
     throw error;
   }
 
-  return data;
+  return toCountdownEvent(data);
 };
 
 export const getActiveCountdownEvents = async (): Promise<CountdownEvent[]> => {
@@ -42,7 +43,7 @@ export const getActiveCountdownEvents = async (): Promise<CountdownEvent[]> => {
     throw error;
   }
 
-  return data || [];
+  return (data || []).map(toCountdownEvent);
 };
 
 export const getAllCountdownEvents = async (): Promise<CountdownEvent[]> => {
@@ -56,7 +57,7 @@ export const getAllCountdownEvents = async (): Promise<CountdownEvent[]> => {
     throw error;
   }
 
-  return data || [];
+  return (data || []).map(toCountdownEvent);
 };
 
 export const createCountdownEvent = async (event: {
@@ -76,7 +77,7 @@ export const createCountdownEvent = async (event: {
     throw error;
   }
 
-  return data;
+  return toCountdownEvent(data);
 };
 
 export const updateCountdownEvent = async (
@@ -95,7 +96,7 @@ export const updateCountdownEvent = async (
     throw error;
   }
 
-  return data;
+  return toCountdownEvent(data);
 };
 
 export const deleteCountdownEvent = async (id: string): Promise<void> => {

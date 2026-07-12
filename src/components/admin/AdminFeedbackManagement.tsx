@@ -21,7 +21,7 @@ interface UserFeedback {
   profiles?: {
     id: string;
     full_name: string | null;
-    email: string;
+    email: string | null;
   } | null;
 }
 

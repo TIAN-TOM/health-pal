@@ -7,7 +7,7 @@ export interface FamilyExpense {
   amount: number;
   category: string;
   payer: string;
-  description?: string;
+  description?: string | null;
   expense_date: string;
   created_at: string;
   updated_at: string;

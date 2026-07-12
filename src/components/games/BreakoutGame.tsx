@@ -119,7 +119,15 @@ const BreakoutGame = ({ onBack, soundEnabled = true }: BreakoutGameProps) => {
   }, []);
 
   const initBricks = useCallback(() => {
-    const bricks = [];
+    const bricks: Array<{
+      x: number;
+      y: number;
+      visible: boolean;
+      color: string;
+      hits: number;
+      maxHits: number;
+      powerUp?: string;
+    }> = [];
     const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e'];
     const startX = (CANVAS_WIDTH - (BRICK_COLS * (BRICK_WIDTH + 3) - 3)) / 2;
     

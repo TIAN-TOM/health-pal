@@ -5,8 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface UserProfile {
   id: string;
-  email: string;
-  full_name: string;
+  email: string | null;
+  full_name: string | null;
 }
 
 interface AuthContextType {

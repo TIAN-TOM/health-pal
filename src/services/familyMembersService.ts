@@ -6,11 +6,11 @@ export interface FamilyMember {
   user_id: string;
   name: string;
   relationship: string;
-  phone?: string;
-  birthday?: string;
-  address?: string;
-  notes?: string;
-  avatar_url?: string;
+  phone?: string | null;
+  birthday?: string | null;
+  address?: string | null;
+  notes?: string | null;
+  avatar_url?: string | null;
   created_at: string;
   updated_at: string;
 }
