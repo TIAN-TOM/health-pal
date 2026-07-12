@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, RefreshCw } from 'lucide-react';
 import { getTodayBeijingDate } from '@/utils/beijingTime';
@@ -13,7 +14,9 @@ const CalendarView = () => {
     currentDate,
     monthData,
     loading,
+    isError,
     loadMonthData,
+    refetch,
     handleDeleteAllCheckins,
     navigateMonth,
     goToToday
@@ -32,7 +35,7 @@ const CalendarView = () => {
   }
   
   // 添加当月的日期
-  monthData.forEach((dayData, index) => {
+  monthData.forEach((dayData) => {
     calendarDays.push(dayData);
   });
 
@@ -77,7 +80,14 @@ const CalendarView = () => {
       </CardHeader>
       
       <CardContent>
-        {loading ? (
+        {isError ? (
+          <div className="text-center py-8 space-y-3" role="alert">
+            <p className="text-gray-600">日历数据加载失败，请检查网络后重试</p>
+            <Button variant="outline" onClick={() => refetch()}>
+              重新加载
+            </Button>
+          </div>
+        ) : loading ? (
           <div className="text-center py-8">
             <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
             <p className="text-gray-600">加载中...</p>

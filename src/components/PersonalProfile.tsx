@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useMutation } from '@tanstack/react-query';
+import { updateProfileName } from '@/services/profileService';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 
@@ -18,9 +19,8 @@ interface PersonalProfileProps {
 
 const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
   const { userProfile, user } = useAuth();
-  const { preferences, loading: preferencesLoading, savePreferences } = useUserPreferences();
+  const { preferences, loading: preferencesLoading, isError, savePreferences, refetch } = useUserPreferences();
   const [fullName, setFullName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   // 偏好设置状态
@@ -79,56 +79,48 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = async () => {
-    if (!user) return;
-    
-    setIsLoading(true);
-    try {
-      // 保存个人资料
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      // 姓名走 profileService；偏好走已迁移的 hook（其内部处理成功/失败 toast）
       if (fullName.trim() !== userProfile?.full_name) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ full_name: fullName.trim() })
-          .eq('id', user.id);
-
-        if (profileError) throw profileError;
+        await updateProfileName(fullName.trim());
       }
-
-      // 保存偏好设置
       const updatedPreferences = {
         birthday: formData.birthday || undefined,
         height: formData.height ? parseInt(formData.height) : undefined,
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
         gender: formData.gender ? formData.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say' : undefined,
-        medical_history: medicalHistoryInput ? 
+        medical_history: medicalHistoryInput ?
           medicalHistoryInput.split(',').map(item => item.trim()).filter(Boolean) : [],
-        allergies: allergiesInput ? 
+        allergies: allergiesInput ?
           allergiesInput.split(',').map(item => item.trim()).filter(Boolean) : [],
-        family_medical_history: familyMedicalHistoryInput ? 
+        family_medical_history: familyMedicalHistoryInput ?
           familyMedicalHistoryInput.split(',').map(item => item.trim()).filter(Boolean) : []
       };
-
-      await savePreferences(updatedPreferences);
-
-      toast({
-        title: "保存成功",
-        description: "您的个人资料和偏好设置已更新"
-      });
-
-      // 刷新页面以更新用户信息
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    } catch (error) {
+      return savePreferences(updatedPreferences);
+    },
+    onSuccess: (ok) => {
+      // savePreferences 成功时 hook 已 toast；此处刷新以更新 AuthContext 的 userProfile
+      if (ok) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+    },
+    onError: (error) => {
+      // 仅当姓名更新（updateProfileName）抛错时到达；偏好失败已由 hook 提示
       console.error('保存失败:', error);
       toast({
         title: "保存失败",
         description: "请稍后重试",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
-    }
+    },
+  });
+
+  const handleSave = () => {
+    if (!user) return;
+    saveMutation.mutate();
   };
 
   if (preferencesLoading) {
@@ -138,6 +130,21 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">加载中...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+        <div className="container mx-auto px-4 py-6 max-w-md md:max-w-2xl lg:max-w-3xl">
+          <div className="text-center py-12 space-y-4" role="alert">
+            <p className="text-gray-600">加载偏好设置失败，请检查网络后重试</p>
+            <Button variant="outline" onClick={() => refetch()}>
+              重新加载
+            </Button>
           </div>
         </div>
       </div>
@@ -309,11 +316,11 @@ const PersonalProfile = ({ onBack }: PersonalProfileProps) => {
 
           <Button
             onClick={handleSave}
-            disabled={isLoading || !fullName.trim()}
+            disabled={saveMutation.isPending || !fullName.trim()}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Save className="mr-2 h-4 w-4" />
-            {isLoading ? '保存中...' : '保存所有设置'}
+            {saveMutation.isPending ? '保存中...' : '保存所有设置'}
           </Button>
         </div>
       </div>

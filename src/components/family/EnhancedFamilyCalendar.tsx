@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Plus, Calendar, Clock, Users, ChevronLeft, ChevronRight, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,8 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { familyCalendarService, type FamilyCalendarEvent, EVENT_COLORS } from '@/services/familyCalendarService';
-import { familyMembersService, type FamilyMember } from '@/services/familyMembersService';
+import { familyCalendarService, type FamilyCalendarEvent, type FamilyCalendarEventInput, EVENT_COLORS } from '@/services/familyCalendarService';
+import { familyMembersService } from '@/services/familyMembersService';
 import { getFestivalForDate, getLunarDate } from '@/data/festivals';
 
 interface EnhancedFamilyCalendarProps {
@@ -18,8 +19,6 @@ interface EnhancedFamilyCalendarProps {
 }
 
 const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
-  const [events, setEvents] = useState<FamilyCalendarEvent[]>([]);
-  const [members, setMembers] = useState<FamilyMember[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -34,94 +33,80 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
     is_all_day: false,
     color: '#3b82f6'
   });
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadData();
-  }, [currentDate]);
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth() + 1;
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth() + 1;
-      
-      const [eventsData, membersData] = await Promise.all([
-        familyCalendarService.getMonthEvents(year, month),
-        familyMembersService.getFamilyMembers()
-      ]);
-      
-      setEvents(eventsData);
-      setMembers(membersData);
-    } catch (error) {
-      console.error('加载数据失败:', error);
-      // 不显示错误提示，直接设置为空数组
-      setEvents([]);
-      setMembers([]);
-    } finally {
-      setLoading(false);
-    }
+  // 月份进入 queryKey：切换月份自动重新拉取
+  const eventsQuery = useQuery({
+    queryKey: ['family-calendar', year, month],
+    queryFn: () => familyCalendarService.getMonthEvents(year, month),
+  });
+  const membersQuery = useQuery({
+    queryKey: ['family-members'],
+    queryFn: () => familyMembersService.getFamilyMembers(),
+  });
+
+  const events = eventsQuery.data ?? [];
+  const members = membersQuery.data ?? [];
+  const isPending = eventsQuery.isPending;
+  const isError = eventsQuery.isError;
+  const refetch = () => {
+    eventsQuery.refetch();
+    membersQuery.refetch();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const eventData = {
-        title: formData.title,
-        description: formData.description,
-        event_date: formData.event_date,
-        // 必须传 null 而非 undefined：supabase 的 update 会忽略 undefined 字段，
-        // 否则把事件改为全天后数据库中会残留旧的开始/结束时间
-        start_time: formData.is_all_day ? null : formData.start_time || null,
-        end_time: formData.is_all_day ? null : formData.end_time || null,
-        participants: formData.participants ? formData.participants.split(',').map(p => p.trim()) : [],
-        is_all_day: formData.is_all_day,
-        color: formData.color
-      };
-
-      if (editingEvent) {
-        await familyCalendarService.updateFamilyCalendarEvent(editingEvent.id, eventData);
-        toast({
-          title: "更新成功",
-          description: "日历事件已更新",
-        });
-      } else {
-        await familyCalendarService.addFamilyCalendarEvent(eventData);
-        toast({
-          title: "添加成功",
-          description: "日历事件已添加",
-        });
-      }
-
+  const saveMutation = useMutation({
+    mutationFn: (vars: { id?: string; data: FamilyCalendarEventInput }) =>
+      vars.id
+        ? familyCalendarService.updateFamilyCalendarEvent(vars.id, vars.data)
+        : familyCalendarService.addFamilyCalendarEvent(vars.data),
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['family-calendar'] });
+      toast(vars.id
+        ? { title: "更新成功", description: "日历事件已更新" }
+        : { title: "添加成功", description: "日历事件已添加" });
       resetForm();
-      loadData();
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error('保存日历事件失败:', error);
-      toast({
-        title: "保存失败",
-        description: "无法保存日历事件",
-        variant: "destructive",
-      });
-    }
+      toast({ title: "保存失败", description: "无法保存日历事件", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => familyCalendarService.deleteFamilyCalendarEvent(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['family-calendar'] });
+      toast({ title: "删除成功", description: "日历事件已删除" });
+    },
+    onError: (error) => {
+      console.error('删除日历事件失败:', error);
+      toast({ title: "删除失败", description: "无法删除日历事件", variant: "destructive" });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const eventData: FamilyCalendarEventInput = {
+      title: formData.title,
+      description: formData.description,
+      event_date: formData.event_date,
+      // 必须传 null 而非 undefined：supabase 的 update 会忽略 undefined 字段，
+      // 否则把事件改为全天后数据库中会残留旧的开始/结束时间
+      start_time: formData.is_all_day ? null : formData.start_time || null,
+      end_time: formData.is_all_day ? null : formData.end_time || null,
+      participants: formData.participants ? formData.participants.split(',').map(p => p.trim()) : [],
+      is_all_day: formData.is_all_day,
+      color: formData.color
+    };
+    saveMutation.mutate({ id: editingEvent?.id, data: eventData });
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await familyCalendarService.deleteFamilyCalendarEvent(id);
-      toast({
-        title: "删除成功",
-        description: "日历事件已删除",
-      });
-      loadData();
-    } catch (error) {
-      console.error('删除日历事件失败:', error);
-      toast({
-        title: "删除失败",
-        description: "无法删除日历事件",
-        variant: "destructive",
-      });
-    }
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id);
   };
 
   const resetForm = () => {
@@ -250,12 +235,25 @@ const EnhancedFamilyCalendar = ({ onBack }: EnhancedFamilyCalendarProps) => {
     '七月', '八月', '九月', '十月', '十一月', '十二月'
   ];
 
-  if (loading) {
+  if (isPending) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center space-y-4" role="alert">
+          <p className="text-gray-600">加载日历失败，请检查网络后重试</p>
+          <Button variant="outline" onClick={() => refetch()}>
+            重新加载
+          </Button>
         </div>
       </div>
     );

@@ -1,134 +1,60 @@
-
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  getUserPreferences,
+  saveUserPreferences,
+  type UserPreferences,
+} from '@/services/profileService';
 
-interface UserPreferences {
-  id?: string;
-  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
-  birthday?: string; // Date in YYYY-MM-DD format
-  height?: number;
-  weight?: number;
-  medical_history?: string[];
-  allergies?: string[];
-  family_medical_history?: string[];
-  emergency_contact_name?: string;
-  emergency_contact_phone?: string;
-  last_birthday_wish_year?: number; // Year when user last received birthday wish
-  preferred_weather_city?: string; // 用户偏好的天气城市
-  preferred_weather_city2?: string; // 第二个对比城市
-}
+export type { UserPreferences };
 
 export const useUserPreferences = () => {
-  const [preferences, setPreferences] = useState<UserPreferences | null>(null);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const loadPreferences = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('user_preferences')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle(); // 使用 maybeSingle 避免错误
+  const preferencesQuery = useQuery({
+    queryKey: ['user-preferences', user?.id],
+    queryFn: getUserPreferences,
+    enabled: !!user,
+  });
 
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        const mappedData: UserPreferences = {
-          id: data.id,
-          gender: data.gender as 'male' | 'female' | 'other' | 'prefer_not_to_say',
-          birthday: data.birthday ?? undefined,
-          height: data.height ?? undefined,
-          weight: data.weight ?? undefined,
-          medical_history: data.medical_history ?? undefined,
-          allergies: data.allergies ?? undefined,
-          family_medical_history: data.family_medical_history ?? undefined,
-          emergency_contact_name: data.emergency_contact_name ?? undefined,
-          emergency_contact_phone: data.emergency_contact_phone ?? undefined,
-          last_birthday_wish_year: data.last_birthday_wish_year ?? undefined,
-          preferred_weather_city: data.preferred_weather_city ?? undefined,
-          preferred_weather_city2: data.preferred_weather_city2 ?? undefined,
-        };
-        setPreferences(mappedData);
-      } else {
-        setPreferences({});
-      }
-    } catch (error: any) {
-      console.error('加载用户偏好设置失败:', error);
-      toast({
-        title: "加载偏好设置失败",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const savePreferences = async (newPreferences: UserPreferences) => {
-    if (!user) return false;
-
-    try {
-      // 先检查是否已存在记录
-      const { data: existingData } = await supabase
-        .from('user_preferences')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      let result;
-      if (existingData) {
-        // 更新现有记录
-        result = await supabase
-          .from('user_preferences')
-          .update(newPreferences)
-          .eq('user_id', user.id);
-      } else {
-        // 插入新记录
-        result = await supabase
-          .from('user_preferences')
-          .insert({
-            user_id: user.id,
-            ...newPreferences
-          });
-      }
-
-      if (result.error) throw result.error;
-
-      setPreferences(newPreferences);
-      toast({
-        title: "保存成功",
-        description: "您的偏好设置已更新"
-      });
-      return true;
-    } catch (error: any) {
+  const saveMutation = useMutation({
+    mutationFn: saveUserPreferences,
+    onSuccess: (_data, variables) => {
+      // 乐观写入缓存，避免保存后短暂闪回旧值；随后 invalidate 拉回真实行
+      queryClient.setQueryData(['user-preferences', user?.id], variables);
+      queryClient.invalidateQueries({ queryKey: ['user-preferences', user?.id] });
+      toast({ title: '保存成功', description: '您的偏好设置已更新' });
+    },
+    onError: (error) => {
       console.error('保存用户偏好设置失败:', error);
       toast({
-        title: "保存失败",
-        description: error.message,
-        variant: "destructive"
+        title: '保存失败',
+        description: error instanceof Error ? error.message : '请稍后重试',
+        variant: 'destructive',
       });
+    },
+  });
+
+  // 保留原有布尔返回契约，供调用方按成功与否分支
+  const savePreferences = async (newPreferences: UserPreferences): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      await saveMutation.mutateAsync(newPreferences);
+      return true;
+    } catch {
       return false;
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      loadPreferences();
-    }
-  }, [user]);
-
   return {
-    preferences,
-    loading,
+    preferences: preferencesQuery.data ?? null,
+    loading: preferencesQuery.isPending,
+    isError: preferencesQuery.isError,
     savePreferences,
-    refreshPreferences: loadPreferences
+    refreshPreferences: preferencesQuery.refetch,
+    refetch: preferencesQuery.refetch,
   };
 };

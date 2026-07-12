@@ -1,242 +1,115 @@
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-
-type UserRole = 'admin' | 'user';
-
-interface UserWithProfile {
-  id: string;
-  email: string;
-  full_name: string | null;
-  role: UserRole;
-  created_at: string;
-  updated_at: string;
-  auth_id: string;
-}
+import {
+  getUsersWithRoles,
+  getUserCheckins,
+  updateUserRole as updateUserRoleService,
+  deleteUserAccount,
+  type UserRole,
+  type UserCheckin,
+} from '@/services/userManagementService';
 
 export const useUserManagement = () => {
-  const [users, setUsers] = useState<UserWithProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userCheckins, setUserCheckins] = useState<{ [userId: string]: any[] }>({});
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  // 按需加载的单用户打卡缓存，保留原有惰性加载语义
+  const [userCheckins, setUserCheckins] = useState<{ [userId: string]: UserCheckin[] }>({});
 
-  const loadUsers = async () => {
-    setLoading(true);
-    try {
-      console.log('开始加载用户...');
-      
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*');
+  const usersQuery = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: getUsersWithRoles,
+  });
 
-      if (profilesError) {
-        console.error('获取用户资料失败:', profilesError);
-        throw profilesError;
-      }
-
-      console.log('获取到的用户资料:', profilesData);
-
-      if (!profilesData || profilesData.length === 0) {
-        console.log('没有找到用户资料');
-        setUsers([]);
-        return;
-      }
-
-      const userIds = profilesData.map(profile => profile.id);
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('*')
-        .in('user_id', userIds);
-
-      if (rolesError) {
-        console.error('获取用户角色失败:', rolesError);
-        throw rolesError;
-      }
-
-      console.log('获取到的用户角色:', rolesData);
-
-      const rolesMap = new Map();
-      rolesData?.forEach(role => {
-        rolesMap.set(role.user_id, role.role);
-      });
-
-      const usersWithProfile = profilesData.map(profile => ({
-        ...profile,
-        auth_id: profile.id,
-        email: profile.email || 'N/A',
-        full_name: profile.full_name || '未设置',
-        role: (rolesMap.get(profile.id) || 'user') as UserRole,
-        created_at: profile.created_at,
-        updated_at: profile.updated_at
-      }));
-
-      console.log('最终用户数据:', usersWithProfile);
-      setUsers(usersWithProfile);
-      
-      toast({
-        title: "用户加载成功",
-        description: `成功加载 ${usersWithProfile.length} 个用户`
-      });
-    } catch (error: any) {
-      console.error('加载用户失败:', error);
-      toast({
-        title: "加载用户失败",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+  const loadUserCheckins = async (userId: string, forceRefresh = false): Promise<UserCheckin[]> => {
+    if (!forceRefresh && userCheckins[userId]) {
+      return userCheckins[userId];
     }
-  };
-
-  const loadUserCheckins = async (userId: string, forceRefresh: boolean = false) => {
     try {
-      console.log('加载用户打卡记录:', userId);
-      
-      // 如果需要强制刷新或者没有缓存数据，则重新加载
-      if (forceRefresh || !userCheckins[userId]) {
-        const { data, error } = await supabase
-          .from('daily_checkins')
-          .select('*')
-          .eq('user_id', userId)
-          .order('checkin_date', { ascending: false })
-          .limit(30);
-
-        if (error) {
-          console.error('加载打卡记录错误:', error);
-          throw error;
-        }
-        
-        console.log('用户打卡记录:', data);
-        setUserCheckins(prev => ({ ...prev, [userId]: data || [] }));
-        return data || [];
-      }
-      
-      return userCheckins[userId] || [];
-    } catch (error: any) {
+      const data = await getUserCheckins(userId);
+      setUserCheckins((prev) => ({ ...prev, [userId]: data }));
+      return data;
+    } catch (error) {
       console.error('加载用户打卡记录失败:', error);
       toast({
-        title: "加载打卡记录失败",
-        description: error.message,
-        variant: "destructive"
+        title: '加载打卡记录失败',
+        description: error instanceof Error ? error.message : '请稍后重试',
+        variant: 'destructive',
       });
       return [];
     }
   };
 
-  const updateUserRole = async (userId: string, newRole: UserRole) => {
+  const updateRoleMutation = useMutation({
+    mutationFn: ({ userId, role }: { userId: string; role: UserRole }) =>
+      updateUserRoleService(userId, role),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
+  });
+
+  const updateUserRole = async (userId: string, newRole: UserRole): Promise<boolean> => {
     try {
-      setLoading(true);
-      
-      const { error } = await supabase
-        .from('user_roles')
-        .upsert({
-          user_id: userId,
-          role: newRole as UserRole
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (error) throw error;
-
-      setUsers(prevUsers =>
-        prevUsers.map(user =>
-          user.id === userId ? { ...user, role: newRole } : user
-        )
-      );
-
-      const user = users.find(u => u.id === userId);
+      await updateRoleMutation.mutateAsync({ userId, role: newRole });
+      const user = usersQuery.data?.find((u) => u.id === userId);
       toast({
-        title: "角色更新成功",
-        description: `用户 ${user?.email} 的角色已更新为 ${newRole}`
+        title: '角色更新成功',
+        description: `用户 ${user?.email} 的角色已更新为 ${newRole}`,
       });
-
       return true;
-    } catch (error: any) {
+    } catch (error) {
       toast({
-        title: "角色更新失败",
-        description: error.message,
-        variant: "destructive"
+        title: '角色更新失败',
+        description: error instanceof Error ? error.message : '请稍后重试',
+        variant: 'destructive',
       });
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
-  const deleteUser = async (userId: string) => {
+  const deleteMutation = useMutation({
+    mutationFn: deleteUserAccount,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
+  });
+
+  const deleteUser = async (userId: string): Promise<boolean> => {
     try {
-      setLoading(true);
-      
-      // 首先删除用户角色记录，失败时立即中止，避免留下不一致数据
-      const { error: rolesError } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
-
-      if (rolesError) {
-        throw new Error(`删除用户角色失败: ${rolesError.message}`);
-      }
-
-      // 然后删除用户档案
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
-
-      if (profileError) {
-        throw new Error(`删除用户档案失败: ${profileError.message}`);
-      }
-
-      setUsers(prevUsers => prevUsers.filter(u => u.id !== userId));
-      // 清除用户的缓存数据
-      setUserCheckins(prev => {
-        const newCheckins = { ...prev };
-        delete newCheckins[userId];
-        return newCheckins;
-      });
-
-      const user = users.find(u => u.id === userId);
+      const user = usersQuery.data?.find((u) => u.id === userId);
+      await deleteMutation.mutateAsync(userId);
+      clearUserCache(userId);
       toast({
-        title: "删除用户成功",
-        description: `用户 ${user?.email} 已被删除`
+        title: '删除用户成功',
+        description: `用户 ${user?.email} 已被删除`,
       });
-
       return true;
-    } catch (error: any) {
+    } catch (error) {
       toast({
-        title: "删除用户失败",
-        description: error.message,
-        variant: "destructive"
+        title: '删除用户失败',
+        description: error instanceof Error ? error.message : '请稍后重试',
+        variant: 'destructive',
       });
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
-  // 清除特定用户的缓存数据
   const clearUserCache = (userId: string) => {
-    setUserCheckins(prev => {
-      const newCheckins = { ...prev };
-      delete newCheckins[userId];
-      return newCheckins;
+    setUserCheckins((prev) => {
+      const next = { ...prev };
+      delete next[userId];
+      return next;
     });
   };
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
   return {
-    users,
-    loading,
+    users: usersQuery.data ?? [],
+    loading: usersQuery.isPending || updateRoleMutation.isPending || deleteMutation.isPending,
+    isError: usersQuery.isError,
     userCheckins,
-    loadUsers,
+    loadUsers: () => {
+      void usersQuery.refetch();
+    },
+    refetch: usersQuery.refetch,
     loadUserCheckins,
     updateUserRole,
     deleteUser,
-    clearUserCache
+    clearUserCache,
   };
 };

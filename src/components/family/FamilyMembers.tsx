@@ -1,5 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Plus, Edit2, Trash2, Phone, MapPin, Calendar, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,38 +16,21 @@ interface FamilyMembersProps {
 }
 
 const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
-  const [members, setMembers] = useState<FamilyMember[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState<string | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchMembers();
-  }, []);
-
-  const fetchMembers = async () => {
-    try {
-      setLoading(true);
-      const data = await familyMembersService.getFamilyMembers();
-      setMembers(data);
-    } catch (error) {
-      console.error('Fetch members error:', error);
-      toast({
-        title: "错误",
-        description: "加载家庭成员失败",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: members = [], isPending, isError, refetch } = useQuery({
+    queryKey: ['family-members'],
+    queryFn: () => familyMembersService.getFamilyMembers(),
+  });
 
   const handleMemberAdded = () => {
     setShowAddForm(false);
     setEditingMember(null);
-    fetchMembers();
+    queryClient.invalidateQueries({ queryKey: ['family-members'] });
   };
 
   const handleEditMember = (member: FamilyMember) => {
@@ -54,25 +38,40 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
     setShowAddForm(true);
   };
 
-  const deleteMember = async (id: string) => {
-    try {
-      await familyMembersService.deleteFamilyMember(id);
-      toast({
-        title: "成功",
-        description: "删除家庭成员成功",
-      });
-      fetchMembers();
-    } catch (error) {
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => familyMembersService.deleteFamilyMember(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['family-members'] });
+      toast({ title: "成功", description: "删除家庭成员成功" });
+    },
+    onError: (error) => {
       console.error('Delete member error:', error);
-      toast({
-        title: "错误",
-        description: "删除家庭成员失败",
-        variant: "destructive",
-      });
-    }
+      toast({ title: "错误", description: "删除家庭成员失败", variant: "destructive" });
+    },
+  });
+
+  const deleteMember = (id: string) => {
+    deleteMutation.mutate(id);
   };
 
-  const handleAvatarUpload = async (file: File, memberId: string) => {
+  const avatarMutation = useMutation({
+    mutationFn: async ({ file, memberId }: { file: File; memberId: string }) => {
+      const avatarUrl = await familyMembersService.uploadAvatar(file, memberId);
+      await familyMembersService.updateFamilyMember(memberId, { avatar_url: avatarUrl });
+    },
+    onMutate: ({ memberId }) => setUploadingAvatar(memberId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['family-members'] });
+      toast({ title: "成功", description: "头像上传成功" });
+    },
+    onError: (error) => {
+      console.error('Avatar upload error:', error);
+      toast({ title: "错误", description: "头像上传失败", variant: "destructive" });
+    },
+    onSettled: () => setUploadingAvatar(null),
+  });
+
+  const handleAvatarUpload = (file: File, memberId: string) => {
     if (!file) return;
 
     // 检查文件类型
@@ -95,27 +94,7 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
       return;
     }
 
-    try {
-      setUploadingAvatar(memberId);
-      const avatarUrl = await familyMembersService.uploadAvatar(file, memberId);
-      await familyMembersService.updateFamilyMember(memberId, { avatar_url: avatarUrl });
-      
-      toast({
-        title: "成功",
-        description: "头像上传成功",
-      });
-      
-      fetchMembers();
-    } catch (error) {
-      console.error('Avatar upload error:', error);
-      toast({
-        title: "错误",
-        description: "头像上传失败",
-        variant: "destructive",
-      });
-    } finally {
-      setUploadingAvatar(null);
-    }
+    avatarMutation.mutate({ file, memberId });
   };
 
   const getAvatarFallback = (name: string) => {
@@ -260,10 +239,17 @@ const FamilyMembers = ({ onBack }: FamilyMembersProps) => {
         )}
 
         {/* 加载状态 */}
-        {loading ? (
+        {isPending ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <div className="text-gray-600">加载中...</div>
+          </div>
+        ) : isError ? (
+          <div className="text-center py-8 space-y-3" role="alert">
+            <div className="text-gray-600">加载家庭成员失败，请检查网络后重试</div>
+            <Button variant="outline" onClick={() => refetch()}>
+              重新加载
+            </Button>
           </div>
         ) : members.length === 0 ? (
           // 空状态

@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BookOpen, Plus, Edit, Trash2, Save, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  getAdminEducationArticles,
+  createEducationArticle,
+  updateEducationArticle,
+  deleteEducationArticle,
+  type EducationArticleInput
+} from '@/services/educationService';
 import type { Tables } from '@/integrations/supabase/types';
 
 type EducationArticle = Tables<'education_articles'>;
@@ -21,7 +28,6 @@ interface ArticleForm {
 }
 
 const AdminEducationManagement = () => {
-  const [articles, setArticles] = useState<EducationArticle[]>([]);
   const [editingArticle, setEditingArticle] = useState<EducationArticle | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState<ArticleForm>({
@@ -31,8 +37,13 @@ const AdminEducationManagement = () => {
     summary: '',
     reading_time: 3
   });
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: articles = [], isPending, isError, refetch } = useQuery({
+    queryKey: ['admin-education-articles'],
+    queryFn: getAdminEducationArticles
+  });
 
   const categories = [
     { value: 'basics', label: '基础知识' },
@@ -42,84 +53,15 @@ const AdminEducationManagement = () => {
     { value: 'psychology', label: '心理调适' }
   ];
 
-  useEffect(() => {
-    loadArticles();
-  }, []);
-
-  const loadArticles = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('education_articles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setArticles(data || []);
-    } catch (error: any) {
+  const saveMutation = useMutation({
+    mutationFn: (vars: { id?: string; input: EducationArticleInput }) =>
+      vars.id ? updateEducationArticle(vars.id, vars.input) : createEducationArticle(vars.input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-education-articles'] });
       toast({
-        title: "加载失败",
-        description: error.message,
-        variant: "destructive"
+        title: editingArticle ? "更新成功" : "创建成功",
+        description: editingArticle ? "文章已更新" : "新文章已创建"
       });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!formData.title || !formData.content) {
-      toast({
-        title: "请填写必要信息",
-        description: "标题和内容不能为空",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      if (editingArticle) {
-        // 更新文章
-        const { error } = await supabase
-          .from('education_articles')
-          .update({
-            title: formData.title,
-            category: formData.category,
-            content: formData.content,
-            summary: formData.summary,
-            reading_time: formData.reading_time,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', editingArticle.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "更新成功",
-          description: "文章已更新"
-        });
-      } else {
-        // 创建新文章
-        const { error } = await supabase
-          .from('education_articles')
-          .insert([{
-            title: formData.title,
-            category: formData.category,
-            content: formData.content,
-            summary: formData.summary,
-            reading_time: formData.reading_time
-          }]);
-
-        if (error) throw error;
-
-        toast({
-          title: "创建成功",
-          description: "新文章已创建"
-        });
-      }
-
       setFormData({
         title: '',
         category: 'basics',
@@ -129,16 +71,55 @@ const AdminEducationManagement = () => {
       });
       setEditingArticle(null);
       setIsCreating(false);
-      loadArticles();
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
+      console.error(error);
       toast({
         title: "操作失败",
         description: error.message,
         variant: "destructive"
       });
-    } finally {
-      setLoading(false);
     }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteEducationArticle,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-education-articles'] });
+      toast({
+        title: "删除成功",
+        description: "文章已删除"
+      });
+    },
+    onError: (error: any) => {
+      console.error(error);
+      toast({
+        title: "删除失败",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleSubmit = () => {
+    if (!formData.title || !formData.content) {
+      toast({
+        title: "请填写必要信息",
+        description: "标题和内容不能为空",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const input: EducationArticleInput = {
+      title: formData.title,
+      category: formData.category,
+      content: formData.content,
+      summary: formData.summary,
+      reading_time: formData.reading_time
+    };
+
+    saveMutation.mutate({ id: editingArticle?.id, input });
   };
 
   const handleEdit = (article: EducationArticle) => {
@@ -153,32 +134,9 @@ const AdminEducationManagement = () => {
     setIsCreating(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!confirm('确定要删除这篇文章吗？')) return;
-
-    try {
-      setLoading(true);
-      const { error } = await supabase
-        .from('education_articles')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({
-        title: "删除成功",
-        description: "文章已删除"
-      });
-      loadArticles();
-    } catch (error: any) {
-      toast({
-        title: "删除失败",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+    deleteMutation.mutate(id);
   };
 
   const handleCancel = () => {
@@ -264,7 +222,7 @@ const AdminEducationManagement = () => {
             </div>
 
             <div className="flex space-x-3">
-              <Button onClick={handleSubmit} disabled={loading}>
+              <Button onClick={handleSubmit} disabled={saveMutation.isPending}>
                 <Save className="h-4 w-4 mr-2" />
                 {editingArticle ? '更新文章' : '创建文章'}
               </Button>
@@ -291,9 +249,16 @@ const AdminEducationManagement = () => {
         </Button>
       </div>
 
-      {loading ? (
+      {isPending ? (
         <div className="text-center py-8">
           <p className="text-gray-600">加载中...</p>
+        </div>
+      ) : isError ? (
+        <div role="alert" className="text-center py-8 space-y-3">
+          <p className="text-gray-600">加载失败，请重试</p>
+          <Button variant="outline" onClick={() => refetch()}>
+            重新加载
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
@@ -315,7 +280,7 @@ const AdminEducationManagement = () => {
                       {article.content.substring(0, 200)}...
                     </p>
                   </div>
-                  
+
                   <div className="flex space-x-2 ml-4">
                     <Button
                       size="sm"

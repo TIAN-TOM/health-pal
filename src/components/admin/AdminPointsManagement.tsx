@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { adminUpdateUserPoints, getPointsTransactions, type PointsTransaction } from '@/services/pointsService';
+import { adminUpdateUserPoints, getPointsTransactions } from '@/services/pointsService';
 import { useUserManagement } from '@/hooks/useUserManagement';
 import { Coins, Plus, Minus, History, Search } from 'lucide-react';
 
@@ -16,15 +17,47 @@ const AdminPointsManagement = () => {
   const [pointsAmount, setPointsAmount] = useState('');
   const [operation, setOperation] = useState<'grant' | 'deduct'>('grant');
   const [description, setDescription] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [transactions, setTransactions] = useState<PointsTransaction[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const { toast } = useToast();
   const { users } = useUserManagement();
+  const queryClient = useQueryClient();
 
   const selectedUser = users.find(u => u.id === selectedUserId);
 
-  const handlePointsUpdate = async () => {
+  // 仅在查看历史且已选用户时按需加载
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['points-transactions', selectedUserId],
+    queryFn: () => getPointsTransactions(selectedUserId),
+    enabled: showHistory && !!selectedUserId,
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (vars: { amount: number; type: 'admin_grant' | 'admin_deduct'; desc: string }) => {
+      const success = await adminUpdateUserPoints(selectedUserId, vars.amount, vars.type, vars.desc);
+      if (!success) throw new Error('积分更新失败');
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['points-transactions', selectedUserId] });
+      toast({
+        title: "积分更新成功",
+        description: `已${vars.amount > 0 ? '赠送' : '扣除'} ${Math.abs(vars.amount)} 积分给用户 ${selectedUser?.email}`
+      });
+      setPointsAmount('');
+      setDescription('');
+    },
+    onError: (error) => {
+      console.error('更新积分失败:', error);
+      toast({
+        title: "更新失败",
+        description: "请稍后重试",
+        variant: "destructive"
+      });
+    },
+  });
+
+  const loading = updateMutation.isPending;
+
+  const handlePointsUpdate = () => {
     if (!selectedUserId || !pointsAmount) {
       toast({
         title: "请填写完整信息",
@@ -44,64 +77,14 @@ const AdminPointsManagement = () => {
       return;
     }
 
-    setLoading(true);
-    
-    try {
-      const finalAmount = operation === 'grant' ? amount : -amount;
-      const transactionType = operation === 'grant' ? 'admin_grant' : 'admin_deduct';
-      
-      const success = await adminUpdateUserPoints(
-        selectedUserId,
-        finalAmount,
-        transactionType,
-        description || `管理员${operation === 'grant' ? '赠送' : '扣除'}积分`
-      );
-
-      if (success) {
-        toast({
-          title: "积分更新成功",
-          description: `已${operation === 'grant' ? '赠送' : '扣除'} ${amount} 积分给用户 ${selectedUser?.email}`
-        });
-        
-        // 清空表单
-        setPointsAmount('');
-        setDescription('');
-        
-        // 如果正在查看历史记录，刷新数据
-        if (showHistory) {
-          loadTransactions();
-        }
-      } else {
-        throw new Error('积分更新失败');
-      }
-    } catch (error) {
-      console.error('更新积分失败:', error);
-      toast({
-        title: "更新失败",
-        description: "请稍后重试",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+    const finalAmount = operation === 'grant' ? amount : -amount;
+    const transactionType = operation === 'grant' ? 'admin_grant' : 'admin_deduct';
+    updateMutation.mutate({
+      amount: finalAmount,
+      type: transactionType,
+      desc: description || `管理员${operation === 'grant' ? '赠送' : '扣除'}积分`,
+    });
   };
-
-  const loadTransactions = async () => {
-    if (!selectedUserId) return;
-    
-    try {
-      const data = await getPointsTransactions(selectedUserId);
-      setTransactions(data);
-    } catch (error) {
-      console.error('加载交易记录失败:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (showHistory && selectedUserId) {
-      loadTransactions();
-    }
-  }, [showHistory, selectedUserId]);
 
   const formatTransactionType = (type: string) => {
     const typeMap: Record<string, string> = {

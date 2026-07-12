@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import UserListView from './admin/UserListView';
 import EnhancedUserDetailView from './admin/EnhancedUserDetailView';
 import RoleEditModal from './admin/RoleEditModal';
@@ -27,7 +28,9 @@ const AdminUserManagement = () => {
   const {
     users,
     loading,
+    isError,
     loadUsers,
+    refetch,
     updateUserRole,
     deleteUser
   } = useUserManagement();
@@ -72,6 +75,16 @@ const AdminUserManagement = () => {
   };
 
   if (currentView === 'list') {
+    if (isError) {
+      return (
+        <div className="text-center py-8 space-y-3" role="alert">
+          <p className="text-muted-foreground">用户列表加载失败，请检查网络后重试</p>
+          <Button variant="outline" onClick={() => refetch()}>
+            重新加载
+          </Button>
+        </div>
+      );
+    }
     return (
       <>
         <UserListView

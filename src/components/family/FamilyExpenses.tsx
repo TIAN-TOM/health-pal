@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Plus, Edit, Trash2, Calendar, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { familyExpensesService, type FamilyExpense, type ExpenseStats, EXPENSE_CATEGORIES } from '@/services/familyExpensesService';
+import { familyExpensesService, type FamilyExpense, EXPENSE_CATEGORIES } from '@/services/familyExpensesService';
 import EmptyState from '@/components/common/EmptyState';
 import { getBeijingDateString } from '@/utils/beijingTime';
 
@@ -17,8 +18,6 @@ interface FamilyExpensesProps {
 }
 
 const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
-  const [expenses, setExpenses] = useState<FamilyExpense[]>([]);
-  const [stats, setStats] = useState<ExpenseStats | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState<FamilyExpense | null>(null);
   const [formData, setFormData] = useState({
@@ -28,94 +27,72 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
     expense_date: getBeijingDateString(),
     payer: ''
   });
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadExpenses();
-    loadStats();
-  }, []);
+  const expensesQuery = useQuery({
+    queryKey: ['family-expenses'],
+    queryFn: () => familyExpensesService.getFamilyExpenses(),
+  });
+  const statsQuery = useQuery({
+    queryKey: ['family-expenses', 'stats'],
+    queryFn: () => familyExpensesService.getExpenseStats(),
+  });
 
-  const loadExpenses = async () => {
-    try {
-      const data = await familyExpensesService.getFamilyExpenses();
-      setExpenses(data);
-    } catch (error) {
-      console.error('加载支出记录失败:', error);
-      toast({
-        title: "加载失败",
-        description: "无法加载支出记录",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+  const expenses = expensesQuery.data ?? [];
+  const stats = statsQuery.data ?? null;
+  const isPending = expensesQuery.isPending;
+  const isError = expensesQuery.isError;
+  const refetch = () => {
+    expensesQuery.refetch();
+    statsQuery.refetch();
   };
 
-  const loadStats = async () => {
-    try {
-      const data = await familyExpensesService.getExpenseStats();
-      setStats(data);
-    } catch (error) {
-      console.error('加载统计数据失败:', error);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const expenseData = {
-        amount: parseFloat(formData.amount),
-        category: formData.category,
-        description: formData.description,
-        expense_date: formData.expense_date,
-        payer: formData.payer
-      };
-
-      if (editingExpense) {
-        await familyExpensesService.updateFamilyExpense(editingExpense.id, expenseData);
-        toast({
-          title: "更新成功",
-          description: "支出记录已更新",
-        });
-      } else {
-        await familyExpensesService.addFamilyExpense(expenseData);
-        toast({
-          title: "添加成功",
-          description: "支出记录已添加",
-        });
-      }
-
+  const saveMutation = useMutation({
+    mutationFn: (vars: { id?: string; data: Omit<FamilyExpense, 'id' | 'user_id' | 'created_at' | 'updated_at'> }) =>
+      vars.id
+        ? familyExpensesService.updateFamilyExpense(vars.id, vars.data)
+        : familyExpensesService.addFamilyExpense(vars.data),
+    onSuccess: (_d, vars) => {
+      // 前缀失效同时刷新列表与统计
+      queryClient.invalidateQueries({ queryKey: ['family-expenses'] });
+      toast(vars.id
+        ? { title: "更新成功", description: "支出记录已更新" }
+        : { title: "添加成功", description: "支出记录已添加" });
       resetForm();
-      loadExpenses();
-      loadStats();
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error('保存支出记录失败:', error);
-      toast({
-        title: "保存失败",
-        description: "无法保存支出记录",
-        variant: "destructive",
-      });
-    }
+      toast({ title: "保存失败", description: "无法保存支出记录", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => familyExpensesService.deleteFamilyExpense(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['family-expenses'] });
+      toast({ title: "删除成功", description: "支出记录已删除" });
+    },
+    onError: (error) => {
+      console.error('删除支出记录失败:', error);
+      toast({ title: "删除失败", description: "无法删除支出记录", variant: "destructive" });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const expenseData = {
+      amount: parseFloat(formData.amount),
+      category: formData.category,
+      description: formData.description,
+      expense_date: formData.expense_date,
+      payer: formData.payer
+    };
+    saveMutation.mutate({ id: editingExpense?.id, data: expenseData });
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await familyExpensesService.deleteFamilyExpense(id);
-      toast({
-        title: "删除成功",
-        description: "支出记录已删除",
-      });
-      loadExpenses();
-      loadStats();
-    } catch (error) {
-      console.error('删除支出记录失败:', error);
-      toast({
-        title: "删除失败",
-        description: "无法删除支出记录",
-        variant: "destructive",
-      });
-    }
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id);
   };
 
   const resetForm = () => {
@@ -146,12 +123,25 @@ const FamilyExpenses = ({ onBack }: FamilyExpensesProps) => {
     return `¥${amount.toFixed(2)}`;
   };
 
-  if (loading) {
+  if (isPending) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center space-y-4" role="alert">
+          <p className="text-gray-600">加载支出记录失败，请检查网络后重试</p>
+          <Button variant="outline" onClick={() => refetch()}>
+            重新加载
+          </Button>
         </div>
       </div>
     );

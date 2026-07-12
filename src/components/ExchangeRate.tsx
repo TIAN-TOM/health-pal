@@ -1,5 +1,6 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, RefreshCw, TrendingUp, TrendingDown, Calculator, DollarSign, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,54 +27,32 @@ interface AllRatesData {
 }
 
 const ExchangeRate = ({ onBack }: ExchangeRateProps) => {
-  const [data, setData] = useState<ExchangeRateData | null>(null);
-  const [allRates, setAllRates] = useState<AllRatesData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [calculatorAmount, setCalculatorAmount] = useState<string>('100');
   const [calculatorFrom, setCalculatorFrom] = useState<string>('AUD');
   const [calculatorTo, setCalculatorTo] = useState<string>('CNY');
+  // 记录上一次汇率，用于计算涨跌幅（跨轮询保持）
+  const prevRateRef = useRef<number | null>(null);
 
-  const fetchExchangeRate = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // 获取AUD到CNY的汇率（主要显示）
+  const rateQuery = useQuery({
+    queryKey: ['exchange-rate'],
+    queryFn: async () => {
       const newData = await exchangeRateService.getAUDToCNYRate();
-      
-      // 获取所有货币汇率（用于计算器）
       const allRatesData = await exchangeRateService.getAllRates('USD');
-      
-      // 计算变化
-      let change: number | undefined = undefined;
-      if (data) {
-        change = exchangeRateService.calculateChange(newData.rate, data.rate);
-      }
+      const change = prevRateRef.current != null
+        ? exchangeRateService.calculateChange(newData.rate, prevRateRef.current)
+        : undefined;
+      prevRateRef.current = newData.rate;
+      return { data: { ...newData, change } as ExchangeRateData, allRates: allRatesData };
+    },
+    refetchInterval: 2 * 60 * 1000, // 自动刷新每2分钟
+  });
 
-      setData({
-        ...newData,
-        change
-      });
-      setAllRates(allRatesData);
-      setLastUpdate(new Date());
-    } catch (err) {
-      console.error('Exchange rate fetch error:', err);
-      setError('无法获取实时汇率，请检查网络连接');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchExchangeRate();
-
-    // 自动刷新每2分钟
-    const interval = setInterval(fetchExchangeRate, 2 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const data = rateQuery.data?.data ?? null;
+  const allRates = rateQuery.data?.allRates ?? null;
+  const loading = rateQuery.isFetching;
+  const error = rateQuery.isError ? '无法获取实时汇率，请检查网络连接' : null;
+  const lastUpdate = rateQuery.dataUpdatedAt ? new Date(rateQuery.dataUpdatedAt) : null;
+  const fetchExchangeRate = () => rateQuery.refetch();
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('zh-CN', {

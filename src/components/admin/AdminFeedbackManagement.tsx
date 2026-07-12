@@ -1,103 +1,52 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MessageSquare, RefreshCw, CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-interface UserFeedback {
-  id: string;
-  user_id: string;
-  title: string;
-  content: string;
-  contact_info: string | null;
-  feedback_type: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  profiles?: {
-    id: string;
-    full_name: string | null;
-    email: string | null;
-  } | null;
-}
+import {
+  getAllFeedbackWithProfiles,
+  updateFeedbackStatus as updateFeedbackStatusService,
+  type AdminFeedback,
+} from '@/services/feedbackService';
 
 const AdminFeedbackManagement = () => {
-  const [feedbackList, setFeedbackList] = useState<UserFeedback[]>([]);
-  const [loading, setLoading] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const loadFeedback = async () => {
-    setLoading(true);
-    try {
-      // 先获取反馈数据
-      const { data: feedbackData, error: feedbackError } = await supabase
-        .from('user_feedback')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const { data: feedbackList = [], isPending, isError, refetch } = useQuery({
+    queryKey: ['admin-feedback'],
+    queryFn: getAllFeedbackWithProfiles,
+  });
 
-      if (feedbackError) throw feedbackError;
-
-      // 获取用户信息
-      const userIds = [...new Set(feedbackData?.map(f => f.user_id) || [])];
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, email')
-        .in('id', userIds);
-
-      if (profilesError) throw profilesError;
-
-      // 组合数据
-      const feedbackWithProfiles = feedbackData?.map(feedback => ({
-        ...feedback,
-        profiles: profilesData?.find(p => p.id === feedback.user_id) || null
-      })) || [];
-
-      setFeedbackList(feedbackWithProfiles);
-    } catch (error: any) {
-      console.error('加载反馈失败:', error);
-      toast({
-        title: "加载失败",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateFeedbackStatus = async (feedbackId: string, newStatus: string) => {
-    try {
-      const { error } = await supabase
-        .from('user_feedback')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', feedbackId);
-
-      if (error) throw error;
-
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      updateFeedbackStatusService(id, status),
+    onSuccess: (_data, { status }) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-feedback'] });
       toast({
         title: "状态更新成功",
-        description: `反馈状态已更新为${getStatusText(newStatus)}`
+        description: `反馈状态已更新为${getStatusText(status)}`
       });
-
-      loadFeedback();
-    } catch (error: any) {
+    },
+    onError: (error) => {
+      console.error(error);
       toast({
         title: "更新失败",
-        description: error.message,
+        description: error instanceof Error ? error.message : '请稍后重试',
         variant: "destructive"
       });
-    }
-  };
+    },
+  });
 
-  useEffect(() => {
-    loadFeedback();
-  }, []);
+  const updateFeedbackStatus = (feedbackId: string, newStatus: string) => {
+    updateStatusMutation.mutate({ id: feedbackId, status: newStatus });
+  };
 
   const getFeedbackTypeText = (type: string) => {
     switch (type) {
@@ -165,13 +114,13 @@ const AdminFeedbackManagement = () => {
           </h2>
           <p className="text-sm text-gray-600">管理和处理用户反馈</p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={loadFeedback}
-          disabled={loading}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isPending}
         >
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 mr-2 ${isPending ? 'animate-spin' : ''}`} />
           刷新
         </Button>
       </div>
@@ -252,10 +201,17 @@ const AdminFeedbackManagement = () => {
           <CardTitle>反馈列表 ({filteredFeedback.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {isPending ? (
             <div className="text-center py-8">
               <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
               <p className="text-gray-600">加载中...</p>
+            </div>
+          ) : isError ? (
+            <div className="text-center py-8 space-y-3" role="alert">
+              <p className="text-gray-600">反馈加载失败，请检查网络后重试</p>
+              <Button variant="outline" onClick={() => refetch()}>
+                重新加载
+              </Button>
             </div>
           ) : filteredFeedback.length === 0 ? (
             <div className="text-center py-8 text-gray-600">

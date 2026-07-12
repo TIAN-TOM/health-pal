@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,195 +8,149 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
-import type { Tables } from '@/integrations/supabase/types';
-
-type EnglishQuote = Tables<'english_quotes'>;
-type EnglishWord = Tables<'english_words'>;
-type EnglishPhrase = Tables<'english_phrases'>;
-type EnglishListening = Tables<'english_listening'>;
+import {
+  getAllQuotes, createQuote, updateQuote, deleteQuote,
+  getAllWords, createWord, updateWord, deleteWord,
+  getAllPhrases, createPhrase, updatePhrase, deletePhrase,
+  getAllListening, createListening, updateListening, deleteListening,
+} from '@/services/englishService';
 
 const EnglishContentManagement = () => {
-  const [quotes, setQuotes] = useState<EnglishQuote[]>([]);
-  const [words, setWords] = useState<EnglishWord[]>([]);
-  const [phrases, setPhrases] = useState<EnglishPhrase[]>([]);
-  const [listening, setListening] = useState<EnglishListening[]>([]);
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
   const [newItemForm, setNewItemForm] = useState<any>({});
   const [showNewForm, setShowNewForm] = useState<string | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadAllContent();
-  }, []);
+  const quotesQuery = useQuery({ queryKey: ['english-quotes'], queryFn: getAllQuotes });
+  const wordsQuery = useQuery({ queryKey: ['english-words'], queryFn: getAllWords });
+  const phrasesQuery = useQuery({ queryKey: ['english-phrases'], queryFn: getAllPhrases });
+  const listeningQuery = useQuery({ queryKey: ['english-listening'], queryFn: getAllListening });
 
-  const loadAllContent = async () => {
-    try {
-      const [quotesRes, wordsRes, phrasesRes, listeningRes] = await Promise.all([
-        supabase.from('english_quotes').select('*').order('created_at', { ascending: false }),
-        supabase.from('english_words').select('*').order('created_at', { ascending: false }),
-        supabase.from('english_phrases').select('*').order('created_at', { ascending: false }),
-        supabase.from('english_listening').select('*').order('created_at', { ascending: false })
-      ]);
+  const quotes = quotesQuery.data ?? [];
+  const words = wordsQuery.data ?? [];
+  const phrases = phrasesQuery.data ?? [];
+  const listening = listeningQuery.data ?? [];
 
-      if (quotesRes.data) setQuotes(quotesRes.data);
-      if (wordsRes.data) setWords(wordsRes.data);
-      if (phrasesRes.data) setPhrases(phrasesRes.data);
-      if (listeningRes.data) setListening(listeningRes.data);
-    } catch (error) {
-      console.error('加载内容失败:', error);
-      toast({ title: '加载失败', description: '请刷新页面重试', variant: 'destructive' });
-    }
+  const isPending = quotesQuery.isPending || wordsQuery.isPending || phrasesQuery.isPending || listeningQuery.isPending;
+  const isError = quotesQuery.isError || wordsQuery.isError || phrasesQuery.isError || listeningQuery.isError;
+  const refetchAll = () => {
+    quotesQuery.refetch();
+    wordsQuery.refetch();
+    phrasesQuery.refetch();
+    listeningQuery.refetch();
   };
 
-  const handleSaveQuote = async (data: any, isNew = false) => {
-    try {
-      if (isNew) {
-        const { error } = await supabase.from('english_quotes').insert(data);
-        if (error) throw error;
-        toast({ title: '添加成功', description: '新名言已添加' });
-        setShowNewForm(null);
-        setNewItemForm({});
-      } else {
-        if (!editingItem) return;
-        const { error } = await supabase.from('english_quotes').update(data).eq('id', editingItem);
-        if (error) throw error;
-        toast({ title: '更新成功', description: '名言已更新' });
-        setEditingItem(null);
-        setEditForm({});
-      }
-      loadAllContent();
-    } catch (error) {
-      console.error('保存失败:', error);
-      toast({ title: '保存失败', description: '请检查输入内容', variant: 'destructive' });
-    }
+  const invalidate = (key: string) => queryClient.invalidateQueries({ queryKey: [key] });
+  const onSaveError = (error: unknown) => {
+    console.error('保存失败:', error);
+    toast({ title: '保存失败', description: '请检查输入内容', variant: 'destructive' });
+  };
+  const onDeleteError = (error: unknown) => {
+    console.error('删除失败:', error);
+    toast({ title: '删除失败', description: '请稍后重试', variant: 'destructive' });
   };
 
-  const handleSaveWord = async (data: any, isNew = false) => {
-    try {
-      if (isNew) {
-        const { error } = await supabase.from('english_words').insert(data);
-        if (error) throw error;
-        toast({ title: '添加成功', description: '新单词已添加' });
-        setShowNewForm(null);
-        setNewItemForm({});
-      } else {
-        if (!editingItem) return;
-        const { error } = await supabase.from('english_words').update(data).eq('id', editingItem);
-        if (error) throw error;
-        toast({ title: '更新成功', description: '单词已更新' });
-        setEditingItem(null);
-        setEditForm({});
-      }
-      loadAllContent();
-    } catch (error) {
-      console.error('保存失败:', error);
-      toast({ title: '保存失败', description: '请检查输入内容', variant: 'destructive' });
-    }
+  const quoteSaveMutation = useMutation({
+    mutationFn: (vars: { data: any; id?: string }) => (vars.id ? updateQuote(vars.id, vars.data) : createQuote(vars.data)),
+    onSuccess: (_d, vars) => {
+      invalidate('english-quotes');
+      if (vars.id) { toast({ title: '更新成功', description: '名言已更新' }); setEditingItem(null); setEditForm({}); }
+      else { toast({ title: '添加成功', description: '新名言已添加' }); setShowNewForm(null); setNewItemForm({}); }
+    },
+    onError: onSaveError,
+  });
+  const quoteDeleteMutation = useMutation({
+    mutationFn: deleteQuote,
+    onSuccess: () => { invalidate('english-quotes'); toast({ title: '删除成功', description: '名言已删除' }); },
+    onError: onDeleteError,
+  });
+
+  const wordSaveMutation = useMutation({
+    mutationFn: (vars: { data: any; id?: string }) => (vars.id ? updateWord(vars.id, vars.data) : createWord(vars.data)),
+    onSuccess: (_d, vars) => {
+      invalidate('english-words');
+      if (vars.id) { toast({ title: '更新成功', description: '单词已更新' }); setEditingItem(null); setEditForm({}); }
+      else { toast({ title: '添加成功', description: '新单词已添加' }); setShowNewForm(null); setNewItemForm({}); }
+    },
+    onError: onSaveError,
+  });
+  const wordDeleteMutation = useMutation({
+    mutationFn: deleteWord,
+    onSuccess: () => { invalidate('english-words'); toast({ title: '删除成功', description: '单词已删除' }); },
+    onError: onDeleteError,
+  });
+
+  const phraseSaveMutation = useMutation({
+    mutationFn: (vars: { data: any; id?: string }) => (vars.id ? updatePhrase(vars.id, vars.data) : createPhrase(vars.data)),
+    onSuccess: (_d, vars) => {
+      invalidate('english-phrases');
+      if (vars.id) { toast({ title: '更新成功', description: '短语已更新' }); setEditingItem(null); setEditForm({}); }
+      else { toast({ title: '添加成功', description: '新短语已添加' }); setShowNewForm(null); setNewItemForm({}); }
+    },
+    onError: onSaveError,
+  });
+  const phraseDeleteMutation = useMutation({
+    mutationFn: deletePhrase,
+    onSuccess: () => { invalidate('english-phrases'); toast({ title: '删除成功', description: '短语已删除' }); },
+    onError: onDeleteError,
+  });
+
+  const listeningSaveMutation = useMutation({
+    mutationFn: (vars: { data: any; id?: string }) => (vars.id ? updateListening(vars.id, vars.data) : createListening(vars.data)),
+    onSuccess: (_d, vars) => {
+      invalidate('english-listening');
+      if (vars.id) { toast({ title: '更新成功', description: '听力内容已更新' }); setEditingItem(null); setEditForm({}); }
+      else { toast({ title: '添加成功', description: '新听力内容已添加' }); setShowNewForm(null); setNewItemForm({}); }
+    },
+    onError: onSaveError,
+  });
+  const listeningDeleteMutation = useMutation({
+    mutationFn: deleteListening,
+    onSuccess: () => { invalidate('english-listening'); toast({ title: '删除成功', description: '听力内容已删除' }); },
+    onError: onDeleteError,
+  });
+
+  const handleSaveQuote = (data: any, isNew = false) => {
+    if (!isNew && !editingItem) return;
+    quoteSaveMutation.mutate({ data, id: isNew ? undefined : editingItem! });
   };
 
-  const handleSavePhrase = async (data: any, isNew = false) => {
-    try {
-      if (isNew) {
-        const { error } = await supabase.from('english_phrases').insert(data);
-        if (error) throw error;
-        toast({ title: '添加成功', description: '新短语已添加' });
-        setShowNewForm(null);
-        setNewItemForm({});
-      } else {
-        if (!editingItem) return;
-        const { error } = await supabase.from('english_phrases').update(data).eq('id', editingItem);
-        if (error) throw error;
-        toast({ title: '更新成功', description: '短语已更新' });
-        setEditingItem(null);
-        setEditForm({});
-      }
-      loadAllContent();
-    } catch (error) {
-      console.error('保存失败:', error);
-      toast({ title: '保存失败', description: '请检查输入内容', variant: 'destructive' });
-    }
+  const handleSaveWord = (data: any, isNew = false) => {
+    if (!isNew && !editingItem) return;
+    wordSaveMutation.mutate({ data, id: isNew ? undefined : editingItem! });
   };
 
-  const handleSaveListening = async (data: any, isNew = false) => {
-    try {
-      if (isNew) {
-        const { error } = await supabase.from('english_listening').insert(data);
-        if (error) throw error;
-        toast({ title: '添加成功', description: '新听力内容已添加' });
-        setShowNewForm(null);
-        setNewItemForm({});
-      } else {
-        if (!editingItem) return;
-        const { error } = await supabase.from('english_listening').update(data).eq('id', editingItem);
-        if (error) throw error;
-        toast({ title: '更新成功', description: '听力内容已更新' });
-        setEditingItem(null);
-        setEditForm({});
-      }
-      loadAllContent();
-    } catch (error) {
-      console.error('保存失败:', error);
-      toast({ title: '保存失败', description: '请检查输入内容', variant: 'destructive' });
-    }
+  const handleSavePhrase = (data: any, isNew = false) => {
+    if (!isNew && !editingItem) return;
+    phraseSaveMutation.mutate({ data, id: isNew ? undefined : editingItem! });
   };
 
-  const handleDeleteQuote = async (id: string) => {
+  const handleSaveListening = (data: any, isNew = false) => {
+    if (!isNew && !editingItem) return;
+    listeningSaveMutation.mutate({ data, id: isNew ? undefined : editingItem! });
+  };
+
+  const handleDeleteQuote = (id: string) => {
     if (!window.confirm('确定要删除这个名言吗？')) return;
-    
-    try {
-      const { error } = await supabase.from('english_quotes').delete().eq('id', id);
-      if (error) throw error;
-      toast({ title: '删除成功', description: '名言已删除' });
-      loadAllContent();
-    } catch (error) {
-      console.error('删除失败:', error);
-      toast({ title: '删除失败', description: '请稍后重试', variant: 'destructive' });
-    }
+    quoteDeleteMutation.mutate(id);
   };
 
-  const handleDeleteWord = async (id: string) => {
+  const handleDeleteWord = (id: string) => {
     if (!window.confirm('确定要删除这个单词吗？')) return;
-    
-    try {
-      const { error } = await supabase.from('english_words').delete().eq('id', id);
-      if (error) throw error;
-      toast({ title: '删除成功', description: '单词已删除' });
-      loadAllContent();
-    } catch (error) {
-      console.error('删除失败:', error);
-      toast({ title: '删除失败', description: '请稍后重试', variant: 'destructive' });
-    }
+    wordDeleteMutation.mutate(id);
   };
 
-  const handleDeletePhrase = async (id: string) => {
+  const handleDeletePhrase = (id: string) => {
     if (!window.confirm('确定要删除这个短语吗？')) return;
-    
-    try {
-      const { error } = await supabase.from('english_phrases').delete().eq('id', id);
-      if (error) throw error;
-      toast({ title: '删除成功', description: '短语已删除' });
-      loadAllContent();
-    } catch (error) {
-      console.error('删除失败:', error);
-      toast({ title: '删除失败', description: '请稍后重试', variant: 'destructive' });
-    }
+    phraseDeleteMutation.mutate(id);
   };
 
-  const handleDeleteListening = async (id: string) => {
+  const handleDeleteListening = (id: string) => {
     if (!window.confirm('确定要删除这个听力内容吗？')) return;
-    
-    try {
-      const { error } = await supabase.from('english_listening').delete().eq('id', id);
-      if (error) throw error;
-      toast({ title: '删除成功', description: '听力内容已删除' });
-      loadAllContent();
-    } catch (error) {
-      console.error('删除失败:', error);
-      toast({ title: '删除失败', description: '请稍后重试', variant: 'destructive' });
-    }
+    listeningDeleteMutation.mutate(id);
   };
 
   const QuoteForm = ({ item, isNew = false }: { item?: any, isNew?: boolean }) => {
@@ -382,6 +337,16 @@ const EnglishContentManagement = () => {
           <CardTitle>英语学习内容管理</CardTitle>
         </CardHeader>
         <CardContent>
+          {isError ? (
+            <div role="alert" className="text-center py-8 space-y-3">
+              <p className="text-gray-600">加载失败，请检查网络后重试</p>
+              <Button variant="outline" onClick={() => refetchAll()}>
+                重新加载
+              </Button>
+            </div>
+          ) : isPending ? (
+            <div className="text-center py-8 text-gray-600">加载中...</div>
+          ) : (
           <Tabs defaultValue="quotes" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="quotes">名言</TabsTrigger>
@@ -610,6 +575,7 @@ const EnglishContentManagement = () => {
               </div>
             </TabsContent>
           </Tabs>
+          )}
         </CardContent>
       </Card>
     </div>

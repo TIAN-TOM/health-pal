@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 
 export interface EducationArticle {
   id: string;
@@ -288,4 +289,45 @@ export const getArticlesByCategory = async (category: string): Promise<Education
   } catch (error) {
     return defaultArticles.filter(article => article.category === category);
   }
+};
+
+// ---- 管理后台 CRUD ----
+// 与 getEducationArticles 不同：只返回真实 DB 行（含 created_at 等完整字段）、按 created_at 倒序、失败即 throw，
+// 绝不回退到内置 defaultArticles（管理员不能编辑/删除假 id 的兜底内容）。
+
+export interface EducationArticleInput {
+  title: string;
+  category: string;
+  content: string;
+  summary: string;
+  reading_time: number;
+}
+
+export const getAdminEducationArticles = async (): Promise<Tables<'education_articles'>[]> => {
+  const { data, error } = await supabase
+    .from('education_articles')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+};
+
+export const createEducationArticle = async (input: EducationArticleInput): Promise<void> => {
+  const { error } = await supabase.from('education_articles').insert([input]);
+  if (error) throw error;
+};
+
+export const updateEducationArticle = async (id: string, input: EducationArticleInput): Promise<void> => {
+  const { error } = await supabase
+    .from('education_articles')
+    .update({ ...input, updated_at: new Date().toISOString() })
+    .eq('id', id);
+
+  if (error) throw error;
+};
+
+export const deleteEducationArticle = async (id: string): Promise<void> => {
+  const { error } = await supabase.from('education_articles').delete().eq('id', id);
+  if (error) throw error;
 };

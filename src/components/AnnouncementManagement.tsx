@@ -1,19 +1,23 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Edit, Trash2, Megaphone, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { getBeijingTimeISO } from '@/utils/beijingTime';
-import type { Tables } from '@/integrations/supabase/types';
-
-type Announcement = Tables<'announcements'>;
+import {
+  getAnnouncements,
+  createAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
+  setAnnouncementActive,
+  type Announcement,
+  type AnnouncementInput,
+} from '@/services/announcementsService';
 
 const AnnouncementManagement = () => {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -21,32 +25,88 @@ const AnnouncementManagement = () => {
     content: '',
     is_active: true
   });
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadAnnouncements();
-  }, []);
+  const {
+    data: announcements = [],
+    isPending,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ['announcements'],
+    queryFn: getAnnouncements,
+  });
 
-  const loadAnnouncements = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('announcements')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setAnnouncements(data || []);
-    } catch (error: any) {
+  const saveMutation = useMutation({
+    mutationFn: async (vars: { id?: string; input: AnnouncementInput }) => {
+      if (vars.id) {
+        await updateAnnouncement(vars.id, vars.input);
+      } else {
+        await createAnnouncement(vars.input);
+      }
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      toast(
+        vars.id
+          ? { title: "更新成功", description: "公告已更新" }
+          : { title: "发布成功", description: "新公告已发布" }
+      );
+      setFormData({ title: '', content: '', is_active: true });
+      setShowForm(false);
+      setEditingId(null);
+    },
+    onError: (error: any) => {
+      console.error(error);
       toast({
-        title: "加载失败",
+        title: "操作失败",
         description: error.message,
         variant: "destructive"
       });
-    }
-  };
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const deleteMutation = useMutation({
+    mutationFn: deleteAnnouncement,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      toast({
+        title: "删除成功",
+        description: "公告已删除"
+      });
+    },
+    onError: (error: any) => {
+      console.error(error);
+      toast({
+        title: "删除失败",
+        description: error.message,
+        variant: "destructive"
+      });
+    },
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, next }: { id: string; next: boolean }) =>
+      setAnnouncementActive(id, next),
+    onSuccess: (_data, { next }) => {
+      queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      toast({
+        title: "状态更新成功",
+        description: next ? "公告已启用" : "公告已停用"
+      });
+    },
+    onError: (error: any) => {
+      console.error(error);
+      toast({
+        title: "更新失败",
+        description: error.message,
+        variant: "destructive"
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim() || !formData.content.trim()) {
       toast({
@@ -57,61 +117,7 @@ const AnnouncementManagement = () => {
       return;
     }
 
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('用户未登录');
-
-      const nowISO = getBeijingTimeISO();
-
-      if (editingId) {
-        const { error } = await supabase
-          .from('announcements')
-          .update({
-            title: formData.title,
-            content: formData.content,
-            is_active: formData.is_active,
-            updated_at: nowISO
-          })
-          .eq('id', editingId);
-
-        if (error) throw error;
-        toast({
-          title: "更新成功",
-          description: "公告已更新"
-        });
-      } else {
-        const { error } = await supabase
-          .from('announcements')
-          .insert({
-            title: formData.title,
-            content: formData.content,
-            author_id: user.id,
-            is_active: formData.is_active,
-            created_at: nowISO,
-            updated_at: nowISO
-          });
-
-        if (error) throw error;
-        toast({
-          title: "发布成功",
-          description: "新公告已发布"
-        });
-      }
-
-      setFormData({ title: '', content: '', is_active: true });
-      setShowForm(false);
-      setEditingId(null);
-      loadAnnouncements();
-    } catch (error: any) {
-      toast({
-        title: "操作失败",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+    saveMutation.mutate({ id: editingId ?? undefined, input: formData });
   };
 
   const handleEdit = (announcement: Announcement) => {
@@ -124,55 +130,14 @@ const AnnouncementManagement = () => {
     setShowForm(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!confirm('确定要删除这条公告吗？')) return;
 
-    try {
-      const { error } = await supabase
-        .from('announcements')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      toast({
-        title: "删除成功",
-        description: "公告已删除"
-      });
-      loadAnnouncements();
-    } catch (error: any) {
-      toast({
-        title: "删除失败",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
+    deleteMutation.mutate(id);
   };
 
-  const toggleStatus = async (id: string, currentStatus: boolean) => {
-    try {
-      const nowISO = getBeijingTimeISO();
-
-      const { error } = await supabase
-        .from('announcements')
-        .update({
-          is_active: !currentStatus,
-          updated_at: nowISO
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-      toast({
-        title: "状态更新成功",
-        description: !currentStatus ? "公告已启用" : "公告已停用"
-      });
-      loadAnnouncements();
-    } catch (error: any) {
-      toast({
-        title: "更新失败",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
+  const toggleStatus = (id: string, currentStatus: boolean) => {
+    toggleMutation.mutate({ id, next: !currentStatus });
   };
 
   return (
@@ -230,8 +195,8 @@ const AnnouncementManagement = () => {
                 <label htmlFor="is_active" className="text-sm">立即发布</label>
               </div>
               <div className="flex space-x-2">
-                <Button type="submit" disabled={loading}>
-                  {loading ? '处理中...' : (editingId ? '更新' : '发布')}
+                <Button type="submit" disabled={saveMutation.isPending}>
+                  {saveMutation.isPending ? '处理中...' : (editingId ? '更新' : '发布')}
                 </Button>
                 <Button
                   type="button"
@@ -250,6 +215,16 @@ const AnnouncementManagement = () => {
         </Card>
       )}
 
+      {isPending ? (
+        <div className="text-center py-8 text-gray-600">加载中...</div>
+      ) : isError ? (
+        <div className="text-center py-8 space-y-3" role="alert">
+          <p className="text-gray-600">公告加载失败，请检查网络后重试</p>
+          <Button variant="outline" onClick={() => refetch()}>
+            重新加载
+          </Button>
+        </div>
+      ) : (
       <div className="space-y-4">
         {announcements.map((announcement) => (
           <Card key={announcement.id}>
@@ -325,6 +300,7 @@ const AnnouncementManagement = () => {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 };

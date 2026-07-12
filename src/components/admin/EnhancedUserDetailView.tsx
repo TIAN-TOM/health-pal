@@ -1,12 +1,19 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, User, Calendar, Activity, TrendingUp, Mail, Phone, Shield, Ban, RotateCcw, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAdminUserDetails } from '@/hooks/useAdminUserDetails';
-import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import {
+  getUserDetailedInfo,
+  suspendUser,
+  reactivateUser,
+  resetUserPassword,
+  sendEmailToUser,
+} from '@/services/adminUserDetailService';
 import { format } from 'date-fns';
 import AdminEmailModal from './AdminEmailModal';
 
@@ -25,60 +32,95 @@ interface EnhancedUserDetailViewProps {
 }
 
 const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) => {
-  const { loading, getUserDetailedInfo, resetUserPassword, suspendUser, reactivateUser, sendEmailToUser } = useAdminUserDetails();
-  const { user: currentUser } = useAuth();
-  const [userDetails, setUserDetails] = useState<any>(null);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadUserDetails();
-  }, [user.id]);
+  const { data: userDetails, isPending, isError, refetch } = useQuery({
+    queryKey: ['admin-user-detail', user.id],
+    queryFn: () => getUserDetailedInfo(user.id),
+  });
 
-  const loadUserDetails = async () => {
-    const details = await getUserDetailedInfo(user.id);
-    setUserDetails(details);
-  };
+  const suspendMutation = useMutation({
+    mutationFn: () => suspendUser(user.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-user-detail', user.id] });
+      toast({ title: '用户已暂停', description: '用户账号已被暂停使用，用户将无法登录系统' });
+    },
+    onError: (error) => {
+      console.error('暂停用户失败:', error);
+      toast({ title: '暂停用户失败', description: error instanceof Error ? error.message : '请稍后重试', variant: 'destructive' });
+    },
+  });
 
-  const handleResetPassword = async () => {
+  const reactivateMutation = useMutation({
+    mutationFn: () => reactivateUser(user.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-user-detail', user.id] });
+      toast({ title: '用户已恢复', description: '用户账号已恢复正常，可以正常登录系统' });
+    },
+    onError: (error) => {
+      console.error('恢复用户失败:', error);
+      toast({ title: '恢复用户失败', description: error instanceof Error ? error.message : '请稍后重试', variant: 'destructive' });
+    },
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: () => resetUserPassword(user.email),
+    onSuccess: () => {
+      toast({ title: '密码重置邮件已发送', description: `已向 ${user.email} 发送密码重置邮件` });
+    },
+    onError: (error) => {
+      toast({ title: '发送重置邮件失败', description: error instanceof Error ? error.message : '请稍后重试', variant: 'destructive' });
+    },
+  });
+
+  const sendEmailMutation = useMutation({
+    mutationFn: ({ subject, message }: { subject: string; message: string }) =>
+      sendEmailToUser(user.email, subject, message),
+    onSuccess: () => {
+      toast({ title: '邮件发送成功', description: `已向 ${user.email} 发送邮件` });
+    },
+    onError: (error) => {
+      toast({ title: '发送邮件失败', description: error instanceof Error ? error.message : '请稍后重试', variant: 'destructive' });
+    },
+  });
+
+  const loading =
+    isPending ||
+    suspendMutation.isPending ||
+    reactivateMutation.isPending ||
+    resetPasswordMutation.isPending ||
+    sendEmailMutation.isPending;
+
+  const handleResetPassword = () => {
     if (confirm(`确定要为用户 ${user.email} 重置密码吗？系统将发送密码重置邮件给该用户。`)) {
-      await resetUserPassword(user.id, user.email);
+      resetPasswordMutation.mutate();
     }
   };
 
-  const handleSuspendUser = async () => {
+  const handleSuspendUser = () => {
     if (confirm(`确定要暂停用户 ${user.email} 的账号吗？暂停后该用户将无法登录系统。`)) {
-      const success = await suspendUser(user.id);
-      if (success) {
-        // 强制刷新用户详情以显示最新状态
-        setUserDetails(null); // 清空当前数据，强制重新加载
-        setTimeout(async () => {
-          await loadUserDetails();
-        }, 500); // 给数据库更新一点时间
-      }
+      suspendMutation.mutate();
     }
   };
 
-  const handleReactivateUser = async () => {
+  const handleReactivateUser = () => {
     if (confirm(`确定要恢复用户 ${user.email} 的账号吗？恢复后该用户可以正常登录系统。`)) {
-      const success = await reactivateUser(user.id);
-      if (success) {
-        // 强制刷新用户详情以显示最新状态
-        setUserDetails(null); // 清空当前数据，强制重新加载
-        setTimeout(async () => {
-          await loadUserDetails();
-        }, 500); // 给数据库更新一点时间
-      }
+      reactivateMutation.mutate();
     }
   };
 
-  const handleSendEmail = async (subject: string, message: string) => {
-    if (!currentUser?.id) {
+  const handleSendEmail = async (subject: string, message: string): Promise<boolean> => {
+    try {
+      await sendEmailMutation.mutateAsync({ subject, message });
+      return true;
+    } catch {
       return false;
     }
-    return await sendEmailToUser(user.email, subject, message, currentUser.id);
   };
 
-  if (loading) {
+  if (isPending) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center">
@@ -88,6 +130,21 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
       </div>
     );
   }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-center space-y-4" role="alert">
+          <p className="text-gray-600">加载用户详情失败，请检查网络后重试</p>
+          <Button variant="outline" onClick={() => refetch()}>
+            重新加载
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userDetails) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">

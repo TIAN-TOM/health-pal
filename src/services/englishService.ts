@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { Tables } from '@/integrations/supabase/types';
+import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 import { getBeijingDateString } from '@/utils/beijingTime';
 import {
   fallbackQuotes,
@@ -121,4 +121,107 @@ export const getDailyEnglishContent = async (date: string) => {
   ]);
 
   return { quote, words, phrases, listening, date };
+};
+
+// ---- 管理后台 CRUD ----
+// 面向内容管理页：返回真实 DB 行、按 created_at 倒序、失败即 throw（区别于上面的每日轮换取数逻辑）。
+
+// 名言
+export const getAllQuotes = async (): Promise<EnglishQuote[]> => {
+  const { data, error } = await supabase
+    .from('english_quotes')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+};
+
+export const createQuote = async (input: TablesInsert<'english_quotes'>): Promise<void> => {
+  const { error } = await supabase.from('english_quotes').insert(input);
+  if (error) throw error;
+};
+
+export const updateQuote = async (id: string, input: TablesUpdate<'english_quotes'>): Promise<void> => {
+  const { error } = await supabase.from('english_quotes').update(input).eq('id', id);
+  if (error) throw error;
+};
+
+export const deleteQuote = async (id: string): Promise<void> => {
+  const { error } = await supabase.from('english_quotes').delete().eq('id', id);
+  if (error) throw error;
+};
+
+// 单词
+export const getAllWords = async (): Promise<EnglishWord[]> => {
+  const { data, error } = await supabase
+    .from('english_words')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+};
+
+export const createWord = async (input: TablesInsert<'english_words'>): Promise<void> => {
+  const { error } = await supabase.from('english_words').insert(input);
+  if (error) throw error;
+};
+
+export const updateWord = async (id: string, input: TablesUpdate<'english_words'>): Promise<void> => {
+  const { error } = await supabase.from('english_words').update(input).eq('id', id);
+  if (error) throw error;
+};
+
+export const deleteWord = async (id: string): Promise<void> => {
+  const { error } = await supabase.from('english_words').delete().eq('id', id);
+  if (error) throw error;
+};
+
+// 短语
+export const getAllPhrases = async (): Promise<EnglishPhrase[]> => {
+  const { data, error } = await supabase
+    .from('english_phrases')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+};
+
+export const createPhrase = async (input: TablesInsert<'english_phrases'>): Promise<void> => {
+  const { error } = await supabase.from('english_phrases').insert(input);
+  if (error) throw error;
+};
+
+export const updatePhrase = async (id: string, input: TablesUpdate<'english_phrases'>): Promise<void> => {
+  const { error } = await supabase.from('english_phrases').update(input).eq('id', id);
+  if (error) throw error;
+};
+
+export const deletePhrase = async (id: string): Promise<void> => {
+  const { error } = await supabase.from('english_phrases').delete().eq('id', id);
+  if (error) throw error;
+};
+
+// 听力
+export const getAllListening = async (): Promise<EnglishListening[]> => {
+  const { data, error } = await supabase
+    .from('english_listening')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+};
+
+export const createListening = async (input: TablesInsert<'english_listening'>): Promise<void> => {
+  const { error } = await supabase.from('english_listening').insert(input);
+  if (error) throw error;
+};
+
+export const updateListening = async (id: string, input: TablesUpdate<'english_listening'>): Promise<void> => {
+  const { error } = await supabase.from('english_listening').update(input).eq('id', id);
+  if (error) throw error;
+};
+
+export const deleteListening = async (id: string): Promise<void> => {
+  const { error } = await supabase.from('english_listening').delete().eq('id', id);
+  if (error) throw error;
 };

@@ -1,4 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
+
+export type AdminNotification = Tables<'admin_notifications'>;
 
 interface AdminNotificationData {
   activity_type: string;
@@ -63,3 +66,36 @@ export const MODULE_NAMES = {
   LIFESTYLE: '生活方式记录',
   CHECKIN: '每日打卡'
 } as const;
+
+// 管理后台通知中心：读取最近 50 条（依赖 RLS 按当前管理员限定行，不在此额外过滤 admin_id）
+export const getAdminNotifications = async (): Promise<AdminNotification[]> => {
+  const { data, error } = await supabase
+    .from('admin_notifications')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) throw error;
+  return data || [];
+};
+
+export const markAdminNotificationRead = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from('admin_notifications')
+    .update({ is_read: true })
+    .eq('id', id);
+
+  if (error) throw error;
+};
+
+// 批量标记已读；ids 由调用方从未读列表派生
+export const markAllAdminNotificationsRead = async (ids: string[]): Promise<void> => {
+  if (ids.length === 0) return;
+
+  const { error } = await supabase
+    .from('admin_notifications')
+    .update({ is_read: true })
+    .in('id', ids);
+
+  if (error) throw error;
+};
