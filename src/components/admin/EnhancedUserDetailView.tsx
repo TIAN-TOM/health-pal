@@ -45,7 +45,7 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
     mutationFn: () => suspendUser(user.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-user-detail', user.id] });
-      toast({ title: '用户已暂停', description: '用户账号已被暂停使用，用户将无法登录系统' });
+      toast({ title: '用户已暂停', description: '用户下次打开或刷新应用时将被强制登出' });
     },
     onError: (error) => {
       console.error('暂停用户失败:', error);
@@ -100,7 +100,7 @@ const EnhancedUserDetailView = ({ user, onBack }: EnhancedUserDetailViewProps) =
   };
 
   const handleSuspendUser = () => {
-    if (confirm(`确定要暂停用户 ${user.email} 的账号吗？暂停后该用户将无法登录系统。`)) {
+    if (confirm(`确定要暂停用户 ${user.email} 的账号吗？暂停后该用户下次打开或刷新应用时将被强制登出。`)) {
       suspendMutation.mutate();
     }
   };

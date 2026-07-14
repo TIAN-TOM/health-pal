@@ -3,6 +3,13 @@ project_id = "ihwgygkrmwpcyrxcyzgh"
 [functions.delete-account]
 verify_jwt = true
 
+[functions.admin-delete-user]
+verify_jwt = true
+
+# 函数内部自校验 JWT + admin 角色；与线上部署保持一致（默认 true 会误改鉴权）。
+[functions.admin-send-email]
+verify_jwt = false
+
 [functions.daily-reminder-scheduler]
 verify_jwt = false
 

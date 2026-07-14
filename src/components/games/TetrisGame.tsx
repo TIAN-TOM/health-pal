@@ -48,6 +48,7 @@ const TetrisGame = ({ onBack }: { onBack: () => void }) => {
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const fallTimeRef = useRef(INITIAL_FALL_TIME);
   const boardRef = useRef<HTMLDivElement>(null);
+  const lockingRef = useRef(false); // 防止同一方块被重复落子（硬降 vs 重力 tick 竞争）
   const { toast } = useToast();
 
   const createRandomPiece = useCallback((): Piece => {
@@ -123,18 +124,22 @@ const TetrisGame = ({ onBack }: { onBack: () => void }) => {
     return clearedBoard;
   }, [level, lines, toast]);
 
-  const placePiece = useCallback(() => {
-    if (!currentPiece) return;
+  // 接收要固定的方块（硬降传入落点方块），避免读取过期闭包中的 currentPiece。
+  // lockingRef 保证同一帧内（如硬降后重力 tick 再次触发）只落子一次。
+  const placePiece = useCallback((pieceToPlace?: Piece) => {
+    const piece = pieceToPlace ?? currentPiece;
+    if (!piece || lockingRef.current) return;
+    lockingRef.current = true;
 
     const newBoard = board.map(row => [...row]);
-    
-    for (let y = 0; y < currentPiece.shape.length; y++) {
-      for (let x = 0; x < currentPiece.shape[y].length; x++) {
-        if (currentPiece.shape[y][x]) {
-          const boardY = currentPiece.y + y;
-          const boardX = currentPiece.x + x;
+
+    for (let y = 0; y < piece.shape.length; y++) {
+      for (let x = 0; x < piece.shape[y].length; x++) {
+        if (piece.shape[y][x]) {
+          const boardY = piece.y + y;
+          const boardX = piece.x + x;
           if (boardY >= 0) {
-            newBoard[boardY][boardX] = currentPiece.color;
+            newBoard[boardY][boardX] = piece.color;
           }
         }
       }
@@ -142,7 +147,7 @@ const TetrisGame = ({ onBack }: { onBack: () => void }) => {
 
     const clearedBoard = clearLines(newBoard);
     setBoard(clearedBoard);
-    
+
     setCurrentPiece(nextPiece);
     setNextPiece(createRandomPiece());
   }, [currentPiece, nextPiece, board, clearLines, createRandomPiece]);
@@ -179,8 +184,8 @@ const TetrisGame = ({ onBack }: { onBack: () => void }) => {
     }
 
     if (dropDistance > 0) {
-      setCurrentPiece(prev => prev ? { ...prev, y: prev.y + dropDistance } : null);
-      setTimeout(placePiece, 50);
+      // 用落点方块同步落子，不经过 setTimeout+过期闭包。
+      placePiece({ ...currentPiece, y: currentPiece.y + dropDistance });
     }
   }, [currentPiece, gameOver, paused, isValidMove, placePiece]);
 
@@ -272,6 +277,11 @@ const TetrisGame = ({ onBack }: { onBack: () => void }) => {
   useEffect(() => {
     checkGameOver();
   }, [currentPiece, checkGameOver]);
+
+  // 新方块激活后解锁，允许下一次落子。
+  useEffect(() => {
+    lockingRef.current = false;
+  }, [currentPiece]);
 
   const startGame = () => {
     const firstPiece = createRandomPiece();

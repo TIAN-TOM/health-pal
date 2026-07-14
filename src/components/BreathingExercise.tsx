@@ -31,6 +31,7 @@ const patterns = {
 
 const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
   const [isActive, setIsActive] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false); // 区分"从未开始"与"暂停中"，避免暂停后误清零进度
   const [phase, setPhase] = useState<'inhale' | 'hold1' | 'exhale' | 'hold2'>('inhale');
   const [countdown, setCountdown] = useState(4);
   const [sessionTime, setSessionTime] = useState(0);
@@ -58,36 +59,48 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
 
   const startSession = () => {
     setIsActive(true);
+    setHasStarted(true);
     setPhase('inhale');
     setCountdown(currentPattern.inhale);
     setSessionTime(0);
     setCompletedCycles(0);
     setSessionCompleted(false);
     progressRef.current = 0;
-    
+
     toast({
       title: "开始呼吸冥想",
       description: `${currentPattern.name} - ${sessionDuration}分钟冥想开始`,
     });
   };
 
+  // 仅暂停，不清零任何进度。
   const pauseSession = () => {
-    setIsActive(!isActive);
+    setIsActive(false);
     toast({
-      title: isActive ? "冥想已暂停" : "冥想已继续",
-      description: isActive ? "点击继续按钮恢复冥想" : "继续您的呼吸练习",
+      title: "冥想已暂停",
+      description: "点击「继续」按钮恢复冥想",
+    });
+  };
+
+  // 从暂停处继续，不重置计时与周期。
+  const resumeSession = () => {
+    setIsActive(true);
+    toast({
+      title: "冥想已继续",
+      description: "继续您的呼吸练习",
     });
   };
 
   const resetSession = () => {
     setIsActive(false);
+    setHasStarted(false);
     setPhase('inhale');
     setCountdown(currentPattern.inhale);
     setSessionTime(0);
     setCompletedCycles(0);
     setSessionCompleted(false);
     progressRef.current = 0;
-    
+
     toast({
       title: "冥想已重置",
       description: "准备开始新的冥想",
@@ -260,6 +273,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
   useEffect(() => {
     if (sessionTime >= sessionDuration * 60 && isActive) {
       setIsActive(false);
+      setHasStarted(false);
       setSessionCompleted(true);
       
       toast({
@@ -474,15 +488,34 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
 
               {/* 控制按钮 */}
               <div className="flex justify-center space-x-4">
-                {!isActive ? (
-                  <Button 
-                    onClick={startSession} 
+                {!isActive && !hasStarted ? (
+                  <Button
+                    onClick={startSession}
                     size="lg"
                     className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-2xl px-8 py-4 rounded-2xl transform transition-all duration-200 hover:scale-105"
                   >
                     <Play className="h-5 w-5 mr-2" />
                     开始呼吸
                   </Button>
+                ) : !isActive && hasStarted ? (
+                  <>
+                    <Button
+                      onClick={resumeSession}
+                      size="lg"
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-2xl px-8 py-4 rounded-2xl transform transition-all duration-200 hover:scale-105"
+                    >
+                      <Play className="h-5 w-5 mr-2" />
+                      继续
+                    </Button>
+                    <Button
+                      onClick={resetSession}
+                      variant="outline"
+                      size="lg"
+                      className="backdrop-blur-sm bg-white/50 border-white/60 hover:bg-white/70 px-6 py-4 rounded-2xl shadow-lg"
+                    >
+                      <RotateCcw className="h-5 w-5" />
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <Button 

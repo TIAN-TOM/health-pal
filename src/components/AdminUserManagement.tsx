@@ -59,7 +59,7 @@ const AdminUserManagement = () => {
   };
 
   const handleDeleteUser = async (user: UserWithProfile) => {
-    if (!confirm(`确定要删除用户 ${user.email} 吗？此操作不可恢复！`)) return;
+    if (!confirm(`确定要删除用户 ${user.email} 吗？将永久删除该用户的账号及全部健康数据，此操作不可恢复！`)) return;
 
     await deleteUser(user.id);
   };

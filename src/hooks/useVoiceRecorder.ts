@@ -39,7 +39,13 @@ export const useVoiceRecorder = () => {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const audioUrlRef = useRef<string>(''); // 追踪最新 url，供卸载清理使用（避免闭包过期）
   const { toast } = useToast();
+
+  useEffect(() => {
+    audioUrlRef.current = audioUrl;
+  }, [audioUrl]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -64,6 +70,7 @@ export const useVoiceRecorder = () => {
         },
       });
 
+      streamRef.current = stream;
       const options = getRecordingOptions();
       const mediaRecorder = new MediaRecorder(stream, options);
       const chunks: BlobPart[] = [];
@@ -82,6 +89,7 @@ export const useVoiceRecorder = () => {
         setHasRecording(true);
 
         stream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
 
         const audio = new Audio(url);
         audio.addEventListener('loadedmetadata', () => {
@@ -164,10 +172,24 @@ export const useVoiceRecorder = () => {
     setDuration(0);
   }, [audioUrl]);
 
-  // 卸载时清理
+  // 卸载时彻底清理：停止计时、关闭 MediaRecorder 与麦克风流、释放 blob URL。
+  // 否则录音中切页（PageRenderer 按 ?page 卸载组件）会让麦克风一直开着。
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+
+      const recorder = mediaRecorderRef.current;
+      if (recorder && recorder.state !== 'inactive') {
+        // 卸载后 setState 无意义，且会产生无人引用的 blob URL，先解绑回调再停止。
+        recorder.ondataavailable = null;
+        recorder.onstop = null;
+        recorder.stop();
+      }
+
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
     };
   }, []);
 

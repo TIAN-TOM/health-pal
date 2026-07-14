@@ -11,7 +11,7 @@ import {
 import { CITIES, City, getWeatherData, WeatherData } from '@/services/weatherService';
 import { CountdownEvent, getActiveCountdownEvents } from '@/services/countdownService';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
-import { getBeijingTime } from '@/utils/beijingTime';
+import { getBeijingDateString } from '@/utils/beijingTime';
 
 const THEME_TEXT: Record<string, string> = {
   purple: 'text-purple-700',
@@ -31,13 +31,16 @@ const THEME_BG: Record<string, string> = {
   red: 'bg-gradient-to-r from-red-100 via-rose-100 to-pink-100',
 };
 
+// 纯日历日运算：避免本地时区与 UTC 午夜混用导致东时区恒多算 1 天。
+const dayToUtcMs = (day: string): number => {
+  const [y, m, d] = day.split('-').map(Number);
+  return Date.UTC(y, m - 1, d);
+};
+
 const computeDaysLeft = (targetDateStr: string): number => {
-  const now = getBeijingTime();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const target = new Date(targetDateStr);
-  target.setHours(23, 59, 59, 999);
-  const diff = target.getTime() - today.getTime();
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  const targetDay = targetDateStr.split('T')[0]; // YYYY-MM-DD
+  const todayDay = getBeijingDateString();
+  return Math.round((dayToUtcMs(targetDay) - dayToUtcMs(todayDay)) / 86400000);
 };
 
 const HomeBanner: React.FC = () => {
@@ -115,13 +118,9 @@ const HomeBanner: React.FC = () => {
     (async () => {
       try {
         const data = await getActiveCountdownEvents();
-        const now = getBeijingTime();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const active = data.filter((c) => {
-          const t = new Date(c.target_date);
-          t.setHours(23, 59, 59, 999);
-          return t.getTime() >= today.getTime();
-        });
+        // 按北京日界比较 YYYY-MM-DD（字典序即日期序），当天事件保留以显示"就是今天"。
+        const todayDay = getBeijingDateString();
+        const active = data.filter((c) => c.target_date.split('T')[0] >= todayDay);
         if (!cancelled) setCountdowns(active);
       } catch (error) {
         console.error('Failed to load countdowns:', error);

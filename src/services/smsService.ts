@@ -54,11 +54,16 @@ export const generateEmergencyMessage = (userName: string, location?: LocationDa
   return `${baseMessage}\n发送时间：${new Date().toLocaleString('zh-CN')}`;
 };
 
+// 审计日志：紧急场景下网络/会话可能失效，写入失败绝不能阻断求助，
+// 因此调用方一律 fire-and-forget（见 openEmergencySMS）。
 export const logEmergencySMS = async (data: EmergencySMSData) => {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('用户未登录');
+  if (!user) return;
 
-  const { error } = await supabase
+  // temp_ 是 contactsService 为缺失 id 的老数据生成的伪 id，写入 uuid 外键列必然失败，跳过。
+  if (data.contactId.startsWith('temp_')) return;
+
+  await supabase
     .from('emergency_sms_logs')
     .insert({
       user_id: user.id,
@@ -66,50 +71,42 @@ export const logEmergencySMS = async (data: EmergencySMSData) => {
       message: data.message,
       location_data: data.location ? JSON.parse(JSON.stringify(data.location)) : null
     });
-
-  if (error) throw error;
 };
 
-export const sendEmergencySMS = async (
-  contact: Contact, 
-  message: string, 
+// 构造 sms: 深链，支持多收件人（iOS 及多数 Android 接受逗号分隔）。
+const buildSmsUrl = (phones: string[], message: string): string | null => {
+  const valid = phones.map((p) => p.trim()).filter(Boolean);
+  if (valid.length === 0) return null;
+  return `sms:${valid.join(',')}?body=${encodeURIComponent(message)}`;
+};
+
+/**
+ * 唤起系统短信应用，预填求助内容与全部收件人。
+ * 关键顺序：先执行纯本地的唤起动作，再 fire-and-forget 写审计日志——
+ * 日志失败（弱网/未登录）绝不阻断求助。返回是否成功构造并唤起。
+ */
+export const openEmergencySMS = (
+  contactList: Contact[],
+  message: string,
   location?: LocationData
-): Promise<boolean> => {
-  try {
-    // 记录短信日志
-    await logEmergencySMS({
-      contactId: contact.id,
-      message,
-      location
-    });
+): boolean => {
+  const url = buildSmsUrl(contactList.map((c) => c.phone), message);
+  if (!url || typeof window === 'undefined') return false;
 
-    // 在实际应用中，这里应该调用短信发送API
-    // 现在我们模拟发送过程
-    console.log('发送紧急短信:', {
-      to: contact.phone,
-      message,
-      location
-    });
+  window.location.href = url;
 
-    // 尝试使用系统的短信功能
-    if (typeof window !== 'undefined' && 'navigator' in window) {
-      try {
-        const smsUrl = `sms:${contact.phone}?body=${encodeURIComponent(message)}`;
-        window.location.href = smsUrl;
-        return true;
-      } catch (error) {
-        console.error('无法打开短信应用:', error);
-        // fallback: 复制到剪贴板
-        if (navigator.clipboard) {
-          await navigator.clipboard.writeText(message);
-        }
-        return true;
-      }
-    }
+  contactList.forEach((contact) => {
+    logEmergencySMS({ contactId: contact.id, message, location }).catch((error) =>
+      console.error('记录紧急短信日志失败（不影响发送）:', error)
+    );
+  });
 
-    return true;
-  } catch (error) {
-    console.error('发送紧急短信失败:', error);
-    throw error;
-  }
+  return true;
 };
+
+// 单个联系人的便捷封装，保持既有调用点可用。
+export const sendEmergencySMS = (
+  contact: Contact,
+  message: string,
+  location?: LocationData
+): boolean => openEmergencySMS([contact], message, location);

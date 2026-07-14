@@ -65,7 +65,8 @@ describe("familyMemberSchema", () => {
       {
         ...validMember,
         phone: "13800138000",
-        birthday: "19580101",
+        // 表单以 format(date,'yyyy-MM-dd') 提交
+        birthday: "1958-01-01",
         address: "北京市朝阳区",
         notes: "每周探望",
         avatar_url: "https://example.com/avatar.png",
@@ -75,15 +76,19 @@ describe("familyMemberSchema", () => {
     // phone 用的是 * 量词，允许空字符串
     ["电话为空字符串", { ...validMember, phone: "" }, true],
     ["头像URL为空字符串", { ...validMember, avatar_url: "" }, true],
+    // 预设 emoji 头像也应通过（表单会提交 emoji 字符）
+    ["头像为emoji", { ...validMember, avatar_url: "👨" }, true],
+    // 未选生日时表单提交 null，用于清空
+    ["生日为null", { ...validMember, birthday: null }, true],
     ["关系恰好50字符", { ...validMember, relationship: "亲".repeat(50) }, true],
-    ["生日为8位数字", { ...validMember, birthday: "19580101" }, true],
+    ["生日为YYYY-MM-DD", { ...validMember, birthday: "1958-01-01" }, true],
     ["缺少关系字段", { name: "妈妈" }, false],
     ["关系为空", { ...validMember, relationship: "" }, false],
     ["关系51字符超限", { ...validMember, relationship: "亲".repeat(51) }, false],
-    ["生日带连字符", { ...validMember, birthday: "1958-01-01" }, false],
+    ["生日为8位数字（旧格式）", { ...validMember, birthday: "19580101" }, false],
     ["生日仅6位", { ...validMember, birthday: "195801" }, false],
     ["电话含字母", { ...validMember, phone: "138abc" }, false],
-    ["头像URL格式错误", { ...validMember, avatar_url: "not-a-url" }, false],
+    ["头像超500字符", { ...validMember, avatar_url: "x".repeat(501) }, false],
     ["备注1001字符超限", { ...validMember, notes: "备".repeat(1001) }, false],
     ["地址201字符超限", { ...validMember, address: "址".repeat(201) }, false],
   ])("%s -> %s", (_desc, input, expected) => {
@@ -93,9 +98,9 @@ describe("familyMemberSchema", () => {
   it("生日格式错误时返回中文错误信息", () => {
     const result = familyMemberSchema.safeParse({
       ...validMember,
-      birthday: "1958-01-01",
+      birthday: "19580101",
     });
-    expect(messagesOf(result)).toContain("生日格式应为YYYYMMDD");
+    expect(messagesOf(result)).toContain("生日格式应为YYYY-MM-DD");
   });
 });
 

@@ -106,27 +106,6 @@ export const getMonthRange = (date: Date) => {
   };
 };
 
-// 删除所有打卡记录的函数
-export const deleteAllCheckins = async () => {
-  const { supabase } = await import('@/integrations/supabase/client');
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error('用户未登录');
-  }
-
-  const { error } = await supabase
-    .from('daily_checkins')
-    .delete()
-    .eq('user_id', user.id);
-
-  if (error) {
-    throw new Error(`删除打卡记录失败: ${error.message}`);
-  }
-
-  console.log('所有打卡记录已删除');
-};
-
 // 统一的北京时间显示格式
 // 传入真实时间戳即可，timeZone 选项负责换算北京时间；
 // 不要传入 getBeijingTime() 的伪时间，否则会双重偏移。

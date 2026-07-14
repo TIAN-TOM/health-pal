@@ -148,13 +148,13 @@ const CheckinCalendarSection = ({ checkinDates, selectedDate, onDateSelect, onMa
 
                     <div>
                       <label className="block text-sm font-medium mb-2">选择补签日期</label>
-                      <Select value={selectedMakeupDate} onValueChange={setSelectedMakeupDate}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="请选择要补签的日期" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableDates.length > 0 ? (
-                            availableDates.map(date => (
+                      {availableDates.length > 0 ? (
+                        <Select value={selectedMakeupDate} onValueChange={setSelectedMakeupDate}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="请选择要补签的日期" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableDates.map(date => (
                               <SelectItem key={date} value={date}>
                                 {new Date(date).toLocaleDateString('zh-CN', {
                                   year: 'numeric',
@@ -163,12 +163,15 @@ const CheckinCalendarSection = ({ checkinDates, selectedDate, onDateSelect, onMa
                                   weekday: 'short'
                                 })}
                               </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="" disabled>暂无可补签日期</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        // 不能渲染 value="" 的 SelectItem：Radix 会抛错导致整页白屏。
+                        <p className="text-sm text-gray-600 border rounded-md px-3 py-2 bg-gray-50">
+                          最近 30 天已全部打卡，暂无可补签日期
+                        </p>
+                      )}
                     </div>
 
                     <div>

@@ -4,7 +4,7 @@ import { MessageSquare, MapPin, Send, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { getCurrentLocation, generateEmergencyMessage, sendEmergencySMS, type LocationData } from '@/services/smsService';
+import { getCurrentLocation, generateEmergencyMessage, openEmergencySMS, type LocationData } from '@/services/smsService';
 import type { Contact } from '@/services/contactsService';
 
 interface EmergencySMSProps {
@@ -51,60 +51,44 @@ const EmergencySMS = ({ contacts, userName }: EmergencySMSProps) => {
 
     setIsSending(true);
     const message = generateEmergencyMessage(userName, location || undefined);
-    let successCount = 0;
 
-    try {
-      for (const contact of contacts) {
-        try {
-          await sendEmergencySMS(contact, message, location || undefined);
-          successCount++;
-        } catch (error) {
-          console.error(`发送给${contact.name}失败:`, error);
-        }
-      }
+    // 用单条多收件人 sms: 链接一次性唤起短信应用（连续给 location.href 赋值只会生效一次）。
+    const opened = openEmergencySMS(contacts, message, location || undefined);
 
-      if (successCount > 0) {
-        toast({
-          title: "求助信息已发送",
-          description: `成功发送给 ${successCount} 位联系人`
-        });
-      } else {
-        toast({
-          title: "发送失败",
-          description: "所有联系人都发送失败，请检查网络连接",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
+    if (opened) {
       toast({
-        title: "发送失败",
-        description: "请稍后重试",
+        title: "已打开短信应用",
+        description: `已为您预填好发送给 ${contacts.length} 位联系人的求助短信，请在短信应用中点击发送`
+      });
+    } else {
+      toast({
+        title: "无法打开短信应用",
+        description: `请手动发送求助短信给：${contacts.map((c) => `${c.name} ${c.phone}`).join('、')}`,
         variant: "destructive"
       });
-    } finally {
-      setIsSending(false);
     }
+    setIsSending(false);
   };
 
-  const handleSendToContact = async (contact: Contact) => {
+  const handleSendToContact = (contact: Contact) => {
     setIsSending(true);
     const message = generateEmergencyMessage(userName, location || undefined);
 
-    try {
-      await sendEmergencySMS(contact, message, location || undefined);
+    const opened = openEmergencySMS([contact], message, location || undefined);
+
+    if (opened) {
       toast({
-        title: "求助信息已发送",
-        description: `已发送给${contact.name}`
+        title: "已打开短信应用",
+        description: `已为您预填好发送给${contact.name}的求助短信，请点击发送`
       });
-    } catch (error) {
+    } else {
       toast({
-        title: "发送失败",
-        description: "请稍后重试",
+        title: "无法打开短信应用",
+        description: `请手动拨打或发短信给 ${contact.name}：${contact.phone}`,
         variant: "destructive"
       });
-    } finally {
-      setIsSending(false);
     }
+    setIsSending(false);
   };
 
   return (
