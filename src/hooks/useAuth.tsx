@@ -2,11 +2,14 @@
 import { useState, useEffect, useCallback, useMemo, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import { clearContactsCache } from '@/services/contactsService';
 
 interface UserProfile {
   id: string;
   email: string | null;
   full_name: string | null;
+  status?: string | null;
 }
 
 interface AuthContextType {
@@ -39,6 +42,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (error) {
       console.error('获取用户资料失败:', error);
+      setUserProfile(null);
+      return;
+    }
+
+    // 前端强制账号暂停：被暂停的用户立即登出（数据库 RLS 已不再阻止其登录）。
+    if (profile?.status === 'suspended') {
+      toast({
+        title: '账号已被暂停',
+        description: '你的账号已被管理员暂停，如有疑问请联系管理员',
+        variant: 'destructive',
+      });
+      clearContactsCache();
+      await supabase.auth.signOut();
       setUserProfile(null);
       return;
     }
@@ -124,6 +140,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signOut = useCallback(async () => {
+    // 清除按用户缓存的紧急联系人，避免共享设备上下一位用户看到上一位的联系人。
+    clearContactsCache();
     await supabase.auth.signOut();
   }, []);
 

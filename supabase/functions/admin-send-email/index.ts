@@ -128,9 +128,20 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
+    // Resend SDK 在 API 报错时不 throw，而是返回 { data: null, error }。
+    // 必须显式检查，否则发送失败仍会写入"成功"审计并返回 200，形成虚假审计。
+    if (emailResponse.error) {
+      console.error("Resend 发送失败:", emailResponse.error);
+      return new Response(
+        JSON.stringify({ error: '邮件发送失败，请稍后重试' }),
+        { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     console.log("Email sent successfully by admin:", user.id, "to:", userEmail);
 
-    await supabase
+    // 仅在确认发送成功后写入审计，并检查审计写入本身是否出错。
+    const { error: auditError } = await supabase
       .from('admin_notifications')
       .insert({
         admin_id: user.id,
@@ -138,6 +149,10 @@ const handler = async (req: Request): Promise<Response> => {
         message: `向用户 ${userEmail} 发送了邮件: ${subject}`,
         type: 'email_sent'
       });
+
+    if (auditError) {
+      console.error("写入邮件审计记录失败:", auditError);
+    }
 
     return new Response(JSON.stringify({
       success: true,

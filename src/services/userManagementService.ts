@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import type { Tables } from '@/integrations/supabase/types';
 
 export type UserRole = 'admin' | 'user';
@@ -69,19 +70,27 @@ export const updateUserRole = async (userId: string, role: UserRole): Promise<vo
   if (error) throw error;
 };
 
-// 删除用户：先删角色再删档案，任一步失败即中止，避免留下不一致数据
+// 删除用户：走 admin-delete-user 边缘函数做服务端级联删除（21+ 张业务表 + 存储桶 + auth 账号）。
+// 客户端只删 user_roles/profiles 会让 auth 账号与全部健康数据变成孤儿数据，故改为服务端执行。
 export const deleteUserAccount = async (userId: string): Promise<void> => {
-  const { error: rolesError } = await supabase
-    .from('user_roles')
-    .delete()
-    .eq('user_id', userId);
+  const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+    body: { userId },
+  });
 
-  if (rolesError) throw new Error(`删除用户角色失败: ${rolesError.message}`);
-
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .delete()
-    .eq('id', userId);
-
-  if (profileError) throw new Error(`删除用户档案失败: ${profileError.message}`);
+  if (error) {
+    // functions.invoke 对非 2xx 会抛 FunctionsHttpError，真正的中文错误在响应体里，需读取透传。
+    let message = error.message;
+    if (error instanceof FunctionsHttpError) {
+      try {
+        const body = await error.context.json();
+        if (body?.error) message = body.error;
+      } catch {
+        // 响应体不可解析时用默认 message
+      }
+    }
+    throw new Error(message);
+  }
+  if (data && data.success === false) {
+    throw new Error(data.error || '删除用户失败');
+  }
 };

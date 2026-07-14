@@ -16,6 +16,174 @@ import {
   getAllListening, createListening, updateListening, deleteListening,
 } from '@/services/englishService';
 
+// 表单组件提升到模块顶层：定义在父组件函数体内时，每次父组件重渲染都会
+// 得到新的组件引用，React 会 unmount+remount 整棵子树导致输入框失焦。
+type FormProps = {
+  formData: any;
+  setFormData: (v: any) => void;
+  item?: any;
+  isNew?: boolean;
+  onSave: (data: any, isNew: boolean) => void;
+  onCancel: (isNew: boolean) => void;
+};
+
+const QuoteForm = ({ formData, setFormData, item, isNew = false, onSave, onCancel }: FormProps) => (
+  <div className="space-y-4">
+    <Input
+      placeholder="英文名言"
+      value={formData.quote_text || (item?.quote_text || '')}
+      onChange={(e) => setFormData({ ...formData, quote_text: e.target.value })}
+    />
+    <Input
+      placeholder="中文翻译"
+      value={formData.quote_translation || (item?.quote_translation || '')}
+      onChange={(e) => setFormData({ ...formData, quote_translation: e.target.value })}
+    />
+    <Input
+      placeholder="作者"
+      value={formData.author || (item?.author || '')}
+      onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+    />
+    <Input
+      placeholder="作者中文名（可选）"
+      value={formData.author_translation || (item?.author_translation || '')}
+      onChange={(e) => setFormData({ ...formData, author_translation: e.target.value })}
+    />
+    <Select value={formData.difficulty_level || item?.difficulty_level || 'intermediate'} onValueChange={(value) => setFormData({ ...formData, difficulty_level: value })}>
+      <SelectTrigger><SelectValue placeholder="难度级别" /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="beginner">初级</SelectItem>
+        <SelectItem value="intermediate">中级</SelectItem>
+        <SelectItem value="advanced">高级</SelectItem>
+      </SelectContent>
+    </Select>
+    <div className="flex gap-2">
+      <Button onClick={() => onSave(formData, isNew)}>
+        <Save className="h-4 w-4 mr-2" />保存
+      </Button>
+      <Button variant="outline" onClick={() => onCancel(isNew)}>
+        <X className="h-4 w-4 mr-2" />取消
+      </Button>
+    </div>
+  </div>
+);
+
+const WordForm = ({ formData, setFormData, item, isNew = false, onSave, onCancel }: FormProps) => (
+  <div className="space-y-4">
+    <Input
+      placeholder="英文单词"
+      value={formData.word || (item?.word || '')}
+      onChange={(e) => setFormData({ ...formData, word: e.target.value })}
+    />
+    <Input
+      placeholder="音标"
+      value={formData.pronunciation || (item?.pronunciation || '')}
+      onChange={(e) => setFormData({ ...formData, pronunciation: e.target.value })}
+    />
+    <Input
+      placeholder="中文意思"
+      value={formData.meaning || (item?.meaning || '')}
+      onChange={(e) => setFormData({ ...formData, meaning: e.target.value })}
+    />
+    <Input
+      placeholder="例句"
+      value={formData.example_sentence || (item?.example_sentence || '')}
+      onChange={(e) => setFormData({ ...formData, example_sentence: e.target.value })}
+    />
+    <Input
+      placeholder="例句翻译"
+      value={formData.example_translation || (item?.example_translation || '')}
+      onChange={(e) => setFormData({ ...formData, example_translation: e.target.value })}
+    />
+    <Select value={formData.word_type || item?.word_type || 'noun'} onValueChange={(value) => setFormData({ ...formData, word_type: value })}>
+      <SelectTrigger><SelectValue placeholder="词性" /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="noun">名词</SelectItem>
+        <SelectItem value="verb">动词</SelectItem>
+        <SelectItem value="adjective">形容词</SelectItem>
+        <SelectItem value="adverb">副词</SelectItem>
+        <SelectItem value="other">其他</SelectItem>
+      </SelectContent>
+    </Select>
+    <div className="flex gap-2">
+      <Button onClick={() => onSave(formData, isNew)}>
+        <Save className="h-4 w-4 mr-2" />保存
+      </Button>
+      <Button variant="outline" onClick={() => onCancel(isNew)}>
+        <X className="h-4 w-4 mr-2" />取消
+      </Button>
+    </div>
+  </div>
+);
+
+const PhraseForm = ({ formData, setFormData, item, isNew = false, onSave, onCancel }: FormProps) => (
+  <div className="space-y-4">
+    <Input
+      placeholder="英文短语"
+      value={formData.phrase_english || (item?.phrase_english || '')}
+      onChange={(e) => setFormData({ ...formData, phrase_english: e.target.value })}
+    />
+    <Input
+      placeholder="中文翻译"
+      value={formData.phrase_chinese || (item?.phrase_chinese || '')}
+      onChange={(e) => setFormData({ ...formData, phrase_chinese: e.target.value })}
+    />
+    <Textarea
+      placeholder="含义解释"
+      value={formData.meaning_explanation || (item?.meaning_explanation || '')}
+      onChange={(e) => setFormData({ ...formData, meaning_explanation: e.target.value })}
+    />
+    <Input
+      placeholder="例句（可选）"
+      value={formData.example_sentence || (item?.example_sentence || '')}
+      onChange={(e) => setFormData({ ...formData, example_sentence: e.target.value })}
+    />
+    <div className="flex gap-2">
+      <Button onClick={() => onSave(formData, isNew)}>
+        <Save className="h-4 w-4 mr-2" />保存
+      </Button>
+      <Button variant="outline" onClick={() => onCancel(isNew)}>
+        <X className="h-4 w-4 mr-2" />取消
+      </Button>
+    </div>
+  </div>
+);
+
+const ListeningForm = ({ formData, setFormData, item, isNew = false, onSave, onCancel }: FormProps) => (
+  <div className="space-y-4">
+    <Input
+      placeholder="标题"
+      value={formData.title || (item?.title || '')}
+      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+    />
+    <Textarea
+      placeholder="英文内容"
+      value={formData.content || (item?.content || '')}
+      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+      rows={4}
+    />
+    <Textarea
+      placeholder="中文翻译"
+      value={formData.translation || (item?.translation || '')}
+      onChange={(e) => setFormData({ ...formData, translation: e.target.value })}
+      rows={4}
+    />
+    <Input
+      placeholder="主题（可选）"
+      value={formData.topic || (item?.topic || '')}
+      onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
+    />
+    <div className="flex gap-2">
+      <Button onClick={() => onSave(formData, isNew)}>
+        <Save className="h-4 w-4 mr-2" />保存
+      </Button>
+      <Button variant="outline" onClick={() => onCancel(isNew)}>
+        <X className="h-4 w-4 mr-2" />取消
+      </Button>
+    </div>
+  </div>
+);
+
 const EnglishContentManagement = () => {
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
@@ -153,182 +321,8 @@ const EnglishContentManagement = () => {
     listeningDeleteMutation.mutate(id);
   };
 
-  const QuoteForm = ({ item, isNew = false }: { item?: any, isNew?: boolean }) => {
-    const formData = isNew ? newItemForm : editForm;
-    const setFormData = isNew ? setNewItemForm : setEditForm;
-
-    return (
-      <div className="space-y-4">
-        <Input
-          placeholder="英文名言"
-          value={formData.quote_text || (item?.quote_text || '')}
-          onChange={(e) => setFormData({ ...formData, quote_text: e.target.value })}
-        />
-        <Input
-          placeholder="中文翻译"
-          value={formData.quote_translation || (item?.quote_translation || '')}
-          onChange={(e) => setFormData({ ...formData, quote_translation: e.target.value })}
-        />
-        <Input
-          placeholder="作者"
-          value={formData.author || (item?.author || '')}
-          onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-        />
-        <Input
-          placeholder="作者中文名（可选）"
-          value={formData.author_translation || (item?.author_translation || '')}
-          onChange={(e) => setFormData({ ...formData, author_translation: e.target.value })}
-        />
-        <Select value={formData.difficulty_level || item?.difficulty_level || 'intermediate'} onValueChange={(value) => setFormData({ ...formData, difficulty_level: value })}>
-          <SelectTrigger><SelectValue placeholder="难度级别" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="beginner">初级</SelectItem>
-            <SelectItem value="intermediate">中级</SelectItem>
-            <SelectItem value="advanced">高级</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="flex gap-2">
-          <Button onClick={() => handleSaveQuote(formData, isNew)}>
-            <Save className="h-4 w-4 mr-2" />保存
-          </Button>
-          <Button variant="outline" onClick={() => isNew ? setShowNewForm(null) : setEditingItem(null)}>
-            <X className="h-4 w-4 mr-2" />取消
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  const WordForm = ({ item, isNew = false }: { item?: any, isNew?: boolean }) => {
-    const formData = isNew ? newItemForm : editForm;
-    const setFormData = isNew ? setNewItemForm : setEditForm;
-
-    return (
-      <div className="space-y-4">
-        <Input
-          placeholder="英文单词"
-          value={formData.word || (item?.word || '')}
-          onChange={(e) => setFormData({ ...formData, word: e.target.value })}
-        />
-        <Input
-          placeholder="音标"
-          value={formData.pronunciation || (item?.pronunciation || '')}
-          onChange={(e) => setFormData({ ...formData, pronunciation: e.target.value })}
-        />
-        <Input
-          placeholder="中文意思"
-          value={formData.meaning || (item?.meaning || '')}
-          onChange={(e) => setFormData({ ...formData, meaning: e.target.value })}
-        />
-        <Input
-          placeholder="例句"
-          value={formData.example_sentence || (item?.example_sentence || '')}
-          onChange={(e) => setFormData({ ...formData, example_sentence: e.target.value })}
-        />
-        <Input
-          placeholder="例句翻译"
-          value={formData.example_translation || (item?.example_translation || '')}
-          onChange={(e) => setFormData({ ...formData, example_translation: e.target.value })}
-        />
-        <Select value={formData.word_type || item?.word_type || 'noun'} onValueChange={(value) => setFormData({ ...formData, word_type: value })}>
-          <SelectTrigger><SelectValue placeholder="词性" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="noun">名词</SelectItem>
-            <SelectItem value="verb">动词</SelectItem>
-            <SelectItem value="adjective">形容词</SelectItem>
-            <SelectItem value="adverb">副词</SelectItem>
-            <SelectItem value="other">其他</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="flex gap-2">
-          <Button onClick={() => handleSaveWord(formData, isNew)}>
-            <Save className="h-4 w-4 mr-2" />保存
-          </Button>
-          <Button variant="outline" onClick={() => isNew ? setShowNewForm(null) : setEditingItem(null)}>
-            <X className="h-4 w-4 mr-2" />取消
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  const PhraseForm = ({ item, isNew = false }: { item?: any, isNew?: boolean }) => {
-    const formData = isNew ? newItemForm : editForm;
-    const setFormData = isNew ? setNewItemForm : setEditForm;
-
-    return (
-      <div className="space-y-4">
-        <Input
-          placeholder="英文短语"
-          value={formData.phrase_english || (item?.phrase_english || '')}
-          onChange={(e) => setFormData({ ...formData, phrase_english: e.target.value })}
-        />
-        <Input
-          placeholder="中文翻译"
-          value={formData.phrase_chinese || (item?.phrase_chinese || '')}
-          onChange={(e) => setFormData({ ...formData, phrase_chinese: e.target.value })}
-        />
-        <Textarea
-          placeholder="含义解释"
-          value={formData.meaning_explanation || (item?.meaning_explanation || '')}
-          onChange={(e) => setFormData({ ...formData, meaning_explanation: e.target.value })}
-        />
-        <Input
-          placeholder="例句（可选）"
-          value={formData.example_sentence || (item?.example_sentence || '')}
-          onChange={(e) => setFormData({ ...formData, example_sentence: e.target.value })}
-        />
-        <div className="flex gap-2">
-          <Button onClick={() => handleSavePhrase(formData, isNew)}>
-            <Save className="h-4 w-4 mr-2" />保存
-          </Button>
-          <Button variant="outline" onClick={() => isNew ? setShowNewForm(null) : setEditingItem(null)}>
-            <X className="h-4 w-4 mr-2" />取消
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  const ListeningForm = ({ item, isNew = false }: { item?: any, isNew?: boolean }) => {
-    const formData = isNew ? newItemForm : editForm;
-    const setFormData = isNew ? setNewItemForm : setEditForm;
-
-    return (
-      <div className="space-y-4">
-        <Input
-          placeholder="标题"
-          value={formData.title || (item?.title || '')}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-        />
-        <Textarea
-          placeholder="英文内容"
-          value={formData.content || (item?.content || '')}
-          onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-          rows={4}
-        />
-        <Textarea
-          placeholder="中文翻译"
-          value={formData.translation || (item?.translation || '')}
-          onChange={(e) => setFormData({ ...formData, translation: e.target.value })}
-          rows={4}
-        />
-        <Input
-          placeholder="主题（可选）"
-          value={formData.topic || (item?.topic || '')}
-          onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
-        />
-        <div className="flex gap-2">
-          <Button onClick={() => handleSaveListening(formData, isNew)}>
-            <Save className="h-4 w-4 mr-2" />保存
-          </Button>
-          <Button variant="outline" onClick={() => isNew ? setShowNewForm(null) : setEditingItem(null)}>
-            <X className="h-4 w-4 mr-2" />取消
-          </Button>
-        </div>
-      </div>
-    );
-  };
+  // 统一取消：新增表单关闭 showNewForm，编辑表单关闭 editingItem。
+  const handleCancel = (isNew: boolean) => (isNew ? setShowNewForm(null) : setEditingItem(null));
 
   return (
     <div className="space-y-6">
@@ -366,7 +360,7 @@ const EnglishContentManagement = () => {
               {showNewForm === 'quotes' && (
                 <Card className="p-4">
                   <h4 className="font-medium mb-4">添加新名言</h4>
-                  <QuoteForm isNew />
+                  <QuoteForm formData={newItemForm} setFormData={setNewItemForm} isNew onSave={handleSaveQuote} onCancel={handleCancel} />
                 </Card>
               )}
 
@@ -374,7 +368,7 @@ const EnglishContentManagement = () => {
                 {quotes.map((quote) => (
                   <Card key={quote.id} className="p-4">
                     {editingItem === quote.id ? (
-                      <QuoteForm item={quote} />
+                      <QuoteForm formData={editForm} setFormData={setEditForm} item={quote} onSave={handleSaveQuote} onCancel={handleCancel} />
                     ) : (
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -421,7 +415,7 @@ const EnglishContentManagement = () => {
               {showNewForm === 'words' && (
                 <Card className="p-4">
                   <h4 className="font-medium mb-4">添加新单词</h4>
-                  <WordForm isNew />
+                  <WordForm formData={newItemForm} setFormData={setNewItemForm} isNew onSave={handleSaveWord} onCancel={handleCancel} />
                 </Card>
               )}
 
@@ -429,7 +423,7 @@ const EnglishContentManagement = () => {
                 {words.map((word) => (
                   <Card key={word.id} className="p-4">
                     {editingItem === word.id ? (
-                      <WordForm item={word} />
+                      <WordForm formData={editForm} setFormData={setEditForm} item={word} onSave={handleSaveWord} onCancel={handleCancel} />
                     ) : (
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -476,7 +470,7 @@ const EnglishContentManagement = () => {
               {showNewForm === 'phrases' && (
                 <Card className="p-4">
                   <h4 className="font-medium mb-4">添加新短语</h4>
-                  <PhraseForm isNew />
+                  <PhraseForm formData={newItemForm} setFormData={setNewItemForm} isNew onSave={handleSavePhrase} onCancel={handleCancel} />
                 </Card>
               )}
 
@@ -484,7 +478,7 @@ const EnglishContentManagement = () => {
                 {phrases.map((phrase) => (
                   <Card key={phrase.id} className="p-4">
                     {editingItem === phrase.id ? (
-                      <PhraseForm item={phrase} />
+                      <PhraseForm formData={editForm} setFormData={setEditForm} item={phrase} onSave={handleSavePhrase} onCancel={handleCancel} />
                     ) : (
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -531,7 +525,7 @@ const EnglishContentManagement = () => {
               {showNewForm === 'listening' && (
                 <Card className="p-4">
                   <h4 className="font-medium mb-4">添加新听力内容</h4>
-                  <ListeningForm isNew />
+                  <ListeningForm formData={newItemForm} setFormData={setNewItemForm} isNew onSave={handleSaveListening} onCancel={handleCancel} />
                 </Card>
               )}
 
@@ -539,7 +533,7 @@ const EnglishContentManagement = () => {
                 {listening.map((item) => (
                   <Card key={item.id} className="p-4">
                     {editingItem === item.id ? (
-                      <ListeningForm item={item} />
+                      <ListeningForm formData={editForm} setFormData={setEditForm} item={item} onSave={handleSaveListening} onCancel={handleCancel} />
                     ) : (
                       <div className="flex justify-between items-start">
                         <div className="flex-1">

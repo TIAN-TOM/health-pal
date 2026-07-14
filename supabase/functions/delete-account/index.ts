@@ -96,17 +96,50 @@ serve(async (req) => {
     });
 
     // 2b) 逐表删除（service role 绕过 RLS，但仍按 user_id 限定）
-    const failed: string[] = [];
-    for (const table of TABLES_BY_USER_ID) {
-      const { error } = await admin.from(table).delete().eq("user_id", user.id);
-      if (error && !/(does not exist|relation .* does not exist)/i.test(error.message)) {
-        console.error(`[delete-account] table=${table} err=${error.message}`);
-        failed.push(table);
+    const deleteBusinessTables = async (tables: string[]): Promise<string[]> => {
+      const stillFailed: string[] = [];
+      for (const table of tables) {
+        const { error } = await admin.from(table).delete().eq("user_id", user.id);
+        if (error && !/(does not exist|relation .* does not exist)/i.test(error.message)) {
+          console.error(`[delete-account] table=${table} err=${error.message}`);
+          stillFailed.push(table);
+        }
       }
-    }
+      return stillFailed;
+    };
 
-    // profiles 主键是 id 而不是 user_id
-    await admin.from("profiles").delete().eq("id", user.id);
+    let failed = await deleteBusinessTables(TABLES_BY_USER_ID);
+
+    // profiles 主键是 id 而不是 user_id，必须单独按 id 删除/重试，不能混进按 user_id 删的批量逻辑。
+    const deleteProfile = async (): Promise<boolean> => {
+      const { error } = await admin.from("profiles").delete().eq("id", user.id);
+      if (error && !/(does not exist|relation .* does not exist)/i.test(error.message)) {
+        console.error(`[delete-account] table=profiles err=${error.message}`);
+        return true;
+      }
+      return false;
+    };
+    let profileFailed = await deleteProfile();
+
+    // 关键：删除 auth 账号是不可逆动作，必须在全部业务数据删除成功后才执行。
+    // 若仍有失败，重试一次；再失败则中止（不删 auth/存储），返回 500，
+    // 用户仍可登录后重试，避免"账号已注销但健康数据永久残留"的隐私违规。
+    if (failed.length > 0) {
+      failed = await deleteBusinessTables(failed);
+    }
+    if (profileFailed) profileFailed = await deleteProfile();
+    if (failed.length > 0 || profileFailed) {
+      const stillFailed = profileFailed ? [...failed, "profiles"] : failed;
+      console.error("[delete-account] aborting auth deletion, tables still failed:", stillFailed);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "部分数据删除失败，账号未注销，请稍后重试",
+          failed_tables: stillFailed,
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     // 2c) 删除存储桶中以 user.id 为前缀的对象（best-effort）
     for (const bucket of ["voice-records", "checkin-photos"]) {
@@ -120,7 +153,7 @@ serve(async (req) => {
       }
     }
 
-    // 2d) 删除 auth 账号
+    // 2d) 删除 auth 账号（仅在全部业务数据删除成功后执行）
     const { error: authErr } = await admin.auth.admin.deleteUser(user.id);
     if (authErr) {
       console.error("[delete-account] auth delete failed:", authErr.message);

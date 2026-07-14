@@ -4,7 +4,7 @@ import { ArrowLeft, Phone, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { Contact, getContacts } from '@/services/contactsService';
+import { Contact, getContacts, getCachedContacts } from '@/services/contactsService';
 import { useAuth } from '@/hooks/useAuth';
 import EmergencySMS from '@/components/EmergencySMS';
 
@@ -16,6 +16,8 @@ interface EmergencyModeProps {
 const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [usingCache, setUsingCache] = useState(false);
   const { userProfile, user } = useAuth();
 
   useEffect(() => {
@@ -23,11 +25,22 @@ const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => 
   }, []);
 
   const loadContacts = async () => {
+    setIsLoading(true);
+    setLoadFailed(false);
+    setUsingCache(false);
     try {
       const contactsData = await getContacts();
       setContacts(contactsData);
     } catch (error) {
       console.error('加载联系人失败:', error);
+      // 紧急场景不能因断网就把用户引导去"添加联系人"——优先回退到本地缓存。
+      const cached = getCachedContacts(user?.id);
+      if (cached && cached.length > 0) {
+        setContacts(cached);
+        setUsingCache(true);
+      } else {
+        setLoadFailed(true);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -118,9 +131,24 @@ const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => 
           <h3 className="text-xl font-bold text-center mb-6 text-gray-800">
             呼叫家人
           </h3>
+          {usingCache && (
+            <div className="text-center text-sm text-orange-700 bg-orange-50 rounded-lg p-3 mb-4">
+              ⚠️ 当前网络异常，显示的是上次保存的联系人
+            </div>
+          )}
           {isLoading ? (
             <div className="text-center py-8">
               <div className="text-lg text-gray-600">加载联系人中...</div>
+            </div>
+          ) : loadFailed ? (
+            <div className="text-center py-8">
+              <div className="text-lg text-gray-700 mb-4">联系人加载失败，请检查网络</div>
+              <Button
+                onClick={loadContacts}
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                重试加载
+              </Button>
             </div>
           ) : contacts.length > 0 ? (
             <div className="space-y-4">

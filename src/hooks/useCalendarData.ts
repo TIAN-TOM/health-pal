@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getDailyCheckins } from '@/services/dailyCheckinService';
+import { getDailyCheckins, deleteAllCheckins } from '@/services/dailyCheckinService';
 import { getMeniereRecords } from '@/services/meniereRecordService';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -8,7 +8,6 @@ import {
   getBeijingDateString,
   getBeijingDayOf,
   getMonthRange,
-  deleteAllCheckins,
 } from '@/utils/beijingTime';
 
 interface DayData {

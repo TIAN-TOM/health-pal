@@ -1,0 +1,172 @@
+// 管理员删除用户：调用方需带 Authorization Bearer JWT，且必须具有 admin 角色。
+// 复用 delete-account 的级联删除逻辑，但目标用户由 body.userId 指定。
+// 防御性：先删全部业务数据，全部成功后才删除 auth 账号（不可逆）；禁止删除自己或其他管理员。
+
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+interface AdminDeletePayload {
+  userId?: string;
+}
+
+const TABLES_BY_USER_ID = [
+  "meniere_records",
+  "daily_checkins",
+  "diabetes_records",
+  "emergency_contacts",
+  "emergency_sms_logs",
+  "medical_records",
+  "user_medications",
+  "user_feedback",
+  "user_item_inventory",
+  "user_purchases",
+  "user_points",
+  "user_preferences",
+  "user_roles",
+  "voice_records",
+  "weather_alerts",
+  "points_transactions",
+  "admin_notifications",
+  "family_calendar_events",
+  "family_expenses",
+  "family_members",
+  "family_messages",
+  "family_reminders",
+];
+
+const json = (body: unknown, status: number) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // 1) 用调用者 JWT 校验身份
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) return json({ error: "Unauthorized" }, 401);
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user: caller }, error: callerErr } = await userClient.auth.getUser();
+    if (callerErr || !caller) return json({ error: "Unauthorized" }, 401);
+
+    const admin = createClient(supabaseUrl, serviceKey);
+
+    // 2) 校验调用者具有 admin 角色
+    const { data: callerRole, error: roleErr } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", caller.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (roleErr) return json({ error: "Failed to verify permissions" }, 500);
+    if (!callerRole) return json({ error: "Forbidden: admin role required" }, 403);
+
+    // 3) 校验目标用户
+    const body = (await req.json().catch(() => ({}))) as AdminDeletePayload;
+    const targetId = body.userId;
+    if (!targetId) return json({ error: "userId is required" }, 400);
+    if (targetId === caller.id) return json({ error: "不能删除自己的账号" }, 400);
+
+    // 禁止删除其他管理员
+    const { data: targetRole } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", targetId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (targetRole) return json({ error: "不能删除其他管理员账号" }, 403);
+
+    // 4) 写审计（先写，确保丢失数据前留下痕迹）
+    const { data: targetProfile } = await admin
+      .from("profiles")
+      .select("email")
+      .eq("id", targetId)
+      .maybeSingle();
+
+    await admin.from("account_deletions").insert({
+      user_id: targetId,
+      user_email: targetProfile?.email ?? "",
+      deletion_reason: "已被管理员删除",
+      deleted_by: caller.id,
+    });
+
+    // 5) 逐表删除（service role 绕过 RLS，但仍按 user_id 限定）
+    const deleteBusinessTables = async (tables: string[]): Promise<string[]> => {
+      const stillFailed: string[] = [];
+      for (const table of tables) {
+        const { error } = await admin.from(table).delete().eq("user_id", targetId);
+        if (error && !/(does not exist|relation .* does not exist)/i.test(error.message)) {
+          console.error(`[admin-delete-user] table=${table} err=${error.message}`);
+          stillFailed.push(table);
+        }
+      }
+      return stillFailed;
+    };
+
+    let failed = await deleteBusinessTables(TABLES_BY_USER_ID);
+
+    // profiles 主键是 id 而不是 user_id，必须单独按 id 删除/重试，不能混进按 user_id 删的批量逻辑。
+    const deleteProfile = async (): Promise<boolean> => {
+      const { error } = await admin.from("profiles").delete().eq("id", targetId);
+      if (error && !/(does not exist|relation .* does not exist)/i.test(error.message)) {
+        console.error(`[admin-delete-user] table=profiles err=${error.message}`);
+        return true;
+      }
+      return false;
+    };
+    let profileFailed = await deleteProfile();
+
+    // 关键：auth 账号删除不可逆，必须在全部业务数据删除成功后才执行。失败重试一次，仍失败则中止。
+    if (failed.length > 0) failed = await deleteBusinessTables(failed);
+    if (profileFailed) profileFailed = await deleteProfile();
+    if (failed.length > 0 || profileFailed) {
+      const stillFailed = profileFailed ? [...failed, "profiles"] : failed;
+      console.error("[admin-delete-user] aborting auth deletion, tables still failed:", stillFailed);
+      return json(
+        { success: false, error: "部分数据删除失败，账号未注销，请稍后重试", failed_tables: stillFailed },
+        500,
+      );
+    }
+
+    // 6) 删除存储桶中以目标 user id 为前缀的对象（best-effort）
+    for (const bucket of ["voice-records", "checkin-photos"]) {
+      try {
+        const { data: files } = await admin.storage.from(bucket).list(targetId, { limit: 1000 });
+        if (files && files.length > 0) {
+          await admin.storage.from(bucket).remove(files.map((f) => `${targetId}/${f.name}`));
+        }
+      } catch (e) {
+        console.warn(`[admin-delete-user] storage bucket=${bucket} err=`, e);
+      }
+    }
+
+    // 7) 删除 auth 账号（仅在全部业务数据删除成功后执行）
+    const { error: authErr } = await admin.auth.admin.deleteUser(targetId);
+    if (authErr) {
+      console.error("[admin-delete-user] auth delete failed:", authErr.message);
+      return json({ success: false, error: "Failed to delete auth account", partial: true }, 500);
+    }
+
+    return json({ success: true }, 200);
+  } catch (e) {
+    console.error("[admin-delete-user] unexpected error:", e);
+    return json({ success: false, error: e instanceof Error ? e.message : "Unknown error" }, 500);
+  }
+});

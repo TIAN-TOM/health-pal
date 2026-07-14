@@ -30,22 +30,28 @@ export const familyMemberSchema = z.object({
     .trim()
     .regex(/^[0-9+\-\s()]*$/, '电话号码格式不正确')
     .max(20, '电话号码不能超过20个字符')
+    .nullable()
     .optional(),
+  // 表单以 format(date,'yyyy-MM-dd') 提交，未选时传 null（用于清空）。
   birthday: z.string()
-    .regex(/^\d{8}$/, '生日格式应为YYYYMMDD')
+    .regex(/^\d{4}-\d{2}-\d{2}$/, '生日格式应为YYYY-MM-DD')
+    .nullable()
     .optional(),
   address: z.string()
     .trim()
     .max(200, '地址不能超过200个字符')
+    .nullable()
     .optional(),
   notes: z.string()
     .trim()
     .max(1000, '备注不能超过1000个字符')
+    .nullable()
     .optional(),
+  // 头像可为预设 emoji、上传的 URL 或空字符串，不强制 URL 格式。
   avatar_url: z.string()
-    .url('头像URL格式不正确')
+    .max(500, '头像格式不正确')
+    .nullable()
     .optional()
-    .or(z.literal(''))
 });
 
 // Medical record validation schema

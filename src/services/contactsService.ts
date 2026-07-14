@@ -11,28 +11,62 @@ export interface Contact {
   updated_at?: string;
 }
 
-export const getContacts = async (): Promise<Contact[]> => {
+// 缓存按用户隔离：共享设备上不能让 B 看到 A 的紧急联系人。
+const CONTACTS_CACHE_PREFIX = 'emergency_contacts_cache_';
+const contactsCacheKey = (userId: string) => `${CONTACTS_CACHE_PREFIX}${userId}`;
+
+// 紧急场景（断网/会话失效）下的离线兜底：成功加载后缓存，加载失败时按当前用户回退。
+export const getCachedContacts = (userId?: string): Contact[] | null => {
+  if (!userId) return null;
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('未登录');
-
-    const { data, error } = await supabase
-      .from('emergency_contacts')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: true });
-
-    if (error) throw error;
-
-    // 确保所有联系人都有有效的id，处理老数据可能缺少id的情况
-    return (data || []).map((contact, index) => ({
-      ...contact,
-      id: contact.id || `temp_${contact.user_id}_${index}`,
-      avatar: contact.avatar || '👤'
-    }));
-  } catch (error) {
-    return [];
+    const raw = localStorage.getItem(contactsCacheKey(userId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as Contact[]) : null;
+  } catch {
+    return null;
   }
+};
+
+// 登出时清除所有用户的联系人缓存（共享设备防串号）。
+export const clearContactsCache = () => {
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(CONTACTS_CACHE_PREFIX)) localStorage.removeItem(key);
+    }
+  } catch {
+    // localStorage 不可用时忽略
+  }
+};
+
+export const getContacts = async (): Promise<Contact[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('未登录');
+
+  const { data, error } = await supabase
+    .from('emergency_contacts')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: true });
+
+  // 读函数在 supabase error 时 throw（项目约定），由调用方决定降级策略。
+  if (error) throw error;
+
+  // 确保所有联系人都有有效的id，处理老数据可能缺少id的情况
+  const contacts = (data || []).map((contact, index) => ({
+    ...contact,
+    id: contact.id || `temp_${contact.user_id}_${index}`,
+    avatar: contact.avatar || '👤'
+  }));
+
+  try {
+    localStorage.setItem(contactsCacheKey(user.id), JSON.stringify(contacts));
+  } catch {
+    // localStorage 不可用时忽略缓存
+  }
+
+  return contacts;
 };
 
 export const saveContact = async (contact: Omit<Contact, 'id'>): Promise<void> => {

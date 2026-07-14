@@ -195,6 +195,24 @@ export const cancelCheckin = async (checkinId: string): Promise<void> => {
   if (error) {
     throw new Error(`取消打卡失败: ${error.message}`);
   }
-  
+
   console.log('取消打卡成功，记录ID:', checkinId);
+};
+
+// 删除当前用户的全部打卡记录（一个 service 对应一个领域表）。
+export const deleteAllCheckins = async (): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('用户未登录');
+  }
+
+  const { error } = await supabase
+    .from('daily_checkins')
+    .delete()
+    .eq('user_id', user.id);
+
+  if (error) {
+    throw new Error(`删除打卡记录失败: ${error.message}`);
+  }
 };
