@@ -50,45 +50,51 @@ const EmergencySMS = ({ contacts, userName }: EmergencySMSProps) => {
     }
 
     setIsSending(true);
-    const message = generateEmergencyMessage(userName, location || undefined);
+    try {
+      const message = generateEmergencyMessage(userName, location || undefined);
 
-    // 用单条多收件人 sms: 链接一次性唤起短信应用（连续给 location.href 赋值只会生效一次）。
-    const opened = openEmergencySMS(contacts, message, location || undefined);
+      // 用单条多收件人 sms: 链接一次性唤起短信应用（连续给 location.href 赋值只会生效一次）。
+      const sentCount = openEmergencySMS(contacts, message, location || undefined);
 
-    if (opened) {
-      toast({
-        title: "已打开短信应用",
-        description: `已为您预填好发送给 ${contacts.length} 位联系人的求助短信，请在短信应用中点击发送`
-      });
-    } else {
-      toast({
-        title: "无法打开短信应用",
-        description: `请手动发送求助短信给：${contacts.map((c) => `${c.name} ${c.phone}`).join('、')}`,
-        variant: "destructive"
-      });
+      if (sentCount > 0) {
+        toast({
+          title: "已打开短信应用",
+          description: `已为您预填好发送给 ${sentCount} 位联系人的求助短信，请在短信应用中点击发送`
+        });
+      } else {
+        toast({
+          title: "无法打开短信应用",
+          description: `请手动发送求助短信给：${contacts.map((c) => `${c.name} ${c.phone}`).join('、')}`,
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsSending(false);
     }
-    setIsSending(false);
   };
 
   const handleSendToContact = (contact: Contact) => {
     setIsSending(true);
-    const message = generateEmergencyMessage(userName, location || undefined);
+    try {
+      const message = generateEmergencyMessage(userName, location || undefined);
 
-    const opened = openEmergencySMS([contact], message, location || undefined);
+      const sentCount = openEmergencySMS([contact], message, location || undefined);
 
-    if (opened) {
-      toast({
-        title: "已打开短信应用",
-        description: `已为您预填好发送给${contact.name}的求助短信，请点击发送`
-      });
-    } else {
-      toast({
-        title: "无法打开短信应用",
-        description: `请手动拨打或发短信给 ${contact.name}：${contact.phone}`,
-        variant: "destructive"
-      });
+      if (sentCount > 0) {
+        toast({
+          title: "已打开短信应用",
+          description: `已为您预填好发送给${contact.name}的求助短信，请点击发送`
+        });
+      } else {
+        toast({
+          title: "无法打开短信应用",
+          description: `请手动拨打或发短信给 ${contact.name}：${contact.phone}`,
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsSending(false);
     }
-    setIsSending(false);
   };
 
   return (

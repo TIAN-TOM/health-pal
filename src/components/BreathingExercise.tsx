@@ -389,7 +389,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
                 <Select 
                   value={breathingPattern} 
                   onValueChange={setBreathingPattern}
-                  disabled={isActive}
+                  disabled={hasStarted}
                 >
                   <SelectTrigger className="backdrop-blur-sm bg-white/50 border-white/60">
                     <SelectValue />
@@ -416,7 +416,7 @@ const BreathingExercise = ({ onBack }: BreathingExerciseProps) => {
                 <Select 
                   value={sessionDuration.toString()} 
                   onValueChange={(value) => setSessionDuration(parseInt(value))}
-                  disabled={isActive}
+                  disabled={hasStarted}
                 >
                   <SelectTrigger className="backdrop-blur-sm bg-white/50 border-white/60">
                     <SelectValue />

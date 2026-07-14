@@ -73,35 +73,39 @@ export const logEmergencySMS = async (data: EmergencySMSData) => {
     });
 };
 
+// 归一化号码：防御 null/undefined/空白（损坏缓存等），避免 .trim() 抛错。
+const normalizePhones = (contactList: Contact[]): string[] =>
+  contactList.map((c) => (c.phone ?? '').trim()).filter(Boolean);
+
 // 构造 sms: 深链，支持多收件人（iOS 及多数 Android 接受逗号分隔）。
 const buildSmsUrl = (phones: string[], message: string): string | null => {
-  const valid = phones.map((p) => p.trim()).filter(Boolean);
-  if (valid.length === 0) return null;
-  return `sms:${valid.join(',')}?body=${encodeURIComponent(message)}`;
+  if (phones.length === 0) return null;
+  return `sms:${phones.join(',')}?body=${encodeURIComponent(message)}`;
 };
 
 /**
- * 唤起系统短信应用，预填求助内容与全部收件人。
+ * 唤起系统短信应用，预填求助内容与全部有效收件人。
  * 关键顺序：先执行纯本地的唤起动作，再 fire-and-forget 写审计日志——
- * 日志失败（弱网/未登录）绝不阻断求助。返回是否成功构造并唤起。
+ * 日志失败（弱网/未登录）绝不阻断求助。返回实际预填的有效收件人数（0 = 未能唤起）。
  */
 export const openEmergencySMS = (
   contactList: Contact[],
   message: string,
   location?: LocationData
-): boolean => {
-  const url = buildSmsUrl(contactList.map((c) => c.phone), message);
-  if (!url || typeof window === 'undefined') return false;
+): number => {
+  const recipients = contactList.filter((c) => (c.phone ?? '').trim());
+  const url = buildSmsUrl(normalizePhones(contactList), message);
+  if (!url || typeof window === 'undefined') return 0;
 
   window.location.href = url;
 
-  contactList.forEach((contact) => {
+  recipients.forEach((contact) => {
     logEmergencySMS({ contactId: contact.id, message, location }).catch((error) =>
       console.error('记录紧急短信日志失败（不影响发送）:', error)
     );
   });
 
-  return true;
+  return recipients.length;
 };
 
 // 单个联系人的便捷封装，保持既有调用点可用。
@@ -109,4 +113,4 @@ export const sendEmergencySMS = (
   contact: Contact,
   message: string,
   location?: LocationData
-): boolean => openEmergencySMS([contact], message, location);
+): number => openEmergencySMS([contact], message, location);

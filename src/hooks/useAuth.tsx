@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useMemo, createContext, useContext } 
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { clearContactsCache } from '@/services/contactsService';
 
 interface UserProfile {
   id: string;
@@ -52,6 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: '你的账号已被管理员暂停，如有疑问请联系管理员',
         variant: 'destructive',
       });
+      clearContactsCache();
       await supabase.auth.signOut();
       setUserProfile(null);
       return;
@@ -138,6 +140,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signOut = useCallback(async () => {
+    // 清除按用户缓存的紧急联系人，避免共享设备上下一位用户看到上一位的联系人。
+    clearContactsCache();
     await supabase.auth.signOut();
   }, []);
 

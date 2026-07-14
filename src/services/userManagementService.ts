@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import type { Tables } from '@/integrations/supabase/types';
 
 export type UserRole = 'admin' | 'user';
@@ -76,7 +77,19 @@ export const deleteUserAccount = async (userId: string): Promise<void> => {
     body: { userId },
   });
 
-  if (error) throw new Error(`删除用户失败: ${error.message}`);
+  if (error) {
+    // functions.invoke 对非 2xx 会抛 FunctionsHttpError，真正的中文错误在响应体里，需读取透传。
+    let message = error.message;
+    if (error instanceof FunctionsHttpError) {
+      try {
+        const body = await error.context.json();
+        if (body?.error) message = body.error;
+      } catch {
+        // 响应体不可解析时用默认 message
+      }
+    }
+    throw new Error(message);
+  }
   if (data && data.success === false) {
     throw new Error(data.error || '删除用户失败');
   }

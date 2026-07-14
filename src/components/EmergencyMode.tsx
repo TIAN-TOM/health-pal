@@ -34,7 +34,7 @@ const EmergencyMode = ({ onBack, onNavigateToContacts }: EmergencyModeProps) => 
     } catch (error) {
       console.error('加载联系人失败:', error);
       // 紧急场景不能因断网就把用户引导去"添加联系人"——优先回退到本地缓存。
-      const cached = getCachedContacts();
+      const cached = getCachedContacts(user?.id);
       if (cached && cached.length > 0) {
         setContacts(cached);
         setUsingCache(true);

@@ -110,12 +110,16 @@ serve(async (req) => {
 
     let failed = await deleteBusinessTables(TABLES_BY_USER_ID);
 
-    // profiles 主键是 id 而不是 user_id
-    const { error: profileErr } = await admin.from("profiles").delete().eq("id", user.id);
-    if (profileErr && !/(does not exist|relation .* does not exist)/i.test(profileErr.message)) {
-      console.error(`[delete-account] table=profiles err=${profileErr.message}`);
-      failed.push("profiles");
-    }
+    // profiles 主键是 id 而不是 user_id，必须单独按 id 删除/重试，不能混进按 user_id 删的批量逻辑。
+    const deleteProfile = async (): Promise<boolean> => {
+      const { error } = await admin.from("profiles").delete().eq("id", user.id);
+      if (error && !/(does not exist|relation .* does not exist)/i.test(error.message)) {
+        console.error(`[delete-account] table=profiles err=${error.message}`);
+        return true;
+      }
+      return false;
+    };
+    let profileFailed = await deleteProfile();
 
     // 关键：删除 auth 账号是不可逆动作，必须在全部业务数据删除成功后才执行。
     // 若仍有失败，重试一次；再失败则中止（不删 auth/存储），返回 500，
@@ -123,13 +127,15 @@ serve(async (req) => {
     if (failed.length > 0) {
       failed = await deleteBusinessTables(failed);
     }
-    if (failed.length > 0) {
-      console.error("[delete-account] aborting auth deletion, tables still failed:", failed);
+    if (profileFailed) profileFailed = await deleteProfile();
+    if (failed.length > 0 || profileFailed) {
+      const stillFailed = profileFailed ? [...failed, "profiles"] : failed;
+      console.error("[delete-account] aborting auth deletion, tables still failed:", stillFailed);
       return new Response(
         JSON.stringify({
           success: false,
           error: "部分数据删除失败，账号未注销，请稍后重试",
-          failed_tables: failed,
+          failed_tables: stillFailed,
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
