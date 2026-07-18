@@ -17,6 +17,35 @@ export interface UpdateEntry {
 
 export const updates: UpdateEntry[] = [
   {
+    version: '2.15.0',
+    date: '2026-07-18',
+    type: '综合升级',
+    icon: Sparkles,
+    color: 'bg-purple-50 text-purple-600 border-purple-200',
+    items: [
+      {
+        title: '高危缺陷与安全加固',
+        description: '修复 16 处遗留高危缺陷（紧急模式、紧急短信、admin 用户管理、联系人、日历、语音录制、呼吸练习、俄罗斯方块等），加固积分 RPC 与邮件/周报 Edge Function，并处理 HistoryView / RecordDetail / WeeklyReportCard / FamilyMemberForm 等跨模块 review 问题。',
+        type: 'fix',
+      },
+      {
+        title: '数据层全面迁到 TanStack Query',
+        description: 'admin、公告、家庭、汇率、体检、个人资料、教育中心、我的订单、用药管理等页面统一走 TanStack Query，配套抽出 announcements/education/feedback/profile/adminUserDetail 等服务层；鉴权错误分支与北京时间处理统一，并补齐服务/工具单测。',
+        type: 'improvement',
+      },
+      {
+        title: '架构与工程化升级',
+        description: '清理死代码与未用 shadcn 组件，启用严格 TypeScript，打包体积明显下降；引入 URL 驱动的伪路由与页面注册表；HistoryView 分页、提醒调度器批量发送、Gomoku / BomberPop 核心逻辑抽为纯模块并补测试；抽取共享 useHighScore hook；接入 GitHub Actions CI，生产构建剥离 console，lint 归零。',
+        type: 'improvement',
+      },
+      {
+        title: '老年友好与无障碍改进',
+        description: '57 个页面组件补齐 aria 标签与焦点态，放大触控热区，字号切换全局生效；公告、首页、表单与记录页在放大字号、屏幕阅读器与键盘操作下表现更稳定。',
+        type: 'improvement',
+      },
+    ],
+  },
+  {
     version: '2.14.0',
     date: '2026-07-06',
     type: '新功能',
