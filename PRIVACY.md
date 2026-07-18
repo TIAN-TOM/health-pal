@@ -61,11 +61,12 @@ The privacy centre additionally offers targeted erasure of emergency SMS logs
 
 ## Known gaps and DRAFT items
 
-1. **Migrations pending**: consent recording (`20260718020000_add_user_consents.sql`)
-   and SMS-log deletion (`20260718030000_allow_users_delete_emergency_sms_logs.sql`)
-   need to be applied to the live database; the UI degrades honestly until then.
-   Two earlier migrations (`20260713030000`, `20260713040000`) are also written but
-   not yet applied.
+1. **Migrations applied**: consent recording (`20260718020000_add_user_consents.sql`)
+   and SMS-log deletion (`20260718030000_allow_users_delete_emergency_sms_logs.sql`),
+   along with two earlier migrations (`20260713030000`, `20260713040000`), have been
+   applied to the live database and verified. Both new migrations are reversible
+   (rollback statements are in each file). The UI's honest degradation path stays as a
+   safety net for any environment whose schema is not yet migrated.
 2. **Voice-note retention is not enforced**: `delete_expired_voice_records()` exists
    but its pg_cron schedule is commented out, so the 30-day expiry is currently a
    promise without a broom. **DRAFT:** define and enforce a retention schedule.
