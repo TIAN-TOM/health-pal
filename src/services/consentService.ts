@@ -16,7 +16,7 @@ export const healthDataConsentQueryKey = (userId?: string) =>
 
 // user_consents 迁移尚未应用到线上时（表不存在），同意功能视为未启用，
 // 不能因此把整个应用锁在同意门后。
-const isMissingTableError = (error: { code?: string; message?: string }): boolean =>
+export const isMissingTableError = (error: { code?: string; message?: string }): boolean =>
   error.code === '42P01' ||
   error.code === 'PGRST205' ||
   /schema cache|does not exist/i.test(error.message ?? '');

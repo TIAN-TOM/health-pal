@@ -80,7 +80,7 @@ const HealthDataConsentGate = () => {
             数据存储在 Supabase 云数据库（新加坡区域）。
           </p>
           <p>
-            您可以随时在「设置」中查看、更正、导出或删除自己的数据，也可以撤回本同意。
+            您可以随时在「设置 → 隐私与数据」中查看、更正、导出或删除自己的数据，也可以撤回本同意。
             完整说明见{' '}
             <a href="/privacy" className="text-blue-600 underline">隐私政策</a>。
           </p>
