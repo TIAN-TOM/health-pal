@@ -38,13 +38,13 @@ The target user is in their seventies, on a phone, possibly dizzy at the moment 
 - TanStack Query for the data layer
 - Supabase: Postgres with row-level security on every table, Auth, Storage, Deno edge functions
 - Installable PWA via web manifest; deliberately no service worker, so users never get stuck on a stale cached build
-- Vitest (296 tests) and GitHub Actions running typecheck, lint, tests and build
+- Vitest (315 tests) and GitHub Actions running typecheck, lint, tests and build
 
 ## Architecture notes
 
 A few decisions worth knowing before reading the code:
 
-- **URL-driven page registry.** React Router owns a handful of top-level routes; the main app is a single route that reads `?page=` against a typed whitelist of 33 page ids ([src/lib/pageRegistry.ts](src/lib/pageRegistry.ts)) rendered through a lazy-loading `PageRenderer`. The system back button steps through visited pages, while in-app back buttons replace history entries so the stack never deepens.
+- **URL-driven page registry.** React Router owns a handful of top-level routes; the main app is a single route that reads `?page=` against a typed whitelist of 34 page ids ([src/lib/pageRegistry.ts](src/lib/pageRegistry.ts)) rendered through a lazy-loading `PageRenderer`. The system back button steps through visited pages, while in-app back buttons replace history entries so the stack never deepens.
 - **The points economy is server-authoritative.** RLS denies client writes to points tables outright. Awards, spends and store purchases go through `SECURITY DEFINER` RPCs that price items server-side and cap game bonuses per day, so no client can pay itself.
 - **Two notions of time.** Stored timestamps are true UTC; anything that means "today" (check-in days, streaks) uses the Beijing calendar day via [src/utils/beijingTime.ts](src/utils/beijingTime.ts). The distinction matters around midnight.
 - **Edge functions** handle email reminders (pg_cron → scheduler → Resend), AI weekly reports, self-service account deletion and admin operations. Per-function JWT rules live in [supabase/config.toml](supabase/config.toml).
@@ -64,7 +64,7 @@ Environment variables are optional for a default run: without a `.env` the clien
 
 ```sh
 supabase link --project-ref <your-ref>
-supabase db push        # 58 migrations
+supabase db push        # 60 migrations
 ```
 
 Checks:
