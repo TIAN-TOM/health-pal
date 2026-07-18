@@ -80,7 +80,7 @@ Two edge functions call Lovable-hosted gateways (the Resend email relay and the 
 
 ## Privacy
 
-Health data is treated as sensitive. The app ships an in-app privacy policy, terms and medical disclaimer (`/privacy`, `/terms`, `/disclaimer`), full data export from within the app, and self-service account deletion backed by an edge function that removes business data and the auth record.
+Health data is treated as sensitive. Collection is gated by a recorded, versioned consent (an append-only `user_consents` ledger behind a blocking dialog after sign-in), and a privacy centre in Settings shows the consent record and offers withdrawal, a full JSON export of the user's data, and targeted cleanup of emergency SMS logs. The app also ships an in-app privacy policy, terms and medical disclaimer (`/privacy`, `/terms`, `/disclaimer`) and self-service account deletion backed by an edge function that removes business data, uploaded files and the auth record. [PRIVACY.md](PRIVACY.md) maps these controls to the Australian Privacy Principles, including the parts still marked DRAFT.
 
 ## Origins
 
