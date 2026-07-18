@@ -36,6 +36,7 @@ export const PAGE_TITLES = {
   'lifestyle-record': '生活记录',
   'medication-record': '用药记录',
   'user-feedback': '意见反馈',
+  'privacy-center': '隐私与数据',
 } as const;
 
 export type PageId = keyof typeof PAGE_TITLES;

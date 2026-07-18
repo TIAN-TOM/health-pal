@@ -34,11 +34,12 @@ const zh = (
       <li><strong>Supabase</strong>：数据库、身份认证、对象存储、边缘函数。</li>
       <li><strong>Open-Meteo</strong>：天气与空气质量数据查询（不向其发送您的身份信息）。</li>
       <li><strong>Resend</strong>：在管理员通知与账号验证场景发送邮件。</li>
+      <li><strong>AI 网关（Lovable AI Gateway）</strong>：仅在您主动生成「AI 健康周报」时，将您近 7 天的健康记录发送给 AI 模型生成摘要，不用于其他目的。</li>
     </ul>
 
     <h2>六、您的权利</h2>
     <ul>
-      <li><strong>访问与导出：</strong>"整理记录给医生/AI" 入口可导出您的全部记录为 JSON/文本。</li>
+      <li><strong>访问与导出：</strong>"设置 → 隐私与数据" 可下载您名下全部数据（JSON），"整理记录给医生/AI" 可导出文本版记录。</li>
       <li><strong>更正：</strong>可在"个人资料"中随时修改。</li>
       <li><strong>删除/注销：</strong>设置 → 账号管理 → 注销账号，将永久删除您的账号与全部相关数据。</li>
       <li><strong>撤回同意：</strong>您可随时停止使用本应用，注销账号即视为撤回授权。</li>
@@ -95,11 +96,12 @@ const en = (
       <li><strong>Supabase</strong>: database, auth, storage, edge functions.</li>
       <li><strong>Open-Meteo</strong>: weather & air-quality data (no identity sent).</li>
       <li><strong>Resend</strong>: transactional emails for admin notifications and verification.</li>
+      <li><strong>AI gateway (Lovable AI Gateway)</strong>: only when you explicitly generate an AI weekly report, your last 7 days of records are sent to the model to produce the summary — nothing else.</li>
     </ul>
 
     <h2>6. Your Rights (GDPR / PIPL)</h2>
     <ul>
-      <li><strong>Access / Export:</strong> "Export records for doctor / AI" gives you all your data as JSON/text.</li>
+      <li><strong>Access / Export:</strong> Settings → Privacy &amp; Data downloads everything under your account as JSON; "Export records for doctor / AI" produces a text version.</li>
       <li><strong>Rectify:</strong> edit anytime in your profile.</li>
       <li><strong>Erasure:</strong> Settings → Account → Delete Account permanently erases your account and all related data.</li>
       <li><strong>Withdraw consent:</strong> stopping use of the App and deleting your account withdraws your consent.</li>

@@ -17,6 +17,7 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const MedicalDisclaimer = lazy(() => import("./pages/MedicalDisclaimer"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 import DisclaimerGate from "@/components/legal/DisclaimerGate";
+import HealthDataConsentGate from "@/components/legal/HealthDataConsentGate";
 import OnboardingModal from "@/components/onboarding/OnboardingModal";
 
 
@@ -47,6 +48,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <DisclaimerGate />
+              <HealthDataConsentGate />
               <OnboardingModal />
               <Suspense fallback={<RouteFallback />}>
                 <Routes>

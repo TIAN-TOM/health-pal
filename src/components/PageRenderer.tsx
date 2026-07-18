@@ -36,6 +36,7 @@ const DailyEnglish = lazyWithRetry(() => import('./DailyEnglish'));
 const DailyDataHub = lazyWithRetry(() => import('./DailyDataHub'));
 const DataExport = lazyWithRetry(() => import('./DataExport'));
 const UserFeedback = lazyWithRetry(() => import('./UserFeedback'));
+const PrivacyCenter = lazyWithRetry(() => import('./PrivacyCenter'));
 
 type MeniereRecord = Tables<'meniere_records'>;
 
@@ -103,6 +104,7 @@ const PageRenderer = ({
             onUpdateLog={() => onNavigation('update-log')}
             onAdminPanel={() => onNavigation('admin-panel')}
             onUserFeedback={() => onNavigation('user-feedback')}
+            onPrivacyCenter={() => onNavigation('privacy-center')}
           />
         );
       case 'profile':
@@ -171,6 +173,8 @@ const PageRenderer = ({
         );
       case 'user-feedback':
         return <UserFeedback onBack={() => onBack('settings')} />;
+      case 'privacy-center':
+        return <PrivacyCenter onBack={() => onBack('settings')} onNavigate={onNavigation} />;
       default:
         return null;
     }

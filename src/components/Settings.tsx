@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import HealthManagement from './settings/HealthManagement';
 import SystemSettings from './settings/SystemSettings';
 import AccountManagement from './settings/AccountManagement';
+import PrivacyCard from './settings/PrivacyCard';
 import UserInfo from './settings/UserInfo';
 import PersonalSettingsCard from './settings/PersonalSettingsCard';
 import AppearanceSettings from './settings/AppearanceSettings';
@@ -22,6 +23,7 @@ interface SettingsProps {
   onUserManual: () => void;
   onUpdateLog: () => void;
   onUserFeedback: () => void;
+  onPrivacyCenter: () => void;
 }
 
 const Settings = ({ 
@@ -34,7 +36,8 @@ const Settings = ({
   onPersonalProfile,
   onUserManual,
   onUpdateLog,
-  onUserFeedback
+  onUserFeedback,
+  onPrivacyCenter
 }: SettingsProps) => {
   const { user, userRole } = useAuth();
 
@@ -75,6 +78,8 @@ const Settings = ({
             onAdminPanel={userRole === 'admin' ? onAdminPanel : undefined}
             onUserFeedback={onUserFeedback}
           />
+
+          <PrivacyCard onPrivacyCenter={onPrivacyCenter} />
 
           <AccountManagement />
 
