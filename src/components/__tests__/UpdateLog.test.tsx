@@ -8,9 +8,9 @@ describe("UpdateLog data", () => {
     expect(updates.length).toBeGreaterThan(30);
   });
 
-  it("latest version is 2.14.0 (MCP agent integrations)", () => {
-    expect(updates[0].version).toBe("2.14.0");
-    expect(updates[0].type).toBe("新功能");
+  it("latest version is 2.15.0 (consolidated GitHub review roll-up)", () => {
+    expect(updates[0].version).toBe("2.15.0");
+    expect(updates[0].type).toBe("综合升级");
   });
 
 
