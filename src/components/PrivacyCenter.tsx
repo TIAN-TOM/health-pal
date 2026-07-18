@@ -120,7 +120,7 @@ const PrivacyCenter = ({ onBack, onNavigate }: PrivacyCenterProps) => {
               <AlertDialogHeader>
                 <AlertDialogTitle>撤回健康数据收集同意？</AlertDialogTitle>
                 <AlertDialogDescription>
-                  撤回后应用会暂停收集健康数据，再次进入时需要重新同意才能继续使用记录功能。
+                  撤回后应用会暂停收集健康数据，需要重新同意才能继续使用记录功能。
                   已有数据不会被删除，如需删除请使用「注销账号」。
                 </AlertDialogDescription>
               </AlertDialogHeader>
