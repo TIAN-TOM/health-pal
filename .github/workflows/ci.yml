@@ -22,7 +22,7 @@ jobs:
         run: npm ci
 
       - name: Type check
-        run: npx tsc --noEmit
+        run: npm run typecheck
 
       - name: Lint
         # Known baseline of ~190 issues; report without failing the build until
