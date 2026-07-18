@@ -5,6 +5,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  DELETION_SPECS,
+  deleteUserRows,
+  removeUserStorageObjects,
+} from "../_shared/account-deletion.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,31 +20,6 @@ const corsHeaders = {
 interface AdminDeletePayload {
   userId?: string;
 }
-
-const TABLES_BY_USER_ID = [
-  "meniere_records",
-  "daily_checkins",
-  "diabetes_records",
-  "emergency_contacts",
-  "emergency_sms_logs",
-  "medical_records",
-  "user_medications",
-  "user_feedback",
-  "user_item_inventory",
-  "user_purchases",
-  "user_points",
-  "user_preferences",
-  "user_roles",
-  "voice_records",
-  "weather_alerts",
-  "points_transactions",
-  "admin_notifications",
-  "family_calendar_events",
-  "family_expenses",
-  "family_members",
-  "family_messages",
-  "family_reminders",
-];
 
 const json = (body: unknown, status: number) =>
   new Response(JSON.stringify(body), {
@@ -107,55 +87,23 @@ serve(async (req) => {
       deleted_by: caller.id,
     });
 
-    // 5) 逐表删除（service role 绕过 RLS，但仍按 user_id 限定）
-    const deleteBusinessTables = async (tables: string[]): Promise<string[]> => {
-      const stillFailed: string[] = [];
-      for (const table of tables) {
-        const { error } = await admin.from(table).delete().eq("user_id", targetId);
-        if (error && !/(does not exist|relation .* does not exist)/i.test(error.message)) {
-          console.error(`[admin-delete-user] table=${table} err=${error.message}`);
-          stillFailed.push(table);
-        }
-      }
-      return stillFailed;
-    };
-
-    let failed = await deleteBusinessTables(TABLES_BY_USER_ID);
-
-    // profiles 主键是 id 而不是 user_id，必须单独按 id 删除/重试，不能混进按 user_id 删的批量逻辑。
-    const deleteProfile = async (): Promise<boolean> => {
-      const { error } = await admin.from("profiles").delete().eq("id", targetId);
-      if (error && !/(does not exist|relation .* does not exist)/i.test(error.message)) {
-        console.error(`[admin-delete-user] table=profiles err=${error.message}`);
-        return true;
-      }
-      return false;
-    };
-    let profileFailed = await deleteProfile();
+    // 5) 逐条执行删除规格（service role 绕过 RLS，但仍按目标用户限定；
+    //    规格覆盖 gomoku_rooms 的 host/guest、admin_notifications 的 admin_id、profiles 的 id）
+    let failed = await deleteUserRows(admin, targetId, DELETION_SPECS, "admin-delete-user");
 
     // 关键：auth 账号删除不可逆，必须在全部业务数据删除成功后才执行。失败重试一次，仍失败则中止。
-    if (failed.length > 0) failed = await deleteBusinessTables(failed);
-    if (profileFailed) profileFailed = await deleteProfile();
-    if (failed.length > 0 || profileFailed) {
-      const stillFailed = profileFailed ? [...failed, "profiles"] : failed;
-      console.error("[admin-delete-user] aborting auth deletion, tables still failed:", stillFailed);
+    if (failed.length > 0) failed = await deleteUserRows(admin, targetId, failed, "admin-delete-user");
+    if (failed.length > 0) {
+      const failedTables = [...new Set(failed.map((spec) => spec.table))];
+      console.error("[admin-delete-user] aborting auth deletion, tables still failed:", failedTables);
       return json(
-        { success: false, error: "部分数据删除失败，账号未注销，请稍后重试", failed_tables: stillFailed },
+        { success: false, error: "部分数据删除失败，账号未注销，请稍后重试", failed_tables: failedTables },
         500,
       );
     }
 
-    // 6) 删除存储桶中以目标 user id 为前缀的对象（best-effort）
-    for (const bucket of ["voice-records", "checkin-photos"]) {
-      try {
-        const { data: files } = await admin.storage.from(bucket).list(targetId, { limit: 1000 });
-        if (files && files.length > 0) {
-          await admin.storage.from(bucket).remove(files.map((f) => `${targetId}/${f.name}`));
-        }
-      } catch (e) {
-        console.warn(`[admin-delete-user] storage bucket=${bucket} err=`, e);
-      }
-    }
+    // 6) 清空存储桶中该目标用户的目录（best-effort；分页 + 递归子目录，含公开的 family-avatars）
+    await removeUserStorageObjects(admin, targetId, "admin-delete-user");
 
     // 7) 删除 auth 账号（仅在全部业务数据删除成功后执行）
     const { error: authErr } = await admin.auth.admin.deleteUser(targetId);

@@ -45,11 +45,14 @@ project (PostgreSQL, Singapore region) with row-level security on every table.
 ## Deletion in detail
 
 `delete-account` (self-service, typed confirmation) and `admin-delete-user` share the
-same server-side flow: write an audit row first, delete 22 user-keyed tables plus
-`profiles`, retry failures once and abort (account intact) if anything still fails,
-best-effort cleanup of the `voice-records` and `checkin-photos` buckets, then delete
-the auth user — which cascades the remaining FK-linked rows (`ai_weekly_reports`,
-`user_notification_preferences`, `user_consents`). The consent ledger therefore
+same server-side flow (extracted to `supabase/functions/_shared/account-deletion.ts`):
+write an audit row first, delete every row matching the table/column specs — the 22
+user-keyed tables plus `profiles` by `id`, `admin_notifications` by `admin_id` and
+`gomoku_rooms` by both `host_id` and `guest_id` — retry failures once and abort
+(account intact) if anything still fails, best-effort cleanup of the `voice-records`,
+`checkin-photos` and public `family-avatars` buckets (paginated and recursing into
+subfolders), then delete the auth user — which cascades the remaining FK-linked rows
+(`ai_weekly_reports`, `user_notification_preferences`, `user_consents`). The consent ledger therefore
 survives withdrawal but not account deletion, while the `account_deletions` audit row
 survives by design.
 
@@ -66,10 +69,11 @@ The privacy centre additionally offers targeted erasure of emergency SMS logs
 2. **Voice-note retention is not enforced**: `delete_expired_voice_records()` exists
    but its pg_cron schedule is commented out, so the 30-day expiry is currently a
    promise without a broom. **DRAFT:** define and enforce a retention schedule.
-3. **Account-deletion blind spots**: `gomoku_rooms` rows keyed by host/guest survive;
-   the `admin_notifications` step is a silent no-op (wrong key column); the public
-   `family-avatars` bucket is never cleaned; storage cleanup lists only the first
-   1000 objects per bucket.
+3. **Account-deletion blind spots — fixed in code, deploy pending**: the deletion
+   flow now removes `gomoku_rooms` rows by host/guest, targets `admin_notifications`
+   by its real `admin_id` column (the old wrong-column delete was silently swallowed),
+   cleans the public `family-avatars` bucket, and paginates/recurses storage cleanup.
+   Takes effect once `supabase functions deploy delete-account admin-delete-user` runs.
 4. **`user_feedback` has no self-delete** (admin-managed; may contain free-text
    health context).
 5. **Exports exclude binaries**: voice audio files and photos are exported as
