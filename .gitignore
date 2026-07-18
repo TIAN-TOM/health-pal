@@ -30,3 +30,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Local agent/editor tooling state (launch configs, scratch worktrees)
+.claude/
