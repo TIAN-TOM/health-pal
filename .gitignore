@@ -25,3 +25,8 @@ dist-ssr
 
 # TypeScript incremental build state (tsc -b)
 *.tsbuildinfo
+
+# Environment files — real values stay out of version control
+.env
+.env.*
+!.env.example
